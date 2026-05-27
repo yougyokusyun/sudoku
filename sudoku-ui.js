@@ -342,14 +342,6 @@ function undo() {
     }
 }
 
-function resetPuzzle() {
-    const selector = document.getElementById('puzzleSelector');
-    const currentName = selector.value;
-    if (currentName) {
-        loadPuzzle(currentName);
-    }
-}
-
 // ==================== 闪烁删除效果 ====================
 
 /**
@@ -532,7 +524,6 @@ function attachEvents() {
     });
     document.getElementById('nextStepBtn')?.addEventListener('click', nextStep);
     document.getElementById('undoBtn')?.addEventListener('click', undo);
-    document.getElementById('resetBtn')?.addEventListener('click', resetPuzzle);
 }
 
 // ==================== 初始化 ====================
