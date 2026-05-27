@@ -53,23 +53,29 @@ h1 {
     outline: none;
 }
 
+/* ========== action-buttons 响应式布局 - 6寸以上手机一排显示 ========== */
 .action-buttons {
     display: flex;
-    gap: 8px;
-    flex-wrap: wrap;
+    gap: 6px;
+    flex-wrap: nowrap;
+    justify-content: center;
+    width: auto;
 }
 
 .action-buttons button {
-    padding: 8px 16px;
+    padding: 6px 10px;
     border: 2px solid #2a5298;
     background: white;
     color: #2a5298;
     border-radius: 30px;
     cursor: pointer;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
     transition: 0.2s;
     white-space: nowrap;
+    flex: 1;
+    min-width: 0;
+    text-align: center;
 }
 
 .action-buttons button:hover {
@@ -92,7 +98,57 @@ h1 {
     color: white;
 }
 
-/* ========== 大屏幕：左右布局 ========== */
+/* 平板及以上设备（宽度≥768px） */
+@media (min-width: 768px) {
+    .action-buttons {
+        gap: 10px;
+    }
+    .action-buttons button {
+        padding: 8px 16px;
+        font-size: 13px;
+        flex: none;
+        min-width: auto;
+    }
+}
+
+/* 大屏手机（宽度414px-767px）- 6寸以上手机主要区间 */
+@media (min-width: 414px) and (max-width: 767px) {
+    .action-buttons {
+        gap: 8px;
+    }
+    .action-buttons button {
+        padding: 7px 12px;
+        font-size: 12px;
+        flex: 1;
+    }
+}
+
+/* 小屏手机（宽度380px-413px） */
+@media (min-width: 380px) and (max-width: 413px) {
+    .action-buttons button {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+    .action-buttons {
+        gap: 5px;
+    }
+}
+
+/* 超小屏（宽度小于380px）- 允许换行保证可读 */
+@media (max-width: 379px) {
+    .action-buttons {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    .action-buttons button {
+        flex: auto;
+        min-width: 70px;
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+}
+
+/* ========== 游戏区域 ========== */
 .game-area {
     display: flex;
     flex-direction: row;
@@ -200,7 +256,7 @@ h1 {
     cursor: pointer;
 }
 
-/* ========== 候选数闪烁动画效果（关键） ========== */
+/* 候选数闪烁动画效果 */
 .candidate-note.flashing {
     animation: flashAndScale 0.8s ease 3;
     display: inline-block;
@@ -349,6 +405,8 @@ h1 {
 }
 
 /* ========== 响应式布局 ========== */
+
+/* 大屏幕：1200px以下 */
 @media (max-width: 1200px) {
     .cell-container { width: 55px; height: 55px; }
     .main-number { font-size: 26px; }
@@ -357,6 +415,7 @@ h1 {
     .explanation-sidebar { min-width: 280px; }
 }
 
+/* 1050px以下 */
 @media (max-width: 1050px) {
     .cell-container { width: 50px; height: 50px; }
     .main-number { font-size: 24px; }
@@ -365,6 +424,7 @@ h1 {
     .explanation-sidebar { min-width: 260px; }
 }
 
+/* 950px以下 */
 @media (max-width: 950px) {
     .cell-container { width: 45px; height: 45px; }
     .main-number { font-size: 22px; }
@@ -373,6 +433,7 @@ h1 {
     .explanation-sidebar { min-width: 250px; }
 }
 
+/* 900px以下 */
 @media (max-width: 900px) {
     .cell-container { width: 42px; height: 42px; }
     .main-number { font-size: 20px; }
@@ -381,6 +442,7 @@ h1 {
     .explanation-sidebar { min-width: 240px; }
 }
 
+/* 平板设备：768px以下 - 切换为上下布局 */
 @media (max-width: 768px) {
     .game-area {
         flex-direction: column;
@@ -395,24 +457,44 @@ h1 {
     }
     .cell-container { width: 45px; height: 45px; }
     .main-number { font-size: 22px; }
-    .action-buttons button { padding: 6px 12px; font-size: 11px; }
     .candidates-area { font-size: 8px; }
     .candidate-note { font-size: 8px; }
+    .controls {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .puzzle-selector {
+        min-width: auto;
+    }
 }
 
+/* 手机横屏/小屏 */
 @media (max-width: 550px) {
     .cell-container { width: 38px; height: 38px; }
     .main-number { font-size: 18px; }
     .candidates-area { font-size: 7px; }
     .candidate-note { font-size: 7px; }
-    .controls { flex-direction: column; align-items: stretch; }
-    .puzzle-selector { min-width: auto; }
-    .action-buttons { justify-content: center; }
 }
 
+/* 超小屏手机 */
 @media (max-width: 450px) {
     .cell-container { width: 34px; height: 34px; }
     .main-number { font-size: 16px; }
     .candidates-area { font-size: 6px; bottom: 1px; }
     .candidate-note { font-size: 6px; }
+}
+
+/* 极端小屏 */
+@media (max-width: 380px) {
+    .cell-container { width: 30px; height: 30px; }
+    .main-number { font-size: 14px; }
+    .candidates-area { font-size: 5px; bottom: 1px; left: 2px; right: 2px; }
+    .candidate-note { font-size: 5px; }
+}
+
+/* 确保6寸以上手机（宽度≥414px）action-buttons按钮文字大小合适 */
+@media (min-width: 414px) and (max-width: 600px) {
+    .action-buttons button {
+        font-size: 12px;
+    }
 }
