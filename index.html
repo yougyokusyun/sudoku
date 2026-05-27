@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>数独解题器</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="container">
+    <h1>🧩 数独解题器</h1>
+    <div class="controls">
+        <div class="puzzle-selector">
+            <select id="puzzleSelector">
+                <option value="">-- 选择题目 --</option>
+            </select>
+        </div>
+        <div class="action-buttons">
+            <button id="editCandidatesBtn">✏️ 编辑候选数</button>
+            <button id="showCandidatesBtn">🔢 隐藏候选数</button>
+            <button id="nextStepBtn">➡️ 下一步</button>
+            <button id="undoBtn">↩️ 上一步</button>
+            <button id="resetBtn">🔄 重置题目</button>
+        </div>
+    </div>
+    <div class="game-area">
+        <div class="sudoku-container">
+            <table id="sudoku-board">
+                <tbody id="sudoku-body"></tbody>
+            </table>
+        </div>
+        <div class="explanation-sidebar">
+            <div class="explanation-panel">
+                <h3>📖 解题过程</h3>
+                <div id="explanation-content">
+                    <div class="step-explanation">✨ 点击"下一步"开始智能解题</div>
+                </div>
+            </div>
+            <div class="steps-history">
+                <h3>📋 步骤历史</h3>
+                <div id="steps-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="puzzles.js"></script>
+<script src="sudoku-core.js"></script>
+<script src="sudoku-ui.js"></script>
+</body>
+</html>
