@@ -8,7 +8,8 @@
 </head>
 <body>
 <div class="container">
-    <div class="header-with-timer">
+    <!-- 顶部第一行：标题 + 模式标识 + 错误次数 + 计时器 -->
+    <div class="header-row">
         <div class="title-section">
             <h1>🧩 数独解题器</h1>
             <span id="modeBadge" class="mode-badge practice-mode">✏️ 练习模式</span>
@@ -20,7 +21,8 @@
         </div>
     </div>
     
-    <div class="controls">
+    <!-- 第二行：选择题目 + 更多操作 + 例题模式按钮 -->
+    <div class="controls-row">
         <div class="puzzle-selector">
             <select id="puzzleSelector">
                 <option value="">-- 选择题目 --</option>
@@ -49,6 +51,20 @@
         </div>
     </div>
     
+    <!-- 提示对话框 -->
+    <div id="hintDialog" class="hint-dialog" style="display: none;">
+        <div class="hint-dialog-content">
+            <div class="hint-dialog-header">
+                <span>💡 解题提示</span>
+                <button class="hint-dialog-close" id="hintDialogClose">&times;</button>
+            </div>
+            <div id="hintDialogBody" class="hint-dialog-body"></div>
+            <div class="hint-dialog-footer">
+                <button id="hintDialogOk" class="hint-dialog-btn">好的</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- 自定义题目弹窗 -->
     <div id="customPuzzleDialog" class="custom-dialog" style="display: none;">
         <div class="custom-dialog-content">
@@ -68,20 +84,6 @@
             <div class="custom-dialog-footer">
                 <button id="cancelCustomBtn" class="custom-dialog-btn cancel">取消</button>
                 <button id="confirmCustomBtn" class="custom-dialog-btn confirm">确认加载</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 提示对话框 -->
-    <div id="hintDialog" class="hint-dialog" style="display: none;">
-        <div class="hint-dialog-content">
-            <div class="hint-dialog-header">
-                <span>💡 解题提示</span>
-                <button class="hint-dialog-close" id="hintDialogClose">&times;</button>
-            </div>
-            <div id="hintDialogBody" class="hint-dialog-body"></div>
-            <div class="hint-dialog-footer">
-                <button id="hintDialogOk" class="hint-dialog-btn">好的</button>
             </div>
         </div>
     </div>

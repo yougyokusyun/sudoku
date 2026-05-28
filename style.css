@@ -21,26 +21,26 @@ body {
     padding: 20px;
 }
 
-/* ========== 标题区域样式 ========== */
-.header-with-timer {
+/* ========== 顶部布局 ========== */
+.header-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
     flex-wrap: wrap;
-    gap: 15px;
+    gap: 10px;
 }
 
 .title-section {
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 10px;
     flex-wrap: wrap;
 }
 
 h1 {
     color: #1e3c72;
-    font-size: 1.9rem;
+    font-size: 1.6rem;
     margin: 0;
 }
 
@@ -48,9 +48,9 @@ h1 {
 .mode-badge {
     display: inline-flex;
     align-items: center;
-    padding: 5px 14px;
+    padding: 4px 12px;
     border-radius: 30px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
 }
 
@@ -76,9 +76,9 @@ h1 {
 .error-count-badge {
     display: inline-flex;
     align-items: center;
-    padding: 5px 14px;
+    padding: 4px 12px;
     border-radius: 30px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: bold;
     background: #ffebee;
     color: #c62828;
@@ -102,48 +102,48 @@ h1 {
 .timer-display {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     background: linear-gradient(135deg, #1e3c72, #2a5298);
-    padding: 5px 18px;
-    border-radius: 50px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    padding: 4px 14px;
+    border-radius: 40px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .timer-icon {
-    font-size: 24px;
+    font-size: 18px;
 }
 
 #timerDisplay {
-    font-size: 24px;
+    font-size: 18px;
     font-weight: bold;
     font-family: 'Courier New', monospace;
     color: white;
-    letter-spacing: 2px;
+    letter-spacing: 1px;
     background: transparent;
     padding: 0;
-    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
-.controls {
+/* 第二行：控制区域 */
+.controls-row {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
+    margin-bottom: 20px;
     flex-wrap: wrap;
     gap: 12px;
 }
 
 .puzzle-selector {
     flex: 2;
-    min-width: 200px;
+    min-width: 180px;
 }
 
 #puzzleSelector {
     width: 100%;
-    padding: 10px 15px;
+    padding: 8px 12px;
     border: 2px solid #2a5298;
     border-radius: 30px;
-    font-size: 14px;
+    font-size: 13px;
     background: white;
     cursor: pointer;
     outline: none;
@@ -156,7 +156,7 @@ h1 {
 }
 
 .dropdown-btn {
-    padding: 6px 10px;
+    padding: 6px 12px;
     border: 2px solid #2a5298;
     background: white;
     color: #2a5298;
@@ -168,7 +168,7 @@ h1 {
     white-space: nowrap;
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
 }
 
 .dropdown-btn:hover {
@@ -185,11 +185,12 @@ h1 {
 .dropdown-menu {
     position: absolute;
     top: 100%;
-    left: 0;
+    right: 0;
+    left: auto;
     background: white;
-    border-radius: 16px;
+    border-radius: 12px;
     box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    min-width: 140px;
+    min-width: 150px;
     z-index: 100;
     margin-top: 8px;
     overflow: hidden;
@@ -201,7 +202,7 @@ h1 {
 }
 
 .dropdown-menu .menu-item {
-    padding: 10px 16px;
+    padding: 10px 14px;
     cursor: pointer;
     font-size: 13px;
     transition: 0.2s;
@@ -222,55 +223,21 @@ h1 {
     color: white;
 }
 
-/* ========== action-buttons 响应式布局 ========== */
+/* 例题模式控制按钮组 */
 .action-buttons {
     display: flex;
-    gap: 6px;
-    flex-wrap: nowrap;
-    justify-content: center;
-    width: auto;
+    gap: 8px;
     align-items: center;
 }
 
-.action-buttons button {
-    padding: 6px 10px;
-    border: 2px solid #2a5298;
-    background: white;
-    color: #2a5298;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-    transition: 0.2s;
-    white-space: nowrap;
-    flex: 1;
-    min-width: 0;
-    text-align: center;
-}
-
-.action-buttons button:hover {
-    background: #2a5298;
-    color: white;
-}
-
-.action-buttons button:active {
-    transform: scale(0.98);
-}
-
-.action-buttons button:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* 例题模式控制按钮组 */
 #exampleControls {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
 }
 
 #exampleControls button {
-    padding: 6px 10px;
+    padding: 6px 12px;
     border: 2px solid #2a5298;
     background: white;
     color: #2a5298;
@@ -285,88 +252,6 @@ h1 {
 #exampleControls button:hover {
     background: #2a5298;
     color: white;
-}
-
-/* 平板及以上设备（宽度≥768px） */
-@media (min-width: 768px) {
-    .action-buttons {
-        gap: 10px;
-    }
-    .action-buttons button {
-        padding: 8px 16px;
-        font-size: 13px;
-        flex: none;
-        min-width: auto;
-    }
-    .dropdown-btn {
-        padding: 8px 16px;
-        font-size: 13px;
-    }
-    #exampleControls button {
-        padding: 8px 16px;
-        font-size: 13px;
-    }
-}
-
-/* 大屏手机（宽度414px-767px） */
-@media (min-width: 414px) and (max-width: 767px) {
-    .action-buttons {
-        gap: 8px;
-    }
-    .action-buttons button {
-        padding: 7px 12px;
-        font-size: 12px;
-        flex: 1;
-    }
-    .dropdown-btn {
-        padding: 7px 12px;
-        font-size: 12px;
-    }
-    #exampleControls button {
-        padding: 7px 12px;
-        font-size: 12px;
-    }
-}
-
-/* 小屏手机（宽度380px-413px） */
-@media (min-width: 380px) and (max-width: 413px) {
-    .action-buttons button {
-        padding: 6px 8px;
-        font-size: 11px;
-    }
-    .dropdown-btn {
-        padding: 6px 8px;
-        font-size: 11px;
-    }
-    #exampleControls button {
-        padding: 6px 8px;
-        font-size: 11px;
-    }
-    .action-buttons {
-        gap: 5px;
-    }
-}
-
-/* 超小屏（宽度小于380px） */
-@media (max-width: 379px) {
-    .action-buttons {
-        flex-wrap: wrap;
-        gap: 6px;
-    }
-    .action-buttons button {
-        flex: auto;
-        min-width: 70px;
-        padding: 6px 10px;
-        font-size: 11px;
-    }
-    .dropdown-btn {
-        padding: 6px 10px;
-        font-size: 11px;
-    }
-    #exampleControls button {
-        padding: 6px 10px;
-        font-size: 11px;
-    }
 }
 
 /* ========== 游戏区域 ========== */
@@ -427,6 +312,23 @@ h1 {
     display: flex;
     flex-direction: column;
     background: white;
+    transition: background-color 0.2s ease;
+}
+
+/* 行列高亮样式 */
+.cell-container.highlight-row-col {
+    background-color: #e8f0fe;
+}
+
+/* 宫高亮样式 */
+.cell-container.highlight-box {
+    background-color: #f0f4ff;
+}
+
+/* 当前选中格子高亮（优先级最高） */
+.cell-container.highlighted {
+    background-color: #fff9c4 !important;
+    box-shadow: inset 0 0 0 3px #ff9800;
 }
 
 .main-number {
@@ -527,11 +429,6 @@ h1 {
 
 .cell-container.has-number .candidates-area {
     display: none;
-}
-
-.cell-container.highlighted {
-    background-color: #fff9c4;
-    box-shadow: inset 0 0 0 3px #ff9800;
 }
 
 /* 右侧面板 */
@@ -736,212 +633,6 @@ h1 {
     opacity: 0.9;
 }
 
-/* ========== 手动编辑提示条 ========== */
-.manual-edit-hint {
-    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
-    border-radius: 12px;
-    padding: 12px 20px;
-    margin-bottom: 20px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 12px;
-    border-left: 5px solid #ff9800;
-    font-size: 14px;
-    font-weight: 500;
-    color: #e65100;
-}
-
-.hint-buttons {
-    display: flex;
-    gap: 10px;
-}
-
-.hint-btn {
-    padding: 6px 14px;
-    border: none;
-    border-radius: 30px;
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: bold;
-    transition: 0.2s;
-}
-
-.hint-btn:first-child {
-    background: #4caf50;
-    color: white;
-}
-
-.hint-btn:first-child:hover {
-    background: #388e3c;
-}
-
-.hint-btn:last-child {
-    background: #ff9800;
-    color: white;
-}
-
-.hint-btn:last-child:hover {
-    background: #e65100;
-}
-
-/* ========== 响应式布局 ========== */
-@media (max-width: 1200px) {
-    .cell-container { width: 55px; height: 55px; }
-    .main-number { font-size: 26px; }
-    .candidates-area { font-size: 9px; }
-    .candidate-note { font-size: 9px; }
-    .explanation-sidebar { min-width: 280px; }
-}
-
-@media (max-width: 1050px) {
-    .cell-container { width: 50px; height: 50px; }
-    .main-number { font-size: 24px; }
-    .candidates-area { font-size: 9px; }
-    .candidate-note { font-size: 9px; }
-    .explanation-sidebar { min-width: 260px; }
-}
-
-@media (max-width: 950px) {
-    .cell-container { width: 45px; height: 45px; }
-    .main-number { font-size: 22px; }
-    .candidates-area { font-size: 8px; }
-    .candidate-note { font-size: 8px; }
-    .explanation-sidebar { min-width: 250px; }
-}
-
-@media (max-width: 900px) {
-    .cell-container { width: 42px; height: 42px; }
-    .main-number { font-size: 20px; }
-    .candidates-area { font-size: 8px; }
-    .candidate-note { font-size: 8px; }
-    .explanation-sidebar { min-width: 240px; }
-}
-
-@media (max-width: 768px) {
-    .game-area {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .game-area.example-mode {
-        flex-direction: column;
-    }
-    
-    .explanation-sidebar {
-        width: 100%;
-        min-width: auto;
-        margin-top: 20px;
-    }
-    
-    .sudoku-container {
-        align-self: center;
-        margin-bottom: 20px;
-    }
-    
-    .cell-container { width: 45px; height: 45px; }
-    .main-number { font-size: 22px; }
-    .candidates-area { font-size: 8px; }
-    .candidate-note { font-size: 8px; }
-    .controls {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .puzzle-selector {
-        min-width: auto;
-    }
-}
-
-@media (max-width: 550px) {
-    .cell-container { width: 38px; height: 38px; }
-    .main-number { font-size: 18px; }
-    .candidates-area { font-size: 7px; }
-    .candidate-note { font-size: 7px; }
-}
-
-@media (max-width: 450px) {
-    .cell-container { width: 34px; height: 34px; }
-    .main-number { font-size: 16px; }
-    .candidates-area { font-size: 6px; bottom: 1px; }
-    .candidate-note { font-size: 6px; }
-}
-
-@media (max-width: 380px) {
-    .cell-container { width: 30px; height: 30px; }
-    .main-number { font-size: 14px; }
-    .candidates-area { font-size: 5px; bottom: 1px; left: 2px; right: 2px; }
-    .candidate-note { font-size: 5px; }
-}
-
-/* 标题区域响应式（手机端） */
-@media (max-width: 550px) {
-    .header-with-timer {
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-    }
-    
-    .title-section {
-        justify-content: center;
-    }
-    
-    h1 {
-        font-size: 1.5rem;
-    }
-    
-    .mode-badge, .error-count-badge {
-        font-size: 11px;
-        padding: 4px 12px;
-    }
-    
-    .timer-display {
-        padding: 4px 14px;
-    }
-    
-    .timer-icon {
-        font-size: 18px;
-    }
-    
-    #timerDisplay {
-        font-size: 18px;
-    }
-    
-    .manual-edit-hint {
-        flex-direction: column;
-        text-align: center;
-    }
-    .hint-buttons {
-        justify-content: center;
-    }
-}
-
-@media (max-width: 380px) {
-    h1 {
-        font-size: 1.3rem;
-    }
-    
-    .mode-badge, .error-count-badge {
-        font-size: 10px;
-        padding: 3px 10px;
-    }
-    
-    #timerDisplay {
-        font-size: 16px;
-    }
-}
-
-@media (min-width: 414px) and (max-width: 600px) {
-    .action-buttons button {
-        font-size: 12px;
-    }
-    .dropdown-btn {
-        font-size: 12px;
-    }
-    #exampleControls button {
-        font-size: 12px;
-    }
-}
 /* ========== 自定义题目弹窗样式 ========== */
 .custom-dialog {
     position: fixed;
@@ -1085,18 +776,204 @@ h1 {
 .custom-dialog-btn.confirm:hover {
     opacity: 0.9;
 }
-/* 行列高亮样式 */
-.cell-container.highlight-row-col {
-    background-color: #e8f0fe;
+
+/* ========== 手动编辑提示条 ========== */
+.manual-edit-hint {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-left: 5px solid #ff9800;
+    font-size: 14px;
+    font-weight: 500;
+    color: #e65100;
 }
 
-/* 宫高亮样式 */
-.cell-container.highlight-box {
-    background-color: #f0f4ff;
+.hint-buttons {
+    display: flex;
+    gap: 10px;
 }
 
-/* 当前选中格子高亮（优先级最高） */
-.cell-container.highlighted {
-    background-color: #fff9c4 !important;
-    box-shadow: inset 0 0 0 3px #ff9800;
+.hint-btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.hint-btn:first-child {
+    background: #4caf50;
+    color: white;
+}
+
+.hint-btn:first-child:hover {
+    background: #388e3c;
+}
+
+.hint-btn:last-child {
+    background: #ff9800;
+    color: white;
+}
+
+.hint-btn:last-child:hover {
+    background: #e65100;
+}
+
+/* ========== 响应式布局 ========== */
+/* 棋盘尺寸响应式 */
+@media (max-width: 1200px) {
+    .cell-container { width: 55px; height: 55px; }
+    .main-number { font-size: 26px; }
+    .candidates-area { font-size: 9px; }
+    .candidate-note { font-size: 9px; }
+    .explanation-sidebar { min-width: 280px; }
+}
+
+@media (max-width: 1050px) {
+    .cell-container { width: 50px; height: 50px; }
+    .main-number { font-size: 24px; }
+    .candidates-area { font-size: 9px; }
+    .candidate-note { font-size: 9px; }
+    .explanation-sidebar { min-width: 260px; }
+}
+
+@media (max-width: 950px) {
+    .cell-container { width: 45px; height: 45px; }
+    .main-number { font-size: 22px; }
+    .candidates-area { font-size: 8px; }
+    .candidate-note { font-size: 8px; }
+    .explanation-sidebar { min-width: 250px; }
+}
+
+@media (max-width: 900px) {
+    .cell-container { width: 42px; height: 42px; }
+    .main-number { font-size: 20px; }
+    .candidates-area { font-size: 8px; }
+    .candidate-note { font-size: 8px; }
+    .explanation-sidebar { min-width: 240px; }
+}
+
+@media (max-width: 768px) {
+    .game-area {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .game-area.example-mode {
+        flex-direction: column;
+    }
+    
+    .explanation-sidebar {
+        width: 100%;
+        min-width: auto;
+        margin-top: 20px;
+    }
+    
+    .sudoku-container {
+        align-self: center;
+        margin-bottom: 20px;
+    }
+    
+    .cell-container { width: 45px; height: 45px; }
+    .main-number { font-size: 22px; }
+    .candidates-area { font-size: 8px; }
+    .candidate-note { font-size: 8px; }
+}
+
+@media (max-width: 650px) {
+    .header-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .title-section {
+        flex-wrap: wrap;
+    }
+    
+    h1 {
+        font-size: 1.3rem;
+    }
+    
+    .mode-badge, .error-count-badge {
+        font-size: 10px;
+        padding: 3px 10px;
+    }
+    
+    .timer-display {
+        align-self: flex-end;
+    }
+    
+    .controls-row {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .puzzle-selector {
+        min-width: auto;
+    }
+    
+    .action-buttons {
+        justify-content: center;
+    }
+    
+    .dropdown-menu {
+        left: 0;
+        right: auto;
+        min-width: 160px;
+    }
+    
+    .dropdown-menu .menu-item {
+        white-space: normal;
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 550px) {
+    .cell-container { width: 38px; height: 38px; }
+    .main-number { font-size: 18px; }
+    .candidates-area { font-size: 7px; }
+    .candidate-note { font-size: 7px; }
+    .manual-edit-hint {
+        flex-direction: column;
+        text-align: center;
+    }
+    .hint-buttons {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .timer-icon {
+        font-size: 14px;
+    }
+    
+    #timerDisplay {
+        font-size: 14px;
+    }
+    
+    .timer-display {
+        padding: 3px 10px;
+    }
+}
+
+@media (max-width: 450px) {
+    .cell-container { width: 34px; height: 34px; }
+    .main-number { font-size: 16px; }
+    .candidates-area { font-size: 6px; bottom: 1px; }
+    .candidate-note { font-size: 6px; }
+}
+
+@media (max-width: 380px) {
+    .cell-container { width: 30px; height: 30px; }
+    .main-number { font-size: 14px; }
+    .candidates-area { font-size: 5px; bottom: 1px; left: 2px; right: 2px; }
+    .candidate-note { font-size: 5px; }
 }
