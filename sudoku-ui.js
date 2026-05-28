@@ -115,6 +115,7 @@ function syncUserCandidatesToDisplay() {
 }
 
 // 补全候选数：基于当前盘面重新计算并填充用户候选数
+// 补全候选数：基于当前盘面重新计算并填充用户候选数
 function fillCandidates() {
     if (isExampleMode) {
         showTemporaryMessage('例题模式下请使用"编辑候选数"功能', 'warning');
@@ -137,12 +138,22 @@ function fillCandidates() {
         }
     }
     
-    // 强制刷新所有候选数显示
-    if (practiceShowCandidates) {
-        for (let i = 0; i < 9; i++) {
-            for (let j = 0; j < 9; j++) {
-                const div = document.getElementById(`candidates-${i}-${j}`);
-                if (div && currentBoard[i][j] === 0) {
+    // 确保候选数显示开启
+    if (!practiceShowCandidates) {
+        practiceShowCandidates = true;
+        const toggleMenuItem = document.querySelector('[data-action="toggle"]');
+        if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
+    }
+    
+    // 显示候选数区域
+    document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
+    
+    // 刷新所有格子的候选数显示
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            const div = document.getElementById(`candidates-${i}-${j}`);
+            if (div) {
+                if (currentBoard[i][j] === 0) {
                     div.innerHTML = '';
                     const sorted = Array.from(userCandidates[i][j]).sort((a, b) => a - b);
                     const isEditable = practiceEditMode;
@@ -161,12 +172,11 @@ function fillCandidates() {
                         span.textContent = num;
                         div.appendChild(span);
                     });
-                } else if (div && currentBoard[i][j] !== 0) {
+                } else {
                     div.innerHTML = '';
                 }
             }
         }
-        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
     }
     
     // 同步到显示用数组
@@ -373,7 +383,7 @@ function practiceToggleCandidate(row, col, num) {
         showTemporaryMessage(`已添加候选数 ${num}`, 'info');
     }
     
-    // 关键：确保候选数区域可见
+    // 确保候选数显示开启
     if (!practiceShowCandidates) {
         practiceShowCandidates = true;
         document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
@@ -409,9 +419,6 @@ function practiceToggleCandidate(row, col, num) {
     for (const n of userCandidates[row][col]) {
         cellCandidates[row][col].add(n);
     }
-    
-    // 额外：控制台输出确认数据
-    console.log(`格子(${row+1},${col+1}) 候选数:`, Array.from(userCandidates[row][col]));
 }
 
 // 获取单个格子的系统候选数（基于当前盘面）
@@ -1433,7 +1440,6 @@ function toggleCandidatesDisplay() {
     
     if (practiceShowCandidates) {
         if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
-        // 显示所有候选数区域
         document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
         
         // 重新渲染所有格子的候选数
