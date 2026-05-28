@@ -888,6 +888,7 @@ h1 {
     .candidate-note { font-size: 8px; }
 }
 
+/* 手机端布局调整 */
 @media (max-width: 650px) {
     .header-row {
         flex-direction: column;
@@ -922,17 +923,31 @@ h1 {
     
     .action-buttons {
         justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .dropdown-wrapper {
+        width: 100%;
+    }
+    
+    .dropdown-btn {
+        width: 100%;
+        justify-content: center;
     }
     
     .dropdown-menu {
-        left: 0;
-        right: auto;
-        min-width: 160px;
+        position: static;
+        width: 100%;
+        margin-top: 5px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
     
     .dropdown-menu .menu-item {
         white-space: normal;
+        word-break: keep-all;
         font-size: 13px;
+        padding: 10px 14px;
+        text-align: left;
     }
 }
 
