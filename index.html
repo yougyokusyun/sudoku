@@ -8,7 +8,18 @@
 </head>
 <body>
 <div class="container">
-    <h1>🧩 数独解题器</h1>
+    <div class="header-with-timer">
+        <div class="title-section">
+            <h1>🧩 数独解题器</h1>
+            <span id="modeBadge" class="mode-badge practice-mode">✏️ 练习模式</span>
+            <span id="errorCountBadge" class="error-count-badge">❌ 错误: 0</span>
+        </div>
+        <div class="timer-display">
+            <span class="timer-icon">⏱️</span>
+            <span id="timerDisplay">00:00:00</span>
+        </div>
+    </div>
+    
     <div class="controls">
         <div class="puzzle-selector">
             <select id="puzzleSelector">
@@ -16,19 +27,72 @@
             </select>
         </div>
         <div class="action-buttons">
-            <button id="editCandidatesBtn">✏️编辑候选</button>
-            <button id="showCandidatesBtn">🔢隐藏候选</button>
-            <button id="nextStepBtn">➡️下一步</button>
-            <button id="undoBtn">↩️上一步</button>
+            <div class="dropdown-wrapper" id="candidatesDropdown">
+                <button class="dropdown-btn" id="candidatesDropdownBtn">
+                    🧰 更多操作 ▼
+                </button>
+                <div class="dropdown-menu" id="candidatesDropdownMenu">
+                    <div class="menu-item" data-action="random">🎲 随机题目</div>
+                    <div class="menu-item" data-action="custom">📝 自定义题目</div>
+                    <div class="menu-item" data-action="example">📖 例题模式</div>
+                    <div class="menu-item" data-action="practice">✏️ 练习模式</div>
+                    <div class="menu-item" data-action="fillCandidates">🔢 补全候选数</div>
+                    <div class="menu-item" data-action="nextHint">💡 下一步提示</div>
+                    <div class="menu-item" data-action="edit" id="editCandidatesMenuItem">✏️ 编辑候选数</div>
+                    <div class="menu-item" data-action="toggle" id="toggleCandidatesMenuItem">🔢 显示候选数</div>
+                </div>
+            </div>
+            <div id="exampleControls" style="display: none;">
+                <button id="nextStepBtn">➡️ 下一步</button>
+                <button id="undoBtn">↩️ 上一步</button>
+            </div>
         </div>
     </div>
-    <div class="game-area">
+    
+    <!-- 自定义题目弹窗 -->
+    <div id="customPuzzleDialog" class="custom-dialog" style="display: none;">
+        <div class="custom-dialog-content">
+            <div class="custom-dialog-header">
+                <span>📝 自定义题目</span>
+                <button class="custom-dialog-close" id="customDialogClose">&times;</button>
+            </div>
+            <div class="custom-dialog-body">
+                <p>请输入9行数独数据，每行9个数字（0表示空格），用逗号分隔：</p>
+                <textarea id="customPuzzleInput" rows="9" placeholder="示例：
+530070000,600195000,098000060,800060003,400803001,700020006,060000280,000419005,000080079"></textarea>
+                <div class="custom-dialog-example">
+                    <button id="loadExampleBtn" class="example-btn">📋 加载示例</button>
+                </div>
+                <div id="customPuzzleError" class="custom-error" style="display: none;"></div>
+            </div>
+            <div class="custom-dialog-footer">
+                <button id="cancelCustomBtn" class="custom-dialog-btn cancel">取消</button>
+                <button id="confirmCustomBtn" class="custom-dialog-btn confirm">确认加载</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 提示对话框 -->
+    <div id="hintDialog" class="hint-dialog" style="display: none;">
+        <div class="hint-dialog-content">
+            <div class="hint-dialog-header">
+                <span>💡 解题提示</span>
+                <button class="hint-dialog-close" id="hintDialogClose">&times;</button>
+            </div>
+            <div id="hintDialogBody" class="hint-dialog-body"></div>
+            <div class="hint-dialog-footer">
+                <button id="hintDialogOk" class="hint-dialog-btn">好的</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="game-area" id="gameArea">
         <div class="sudoku-container">
             <table id="sudoku-board">
                 <tbody id="sudoku-body"></tbody>
             </table>
         </div>
-        <div class="explanation-sidebar">
+        <div class="explanation-sidebar" id="explanationSidebar">
             <div class="explanation-panel">
                 <h3>📖 解题过程</h3>
                 <div id="explanation-content">

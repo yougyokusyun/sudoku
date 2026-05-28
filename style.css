@@ -21,11 +21,107 @@ body {
     padding: 20px;
 }
 
-h1 {
-    text-align: center;
-    color: #1e3c72;
+/* ========== 标题区域样式 ========== */
+.header-with-timer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.title-section {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+h1 {
+    color: #1e3c72;
     font-size: 1.9rem;
+    margin: 0;
+}
+
+/* 模式标识徽章 */
+.mode-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.mode-badge.practice-mode {
+    background: #e8f5e9;
+    color: #2e7d32;
+    border: 1px solid #4caf50;
+}
+
+.mode-badge.example-mode {
+    background: #fff3e0;
+    color: #e65100;
+    border: 1px solid #ff9800;
+}
+
+.mode-badge.manual-mode {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #f44336;
+}
+
+/* 错误次数徽章 */
+.error-count-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 14px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: bold;
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #f44336;
+}
+
+.error-count-badge.warning {
+    background: #fff3e0;
+    color: #e65100;
+    border-color: #ff9800;
+}
+
+.error-count-badge.high {
+    background: #ffebee;
+    color: #c62828;
+    border-color: #f44336;
+    animation: pulse 0.5s ease;
+}
+
+/* 计时器显示 */
+.timer-display {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    padding: 5px 18px;
+    border-radius: 50px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.timer-icon {
+    font-size: 24px;
+}
+
+#timerDisplay {
+    font-size: 24px;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    color: white;
+    letter-spacing: 2px;
+    background: transparent;
+    padding: 0;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
 }
 
 .controls {
@@ -53,13 +149,87 @@ h1 {
     outline: none;
 }
 
-/* ========== action-buttons 响应式布局 - 6寸以上手机一排显示 ========== */
+/* 下拉按钮容器 */
+.dropdown-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-btn {
+    padding: 6px 10px;
+    border: 2px solid #2a5298;
+    background: white;
+    color: #2a5298;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: 0.2s;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.dropdown-btn:hover {
+    background: #2a5298;
+    color: white;
+}
+
+.dropdown-btn.active {
+    background: #ff9800;
+    border-color: #ff9800;
+    color: white;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+    min-width: 140px;
+    z-index: 100;
+    margin-top: 8px;
+    overflow: hidden;
+    display: none;
+}
+
+.dropdown-menu.show {
+    display: block;
+}
+
+.dropdown-menu .menu-item {
+    padding: 10px 16px;
+    cursor: pointer;
+    font-size: 13px;
+    transition: 0.2s;
+    border-bottom: 1px solid #eee;
+    white-space: nowrap;
+}
+
+.dropdown-menu .menu-item:last-child {
+    border-bottom: none;
+}
+
+.dropdown-menu .menu-item:hover {
+    background: #e3f2fd;
+}
+
+.dropdown-menu .menu-item.active {
+    background: #ff9800;
+    color: white;
+}
+
+/* ========== action-buttons 响应式布局 ========== */
 .action-buttons {
     display: flex;
     gap: 6px;
     flex-wrap: nowrap;
     justify-content: center;
     width: auto;
+    align-items: center;
 }
 
 .action-buttons button {
@@ -92,9 +262,28 @@ h1 {
     cursor: not-allowed;
 }
 
-.action-buttons button.edit-mode-active {
-    background: #ff9800;
-    border-color: #ff9800;
+/* 例题模式控制按钮组 */
+#exampleControls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+#exampleControls button {
+    padding: 6px 10px;
+    border: 2px solid #2a5298;
+    background: white;
+    color: #2a5298;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+
+#exampleControls button:hover {
+    background: #2a5298;
     color: white;
 }
 
@@ -109,9 +298,17 @@ h1 {
         flex: none;
         min-width: auto;
     }
+    .dropdown-btn {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+    #exampleControls button {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
 }
 
-/* 大屏手机（宽度414px-767px）- 6寸以上手机主要区间 */
+/* 大屏手机（宽度414px-767px） */
 @media (min-width: 414px) and (max-width: 767px) {
     .action-buttons {
         gap: 8px;
@@ -121,6 +318,14 @@ h1 {
         font-size: 12px;
         flex: 1;
     }
+    .dropdown-btn {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
+    #exampleControls button {
+        padding: 7px 12px;
+        font-size: 12px;
+    }
 }
 
 /* 小屏手机（宽度380px-413px） */
@@ -129,12 +334,20 @@ h1 {
         padding: 6px 8px;
         font-size: 11px;
     }
+    .dropdown-btn {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+    #exampleControls button {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
     .action-buttons {
         gap: 5px;
     }
 }
 
-/* 超小屏（宽度小于380px）- 允许换行保证可读 */
+/* 超小屏（宽度小于380px） */
 @media (max-width: 379px) {
     .action-buttons {
         flex-wrap: wrap;
@@ -146,6 +359,14 @@ h1 {
         padding: 6px 10px;
         font-size: 11px;
     }
+    .dropdown-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
+    #exampleControls button {
+        padding: 6px 10px;
+        font-size: 11px;
+    }
 }
 
 /* ========== 游戏区域 ========== */
@@ -154,20 +375,34 @@ h1 {
     flex-direction: row;
     gap: 30px;
     align-items: flex-start;
-    justify-content: flex-start;
+    justify-content: center;
     width: 100%;
+}
+
+/* 练习模式：棋盘居中，占满可用空间 */
+.game-area.practice-mode .sudoku-container {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+}
+
+/* 例题模式：棋盘和面板并排 */
+.game-area.example-mode .sudoku-container {
+    flex-shrink: 0;
 }
 
 .sudoku-container {
     flex-shrink: 0;
     overflow-x: auto;
+    display: flex;
+    justify-content: center;
 }
 
 #sudoku-board {
     border-collapse: collapse;
     border: 4px solid #1e3c72;
     background: white;
-    margin: 0;
+    margin: 0 auto;
 }
 
 #sudoku-board td {
@@ -223,6 +458,7 @@ h1 {
 
 .main-number.user-filled {
     color: #2196f3;
+    font-weight: bold;
 }
 
 /* 候选数区域 */
@@ -302,9 +538,14 @@ h1 {
 .explanation-sidebar {
     flex: 1;
     min-width: 300px;
-    display: flex;
+    display: none;
     flex-direction: column;
     gap: 20px;
+}
+
+/* 例题模式时显示右侧面板 */
+.game-area.example-mode .explanation-sidebar {
+    display: flex;
 }
 
 .explanation-panel {
@@ -404,9 +645,148 @@ h1 {
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* ========== 响应式布局 ========== */
+/* ========== 提示对话框样式 ========== */
+.hint-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+}
 
-/* 大屏幕：1200px以下 */
+.hint-dialog-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: dialogSlideIn 0.3s ease;
+}
+
+@keyframes dialogSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hint-dialog-header {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.hint-dialog-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.hint-dialog-close:hover {
+    opacity: 0.8;
+}
+
+.hint-dialog-body {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #333;
+}
+
+.hint-dialog-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    text-align: right;
+}
+
+.hint-dialog-btn {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    border: none;
+    padding: 8px 24px;
+    border-radius: 30px;
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+.hint-dialog-btn:hover {
+    opacity: 0.9;
+}
+
+/* ========== 手动编辑提示条 ========== */
+.manual-edit-hint {
+    background: linear-gradient(135deg, #fff3e0, #ffe0b2);
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-left: 5px solid #ff9800;
+    font-size: 14px;
+    font-weight: 500;
+    color: #e65100;
+}
+
+.hint-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.hint-btn {
+    padding: 6px 14px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.hint-btn:first-child {
+    background: #4caf50;
+    color: white;
+}
+
+.hint-btn:first-child:hover {
+    background: #388e3c;
+}
+
+.hint-btn:last-child {
+    background: #ff9800;
+    color: white;
+}
+
+.hint-btn:last-child:hover {
+    background: #e65100;
+}
+
+/* ========== 响应式布局 ========== */
 @media (max-width: 1200px) {
     .cell-container { width: 55px; height: 55px; }
     .main-number { font-size: 26px; }
@@ -415,7 +795,6 @@ h1 {
     .explanation-sidebar { min-width: 280px; }
 }
 
-/* 1050px以下 */
 @media (max-width: 1050px) {
     .cell-container { width: 50px; height: 50px; }
     .main-number { font-size: 24px; }
@@ -424,7 +803,6 @@ h1 {
     .explanation-sidebar { min-width: 260px; }
 }
 
-/* 950px以下 */
 @media (max-width: 950px) {
     .cell-container { width: 45px; height: 45px; }
     .main-number { font-size: 22px; }
@@ -433,7 +811,6 @@ h1 {
     .explanation-sidebar { min-width: 250px; }
 }
 
-/* 900px以下 */
 @media (max-width: 900px) {
     .cell-container { width: 42px; height: 42px; }
     .main-number { font-size: 20px; }
@@ -442,19 +819,27 @@ h1 {
     .explanation-sidebar { min-width: 240px; }
 }
 
-/* 平板设备：768px以下 - 切换为上下布局 */
 @media (max-width: 768px) {
     .game-area {
         flex-direction: column;
+        align-items: center;
     }
+    
+    .game-area.example-mode {
+        flex-direction: column;
+    }
+    
     .explanation-sidebar {
         width: 100%;
         min-width: auto;
+        margin-top: 20px;
     }
+    
     .sudoku-container {
         align-self: center;
         margin-bottom: 20px;
     }
+    
     .cell-container { width: 45px; height: 45px; }
     .main-number { font-size: 22px; }
     .candidates-area { font-size: 8px; }
@@ -468,7 +853,6 @@ h1 {
     }
 }
 
-/* 手机横屏/小屏 */
 @media (max-width: 550px) {
     .cell-container { width: 38px; height: 38px; }
     .main-number { font-size: 18px; }
@@ -476,7 +860,6 @@ h1 {
     .candidate-note { font-size: 7px; }
 }
 
-/* 超小屏手机 */
 @media (max-width: 450px) {
     .cell-container { width: 34px; height: 34px; }
     .main-number { font-size: 16px; }
@@ -484,7 +867,6 @@ h1 {
     .candidate-note { font-size: 6px; }
 }
 
-/* 极端小屏 */
 @media (max-width: 380px) {
     .cell-container { width: 30px; height: 30px; }
     .main-number { font-size: 14px; }
@@ -492,9 +874,229 @@ h1 {
     .candidate-note { font-size: 5px; }
 }
 
-/* 确保6寸以上手机（宽度≥414px）action-buttons按钮文字大小合适 */
+/* 标题区域响应式（手机端） */
+@media (max-width: 550px) {
+    .header-with-timer {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .title-section {
+        justify-content: center;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+    }
+    
+    .mode-badge, .error-count-badge {
+        font-size: 11px;
+        padding: 4px 12px;
+    }
+    
+    .timer-display {
+        padding: 4px 14px;
+    }
+    
+    .timer-icon {
+        font-size: 18px;
+    }
+    
+    #timerDisplay {
+        font-size: 18px;
+    }
+    
+    .manual-edit-hint {
+        flex-direction: column;
+        text-align: center;
+    }
+    .hint-buttons {
+        justify-content: center;
+    }
+}
+
+@media (max-width: 380px) {
+    h1 {
+        font-size: 1.3rem;
+    }
+    
+    .mode-badge, .error-count-badge {
+        font-size: 10px;
+        padding: 3px 10px;
+    }
+    
+    #timerDisplay {
+        font-size: 16px;
+    }
+}
+
 @media (min-width: 414px) and (max-width: 600px) {
     .action-buttons button {
         font-size: 12px;
     }
+    .dropdown-btn {
+        font-size: 12px;
+    }
+    #exampleControls button {
+        font-size: 12px;
+    }
+}
+/* ========== 自定义题目弹窗样式 ========== */
+.custom-dialog {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 3000;
+}
+
+.custom-dialog-content {
+    background: white;
+    border-radius: 20px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: dialogSlideIn 0.3s ease;
+}
+
+.custom-dialog-header {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.custom-dialog-close {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+
+.custom-dialog-close:hover {
+    opacity: 0.8;
+}
+
+.custom-dialog-body {
+    padding: 20px;
+    max-height: 60vh;
+    overflow-y: auto;
+}
+
+.custom-dialog-body p {
+    margin-bottom: 12px;
+    color: #333;
+    font-size: 14px;
+}
+
+#customPuzzleInput {
+    width: 100%;
+    height: 200px;
+    padding: 12px;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    font-family: monospace;
+    font-size: 14px;
+    resize: vertical;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+#customPuzzleInput:focus {
+    border-color: #2a5298;
+}
+
+.custom-dialog-example {
+    margin-top: 12px;
+    text-align: right;
+}
+
+.example-btn {
+    background: #e3f2fd;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #1565c0;
+    transition: 0.2s;
+}
+
+.example-btn:hover {
+    background: #bbdef5;
+}
+
+.custom-error {
+    background: #ffebee;
+    color: #c62828;
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 12px;
+    font-size: 13px;
+}
+
+.custom-dialog-footer {
+    padding: 15px 20px;
+    border-top: 1px solid #eee;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.custom-dialog-btn {
+    padding: 8px 20px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: bold;
+    transition: 0.2s;
+}
+
+.custom-dialog-btn.cancel {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.custom-dialog-btn.cancel:hover {
+    background: #e0e0e0;
+}
+
+.custom-dialog-btn.confirm {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+}
+
+.custom-dialog-btn.confirm:hover {
+    opacity: 0.9;
+}
+/* 行列高亮样式 */
+.cell-container.highlight-row-col {
+    background-color: #e8f0fe;
+}
+
+/* 宫高亮样式 */
+.cell-container.highlight-box {
+    background-color: #f0f4ff;
+}
+
+/* 当前选中格子高亮（优先级最高） */
+.cell-container.highlighted {
+    background-color: #fff9c4 !important;
+    box-shadow: inset 0 0 0 3px #ff9800;
 }
