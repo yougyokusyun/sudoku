@@ -992,3 +992,237 @@ h1 {
     .candidates-area { font-size: 5px; bottom: 1px; left: 2px; right: 2px; }
     .candidate-note { font-size: 5px; }
 }
+/* ========== 手机端数字选择器样式 ========== */
+.number-picker-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 4000;
+}
+
+.number-picker {
+    background: white;
+    border-radius: 24px;
+    padding: 20px;
+    width: 280px;
+    max-width: 90%;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: dialogSlideIn 0.2s ease;
+}
+
+.number-picker-title {
+    text-align: center;
+    font-size: 16px;
+    font-weight: bold;
+    color: #1e3c72;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.number-picker-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+}
+
+.number-picker-btn {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #2a5298;
+    background: white;
+    color: #2a5298;
+    border-radius: 16px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.number-picker-btn:hover {
+    background: #2a5298;
+    color: white;
+}
+
+.number-picker-btn.delete-btn {
+    background: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+    font-size: 14px;
+}
+
+.number-picker-btn.delete-btn:hover {
+    background: #f44336;
+    color: white;
+}
+
+.number-picker-btn.cancel-btn {
+    background: #f5f5f5;
+    border-color: #999;
+    color: #666;
+    font-size: 14px;
+}
+
+.number-picker-btn.cancel-btn:hover {
+    background: #999;
+    color: white;
+}
+
+/* 手机端小屏幕调整 */
+@media (max-width: 480px) {
+    .number-picker-btn {
+        width: 55px;
+        height: 55px;
+        font-size: 22px;
+    }
+    
+    .number-picker-btn.delete-btn,
+    .number-picker-btn.cancel-btn {
+        width: 70px;
+        font-size: 12px;
+    }
+}
+
+@media (max-width: 380px) {
+    .number-picker-buttons {
+        gap: 8px;
+    }
+    
+    .number-picker-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+    
+    .number-picker-btn.delete-btn,
+    .number-picker-btn.cancel-btn {
+        width: 60px;
+        font-size: 11px;
+    }
+}
+/* ========== 底部数字键盘 ========== */
+.number-pad {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 60px;
+    flex-wrap: wrap;
+}
+
+.number-pad-btn {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #2a5298;
+    background: white;
+    color: #2a5298;
+    border-radius: 30px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.number-pad-btn:hover {
+    background: #2a5298;
+    color: white;
+}
+
+.number-pad-btn.clear-btn {
+    background: #ffebee;
+    border-color: #f44336;
+    color: #c62828;
+    font-size: 18px;
+}
+
+.number-pad-btn.clear-btn:hover {
+    background: #f44336;
+    color: white;
+}
+
+@media (max-width: 550px) {
+    .number-pad-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 450px) {
+    .number-pad {
+        gap: 8px;
+        padding: 10px;
+    }
+    .number-pad-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+    }
+}
+/* ========== 底部数字键盘 ========== */
+.number-pad {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 20px;
+    padding: 15px;
+    background: #f5f5f5;
+    border-radius: 60px;
+    flex-wrap: wrap;
+}
+
+.number-pad-btn {
+    width: 60px;
+    height: 60px;
+    border: 2px solid #2a5298;
+    background: white;
+    color: #2a5298;
+    border-radius: 30px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.number-pad-btn:hover {
+    background: #2a5298;
+    color: white;
+    transform: scale(1.05);
+}
+
+.number-pad-btn:active {
+    transform: scale(0.95);
+}
+
+@media (max-width: 550px) {
+    .number-pad {
+        gap: 8px;
+        padding: 12px;
+    }
+    .number-pad-btn {
+        width: 45px;
+        height: 45px;
+        font-size: 20px;
+    }
+}
+
+@media (max-width: 450px) {
+    .number-pad {
+        gap: 6px;
+        padding: 10px;
+    }
+    .number-pad-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 18px;
+    }
+}

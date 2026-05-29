@@ -2,9 +2,31 @@
  * 数独解题器 - UI交互逻辑
  * 依赖：sudoku-core.js（核心解题）、puzzles.js（题库）
  */
+// 检查用户候选数与系统候选数是否完全一致
+function isUserCandidatesMatchSystem() {
+    const sysCandidates = getSystemCandidates();
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            if (currentBoard[i][j] === 0) {
+                const userSet = userCandidates[i][j];
+                const sysSet = sysCandidates[i][j];
+                
+                // 检查大小是否相同
+                if (userSet.size !== sysSet.size) return false;
+                
+                // 检查每个数字是否都存在
+                for (const num of userSet) {
+                    if (!sysSet.has(num)) return false;
+                }
+            }
+        }
+    }
+    return true;
+}
 // ==================== 错误计数变量 ====================
 let errorCount = 0;
-let isFreeMode = false;  // 自由模式：当无法智能解题时允许任意操作
+let isFreeMode = false;  // 自由模式：当没有任何格子可以推导时允许任意操作
+
 // 更新错误次数显示
 function updateErrorCountDisplay() {
     const errorBadge = document.getElementById('errorCountBadge');
@@ -33,28 +55,144 @@ function resetErrorCount() {
     updateErrorCountDisplay();
 }
 
-// 检查是否可以自由操作（无法智能解题时）
-function checkAndSetFreeMode() {
+// ==================== 推导检查函数 ====================
+
+// 检查当前格子是否能通过数独规则唯一确定数字
+// 返回：{ canDerive: boolean, value: number|null, technique: string }
+function canDeriveCellValue(row, col) {
+    // 如果已经有数字，返回 false
+    if (currentBoard[row][col] !== 0) {
+        return { canDerive: false, value: null, technique: '' };
+    }
+    
+    // 1. 唯一候选数法（Naked Single）：检查候选数是否只有一个
+    const candidates = new Set();
+    for (let n = 1; n <= 9; n++) {
+        if (isValidMove(row, col, n)) {
+            candidates.add(n);
+        }
+    }
+    if (candidates.size === 1) {
+        const value = Array.from(candidates)[0];
+        return { canDerive: true, value: value, technique: `唯一候选数法：格子 (${row+1},${col+1}) 只剩下数字 ${value}` };
+    }
+    
+    // 2. 唯余法（Hidden Single）：检查行中该数字是否只出现在这个格子
+    // 检查行
+    for (let num = 1; num <= 9; num++) {
+        let count = 0;
+        let pos = -1;
+        for (let c = 0; c < 9; c++) {
+            if (currentBoard[row][c] === 0 && isValidMove(row, c, num)) {
+                count++;
+                pos = c;
+            }
+        }
+        if (count === 1 && pos === col) {
+            return { canDerive: true, value: num, technique: `唯余法（行）：第 ${row+1} 行中数字 ${num} 只能出现在 (${row+1},${col+1})` };
+        }
+    }
+    
+    // 检查列
+    for (let num = 1; num <= 9; num++) {
+        let count = 0;
+        let pos = -1;
+        for (let r = 0; r < 9; r++) {
+            if (currentBoard[r][col] === 0 && isValidMove(r, col, num)) {
+                count++;
+                pos = r;
+            }
+        }
+        if (count === 1 && pos === row) {
+            return { canDerive: true, value: num, technique: `唯余法（列）：第 ${col+1} 列中数字 ${num} 只能出现在 (${row+1},${col+1})` };
+        }
+    }
+    
+    // 检查宫
+    const br = Math.floor(row / 3) * 3;
+    const bc = Math.floor(col / 3) * 3;
+    for (let num = 1; num <= 9; num++) {
+        let count = 0;
+        let posRow = -1, posCol = -1;
+        for (let i = 0; i < 3; i++) {
+            for (let j = 0; j < 3; j++) {
+                const r = br + i;
+                const c = bc + j;
+                if (currentBoard[r][c] === 0 && isValidMove(r, c, num)) {
+                    count++;
+                    posRow = r;
+                    posCol = c;
+                }
+            }
+        }
+        if (count === 1 && posRow === row && posCol === col) {
+            return { canDerive: true, value: num, technique: `唯余法（宫）：第 ${Math.floor(row/3)*3 + Math.floor(col/3) + 1} 宫中数字 ${num} 只能出现在 (${row+1},${col+1})` };
+        }
+    }
+    
+    return { canDerive: false, value: null, technique: '' };
+}
+
+// 检查整个盘面是否有任何格子可以唯一确定数字
+// 返回：{ hasDerivable: boolean, row: number, col: number, value: number, technique: string }
+function hasAnyDerivableCell() {
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            if (currentBoard[i][j] === 0) {
+                const result = canDeriveCellValue(i, j);
+                if (result.canDerive) {
+                    return {
+                        hasDerivable: true,
+                        row: i,
+                        col: j,
+                        value: result.value,
+                        technique: result.technique
+                    };
+                }
+            }
+        }
+    }
+    return { hasDerivable: false, row: -1, col: -1, value: null, technique: '' };
+}
+
+// 检查并更新自由模式状态
+function updateFreeModeStatus() {
     if (isExampleMode) return;
     
-    // 尝试找下一步
-    const nextStep = findNextStep();
-    if (!nextStep) {
-        // 没有可确定的步骤，进入自由模式
+    const derivable = hasAnyDerivableCell();
+    const candidatesMatch = isUserCandidatesMatchSystem();
+    
+    if (!derivable.hasDerivable && candidatesMatch) {
+        // 没有任何格子可以推导，且候选数一致，进入自由模式
         if (!isFreeMode) {
             isFreeMode = true;
-            showTemporaryMessage('当前无法推导出下一步，已进入自由模式，可任意填写', 'warning');
+            showTemporaryMessage('当前没有任何格子可以推导，已进入自由模式，可任意填写', 'warning');
             const modeBadge = document.getElementById('modeBadge');
             if (modeBadge) {
                 modeBadge.innerHTML = '✏️ 自由模式';
                 modeBadge.classList.add('manual-mode');
             }
         }
-    } else {
-        // 有可确定的步骤，退出自由模式
+    } else if (!derivable.hasDerivable && !candidatesMatch) {
+        // 没有任何格子可以推导，但候选数不一致
         if (isFreeMode) {
             isFreeMode = false;
-            showTemporaryMessage('已恢复标准模式，请按数独规则操作', 'success');
+            const modeBadge = document.getElementById('modeBadge');
+            if (modeBadge) {
+                modeBadge.innerHTML = '✏️ 练习模式';
+                modeBadge.classList.remove('manual-mode');
+                modeBadge.classList.add('practice-mode');
+            }
+        }
+        // 提示用户候选数不一致（不自动弹出，只在顶部显示）
+        const modeBadge = document.getElementById('modeBadge');
+        if (modeBadge && !modeBadge.innerHTML.includes('候选数')) {
+            // 可以在徽章上添加标记，但不强制弹窗
+        }
+    } else if (derivable.hasDerivable) {
+        // 有格子可以确定，退出自由模式
+        if (isFreeMode) {
+            isFreeMode = false;
             const modeBadge = document.getElementById('modeBadge');
             if (modeBadge) {
                 modeBadge.innerHTML = '✏️ 练习模式';
@@ -67,6 +205,7 @@ function checkAndSetFreeMode() {
 
 // 练习模式专用：用户自定义候选数（独立于系统候选数）
 let userCandidates = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
+
 // ==================== 练习模式专用函数 ====================
 
 // 初始化用户候选数（练习模式下默认为空）
@@ -93,10 +232,8 @@ function initUserCandidates() {
 function syncUserCandidatesToDisplay() {
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
-            // 清空显示用的 cellCandidates
             cellCandidates[i][j].clear();
             if (currentBoard[i][j] === 0) {
-                // 从 userCandidates 复制到显示用 cellCandidates
                 for (const num of userCandidates[i][j]) {
                     cellCandidates[i][j].add(num);
                 }
@@ -104,7 +241,6 @@ function syncUserCandidatesToDisplay() {
         }
     }
     
-    // 强制刷新所有候选数显示
     if (!isExampleMode && practiceShowCandidates) {
         for (let i = 0; i < 9; i++) {
             for (let j = 0; j < 9; j++) {
@@ -115,14 +251,12 @@ function syncUserCandidatesToDisplay() {
 }
 
 // 补全候选数：基于当前盘面重新计算并填充用户候选数
-// 补全候选数：基于当前盘面重新计算并填充用户候选数
 function fillCandidates() {
     if (isExampleMode) {
         showTemporaryMessage('例题模式下请使用"编辑候选数"功能', 'warning');
         return;
     }
     
-    // 重新计算用户候选数（基于盘面排除法）
     let filledCount = 0;
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
@@ -138,17 +272,14 @@ function fillCandidates() {
         }
     }
     
-    // 确保候选数显示开启
     if (!practiceShowCandidates) {
         practiceShowCandidates = true;
         const toggleMenuItem = document.querySelector('[data-action="toggle"]');
         if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
     }
     
-    // 显示候选数区域
     document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
     
-    // 刷新所有格子的候选数显示
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const div = document.getElementById(`candidates-${i}-${j}`);
@@ -179,7 +310,6 @@ function fillCandidates() {
         }
     }
     
-    // 同步到显示用数组
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             cellCandidates[i][j].clear();
@@ -216,124 +346,21 @@ function showNextHint() {
         return;
     }
     
-    // 获取系统候选数
-    const sysCandidates = getSystemCandidates();
+    const derivable = hasAnyDerivableCell();
     
-    // 检查是否有唯一候选数的格子
-    let hintFound = false;
-    let hintMessages = [];
-    
-    // 1. 检查唯一候选数（Naked Single）
-    for (let i = 0; i < 9; i++) {
-        for (let j = 0; j < 9; j++) {
-            if (currentBoard[i][j] === 0 && sysCandidates[i][j].size === 1) {
-                const value = Array.from(sysCandidates[i][j])[0];
-                hintMessages.push({
-                    type: 'success',
-                    title: '🎯 唯一候选数',
-                    content: `在格子 (${i+1}, ${j+1}) 中，根据排除法只剩下数字 ${value}，可以直接填入。`
-                });
-                hintFound = true;
-                break;
-            }
-        }
-        if (hintFound) break;
-    }
-    
-    // 2. 检查唯余法（Hidden Single）
-    if (!hintFound) {
-        // 检查行
-        for (let row = 0; row < 9; row++) {
-            const numCount = {};
-            const numPos = {};
-            for (let col = 0; col < 9; col++) {
-                if (currentBoard[row][col] === 0) {
-                    for (const num of sysCandidates[row][col]) {
-                        if (!numCount[num]) {
-                            numCount[num] = 0;
-                            numPos[num] = col;
-                        }
-                        numCount[num]++;
-                    }
-                }
-            }
-            for (let num = 1; num <= 9; num++) {
-                if (numCount[num] === 1) {
-                    hintMessages.push({
-                        type: 'success',
-                        title: '🎯 唯余法（行）',
-                        content: `在第 ${row+1} 行中，数字 ${num} 只能出现在格子 (${row+1}, ${numPos[num]+1})，可以填入。`
-                    });
-                    hintFound = true;
-                    break;
-                }
-            }
-            if (hintFound) break;
-        }
-    }
-    
-    // 3. 检查用户候选数与系统候选数的差异
-    if (!hintFound) {
-        let diffFound = false;
-        for (let i = 0; i < 9; i++) {
-            for (let j = 0; j < 9; j++) {
-                if (currentBoard[i][j] === 0) {
-                    const userSet = userCandidates[i][j];
-                    const sysSet = sysCandidates[i][j];
-                    
-                    // 用户候选数中多出的数字
-                    const extra = [];
-                    for (const num of userSet) {
-                        if (!sysSet.has(num)) {
-                            extra.push(num);
-                        }
-                    }
-                    
-                    // 用户候选数中缺少的数字
-                    const missing = [];
-                    for (const num of sysSet) {
-                        if (!userSet.has(num)) {
-                            missing.push(num);
-                        }
-                    }
-                    
-                    if (extra.length > 0) {
-                        hintMessages.push({
-                            type: 'warning',
-                            title: `⚠️ 候选数错误 (${i+1}, ${j+1})`,
-                            content: `您的候选数 [${Array.from(userSet).sort().join(', ')}] 中，数字 ${extra.join(', ')} 不应该存在。请检查行列宫排除规则。`
-                        });
-                        diffFound = true;
-                    }
-                    
-                    if (missing.length > 0 && !diffFound) {
-                        hintMessages.push({
-                            type: 'info',
-                            title: `💡 候选数遗漏 (${i+1}, ${j+1})`,
-                            content: `您的候选数 [${Array.from(userSet).sort().join(', ')}] 中，可能缺少 ${missing.join(', ')}。建议使用"补全候选数"功能。`
-                        });
-                        diffFound = true;
-                    }
-                }
-            }
-        }
-        
-        if (diffFound) {
-            hintFound = true;
-        }
-    }
-    
-    // 4. 如果没有找到可填数字也没有差异，提示用户补全候选数
-    if (!hintFound) {
-        hintMessages.push({
+    if (derivable.hasDerivable) {
+        showHintDialog([{
+            type: 'success',
+            title: '🎯 可推导的数字',
+            content: `${derivable.technique}，可以直接填入 ${derivable.value}。`
+        }]);
+    } else {
+        showHintDialog([{
             type: 'info',
             title: '🤔 暂无直接可填数字',
-            content: '当前没有可以直接确定的数字。建议：\n1. 点击"补全候选数"重新计算候选数\n2. 检查是否有遗漏的排除规则\n3. 尝试使用显性数对、区块排除等高级技巧'
-        });
+            content: '当前没有任何格子可以通过数独规则唯一确定数字。建议：\n1. 点击"补全候选数"查看候选数\n2. 尝试使用更高级的技巧\n3. 或进入自由模式任意填写（只要不违反基本规则）'
+        }]);
     }
-    
-    // 显示提示对话框
-    showHintDialog(hintMessages);
 }
 
 // 显示提示对话框
@@ -345,13 +372,8 @@ function showHintDialog(messages) {
     
     let html = '';
     for (const msg of messages) {
-        let bgClass = '';
-        if (msg.type === 'success') bgClass = 'hint-success';
-        else if (msg.type === 'warning') bgClass = 'hint-warning';
-        else bgClass = 'hint-info';
-        
         html += `
-            <div class="${bgClass}" style="margin-bottom: 15px; padding: 12px; border-radius: 10px;">
+            <div style="margin-bottom: 15px; padding: 12px; border-radius: 10px; ${msg.type === 'success' ? 'background:#e8f5e9;' : 'background:#e3f2fd;'}">
                 <div style="font-weight: bold; margin-bottom: 8px;">${msg.title}</div>
                 <div>${msg.content}</div>
             </div>
@@ -363,6 +385,7 @@ function showHintDialog(messages) {
 }
 
 // 练习模式下编辑候选数
+// 练习模式下编辑候选数（用户自由编辑，不增加错误）
 function practiceToggleCandidate(row, col, num) {
     if (!practiceEditMode) {
         showTemporaryMessage('请先开启"编辑候选数"模式', 'warning');
@@ -374,7 +397,7 @@ function practiceToggleCandidate(row, col, num) {
         return;
     }
     
-    // 添加或删除候选数
+    // 编辑候选数：不增加错误，用户可自由调整
     if (userCandidates[row][col].has(num)) {
         userCandidates[row][col].delete(num);
         showTemporaryMessage(`已删除候选数 ${num}`, 'info');
@@ -383,7 +406,6 @@ function practiceToggleCandidate(row, col, num) {
         showTemporaryMessage(`已添加候选数 ${num}`, 'info');
     }
     
-    // 确保候选数显示开启
     if (!practiceShowCandidates) {
         practiceShowCandidates = true;
         document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
@@ -391,7 +413,6 @@ function practiceToggleCandidate(row, col, num) {
         if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
     }
     
-    // 刷新这个格子的显示
     const div = document.getElementById(`candidates-${row}-${col}`);
     if (div) {
         div.innerHTML = '';
@@ -414,14 +435,16 @@ function practiceToggleCandidate(row, col, num) {
         });
     }
     
-    // 同步到显示用数组
     cellCandidates[row][col].clear();
     for (const n of userCandidates[row][col]) {
         cellCandidates[row][col].add(n);
     }
+    
+    // 编辑候选数后，重新检查自由模式状态（但不自动退出，只是更新提示）
+    updateFreeModeStatus();
 }
 
-// 获取单个格子的系统候选数（基于当前盘面）
+// 获取单个格子的系统候选数（基于当前盘面排除法）
 function getSystemCandidatesForCell(row, col) {
     const candidates = new Set();
     if (currentBoard[row][col] !== 0) return candidates;
@@ -440,27 +463,26 @@ let nextStepInProgress = false;
 let historyBoards = [];
 let historyIdx = -1;
 
-// 闪烁动画参数
 const FLASH_DURATION = 800;
 const FLASH_REPEAT = 3;
 const TOTAL_FLASH_TIME = FLASH_DURATION * FLASH_REPEAT;
 
 // ==================== 模式变量 ====================
-let isExampleMode = false;           // true=例题模式, false=练习模式
-
-// 练习模式专用变量
-let practiceShowCandidates = false;  // 练习模式：是否显示候选数（默认不显示）
-let practiceEditMode = false;        // 练习模式：是否编辑候选数
-
-// 例题模式专用变量
-let exampleShowCandidates = true;    // 例题模式：是否显示候选数（默认显示）
-let exampleEditMode = false;         // 例题模式：是否编辑候选数
+let isExampleMode = false;
+let practiceShowCandidates = false;
+let practiceEditMode = false;
+let exampleShowCandidates = true;
+let exampleEditMode = false;
 
 // ==================== 计时器变量 ====================
 let timerInterval = null;
 let timerSeconds = 0;
 let isTimerRunning = false;
 let isPuzzleCompleted = false;
+
+// 当前选中的格子
+let currentSelectedRow = -1;
+let currentSelectedCol = -1;
 
 // ==================== 辅助函数 ====================
 
@@ -504,9 +526,7 @@ function updateTimerDisplay() {
 }
 
 function startTimer() {
-    if (timerInterval) {
-        clearInterval(timerInterval);
-    }
+    if (timerInterval) clearInterval(timerInterval);
     isTimerRunning = true;
     isPuzzleCompleted = false;
     timerInterval = setInterval(() => {
@@ -536,12 +556,8 @@ function completeTimer() {
     if (!isPuzzleCompleted) {
         isPuzzleCompleted = true;
         isTimerRunning = false;
-        if (timerInterval) {
-            clearInterval(timerInterval);
-            timerInterval = null;
-        }
-        const timeStr = formatTime(timerSeconds);
-        showTemporaryMessage(`🎉 恭喜完成！用时 ${timeStr}`, 'success');
+        if (timerInterval) clearInterval(timerInterval);
+        showTemporaryMessage(`🎉 恭喜完成！用时 ${formatTime(timerSeconds)}`, 'success');
     }
 }
 
@@ -574,7 +590,6 @@ function renderCellCandidates(row, col) {
     const div = document.getElementById(`candidates-${row}-${col}`);
     if (!div) return;
     
-    // 如果格子有数字，清空候选数区域
     if (currentBoard[row][col] !== 0) {
         div.innerHTML = '';
         return;
@@ -582,7 +597,6 @@ function renderCellCandidates(row, col) {
     
     div.innerHTML = '';
     
-    // 练习模式：从 userCandidates 获取候选数
     let candidatesSource;
     if (isExampleMode) {
         candidatesSource = cellCandidates[row][col];
@@ -593,7 +607,6 @@ function renderCellCandidates(row, col) {
     const sorted = Array.from(candidatesSource).sort((a, b) => a - b);
     const isEditable = isExampleMode ? exampleEditMode : practiceEditMode;
     
-    // 有候选数才添加，没有就显示空白（但不能 return，因为需要清空旧内容）
     sorted.forEach(num => {
         const span = document.createElement('span');
         span.className = 'candidate-note';
@@ -639,7 +652,6 @@ function updateBoardDisplay() {
         }
     }
     
-    // 根据模式控制候选数显示
     if (isExampleMode) {
         if (exampleShowCandidates) {
             document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
@@ -650,7 +662,6 @@ function updateBoardDisplay() {
     } else {
         if (practiceShowCandidates) {
             document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
-            // 重新渲染所有候选数（确保显示用户候选数）
             for (let i = 0; i < 9; i++) {
                 for (let j = 0; j < 9; j++) {
                     renderCellCandidates(i, j);
@@ -678,7 +689,10 @@ function createBoard() {
             input.maxLength = 1;
             input.id = `cell-${i}-${j}`;
             input.className = 'main-number';
-            input.addEventListener('click', () => selectCell(i, j));
+            input.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectCell(i, j);
+            });
             input.addEventListener('keydown', (e) => handleKeyDown(e, i, j));
             
             const candDiv = document.createElement('div');
@@ -694,35 +708,362 @@ function createBoard() {
     }
 }
 
+// 创建底部数字键盘
+function createNumberPad() {
+    const existingPad = document.querySelector('.number-pad');
+    if (existingPad) existingPad.remove();
+    
+    const pad = document.createElement('div');
+    pad.className = 'number-pad';
+    
+    for (let i = 1; i <= 9; i++) {
+        const btn = document.createElement('button');
+        btn.textContent = i;
+        btn.className = 'number-pad-btn';
+        btn.addEventListener('click', () => {
+            if (currentSelectedRow === -1 || currentSelectedCol === -1) {
+                showTemporaryMessage('请先点击选择一个格子', 'warning');
+                return;
+            }
+            
+            const row = currentSelectedRow;
+            const col = currentSelectedCol;
+            
+            // 例题模式下且非手动编辑模式，不允许输入
+            if (isExampleMode && !window.isManualEditMode) {
+                showTemporaryMessage('例题模式下请使用"下一步"按钮', 'warning');
+                return;
+            }
+            
+            // 原始题目格子不能修改
+            if (originalBoard[row][col] !== 0) {
+                showTemporaryMessage('原始题目格子不能修改', 'warning');
+                return;
+            }
+            
+            // 根据模式决定是填入数字还是编辑候选数
+            if (isExampleMode) {
+                // 例题模式：手动编辑模式下填入数字
+                if (window.isManualEditMode) {
+                    fillNumberToSelectedCell(i);
+                } else if (exampleEditMode) {
+                    toggleCandidateNumberUI(row, col, i);
+                }
+            } else {
+                // 练习模式
+                if (practiceEditMode) {
+                    // 编辑候选数模式：编辑候选数
+                    practiceToggleCandidate(row, col, i);
+                } else {
+                    // 数字输入模式：填入数字
+                    fillNumberToSelectedCell(i);
+                }
+            }
+        });
+        pad.appendChild(btn);
+    }
+    
+    const gameArea = document.querySelector('.game-area');
+    if (gameArea) {
+        gameArea.parentNode.insertBefore(pad, gameArea.nextSibling);
+    } else {
+        document.querySelector('.container').appendChild(pad);
+    }
+}
+
+// ==================== 核心验证函数 ====================
+
+// 获取违反基本规则的错误详情
+function getErrorDetail(row, col, num) {
+    let reasons = [];
+    
+    for (let c = 0; c < 9; c++) {
+        if (c !== col && currentBoard[row][c] === num) {
+            reasons.push(`第 ${row+1} 行第 ${c+1} 列已经有了数字 ${num}`);
+        }
+    }
+    
+    for (let r = 0; r < 9; r++) {
+        if (r !== row && currentBoard[r][col] === num) {
+            reasons.push(`第 ${r+1} 行第 ${col+1} 列已经有了数字 ${num}`);
+        }
+    }
+    
+    const br = Math.floor(row / 3) * 3;
+    const bc = Math.floor(col / 3) * 3;
+    for (let i = 0; i < 3; i++) {
+        for (let j = 0; j < 3; j++) {
+            const r = br + i;
+            const c = bc + j;
+            if ((r !== row || c !== col) && currentBoard[r][c] === num) {
+                reasons.push(`第 ${r+1} 行第 ${c+1} 列（同一宫）已经有了数字 ${num}`);
+            }
+        }
+    }
+    
+    if (reasons.length === 0) {
+        reasons.push(`数字 ${num} 违反了数独规则`);
+    }
+    
+    return {
+        title: `❌ 不能填入数字 ${num}`,
+        content: `在格子 (${row+1}, ${col+1}) 中，填入 ${num} 会违反以下规则：`,
+        reasons: reasons,
+        suggestion: '请尝试其他数字，或者先检查该行、列、宫中已有的数字。'
+    };
+}
+
+// 获取当前格子无法推导的错误详情（但有其他格子可推导）
+function getOtherDerivableErrorDetail(row, col, num, derivableCell) {
+    return {
+        title: `❌ 不能填入数字 ${num}`,
+        content: `在格子 (${row+1}, ${col+1}) 中，数字 ${num} 无法通过当前盘面的数独规则推导出来。`,
+        reasons: [
+            `${derivableCell.technique}`,
+            `请先处理这个可以确定的格子，然后再尝试填入其他格子。`
+        ],
+        suggestion: `请先处理格子 (${derivableCell.row+1}, ${derivableCell.col+1})，填入数字 ${derivableCell.value}。`
+    };
+}
+
+// 获取当前格子推导出的正确数字提示
+function getCorrectDerivableDetail(row, col, num, derivableResult) {
+    return {
+        title: `✅ 正确填入 ${num}`,
+        content: `${derivableResult.technique}`,
+        suggestion: ''
+    };
+}
+
+// 显示错误提示对话框
+function showErrorHintDialog(errorInfo) {
+    const dialog = document.getElementById('hintDialog');
+    const body = document.getElementById('hintDialogBody');
+    
+    if (!dialog || !body) return;
+    
+    let reasonsHtml = '';
+    if (errorInfo.reasons && errorInfo.reasons.length > 0) {
+        reasonsHtml = '<ul style="margin: 10px 0 10px 20px; line-height: 1.8;">';
+        for (const reason of errorInfo.reasons) {
+            reasonsHtml += `<li>${reason}</li>`;
+        }
+        reasonsHtml += '</ul>';
+    }
+    
+    let suggestionHtml = '';
+    if (errorInfo.suggestion) {
+        suggestionHtml = `
+            <div style="background: #fff3e0; padding: 12px; border-radius: 8px; margin-top: 12px;">
+                <strong>📖 建议：</strong> ${errorInfo.suggestion}
+            </div>
+        `;
+    }
+    
+    body.innerHTML = `
+        <div style="background: #ffebee; padding: 15px; border-radius: 10px;">
+            <div style="font-size: 18px; font-weight: bold; color: #c62828; margin-bottom: 10px;">${errorInfo.title}</div>
+            <div style="margin-bottom: 10px;">${errorInfo.content}</div>
+            ${reasonsHtml}
+            ${suggestionHtml}
+        </div>
+    `;
+    
+    dialog.style.display = 'flex';
+}
+
+// 显示成功提示对话框（可选）
+function showSuccessHintDialog(successInfo) {
+    const dialog = document.getElementById('hintDialog');
+    const body = document.getElementById('hintDialogBody');
+    
+    if (!dialog || !body) return;
+    
+    body.innerHTML = `
+        <div style="background: #e8f5e9; padding: 15px; border-radius: 10px;">
+            <div style="font-size: 18px; font-weight: bold; color: #2e7d32; margin-bottom: 10px;">${successInfo.title}</div>
+            <div>${successInfo.content}</div>
+        </div>
+    `;
+    
+    dialog.style.display = 'flex';
+    setTimeout(() => {
+        dialog.style.display = 'none';
+    }, 2000);
+}
+
+// ==================== 核心填入函数 ====================
+
+// 向当前选中的格子填入数字
+// 向当前选中的格子填入数字
+function fillNumberToSelectedCell(num) {
+    if (currentSelectedRow === -1 || currentSelectedCol === -1) {
+        showTemporaryMessage('请先点击选择一个格子', 'warning');
+        return;
+    }
+    
+    const row = currentSelectedRow;
+    const col = currentSelectedCol;
+    
+    // 原始题目格子不能修改
+    if (originalBoard[row][col] !== 0) {
+        showTemporaryMessage('原始题目格子不能修改', 'warning');
+        return;
+    }
+    
+    // 例题模式下且非手动编辑模式，不允许输入
+    if (isExampleMode && !window.isManualEditMode) {
+        showTemporaryMessage('例题模式下请使用"下一步"按钮', 'warning');
+        return;
+    }
+    
+    // 1. 首先检查是否违反基本规则（行列宫冲突）
+    if (!isValidMove(row, col, num)) {
+        addError();
+        const errorDetail = getErrorDetail(row, col, num);
+        showErrorHintDialog(errorDetail);
+        return;
+    }
+    
+    // 2. 检查当前格子是否能通过规则唯一确定
+    const derivableCurrent = canDeriveCellValue(row, col);
+    
+    // 3. 检查整个盘面是否有任何格子可以确定
+    const derivableAny = hasAnyDerivableCell();
+    
+    // 4. 检查用户候选数与系统候选数是否一致
+    const candidatesMatch = isUserCandidatesMatchSystem();
+    
+    // 自由模式判断：没有任何格子可以确定，且候选数一致
+    if (!derivableAny.hasDerivable && candidatesMatch) {
+        // 自由模式：允许任意填入（只要不违反基本规则）
+        if (!isFreeMode) {
+            isFreeMode = true;
+            showTemporaryMessage('当前没有任何格子可以推导，已进入自由模式，可任意填写', 'warning');
+            const modeBadge = document.getElementById('modeBadge');
+            if (modeBadge) {
+                modeBadge.innerHTML = '✏️ 自由模式';
+                modeBadge.classList.add('manual-mode');
+            }
+        }
+        
+        saveToHistory();
+        currentBoard[row][col] = num;
+        
+        if (!isExampleMode) {
+            userCandidates[row][col].clear();
+            syncUserCandidatesToDisplay();
+        } else {
+            recalcAfterPlacement(row, col, num);
+            clearDeleteRecord();
+        }
+        
+        updateBoardDisplay();
+        checkPuzzleCompletion();
+        
+        showTemporaryMessage(`已填入 ${num}`, 'success');
+        return;
+    }
+    
+    // 5. 如果没有可推导的格子，但候选数不一致，提示用户调整候选数
+    if (!derivableAny.hasDerivable && !candidatesMatch) {
+        addError();
+        const errorDetail = {
+            title: `❌ 不能填入数字 ${num}`,
+            content: `当前盘面无法推导出任何数字，但您的候选数与系统计算的不一致。`,
+            reasons: [
+                `请先使用"编辑候选数"功能，将候选数调整为与系统计算一致。`,
+                `或者点击"补全候选数"自动修正。`
+            ],
+            suggestion: '请点击"补全候选数"或手动编辑候选数。'
+        };
+        showErrorHintDialog(errorDetail);
+        return;
+    }
+    
+    // 6. 有格子可以确定，退出自由模式（如果之前是自由模式）
+    if (isFreeMode) {
+        isFreeMode = false;
+        const modeBadge = document.getElementById('modeBadge');
+        if (modeBadge) {
+            modeBadge.innerHTML = '✏️ 练习模式';
+            modeBadge.classList.remove('manual-mode');
+            modeBadge.classList.add('practice-mode');
+        }
+        showTemporaryMessage('已恢复标准模式', 'info');
+    }
+    
+    // 7. 检查当前格子是否能确定
+    if (derivableCurrent.canDerive) {
+        // 当前格子可以确定，检查填入的数字是否正确
+        if (derivableCurrent.value === num) {
+            // 正确填入
+            saveToHistory();
+            currentBoard[row][col] = num;
+            
+            if (!isExampleMode) {
+                userCandidates[row][col].clear();
+                syncUserCandidatesToDisplay();
+            } else {
+                recalcAfterPlacement(row, col, num);
+                clearDeleteRecord();
+            }
+            
+            updateBoardDisplay();
+            checkPuzzleCompletion();
+            
+            showTemporaryMessage(`正确！${derivableCurrent.technique}`, 'success');
+        } else {
+            // 错误：当前格子应该填入其他数字
+            addError();
+            const errorDetail = {
+                title: `❌ 不能填入数字 ${num}`,
+                content: `在格子 (${row+1}, ${col+1}) 中，当前盘面无法通过逻辑推导出此值。`,
+                reasons: [`根据数独规则，这个格子只能填入 ${derivableCurrent.value}。`],
+                suggestion: `请填入数字 ${derivableCurrent.value}`
+            };
+            showErrorHintDialog(errorDetail);
+        }
+    } else {
+        // 当前格子不能确定，但盘面有其他格子可以确定
+        addError();
+        const errorDetail = {
+            title: `❌ 不能填入数字 ${num}`,
+            content: `在格子 (${row+1}, ${col+1}) 中，当前盘面无法通过逻辑推导出此值。`,
+            reasons: [`当前盘面存在其他可以确定的格子，请先处理那些格子。`],
+            suggestion: `请先处理其他可以确定的格子。`
+        };
+        showErrorHintDialog(errorDetail);
+    }
+}
 function selectCell(row, col) {
-    // 清除所有高亮
+    currentSelectedRow = row;
+    currentSelectedCol = col;
+    
     document.querySelectorAll('.cell-container').forEach(c => {
         c.classList.remove('highlighted');
         c.classList.remove('highlight-row-col');
         c.classList.remove('highlight-box');
     });
     
-    // 高亮当前选中格子
     const container = document.getElementById(`cell-container-${row}-${col}`);
     if (container) container.classList.add('highlighted');
     
-    // 高亮同一行的所有格子
+    // 高亮同一行
     for (let c = 0; c < 9; c++) {
+        if (c === col) continue;
         const cell = document.getElementById(`cell-container-${row}-${c}`);
-        if (cell && !(row === row && c === col)) {
-            cell.classList.add('highlight-row-col');
-        }
+        if (cell) cell.classList.add('highlight-row-col');
     }
     
-    // 高亮同一列的所有格子
+    // 高亮同一列
     for (let r = 0; r < 9; r++) {
+        if (r === row) continue;
         const cell = document.getElementById(`cell-container-${r}-${col}`);
-        if (cell && !(r === row && col === col)) {
-            cell.classList.add('highlight-row-col');
-        }
+        if (cell) cell.classList.add('highlight-row-col');
     }
     
-    // 高亮同一宫的所有格子
+    // 高亮同一宫
     const boxRow = Math.floor(row / 3) * 3;
     const boxCol = Math.floor(col / 3) * 3;
     for (let i = 0; i < 3; i++) {
@@ -731,9 +1072,7 @@ function selectCell(row, col) {
             const c = boxCol + j;
             if (r === row && c === col) continue;
             const cell = document.getElementById(`cell-container-${r}-${c}`);
-            if (cell) {
-                cell.classList.add('highlight-box');
-            }
+            if (cell) cell.classList.add('highlight-box');
         }
     }
 }
@@ -786,518 +1125,8 @@ function updateStepsListDisplay() {
 
 // ==================== UI操作函数 ====================
 
-function setCellNumberUI(row, col, num) {
-    // 原始题目格子不能修改
-    if (originalBoard[row][col] !== 0) {
-        showTemporaryMessage('原始题目格子不能修改', 'warning');
-        return false;
-    }
-    
-    // 自由模式下允许任意填入（不做校验）
-    if (!isFreeMode && !isExampleMode) {
-        // 1. 首先检查是否违反基本规则
-        if (!isValidMove(row, col, num)) {
-            addError();
-            const errorDetail = getErrorDetail(row, col, num);
-            showErrorHintDialog(errorDetail);
-            return false;
-        }
-        
-        // 2. 检查这个数字是否可以通过当前盘面的逻辑算法推导出来
-        const canBeDerived = canDeriveNumber(row, col, num);
-        if (!canBeDerived) {
-            addError();
-            const errorDetail = getDerivationErrorDetail(row, col, num);
-            showErrorHintDialog(errorDetail);
-            return false;
-        }
-    }
-    
-    // 保存历史
-    saveToHistory();
-    
-    // 填入数字
-    currentBoard[row][col] = num;
-    
-    // 练习模式：填入数字后，清空该格子的候选数（因为已经有数字了）
-    if (!isExampleMode) {
-        // 清空当前格子的候选数
-        userCandidates[row][col].clear();
-        
-        // 注意：不自动删除同行、同列、同宫其他格子的候选数
-        // 候选数由用户手动维护，系统只负责校验填入的数字是否合法
-        
-        syncUserCandidatesToDisplay();
-    } else {
-        recalcAfterPlacement(row, col, num);
-        clearDeleteRecord();
-    }
-    
-    updateBoardDisplay();
-    checkPuzzleCompletion();
-    checkAndSetFreeMode();
-    
-    showTemporaryMessage(`已填入 ${num}`, 'success');
-    return true;
-}
-
-// 检查某个数字是否可以通过当前盘面的逻辑算法推导出来
-function canDeriveNumber(row, col, num) {
-    // 临时保存当前盘面
-    const tempBoard = cloneBoardUI(currentBoard);
-    
-    // 方法1：检查是否可以通过唯一候选数法（Naked Single）推导
-    // 计算该格子的候选数
-    const candidates = new Set();
-    for (let n = 1; n <= 9; n++) {
-        if (isValidMove(row, col, n)) {
-            candidates.add(n);
-        }
-    }
-    // 如果只有这一个候选数，说明可以通过唯一候选数法推导
-    if (candidates.size === 1 && candidates.has(num)) {
-        return true;
-    }
-    
-    // 方法2：检查是否可以通过唯余法（Hidden Single）推导
-    // 检查行
-    let rowCount = 0;
-    for (let c = 0; c < 9; c++) {
-        if (currentBoard[row][c] === 0) {
-            const cellCands = new Set();
-            for (let n = 1; n <= 9; n++) {
-                if (isValidMove(row, c, n)) {
-                    cellCands.add(n);
-                }
-            }
-            if (cellCands.has(num)) {
-                rowCount++;
-            }
-        }
-    }
-    if (rowCount === 1) {
-        return true;
-    }
-    
-    // 检查列
-    let colCount = 0;
-    for (let r = 0; r < 9; r++) {
-        if (currentBoard[r][col] === 0) {
-            const cellCands = new Set();
-            for (let n = 1; n <= 9; n++) {
-                if (isValidMove(r, col, n)) {
-                    cellCands.add(n);
-                }
-            }
-            if (cellCands.has(num)) {
-                colCount++;
-            }
-        }
-    }
-    if (colCount === 1) {
-        return true;
-    }
-    
-    // 检查宫
-    const br = Math.floor(row / 3) * 3;
-    const bc = Math.floor(col / 3) * 3;
-    let boxCount = 0;
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-            const r = br + i;
-            const c = bc + j;
-            if (currentBoard[r][c] === 0) {
-                const cellCands = new Set();
-                for (let n = 1; n <= 9; n++) {
-                    if (isValidMove(r, c, n)) {
-                        cellCands.add(n);
-                    }
-                }
-                if (cellCands.has(num)) {
-                    boxCount++;
-                }
-            }
-        }
-    }
-    if (boxCount === 1) {
-        return true;
-    }
-    
-    // 方法3：使用完整的解题算法尝试推导
-    // 复制当前盘面，尝试填入这个数字，然后用算法求解
-    const testBoard = cloneBoardUI(currentBoard);
-    testBoard[row][col] = num;
-    
-    // 简单检查：填入后是否会导致无解
-    // 快速检查是否有格子没有候选数
-    for (let i = 0; i < 9; i++) {
-        for (let j = 0; j < 9; j++) {
-            if (testBoard[i][j] === 0) {
-                let hasCandidate = false;
-                for (let n = 1; n <= 9; n++) {
-                    if (isValidMoveWithBoard(testBoard, i, j, n)) {
-                        hasCandidate = true;
-                        break;
-                    }
-                }
-                if (!hasCandidate) {
-                    return false; // 填入后会导致无解
-                }
-            }
-        }
-    }
-    
-    return false;
-}
-
-// 使用指定盘面检查移动是否有效
-function isValidMoveWithBoard(board, row, col, num) {
-    for (let c = 0; c < 9; c++) {
-        if (board[row][c] === num) return false;
-    }
-    for (let r = 0; r < 9; r++) {
-        if (board[r][col] === num) return false;
-    }
-    const br = Math.floor(row / 3) * 3;
-    const bc = Math.floor(col / 3) * 3;
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-            if (board[br + i][bc + j] === num) return false;
-        }
-    }
-    return true;
-}
-// 获取无法推导的错误详情
-function getDerivationErrorDetail(row, col, num) {
-    // 计算该格子真正的候选数
-    const realCandidates = new Set();
-    for (let n = 1; n <= 9; n++) {
-        if (isValidMove(row, col, n)) {
-            realCandidates.add(n);
-        }
-    }
-    
-    const possibleNumbers = Array.from(realCandidates).sort((a, b) => a - b);
-    
-    let reasons = [];
-    reasons.push(`数字 ${num} 虽然不违反当前盘面的行列宫规则，但无法通过逻辑算法推导出来。`);
-    reasons.push(`当前盘面下，该格子不能直接确定必须填入 ${num}。`);
-    
-    // 检查是否可以通过其他方式确定
-    let hasHiddenSingle = false;
-    let hiddenSingleInfo = '';
-    
-    // 检查行唯余
-    for (let r = 0; r < 9; r++) {
-        let numCount = 0;
-        let numPos = -1;
-        for (let c = 0; c < 9; c++) {
-            if (currentBoard[r][c] === 0) {
-                for (let n = 1; n <= 9; n++) {
-                    if (isValidMove(r, c, n)) {
-                        if (n === num) {
-                            numCount++;
-                            numPos = c;
-                        }
-                    }
-                }
-            }
-        }
-        if (numCount === 1 && numPos === col && r === row) {
-            hasHiddenSingle = true;
-            hiddenSingleInfo = `在第 ${row+1} 行中，数字 ${num} 只能出现在 (${row+1}, ${col+1})，所以可以填入。`;
-            break;
-        }
-    }
-    
-    // 检查列唯余
-    if (!hasHiddenSingle) {
-        for (let c = 0; c < 9; c++) {
-            let numCount = 0;
-            let numPos = -1;
-            for (let r = 0; r < 9; r++) {
-                if (currentBoard[r][c] === 0) {
-                    for (let n = 1; n <= 9; n++) {
-                        if (isValidMove(r, c, n)) {
-                            if (n === num) {
-                                numCount++;
-                                numPos = r;
-                            }
-                        }
-                    }
-                }
-            }
-            if (numCount === 1 && numPos === row && c === col) {
-                hasHiddenSingle = true;
-                hiddenSingleInfo = `在第 ${col+1} 列中，数字 ${num} 只能出现在 (${row+1}, ${col+1})，所以可以填入。`;
-                break;
-            }
-        }
-    }
-    
-    // 检查宫唯余
-    if (!hasHiddenSingle) {
-        const br = Math.floor(row / 3) * 3;
-        const bc = Math.floor(col / 3) * 3;
-        let numCount = 0;
-        let numRow = -1, numCol = -1;
-        for (let i = 0; i < 3; i++) {
-            for (let j = 0; j < 3; j++) {
-                const r = br + i;
-                const c = bc + j;
-                if (currentBoard[r][c] === 0) {
-                    for (let n = 1; n <= 9; n++) {
-                        if (isValidMove(r, c, n)) {
-                            if (n === num) {
-                                numCount++;
-                                numRow = r;
-                                numCol = c;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        if (numCount === 1 && numRow === row && numCol === col) {
-            hasHiddenSingle = true;
-            hiddenSingleInfo = `在第 ${Math.floor(row/3)*3 + Math.floor(col/3) + 1} 宫中，数字 ${num} 只能出现在 (${row+1}, ${col+1})，所以可以填入。`;
-        }
-    }
-    
-    return {
-        title: `❌ 不能填入数字 ${num}`,
-        content: `在格子 (${row+1}, ${col+1}) 中，数字 ${num} 无法通过当前盘面的逻辑推导出来。`,
-        reasons: reasons,
-        possibleNumbers: possibleNumbers,
-        hiddenSingleInfo: hiddenSingleInfo,
-        suggestion: possibleNumbers.length > 0 
-            ? `该格子当前可能的候选数是：${possibleNumbers.join(', ')}。请先推导确定其中一个数字后再填入。`
-            : '当前盘面可能存在问题，请检查之前填入的数字是否正确。'
-    };
-}
-// 获取输入数字错误详细原因（基于系统候选数）
-function getInputErrorDetail(row, col, num, sysCandidates) {
-    let reasons = [];
-    const possibleNumbers = Array.from(sysCandidates).sort((a, b) => a - b);
-    
-    // 检查是否因为行冲突
-    for (let c = 0; c < 9; c++) {
-        if (c !== col && currentBoard[row][c] === num) {
-            reasons.push(`第 ${row+1} 行第 ${c+1} 列已经有了数字 ${num}`);
-        }
-    }
-    
-    // 检查是否因为列冲突
-    for (let r = 0; r < 9; r++) {
-        if (r !== row && currentBoard[r][col] === num) {
-            reasons.push(`第 ${r+1} 行第 ${col+1} 列已经有了数字 ${num}`);
-        }
-    }
-    
-    // 检查是否因为宫冲突
-    const br = Math.floor(row / 3) * 3;
-    const bc = Math.floor(col / 3) * 3;
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-            const r = br + i;
-            const c = bc + j;
-            if ((r !== row || c !== col) && currentBoard[r][c] === num) {
-                reasons.push(`第 ${r+1} 行第 ${c+1} 列（同一宫）已经有了数字 ${num}`);
-            }
-        }
-    }
-    
-    if (reasons.length === 0 && possibleNumbers.length > 0) {
-        reasons.push(`根据当前盘面推理，格子 (${row+1}, ${col+1}) 只能填入：${possibleNumbers.join(', ')}`);
-        reasons.push(`您输入的 ${num} 不在这个范围内`);
-    } else if (possibleNumbers.length === 0) {
-        reasons.push(`当前盘面下，格子 (${row+1}, ${col+1}) 没有任何可填的数字`);
-        reasons.push(`这可能是因为之前的填入有误，请检查并修正`);
-    }
-    
-    return {
-        title: `❌ 不能填入数字 ${num}`,
-        content: `在格子 (${row+1}, ${col+1}) 中，根据当前盘面推理，不能填入 ${num}。`,
-        reasons: reasons,
-        possibleNumbers: possibleNumbers,
-        suggestion: possibleNumbers.length > 0 
-            ? `请从推荐数字中选择：${possibleNumbers.join(', ')}` 
-            : '请先检查并修正盘面中的错误。'
-    };
-}
-// 获取冲突详细原因
-function getErrorDetail(row, col, num) {
-    let reasons = [];
-    
-    // 检查行冲突
-    for (let c = 0; c < 9; c++) {
-        if (c !== col && currentBoard[row][c] === num) {
-            reasons.push(`第 ${row+1} 行第 ${c+1} 列已经有了数字 ${num}`);
-        }
-    }
-    
-    // 检查列冲突
-    for (let r = 0; r < 9; r++) {
-        if (r !== row && currentBoard[r][col] === num) {
-            reasons.push(`第 ${r+1} 行第 ${col+1} 列已经有了数字 ${num}`);
-        }
-    }
-    
-    // 检查宫冲突
-    const br = Math.floor(row / 3) * 3;
-    const bc = Math.floor(col / 3) * 3;
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-            const r = br + i;
-            const c = bc + j;
-            if ((r !== row || c !== col) && currentBoard[r][c] === num) {
-                reasons.push(`第 ${r+1} 行第 ${c+1} 列（同一宫）已经有了数字 ${num}`);
-            }
-        }
-    }
-    
-    if (reasons.length === 0) {
-        reasons.push(`数字 ${num} 违反了数独规则`);
-    }
-    
-    return {
-        title: `❌ 不能填入数字 ${num}`,
-        content: `在格子 (${row+1}, ${col+1}) 填入 ${num} 会违反以下规则：`,
-        reasons: reasons,
-        suggestion: '请尝试其他数字，或者先检查该行、列、宫中已有的数字。'
-    };
-}
-
-// 获取候选数错误详细原因
-function getCandidateErrorDetail(row, col, num, sysCandidates) {
-    let reasons = [];
-    
-    // 检查行中是否已有该数字
-    for (let c = 0; c < 9; c++) {
-        if (currentBoard[row][c] === num) {
-            reasons.push(`第 ${row+1} 行第 ${c+1} 列已经有数字 ${num}，所以 (${row+1},${col+1}) 不能填入 ${num}`);
-        }
-    }
-    
-    // 检查列中是否已有该数字
-    for (let r = 0; r < 9; r++) {
-        if (currentBoard[r][col] === num) {
-            reasons.push(`第 ${r+1} 行第 ${col+1} 列已经有数字 ${num}，所以 (${row+1},${col+1}) 不能填入 ${num}`);
-        }
-    }
-    
-    // 检查宫中是否已有该数字
-    const br = Math.floor(row / 3) * 3;
-    const bc = Math.floor(col / 3) * 3;
-    for (let i = 0; i < 3; i++) {
-        for (let j = 0; j < 3; j++) {
-            const r = br + i;
-            const c = bc + j;
-            if (currentBoard[r][c] === num) {
-                reasons.push(`第 ${r+1} 行第 ${c+1} 列（同一宫）已经有数字 ${num}`);
-            }
-        }
-    }
-    
-    // 显示系统推荐的候选数
-    const recommended = Array.from(sysCandidates).sort((a, b) => a - b);
-    
-    return {
-        title: `❌ 不能添加候选数 ${num}`,
-        content: `在格子 (${row+1}, ${col+1}) 中，数字 ${num} 不应该作为候选数，因为：`,
-        reasons: reasons,
-        recommended: recommended,
-        suggestion: recommended.length > 0 ? `该格子可能的候选数是：${recommended.join(', ')}。请从这些数字中选择。` : '该格子可能已经可以通过排除法确定数字，请先填写其他格子。'
-    };
-}
-
-// 显示错误提示对话框
-function showErrorHintDialog(errorInfo) {
-    const dialog = document.getElementById('hintDialog');
-    const body = document.getElementById('hintDialogBody');
-    
-    if (!dialog || !body) return;
-    
-    let reasonsHtml = '';
-    if (errorInfo.reasons && errorInfo.reasons.length > 0) {
-        reasonsHtml = '<ul style="margin: 10px 0 10px 20px; line-height: 1.8;">';
-        for (const reason of errorInfo.reasons) {
-            reasonsHtml += `<li>${reason}</li>`;
-        }
-        reasonsHtml += '</ul>';
-    }
-    
-    let possibleHtml = '';
-    if (errorInfo.possibleNumbers && errorInfo.possibleNumbers.length > 0) {
-        possibleHtml = `
-            <div style="background: #e3f2fd; padding: 12px; border-radius: 8px; margin-top: 12px;">
-                <strong>🔍 当前格子候选数：</strong><br>
-                <span style="font-size: 18px; font-weight: bold; color: #1565c0;">${errorInfo.possibleNumbers.join('、')}</span>
-            </div>
-        `;
-    }
-    
-    let hiddenSingleHtml = '';
-    if (errorInfo.hiddenSingleInfo) {
-        hiddenSingleHtml = `
-            <div style="background: #e8f5e9; padding: 12px; border-radius: 8px; margin-top: 12px;">
-                <strong>💡 提示：</strong> ${errorInfo.hiddenSingleInfo}
-            </div>
-        `;
-    }
-    
-    let suggestionHtml = '';
-    if (errorInfo.suggestion) {
-        suggestionHtml = `
-            <div style="background: #fff3e0; padding: 12px; border-radius: 8px; margin-top: 12px;">
-                <strong>📖 建议：</strong> ${errorInfo.suggestion}
-            </div>
-        `;
-    }
-    
-    body.innerHTML = `
-        <div style="background: #ffebee; padding: 15px; border-radius: 10px; margin-bottom: 10px;">
-            <div style="font-size: 18px; font-weight: bold; color: #c62828; margin-bottom: 10px;">${errorInfo.title}</div>
-            <div style="margin-bottom: 10px;">${errorInfo.content}</div>
-            ${reasonsHtml}
-            ${possibleHtml}
-            ${hiddenSingleHtml}
-            ${suggestionHtml}
-        </div>
-    `;
-    
-    dialog.style.display = 'flex';
-}
-function toggleCandidateNumberUI(row, col, num) {
-    // 例题模式专用
-    if (!isExampleMode) return;
-    
-    if (!exampleEditMode) {
-        showTemporaryMessage('例题模式下需要先开启"编辑候选数"才能修改', 'warning');
-        return;
-    }
-    
-    if (currentBoard[row][col] !== 0) {
-        showTemporaryMessage('该格子已有数字，无法编辑候选数', 'warning');
-        return;
-    }
-    
-    if (cellCandidates[row][col].has(num)) {
-        cellCandidates[row][col].delete(num);
-        showTemporaryMessage(`已删除候选数 ${num}`, 'info');
-    } else {
-        if (isValidMove(row, col, num)) {
-            cellCandidates[row][col].add(num);
-            showTemporaryMessage(`已添加候选数 ${num}`, 'info');
-        } else {
-            showTemporaryMessage(`数字 ${num} 违反数独规则，不能添加为候选数`, 'warning');
-        }
-    }
-    renderCellCandidates(row, col);
-}
-
 function handleKeyDown(e, row, col) {
-    // 高亮当前操作的格子（新增）
+    // 高亮当前操作的格子
     selectCell(row, col);
     
     // 例题模式下
@@ -1306,22 +1135,21 @@ function handleKeyDown(e, row, col) {
         if (window.isManualEditMode) {
             if (e.key >= '1' && e.key <= '9') {
                 e.preventDefault();
-                setCellNumberUI(row, col, parseInt(e.key));
+                fillNumberToSelectedCell(parseInt(e.key));
             } else if (e.key === 'Delete' || e.key === 'Backspace') {
                 e.preventDefault();
-                // 清空数字
                 if (originalBoard[row][col] !== 0) {
                     showTemporaryMessage('原始题目格子不能修改', 'warning');
                     return;
                 }
-                
-                // 清空数字总是允许的
                 saveToHistory();
                 currentBoard[row][col] = 0;
-                
+                if (!isExampleMode) {
+                    userCandidates[row][col].clear();
+                    syncUserCandidatesToDisplay();
+                }
                 updateBoardDisplay();
                 checkPuzzleCompletion();
-                checkAndSetFreeMode();
                 showTemporaryMessage('已清除', 'info');
             }
             return;
@@ -1348,17 +1176,19 @@ function handleKeyDown(e, row, col) {
     // 练习模式 - 数字输入模式
     if (e.key >= '1' && e.key <= '9') {
         e.preventDefault();
-        setCellNumberUI(row, col, parseInt(e.key));
+        fillNumberToSelectedCell(parseInt(e.key));
     } else if (e.key === 'Delete' || e.key === 'Backspace') {
         e.preventDefault();
-        // 清空数字
         if (originalBoard[row][col] !== 0) {
             showTemporaryMessage('原始题目格子不能修改', 'warning');
             return;
         }
         saveToHistory();
         currentBoard[row][col] = 0;
-        
+        if (!isExampleMode) {
+            userCandidates[row][col].clear();
+            syncUserCandidatesToDisplay();
+        }
         updateBoardDisplay();
         checkPuzzleCompletion();
         showTemporaryMessage('已清除', 'info');
@@ -1367,7 +1197,6 @@ function handleKeyDown(e, row, col) {
 
 function toggleEditMode() {
     if (isExampleMode) {
-        // 例题模式：切换例题模式的候选数编辑状态
         exampleEditMode = !exampleEditMode;
         const dropdownBtn = document.getElementById('candidatesDropdownBtn');
         const editMenuItem = document.querySelector('[data-action="edit"]');
@@ -1375,7 +1204,7 @@ function toggleEditMode() {
         if (exampleEditMode) {
             if (dropdownBtn) dropdownBtn.classList.add('active');
             if (editMenuItem) editMenuItem?.classList.add('active');
-            showTemporaryMessage('例题模式：候选数编辑模式（可修改候选数）', 'info');
+            showTemporaryMessage('例题模式：候选数编辑模式，点击候选数或按数字键可添加/删除', 'info');
         } else {
             if (dropdownBtn) dropdownBtn.classList.remove('active');
             if (editMenuItem) editMenuItem?.classList.remove('active');
@@ -1385,7 +1214,6 @@ function toggleEditMode() {
         return;
     }
     
-    // 练习模式
     practiceEditMode = !practiceEditMode;
     const dropdownBtn = document.getElementById('candidatesDropdownBtn');
     const editMenuItem = document.querySelector('[data-action="edit"]');
@@ -1401,7 +1229,7 @@ function toggleEditMode() {
             }
         }
         renderAllCandidates();
-        showTemporaryMessage('练习模式：候选数编辑模式，点击候选数可添加/删除', 'info');
+        showTemporaryMessage('练习模式：候选数编辑模式，点击候选数或按数字键可添加/删除', 'info');
     } else {
         if (dropdownBtn) dropdownBtn.classList.remove('active');
         if (editMenuItem) editMenuItem?.classList.remove('active');
@@ -1413,7 +1241,7 @@ function toggleEditMode() {
             }
         }
         if (practiceShowCandidates) renderAllCandidates();
-        showTemporaryMessage('练习模式：数字输入模式，直接输入数字', 'info');
+        showTemporaryMessage('练习模式：数字输入模式，点击底部数字按钮或按数字键填入', 'info');
     }
 }
 
@@ -1434,7 +1262,6 @@ function toggleCandidatesDisplay() {
         return;
     }
     
-    // 练习模式
     practiceShowCandidates = !practiceShowCandidates;
     const toggleMenuItem = document.querySelector('[data-action="toggle"]');
     
@@ -1442,7 +1269,6 @@ function toggleCandidatesDisplay() {
         if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
         document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
         
-        // 重新渲染所有格子的候选数
         for (let i = 0; i < 9; i++) {
             for (let j = 0; j < 9; j++) {
                 const div = document.getElementById(`candidates-${i}-${j}`);
@@ -1488,19 +1314,16 @@ function loadPuzzle(name) {
     
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
-            const val = grid[i][j];
-            currentBoard[i][j] = val;
-            originalBoard[i][j] = val;
+            currentBoard[i][j] = grid[i][j];
+            originalBoard[i][j] = grid[i][j];
         }
     }
     initCandidates();
-    
-    // 初始化用户候选数
     initUserCandidates();
-	// 确保候选数区域隐藏
-   if (!isExampleMode && !practiceShowCandidates) {
-       document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
-   }
+    
+    if (!isExampleMode && !practiceShowCandidates) {
+        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
+    }
     updateBoardDisplay();
     
     historyBoards = [cloneBoardUI(currentBoard)];
@@ -1512,10 +1335,9 @@ function loadPuzzle(name) {
     
     resetTimer();
     startTimer();
-    
-    // 重置错误次数和自由模式
     resetErrorCount();
     isFreeMode = false;
+    
     const modeBadge = document.getElementById('modeBadge');
     if (modeBadge) {
         modeBadge.innerHTML = '✏️ 练习模式';
@@ -1523,9 +1345,8 @@ function loadPuzzle(name) {
         modeBadge.classList.add('practice-mode');
     }
     
-    if (!isExampleMode && !practiceShowCandidates) {
-        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
-    }
+    // 更新自由模式状态
+    updateFreeModeStatus();
     
     showTemporaryMessage(`已加载: ${name}`, 'success');
 }
@@ -1558,9 +1379,7 @@ function loadRandomPuzzle() {
     const randomPuzzle = PUZZLE_LIBRARY[randomIndex];
     
     const selector = document.getElementById('puzzleSelector');
-    if (selector) {
-        selector.value = randomPuzzle.name;
-    }
+    if (selector) selector.value = randomPuzzle.name;
     
     loadPuzzle(randomPuzzle.name);
     showTemporaryMessage(`🎲 随机加载: ${randomPuzzle.name}`, 'success');
@@ -1595,6 +1414,9 @@ function undo() {
             startTimer();
         }
         
+        // 更新自由模式状态
+        updateFreeModeStatus();
+        
         showTemporaryMessage('已回退到上一步', 'info');
     } else {
         showTemporaryMessage('没有更早的历史', 'warning');
@@ -1621,12 +1443,9 @@ function flashAndRemoveCandidate(row, col, num, callback) {
     
     if (targetSpan) {
         targetSpan.classList.add('flashing');
-        
         setTimeout(() => {
             targetSpan.classList.remove('flashing');
-            if (targetSpan.parentNode) {
-                targetSpan.remove();
-            }
+            if (targetSpan.parentNode) targetSpan.remove();
             renderCellCandidates(row, col);
             if (callback) callback();
         }, TOTAL_FLASH_TIME);
@@ -1645,9 +1464,7 @@ function flashCandidatesBatch(eliminations, callback) {
     for (const elim of eliminations) {
         flashAndRemoveCandidate(elim.row, elim.col, elim.num, () => {
             completed++;
-            if (completed === eliminations.length) {
-                if (callback) callback();
-            }
+            if (completed === eliminations.length && callback) callback();
         });
     }
 }
@@ -1675,10 +1492,8 @@ async function nextStep() {
                 if (isFull) {
                     showTemporaryMessage('🎉 已完成！', 'success');
                 } else {
-                    showTemporaryMessage('⚠️ 当前没有找到可确定的步骤，已切换为手动编辑模式', 'warning');
-                    if (isExampleMode) {
-                        enableManualEditInExampleMode();
-                    }
+                    showTemporaryMessage('⚠️ 当前没有找到可确定的步骤', 'warning');
+                    if (isExampleMode) enableManualEditInExampleMode();
                 }
                 nextStepInProgress = false;
                 if (btn) {
@@ -1710,14 +1525,12 @@ async function nextStep() {
             
             if (step.eliminations && step.eliminations.length > 0) {
                 applyStep(step);
-                
                 flashCandidatesBatch(step.eliminations, () => {
                     stepCount++;
                     currentSteps.push(step);
                     addDetailedExplanation(step, stepCount);
                     updateStepsListDisplay();
                     checkPuzzleCompletion();
-                    
                     nextStepInProgress = false;
                     if (btn) {
                         btn.disabled = false;
@@ -1730,7 +1543,6 @@ async function nextStep() {
             stepCount++;
             currentSteps.push(step);
             updateStepsListDisplay();
-            
             nextStepInProgress = false;
             if (btn) {
                 btn.disabled = false;
@@ -1752,35 +1564,24 @@ async function nextStep() {
 
 function enterExampleMode() {
     if (isExampleMode) return;
-    
     isExampleMode = true;
-    
-    // 重置手动编辑标志
     window.isManualEditMode = false;
     
-    // 显示例题模式控制区域
-    const exampleControls = document.getElementById('exampleControls');
-    if (exampleControls) exampleControls.style.display = 'flex';
+    document.getElementById('exampleControls').style.display = 'flex';
+    document.getElementById('explanationSidebar').style.display = 'flex';
     
-    // 显示右侧解题面板
-    const explanationSidebar = document.getElementById('explanationSidebar');
-    if (explanationSidebar) explanationSidebar.style.display = 'flex';
-    
-    // 修改 game-area 的 class 为 example-mode
     const gameArea = document.getElementById('gameArea');
     if (gameArea) {
         gameArea.classList.remove('practice-mode');
         gameArea.classList.add('example-mode');
     }
     
-    // 更新模式标识徽章
     const modeBadge = document.getElementById('modeBadge');
     if (modeBadge) {
         modeBadge.className = 'mode-badge example-mode';
         modeBadge.innerHTML = '📖 例题模式';
     }
     
-    // 设置格子为只读
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
@@ -1788,11 +1589,9 @@ function enterExampleMode() {
         }
     }
     
-    // 重置例题模式的候选数显示状态
     exampleShowCandidates = true;
     exampleEditMode = false;
     
-    // 更新下拉菜单文字和样式
     const toggleMenuItem = document.querySelector('[data-action="toggle"]');
     if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
     
@@ -1802,11 +1601,9 @@ function enterExampleMode() {
     const dropdownBtn = document.getElementById('candidatesDropdownBtn');
     if (dropdownBtn) dropdownBtn.classList.remove('active');
     
-    // 显示候选数区域
     document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
     renderAllCandidates();
     
-    // 重置解题状态
     stepCount = 0;
     currentSteps = [];
     updateStepsListDisplay();
@@ -1815,10 +1612,7 @@ function enterExampleMode() {
         explanationContent.innerHTML = '<div class="step-explanation">✨ 点击"下一步"开始智能解题</div>';
     }
     
-    // 重新初始化候选数
     initCandidates();
-    
-    // 移除可能残留的手动编辑提示条
     const manualHint = document.getElementById('manualEditHint');
     if (manualHint) manualHint.remove();
     
@@ -1827,35 +1621,24 @@ function enterExampleMode() {
 
 function exitExampleMode() {
     if (!isExampleMode) return;
-    
     isExampleMode = false;
-    
-    // 重置手动编辑标志
     window.isManualEditMode = false;
     
-    // 隐藏例题模式控制区域
-    const exampleControls = document.getElementById('exampleControls');
-    if (exampleControls) exampleControls.style.display = 'none';
+    document.getElementById('exampleControls').style.display = 'none';
+    document.getElementById('explanationSidebar').style.display = 'none';
     
-    // 隐藏右侧解题面板
-    const explanationSidebar = document.getElementById('explanationSidebar');
-    if (explanationSidebar) explanationSidebar.style.display = 'none';
-    
-    // 修改 game-area 的 class 为 practice-mode
     const gameArea = document.getElementById('gameArea');
     if (gameArea) {
         gameArea.classList.remove('example-mode');
         gameArea.classList.add('practice-mode');
     }
     
-    // 更新模式标识徽章
     const modeBadge = document.getElementById('modeBadge');
     if (modeBadge) {
         modeBadge.className = 'mode-badge practice-mode';
         modeBadge.innerHTML = '✏️ 练习模式';
     }
     
-    // 恢复格子的可编辑状态
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
@@ -1863,7 +1646,6 @@ function exitExampleMode() {
         }
     }
     
-    // 恢复练习模式的候选数显示状态（默认不显示）
     if (practiceShowCandidates) {
         document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
         renderAllCandidates();
@@ -1871,13 +1653,11 @@ function exitExampleMode() {
         document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
     }
     
-    // 更新下拉菜单文字
     const toggleMenuItem = document.querySelector('[data-action="toggle"]');
     if (toggleMenuItem) {
         toggleMenuItem.innerHTML = practiceShowCandidates ? '🔢 隐藏候选数' : '🔢 显示候选数';
     }
     
-    // 更新编辑候选数按钮状态
     const editMenuItem = document.querySelector('[data-action="edit"]');
     if (editMenuItem && practiceEditMode) {
         editMenuItem.classList.add('active');
@@ -1889,35 +1669,30 @@ function exitExampleMode() {
         if (dropdownBtn) dropdownBtn.classList.remove('active');
     }
     
-    // 移除手动编辑提示条
     const manualHint = document.getElementById('manualEditHint');
     if (manualHint) manualHint.remove();
+    
+    // 更新自由模式状态
+    updateFreeModeStatus();
     
     showTemporaryMessage('已切换到练习模式', 'info');
 }
 
 function enableManualEditInExampleMode() {
     if (!isExampleMode) return;
-    
-    // 标记为手动编辑模式
     window.isManualEditMode = true;
     
-    // 更新模式标识徽章
     const modeBadge = document.getElementById('modeBadge');
     modeBadge.className = 'mode-badge manual-mode';
     modeBadge.innerHTML = '✏️ 手动编辑';
     
-    // 解除格子的只读状态，允许用户手动输入
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
-            if (input && originalBoard[i][j] === 0) {
-                input.readOnly = false;
-            }
+            if (input && originalBoard[i][j] === 0) input.readOnly = false;
         }
     }
     
-    // 自动开启候选数编辑模式
     if (!exampleEditMode) {
         exampleEditMode = true;
         const editMenuItem = document.querySelector('[data-action="edit"]');
@@ -1926,7 +1701,6 @@ function enableManualEditInExampleMode() {
         if (dropdownBtn) dropdownBtn.classList.add('active');
     }
     
-    // 确保候选数显示
     if (!exampleShowCandidates) {
         exampleShowCandidates = true;
         const toggleMenuItem = document.querySelector('[data-action="toggle"]');
@@ -1934,15 +1708,11 @@ function enableManualEditInExampleMode() {
         document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
     }
     renderAllCandidates();
-    
-    // 显示提示按钮
     showManualEditHint();
-    
-    showTemporaryMessage('已切换到手动编辑模式，您可以手动填写数字或编辑候选数', 'info');
+    showTemporaryMessage('已切换到手动编辑模式', 'info');
 }
 
 function showManualEditHint() {
-    // 检查是否已存在提示条
     if (document.getElementById('manualEditHint')) return;
     
     const hintDiv = document.createElement('div');
@@ -1956,7 +1726,6 @@ function showManualEditHint() {
         </div>
     `;
     
-    // 将提示条插入到 game-area 之前
     const gameArea = document.querySelector('.game-area');
     if (gameArea) {
         gameArea.parentNode.insertBefore(hintDiv, gameArea);
@@ -1967,9 +1736,7 @@ function showManualEditHint() {
         }
     }
     
-    document.getElementById('retryAutoSolveBtn')?.addEventListener('click', () => {
-        retryAutoSolve();
-    });
+    document.getElementById('retryAutoSolveBtn')?.addEventListener('click', () => retryAutoSolve());
     document.getElementById('exitToPracticeBtn')?.addEventListener('click', () => {
         exitExampleMode();
         document.getElementById('manualEditHint')?.remove();
@@ -1978,31 +1745,22 @@ function showManualEditHint() {
 
 function retryAutoSolve() {
     if (!isExampleMode) return;
-    
-    // 重新初始化候选数
     initCandidates();
-    
-    // 重置手动编辑标志
     window.isManualEditMode = false;
     
-    // 更新模式标识徽章
     const modeBadge = document.getElementById('modeBadge');
     if (modeBadge) {
         modeBadge.className = 'mode-badge example-mode';
         modeBadge.innerHTML = '📖 例题模式';
     }
     
-    // 恢复格子只读状态
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
-            if (input && originalBoard[i][j] === 0) {
-                input.readOnly = true;
-            }
+            if (input && originalBoard[i][j] === 0) input.readOnly = true;
         }
     }
     
-    // 关闭候选数编辑模式
     exampleEditMode = false;
     const editMenuItem = document.querySelector('[data-action="edit"]');
     const dropdownBtn = document.getElementById('candidatesDropdownBtn');
@@ -2010,83 +1768,35 @@ function retryAutoSolve() {
     if (dropdownBtn) dropdownBtn.classList.remove('active');
     
     renderAllCandidates();
-    
-    // 移除提示条
     const manualHint = document.getElementById('manualEditHint');
     if (manualHint) manualHint.remove();
     
     showTemporaryMessage('已重新尝试智能解题，请点击"下一步"继续', 'info');
 }
 
-// ==================== 事件绑定 ====================
-
-function attachEvents() {
-    // 下拉按钮事件
-    const dropdownBtn = document.getElementById('candidatesDropdownBtn');
-    const dropdownMenu = document.getElementById('candidatesDropdownMenu');
-    
-    if (dropdownBtn && dropdownMenu) {
-        dropdownBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            dropdownMenu.classList.toggle('show');
-        });
-        
-        document.addEventListener('click', () => {
-            dropdownMenu.classList.remove('show');
-        });
-        
-        dropdownMenu.addEventListener('click', (e) => {
-            e.stopPropagation();
-            const action = e.target.getAttribute('data-action');
-            
-            if (action === 'random') {
-                loadRandomPuzzle();
-                dropdownMenu.classList.remove('show');
-            } else if (action === 'custom') {
-                showCustomPuzzleDialog();
-                dropdownMenu.classList.remove('show');
-            } else if (action === 'example') {
-                enterExampleMode();
-                dropdownMenu.classList.remove('show');
-            } else if (action === 'practice') {
-                exitExampleMode();
-                dropdownMenu.classList.remove('show');
-            } else if (action === 'fillCandidates') {
-                fillCandidates();
-                dropdownMenu.classList.remove('show');
-            } else if (action === 'nextHint') {
-                showNextHint();
-                dropdownMenu.classList.remove('show');
-            } else if (action === 'edit') {
-                toggleEditMode();
-                dropdownMenu.classList.remove('show');
-            } else if (action === 'toggle') {
-                toggleCandidatesDisplay();
-                dropdownMenu.classList.remove('show');
-            }
-        });
+function toggleCandidateNumberUI(row, col, num) {
+    if (!isExampleMode) return;
+    if (!exampleEditMode) {
+        showTemporaryMessage('请先开启"编辑候选数"模式', 'warning');
+        return;
+    }
+    if (currentBoard[row][col] !== 0) {
+        showTemporaryMessage('该格子已有数字，无法编辑候选数', 'warning');
+        return;
     }
     
-    // 例题模式按钮事件
-    document.getElementById('nextStepBtn')?.addEventListener('click', nextStep);
-    document.getElementById('undoBtn')?.addEventListener('click', undo);
-    
-    // 提示对话框关闭事件
-    document.getElementById('hintDialogClose')?.addEventListener('click', () => {
-        document.getElementById('hintDialog').style.display = 'none';
-    });
-    document.getElementById('hintDialogOk')?.addEventListener('click', () => {
-        document.getElementById('hintDialog').style.display = 'none';
-    });
-    window.addEventListener('click', (e) => {
-        const dialog = document.getElementById('hintDialog');
-        if (e.target === dialog) {
-            dialog.style.display = 'none';
+    if (cellCandidates[row][col].has(num)) {
+        cellCandidates[row][col].delete(num);
+        showTemporaryMessage(`已删除候选数 ${num}`, 'info');
+    } else {
+        if (isValidMove(row, col, num)) {
+            cellCandidates[row][col].add(num);
+            showTemporaryMessage(`已添加候选数 ${num}`, 'info');
+        } else {
+            showTemporaryMessage(`数字 ${num} 违反数独规则，不能添加`, 'warning');
         }
-    });
-    
-    // 自定义题目弹窗事件
-    initCustomDialogEvents();
+    }
+    renderCellCandidates(row, col);
 }
 
 // ==================== 自定义题目函数 ====================
@@ -2095,11 +1805,8 @@ function showCustomPuzzleDialog() {
     const dialog = document.getElementById('customPuzzleDialog');
     const textarea = document.getElementById('customPuzzleInput');
     const errorDiv = document.getElementById('customPuzzleError');
-    
-    // 清空之前的输入和错误
     if (textarea) textarea.value = '';
     if (errorDiv) errorDiv.style.display = 'none';
-    
     dialog.style.display = 'flex';
 }
 
@@ -2112,83 +1819,40 @@ function initCustomDialogEvents() {
     const textarea = document.getElementById('customPuzzleInput');
     const errorDiv = document.getElementById('customPuzzleError');
     
-    // 关闭弹窗
-    const closeDialog = () => {
-        dialog.style.display = 'none';
-    };
-    
+    const closeDialog = () => dialog.style.display = 'none';
     closeBtn?.addEventListener('click', closeDialog);
     cancelBtn?.addEventListener('click', closeDialog);
+    window.addEventListener('click', (e) => { if (e.target === dialog) closeDialog(); });
     
-    // 点击背景关闭
-    window.addEventListener('click', (e) => {
-        if (e.target === dialog) {
-            closeDialog();
-        }
-    });
-    
-    // 加载示例
     loadExampleBtn?.addEventListener('click', () => {
-        const example = "530070000,600195000,098000060,800060003,400803001,700020006,060000280,000419005,000080079";
-        if (textarea) textarea.value = example;
+        if (textarea) textarea.value = "530070000,600195000,098000060,800060003,400803001,700020006,060000280,000419005,000080079";
         if (errorDiv) errorDiv.style.display = 'none';
     });
     
-    // 确认加载
     confirmBtn?.addEventListener('click', () => {
         const inputValue = textarea?.value.trim();
-        if (!inputValue) {
-            showCustomError('请输入题目数据');
-            return;
-        }
+        if (!inputValue) { showCustomError('请输入题目数据'); return; }
         
-        // 解析输入
         const parts = inputValue.split(',').map(s => s.trim());
-        if (parts.length !== 9) {
-            showCustomError(`需要输入9行数据，当前输入了 ${parts.length} 行`);
-            return;
-        }
+        if (parts.length !== 9) { showCustomError(`需要输入9行数据，当前输入了 ${parts.length} 行`); return; }
         
         const grid = [];
-        let valid = true;
-        let errorMsg = '';
-        
         for (let i = 0; i < 9; i++) {
             const rowStr = parts[i];
-            if (rowStr.length !== 9) {
-                errorMsg = `第 ${i+1} 行长度不是9个字符，当前长度：${rowStr.length}`;
-                valid = false;
-                break;
-            }
-            
+            if (rowStr.length !== 9) { showCustomError(`第 ${i+1} 行长度不是9个字符`); return; }
             const row = [];
             for (let j = 0; j < 9; j++) {
                 const char = rowStr[j];
                 const num = parseInt(char, 10);
-                if (isNaN(num) || num < 0 || num > 9) {
-                    errorMsg = `第 ${i+1} 行第 ${j+1} 列包含无效字符：${char}，只能输入0-9的数字`;
-                    valid = false;
-                    break;
-                }
+                if (isNaN(num) || num < 0 || num > 9) { showCustomError(`第 ${i+1} 行第 ${j+1} 列无效`); return; }
                 row.push(num);
             }
-            if (!valid) break;
             grid.push(row);
         }
         
-        if (!valid) {
-            showCustomError(errorMsg);
-            return;
-        }
-        
-        // 验证题目是否有效（检查每行、每列、每宫是否有重复数字）
         const validationError = validatePuzzle(grid);
-        if (validationError) {
-            showCustomError(validationError);
-            return;
-        }
+        if (validationError) { showCustomError(validationError); return; }
         
-        // 加载自定义题目
         loadCustomPuzzle(grid);
         closeDialog();
         showTemporaryMessage('自定义题目加载成功', 'success');
@@ -2203,90 +1867,56 @@ function showCustomError(message) {
     }
 }
 
-// 验证题目有效性
 function validatePuzzle(grid) {
-    // 检查每行
     for (let row = 0; row < 9; row++) {
         const seen = new Set();
         for (let col = 0; col < 9; col++) {
             const val = grid[row][col];
-            if (val !== 0) {
-                if (seen.has(val)) {
-                    return `第 ${row+1} 行有重复的数字 ${val}`;
-                }
-                seen.add(val);
-            }
+            if (val !== 0) { if (seen.has(val)) return `第 ${row+1} 行有重复的数字 ${val}`; seen.add(val); }
         }
     }
-    
-    // 检查每列
     for (let col = 0; col < 9; col++) {
         const seen = new Set();
         for (let row = 0; row < 9; row++) {
             const val = grid[row][col];
-            if (val !== 0) {
-                if (seen.has(val)) {
-                    return `第 ${col+1} 列有重复的数字 ${val}`;
-                }
-                seen.add(val);
-            }
+            if (val !== 0) { if (seen.has(val)) return `第 ${col+1} 列有重复的数字 ${val}`; seen.add(val); }
         }
     }
-    
-    // 检查每宫
     for (let box = 0; box < 9; box++) {
         const seen = new Set();
-        const br = Math.floor(box / 3) * 3;
-        const bc = (box % 3) * 3;
+        const br = Math.floor(box / 3) * 3, bc = (box % 3) * 3;
         for (let i = 0; i < 3; i++) {
             for (let j = 0; j < 3; j++) {
                 const val = grid[br + i][bc + j];
-                if (val !== 0) {
-                    if (seen.has(val)) {
-                        return `第 ${box+1} 宫有重复的数字 ${val}`;
-                    }
-                    seen.add(val);
-                }
+                if (val !== 0) { if (seen.has(val)) return `第 ${box+1} 宫有重复的数字 ${val}`; seen.add(val); }
             }
         }
     }
-    
     return null;
 }
 
-// 加载自定义题目
 function loadCustomPuzzle(grid) {
-    // 更新 currentBoard 和 originalBoard
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
-            const val = grid[i][j];
-            currentBoard[i][j] = val;
-            originalBoard[i][j] = val;
+            currentBoard[i][j] = grid[i][j];
+            originalBoard[i][j] = grid[i][j];
         }
     }
-    
-    // 重新初始化
     initCandidates();
     initUserCandidates();
     updateBoardDisplay();
     
-    // 重置历史记录
     historyBoards = [cloneBoardUI(currentBoard)];
     historyIdx = 0;
     currentSteps = [];
     stepCount = 0;
     updateStepsListDisplay();
     document.getElementById('explanation-content').innerHTML = '<div class="step-explanation">✨ 点击"下一步"开始智能解题</div>';
-    
-    // 重置计时器
     resetTimer();
     startTimer();
-    
-    // 重置错误次数和自由模式
     resetErrorCount();
     isFreeMode = false;
     
-    // 更新模式标识
     const modeBadge = document.getElementById('modeBadge');
     if (modeBadge && !isExampleMode) {
         modeBadge.innerHTML = '✏️ 练习模式';
@@ -2294,33 +1924,74 @@ function loadCustomPuzzle(grid) {
         modeBadge.classList.add('practice-mode');
     }
     
-    // 更新下拉选择框（添加自定义选项或取消选中）
     const selector = document.getElementById('puzzleSelector');
-    if (selector) {
-        selector.value = '';
-    }
-    
-    // 练习模式下隐藏候选数
+    if (selector) selector.value = '';
     if (!isExampleMode && !practiceShowCandidates) {
         document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
     }
+    
+    // 更新自由模式状态
+    updateFreeModeStatus();
 }
+
+// ==================== 事件绑定 ====================
+
+function attachEvents() {
+    const dropdownBtn = document.getElementById('candidatesDropdownBtn');
+    const dropdownMenu = document.getElementById('candidatesDropdownMenu');
+    
+    if (dropdownBtn && dropdownMenu) {
+        dropdownBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            dropdownMenu.classList.toggle('show');
+        });
+        document.addEventListener('click', () => dropdownMenu.classList.remove('show'));
+        dropdownMenu.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const action = e.target.getAttribute('data-action');
+            if (action === 'random') { loadRandomPuzzle(); dropdownMenu.classList.remove('show'); }
+            else if (action === 'custom') { showCustomPuzzleDialog(); dropdownMenu.classList.remove('show'); }
+            else if (action === 'example') { enterExampleMode(); dropdownMenu.classList.remove('show'); }
+            else if (action === 'practice') { exitExampleMode(); dropdownMenu.classList.remove('show'); }
+            else if (action === 'fillCandidates') { fillCandidates(); dropdownMenu.classList.remove('show'); }
+            else if (action === 'nextHint') { showNextHint(); dropdownMenu.classList.remove('show'); }
+            else if (action === 'edit') { toggleEditMode(); dropdownMenu.classList.remove('show'); }
+            else if (action === 'toggle') { toggleCandidatesDisplay(); dropdownMenu.classList.remove('show'); }
+        });
+    }
+    
+    document.getElementById('nextStepBtn')?.addEventListener('click', nextStep);
+    document.getElementById('undoBtn')?.addEventListener('click', undo);
+    
+    document.getElementById('hintDialogClose')?.addEventListener('click', () => {
+        document.getElementById('hintDialog').style.display = 'none';
+    });
+    document.getElementById('hintDialogOk')?.addEventListener('click', () => {
+        document.getElementById('hintDialog').style.display = 'none';
+    });
+    window.addEventListener('click', (e) => {
+        const dialog = document.getElementById('hintDialog');
+        if (e.target === dialog) dialog.style.display = 'none';
+    });
+    
+    initCustomDialogEvents();
+}
+
 // ==================== 初始化 ====================
 
 function initUI() {
     createBoard();
     attachEvents();
     loadPuzzleList();
+    createNumberPad();
     
-    // 设置初始布局为练习模式（棋盘居中，右侧面板隐藏）
     const gameArea = document.getElementById('gameArea');
-    if (gameArea) {
-        gameArea.classList.add('practice-mode');
-    }
+    if (gameArea) gameArea.classList.add('practice-mode');
     const explanationSidebar = document.getElementById('explanationSidebar');
-    if (explanationSidebar) {
-        explanationSidebar.style.display = 'none';
-    }
+    if (explanationSidebar) explanationSidebar.style.display = 'none';
+    
+    // 初始化自由模式状态
+    updateFreeModeStatus();
 }
 
 document.addEventListener('DOMContentLoaded', initUI);
