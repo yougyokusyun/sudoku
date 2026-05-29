@@ -708,66 +708,57 @@ function createBoard() {
     }
 }
 
-// 创建底部数字键盘
+// 创建底部数字键盘（放在 game-area 内部）
 function createNumberPad() {
-    const existingPad = document.querySelector('.number-pad');
-    if (existingPad) existingPad.remove();
+    const existingPad = document.getElementById('numberPad');
+    if (existingPad) {
+        // 清空现有内容
+        existingPad.innerHTML = '';
+    } else {
+        // 如果不存在，创建容器（但 HTML 中已经有了）
+        return;
+    }
     
-    const pad = document.createElement('div');
-    pad.className = 'number-pad';
+    const pad = document.getElementById('numberPad');
+    if (!pad) return;
     
     for (let i = 1; i <= 9; i++) {
         const btn = document.createElement('button');
         btn.textContent = i;
         btn.className = 'number-pad-btn';
         btn.addEventListener('click', () => {
-            if (currentSelectedRow === -1 || currentSelectedCol === -1) {
-                showTemporaryMessage('请先点击选择一个格子', 'warning');
-                return;
-            }
-            
-            const row = currentSelectedRow;
-            const col = currentSelectedCol;
-            
-            // 例题模式下且非手动编辑模式，不允许输入
-            if (isExampleMode && !window.isManualEditMode) {
-                showTemporaryMessage('例题模式下请使用"下一步"按钮', 'warning');
-                return;
-            }
-            
-            // 原始题目格子不能修改
-            if (originalBoard[row][col] !== 0) {
-                showTemporaryMessage('原始题目格子不能修改', 'warning');
-                return;
-            }
-            
-            // 根据模式决定是填入数字还是编辑候选数
-            if (isExampleMode) {
-                // 例题模式：手动编辑模式下填入数字
-                if (window.isManualEditMode) {
-                    fillNumberToSelectedCell(i);
-                } else if (exampleEditMode) {
-                    toggleCandidateNumberUI(row, col, i);
+            if (currentSelectedRow !== -1 && currentSelectedCol !== -1) {
+                const row = currentSelectedRow;
+                const col = currentSelectedCol;
+                
+                if (isExampleMode && !window.isManualEditMode) {
+                    showTemporaryMessage('例题模式下请使用"下一步"按钮', 'warning');
+                    return;
+                }
+                
+                if (originalBoard[row][col] !== 0) {
+                    showTemporaryMessage('原始题目格子不能修改', 'warning');
+                    return;
+                }
+                
+                if (isExampleMode) {
+                    if (window.isManualEditMode) {
+                        fillNumberToSelectedCell(i);
+                    } else if (exampleEditMode) {
+                        toggleCandidateNumberUI(row, col, i);
+                    }
+                } else {
+                    if (practiceEditMode) {
+                        practiceToggleCandidate(row, col, i);
+                    } else {
+                        fillNumberToSelectedCell(i);
+                    }
                 }
             } else {
-                // 练习模式
-                if (practiceEditMode) {
-                    // 编辑候选数模式：编辑候选数
-                    practiceToggleCandidate(row, col, i);
-                } else {
-                    // 数字输入模式：填入数字
-                    fillNumberToSelectedCell(i);
-                }
+                showTemporaryMessage('请先点击选择一个格子', 'warning');
             }
         });
         pad.appendChild(btn);
-    }
-    
-    const gameArea = document.querySelector('.game-area');
-    if (gameArea) {
-        gameArea.parentNode.insertBefore(pad, gameArea.nextSibling);
-    } else {
-        document.querySelector('.container').appendChild(pad);
     }
 }
 

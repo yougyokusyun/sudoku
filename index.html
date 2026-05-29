@@ -8,8 +8,7 @@
 </head>
 <body>
 <div class="container">
-    <!-- 顶部第一行：标题 + 模式标识 + 错误次数 + 计时器 -->
-    <div class="header-row">
+    <div class="header-with-timer">
         <div class="title-section">
             <h1>🧩 数独解题器</h1>
             <span id="modeBadge" class="mode-badge practice-mode">✏️ 练习模式</span>
@@ -21,8 +20,7 @@
         </div>
     </div>
     
-    <!-- 第二行：选择题目 + 更多操作 + 例题模式按钮 -->
-    <div class="controls-row">
+    <div class="controls">
         <div class="puzzle-selector">
             <select id="puzzleSelector">
                 <option value="">-- 选择题目 --</option>
@@ -94,6 +92,8 @@
                 <tbody id="sudoku-body"></tbody>
             </table>
         </div>
+        <!-- 数字键盘放在 game-area 内部，棋盘右侧 -->
+        <div class="number-pad" id="numberPad"></div>
         <div class="explanation-sidebar" id="explanationSidebar">
             <div class="explanation-panel">
                 <h3>📖 解题过程</h3>

@@ -22,7 +22,7 @@ body {
 }
 
 /* ========== 顶部布局 ========== */
-.header-row {
+.header-with-timer {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -123,8 +123,8 @@ h1 {
     padding: 0;
 }
 
-/* 第二行：控制区域 */
-.controls-row {
+/* 控制区域 */
+.controls {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -257,26 +257,25 @@ h1 {
 /* ========== 游戏区域 ========== */
 .game-area {
     display: flex;
-    flex-direction: row;
-    gap: 30px;
-    align-items: flex-start;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
     justify-content: center;
     width: 100%;
 }
 
-/* 练习模式：棋盘居中，占满可用空间 */
-.game-area.practice-mode .sudoku-container {
-    flex: 1;
-    display: flex;
-    justify-content: center;
-}
-
-/* 例题模式：棋盘和面板并排 */
-.game-area.example-mode .sudoku-container {
-    flex-shrink: 0;
+/* 横屏模式：改为水平布局 */
+@media (min-aspect-ratio: 1/1) {
+    .game-area {
+        flex-direction: row;
+        align-items: flex-start;
+        justify-content: center;
+        gap: 30px;
+    }
 }
 
 .sudoku-container {
+    position: relative;
     flex-shrink: 0;
     overflow-x: auto;
     display: flex;
@@ -431,18 +430,198 @@ h1 {
     display: none;
 }
 
-/* 右侧面板 */
+/* ========== 数字键盘布局 ========== */
+.number-pad {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 16px;
+    background: #f5f5f5;
+    border-radius: 60px;
+    flex-wrap: nowrap;
+    width: 100%;
+    box-sizing: border-box;
+    order: 2;
+}
+
+.number-pad-btn {
+    flex: 1;
+    max-width: 70px;
+    height: 55px;
+    border: 2px solid #2a5298;
+    background: white;
+    color: #2a5298;
+    border-radius: 30px;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.2s;
+    text-align: center;
+}
+
+.number-pad-btn:hover {
+    background: #2a5298;
+    color: white;
+    transform: scale(1.02);
+}
+
+.number-pad-btn:active {
+    transform: scale(0.98);
+}
+
+/* 竖屏手机端（高度 > 宽度）紧凑样式 - 宽度自适应棋盘 */
+@media (max-aspect-ratio: 1/1) and (max-width: 550px) {
+    .number-pad {
+        gap: 6px;
+        padding: 10px 12px;
+        border-radius: 40px;
+    }
+    
+    .number-pad-btn {
+        height: 42px;
+        font-size: 18px;
+        border-radius: 21px;
+        min-width: 0;
+    }
+}
+
+@media (max-aspect-ratio: 1/1) and (max-width: 450px) {
+    .number-pad {
+        gap: 5px;
+        padding: 8px 10px;
+    }
+    
+    .number-pad-btn {
+        height: 36px;
+        font-size: 16px;
+        border-radius: 18px;
+    }
+}
+
+@media (max-aspect-ratio: 1/1) and (max-width: 380px) {
+    .number-pad {
+        gap: 4px;
+        padding: 6px 8px;
+    }
+    
+    .number-pad-btn {
+        height: 32px;
+        font-size: 14px;
+        border-radius: 16px;
+    }
+}
+
+/* 横屏（宽度 > 高度）：键盘放在棋盘右侧，垂直排列 - 高度不超过棋盘 */
+@media (min-aspect-ratio: 1/1) {
+    .number-pad {
+        flex-direction: column;
+        width: auto;
+        min-width: 70px;
+        padding: 12px 10px;
+        background: #f5f5f5;
+        border-radius: 35px;
+        gap: 8px;
+        order: 1;
+        align-self: center;
+    }
+    
+    .number-pad-btn {
+        width: 50px;
+        height: 50px;
+        flex: none;
+        max-width: none;
+        font-size: 20px;
+        margin: 0;
+        border-radius: 25px;
+    }
+}
+
+/* 横屏大屏幕 */
+@media (min-aspect-ratio: 1/1) and (min-width: 1200px) {
+    .number-pad {
+        min-width: 80px;
+        padding: 15px 12px;
+        gap: 10px;
+        border-radius: 40px;
+    }
+    
+    .number-pad-btn {
+        width: 56px;
+        height: 56px;
+        font-size: 22px;
+        border-radius: 28px;
+    }
+}
+
+/* 横屏中等屏幕 */
+@media (min-aspect-ratio: 1/1) and (min-width: 768px) and (max-width: 1199px) {
+    .number-pad {
+        min-width: 70px;
+        padding: 12px 10px;
+        gap: 8px;
+    }
+    
+    .number-pad-btn {
+        width: 50px;
+        height: 50px;
+        font-size: 20px;
+    }
+}
+
+/* 横屏手机端（宽度 > 高度，但屏幕较小） */
+@media (min-aspect-ratio: 1/1) and (max-width: 767px) {
+    .number-pad {
+        min-width: 55px;
+        padding: 10px 8px;
+        gap: 6px;
+        border-radius: 28px;
+    }
+    
+    .number-pad-btn {
+        width: 40px;
+        height: 40px;
+        font-size: 16px;
+        border-radius: 20px;
+    }
+}
+
+/* 横屏超小屏 */
+@media (min-aspect-ratio: 1/1) and (max-width: 550px) {
+    .number-pad {
+        min-width: 48px;
+        padding: 8px 6px;
+        gap: 5px;
+        border-radius: 24px;
+    }
+    
+    .number-pad-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 14px;
+        border-radius: 18px;
+    }
+}
+
+/* ========== 右侧面板 ========== */
 .explanation-sidebar {
     flex: 1;
     min-width: 300px;
     display: none;
     flex-direction: column;
     gap: 20px;
+    order: 3;
 }
 
 /* 例题模式时显示右侧面板 */
 .game-area.example-mode .explanation-sidebar {
     display: flex;
+}
+
+/* 横屏时右侧面板顺序 */
+@media (min-aspect-ratio: 1/1) {
+    .explanation-sidebar {
+        order: 2;
+    }
 }
 
 .explanation-panel {
@@ -834,7 +1013,6 @@ h1 {
     .main-number { font-size: 26px; }
     .candidates-area { font-size: 9px; }
     .candidate-note { font-size: 9px; }
-    .explanation-sidebar { min-width: 280px; }
 }
 
 @media (max-width: 1050px) {
@@ -842,7 +1020,6 @@ h1 {
     .main-number { font-size: 24px; }
     .candidates-area { font-size: 9px; }
     .candidate-note { font-size: 9px; }
-    .explanation-sidebar { min-width: 260px; }
 }
 
 @media (max-width: 950px) {
@@ -850,7 +1027,6 @@ h1 {
     .main-number { font-size: 22px; }
     .candidates-area { font-size: 8px; }
     .candidate-note { font-size: 8px; }
-    .explanation-sidebar { min-width: 250px; }
 }
 
 @media (max-width: 900px) {
@@ -858,28 +1034,12 @@ h1 {
     .main-number { font-size: 20px; }
     .candidates-area { font-size: 8px; }
     .candidate-note { font-size: 8px; }
-    .explanation-sidebar { min-width: 240px; }
 }
 
 @media (max-width: 768px) {
-    .game-area {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    .game-area.example-mode {
-        flex-direction: column;
-    }
-    
-    .explanation-sidebar {
-        width: 100%;
-        min-width: auto;
-        margin-top: 20px;
-    }
-    
     .sudoku-container {
         align-self: center;
-        margin-bottom: 20px;
+        margin-bottom: 0;
     }
     
     .cell-container { width: 45px; height: 45px; }
@@ -890,7 +1050,7 @@ h1 {
 
 /* 手机端布局调整 */
 @media (max-width: 650px) {
-    .header-row {
+    .header-with-timer {
         flex-direction: column;
         align-items: flex-start;
     }
@@ -912,7 +1072,7 @@ h1 {
         align-self: flex-end;
     }
     
-    .controls-row {
+    .controls {
         flex-direction: column;
         align-items: stretch;
     }
@@ -952,10 +1112,6 @@ h1 {
 }
 
 @media (max-width: 550px) {
-    .cell-container { width: 38px; height: 38px; }
-    .main-number { font-size: 18px; }
-    .candidates-area { font-size: 7px; }
-    .candidate-note { font-size: 7px; }
     .manual-edit-hint {
         flex-direction: column;
         text-align: center;
@@ -976,253 +1132,5 @@ h1 {
     
     .timer-display {
         padding: 3px 10px;
-    }
-}
-
-@media (max-width: 450px) {
-    .cell-container { width: 34px; height: 34px; }
-    .main-number { font-size: 16px; }
-    .candidates-area { font-size: 6px; bottom: 1px; }
-    .candidate-note { font-size: 6px; }
-}
-
-@media (max-width: 380px) {
-    .cell-container { width: 30px; height: 30px; }
-    .main-number { font-size: 14px; }
-    .candidates-area { font-size: 5px; bottom: 1px; left: 2px; right: 2px; }
-    .candidate-note { font-size: 5px; }
-}
-/* ========== 手机端数字选择器样式 ========== */
-.number-picker-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 4000;
-}
-
-.number-picker {
-    background: white;
-    border-radius: 24px;
-    padding: 20px;
-    width: 280px;
-    max-width: 90%;
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-    animation: dialogSlideIn 0.2s ease;
-}
-
-.number-picker-title {
-    text-align: center;
-    font-size: 16px;
-    font-weight: bold;
-    color: #1e3c72;
-    margin-bottom: 20px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid #eee;
-}
-
-.number-picker-buttons {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    gap: 12px;
-}
-
-.number-picker-btn {
-    width: 60px;
-    height: 60px;
-    border: 2px solid #2a5298;
-    background: white;
-    color: #2a5298;
-    border-radius: 16px;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.number-picker-btn:hover {
-    background: #2a5298;
-    color: white;
-}
-
-.number-picker-btn.delete-btn {
-    background: #ffebee;
-    border-color: #f44336;
-    color: #c62828;
-    font-size: 14px;
-}
-
-.number-picker-btn.delete-btn:hover {
-    background: #f44336;
-    color: white;
-}
-
-.number-picker-btn.cancel-btn {
-    background: #f5f5f5;
-    border-color: #999;
-    color: #666;
-    font-size: 14px;
-}
-
-.number-picker-btn.cancel-btn:hover {
-    background: #999;
-    color: white;
-}
-
-/* 手机端小屏幕调整 */
-@media (max-width: 480px) {
-    .number-picker-btn {
-        width: 55px;
-        height: 55px;
-        font-size: 22px;
-    }
-    
-    .number-picker-btn.delete-btn,
-    .number-picker-btn.cancel-btn {
-        width: 70px;
-        font-size: 12px;
-    }
-}
-
-@media (max-width: 380px) {
-    .number-picker-buttons {
-        gap: 8px;
-    }
-    
-    .number-picker-btn {
-        width: 48px;
-        height: 48px;
-        font-size: 20px;
-    }
-    
-    .number-picker-btn.delete-btn,
-    .number-picker-btn.cancel-btn {
-        width: 60px;
-        font-size: 11px;
-    }
-}
-/* ========== 底部数字键盘 ========== */
-.number-pad {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 20px;
-    padding: 15px;
-    background: #f5f5f5;
-    border-radius: 60px;
-    flex-wrap: wrap;
-}
-
-.number-pad-btn {
-    width: 60px;
-    height: 60px;
-    border: 2px solid #2a5298;
-    background: white;
-    color: #2a5298;
-    border-radius: 30px;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.number-pad-btn:hover {
-    background: #2a5298;
-    color: white;
-}
-
-.number-pad-btn.clear-btn {
-    background: #ffebee;
-    border-color: #f44336;
-    color: #c62828;
-    font-size: 18px;
-}
-
-.number-pad-btn.clear-btn:hover {
-    background: #f44336;
-    color: white;
-}
-
-@media (max-width: 550px) {
-    .number-pad-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 20px;
-    }
-}
-
-@media (max-width: 450px) {
-    .number-pad {
-        gap: 8px;
-        padding: 10px;
-    }
-    .number-pad-btn {
-        width: 38px;
-        height: 38px;
-        font-size: 18px;
-    }
-}
-/* ========== 底部数字键盘 ========== */
-.number-pad {
-    display: flex;
-    justify-content: center;
-    gap: 12px;
-    margin-top: 20px;
-    padding: 15px;
-    background: #f5f5f5;
-    border-radius: 60px;
-    flex-wrap: wrap;
-}
-
-.number-pad-btn {
-    width: 60px;
-    height: 60px;
-    border: 2px solid #2a5298;
-    background: white;
-    color: #2a5298;
-    border-radius: 30px;
-    font-size: 24px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.number-pad-btn:hover {
-    background: #2a5298;
-    color: white;
-    transform: scale(1.05);
-}
-
-.number-pad-btn:active {
-    transform: scale(0.95);
-}
-
-@media (max-width: 550px) {
-    .number-pad {
-        gap: 8px;
-        padding: 12px;
-    }
-    .number-pad-btn {
-        width: 45px;
-        height: 45px;
-        font-size: 20px;
-    }
-}
-
-@media (max-width: 450px) {
-    .number-pad {
-        gap: 6px;
-        padding: 10px;
-    }
-    .number-pad-btn {
-        width: 38px;
-        height: 38px;
-        font-size: 18px;
     }
 }
