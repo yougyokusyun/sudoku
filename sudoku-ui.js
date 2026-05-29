@@ -638,15 +638,18 @@ function updateBoardDisplay() {
                 if (originalBoard[i][j] !== 0) {
                     input.classList.add('original');
                     input.classList.remove('user-filled');
-                    input.readOnly = true;
+                    // 原始题目格子只读，不弹出键盘
+                    input.setAttribute('readonly', 'readonly');
                 } else if (val !== 0) {
                     input.classList.remove('original');
                     input.classList.add('user-filled');
-                    input.readOnly = isExampleMode ? true : practiceEditMode;
+                    // 用户填入的数字格子只读，不弹出键盘
+                    input.setAttribute('readonly', 'readonly');
                 } else {
                     input.classList.remove('original');
                     input.classList.remove('user-filled');
-                    input.readOnly = isExampleMode ? true : practiceEditMode;
+                    // 空格子也只读，不弹出键盘，使用底部数字按钮输入
+                    input.setAttribute('readonly', 'readonly');
                 }
             }
         }
@@ -689,6 +692,8 @@ function createBoard() {
             input.maxLength = 1;
             input.id = `cell-${i}-${j}`;
             input.className = 'main-number';
+            // 禁止手机弹出系统键盘
+            input.setAttribute('readonly', 'readonly');
             input.addEventListener('click', (e) => {
                 e.stopPropagation();
                 selectCell(i, j);
@@ -1186,53 +1191,52 @@ function handleKeyDown(e, row, col) {
     }
 }
 
-function toggleEditMode() {
-    if (isExampleMode) {
-        exampleEditMode = !exampleEditMode;
-        const dropdownBtn = document.getElementById('candidatesDropdownBtn');
-        const editMenuItem = document.querySelector('[data-action="edit"]');
-        
-        if (exampleEditMode) {
-            if (dropdownBtn) dropdownBtn.classList.add('active');
-            if (editMenuItem) editMenuItem?.classList.add('active');
-            showTemporaryMessage('例题模式：候选数编辑模式，点击候选数或按数字键可添加/删除', 'info');
-        } else {
-            if (dropdownBtn) dropdownBtn.classList.remove('active');
-            if (editMenuItem) editMenuItem?.classList.remove('active');
-            showTemporaryMessage('例题模式：候选数只读模式', 'info');
+function updateBoardDisplay() {
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            const input = document.getElementById(`cell-${i}-${j}`);
+            if (input) {
+                const val = currentBoard[i][j];
+                input.value = val === 0 ? '' : val;
+                
+                if (originalBoard[i][j] !== 0) {
+                    input.classList.add('original');
+                    input.classList.remove('user-filled');
+                    // 原始题目格子只读，不弹出键盘
+                    input.setAttribute('readonly', 'readonly');
+                } else if (val !== 0) {
+                    input.classList.remove('original');
+                    input.classList.add('user-filled');
+                    // 用户填入的数字格子只读，不弹出键盘
+                    input.setAttribute('readonly', 'readonly');
+                } else {
+                    input.classList.remove('original');
+                    input.classList.remove('user-filled');
+                    // 空格子也只读，不弹出键盘，使用底部数字按钮输入
+                    input.setAttribute('readonly', 'readonly');
+                }
+            }
         }
-        renderAllCandidates();
-        return;
     }
     
-    practiceEditMode = !practiceEditMode;
-    const dropdownBtn = document.getElementById('candidatesDropdownBtn');
-    const editMenuItem = document.querySelector('[data-action="edit"]');
-    
-    if (practiceEditMode) {
-        if (dropdownBtn) dropdownBtn.classList.add('active');
-        if (editMenuItem) editMenuItem?.classList.add('active');
-        // 进入候选数编辑模式：格子变为只读
-        for (let i = 0; i < 9; i++) {
-            for (let j = 0; j < 9; j++) {
-                const input = document.getElementById(`cell-${i}-${j}`);
-                if (input && originalBoard[i][j] === 0) input.readOnly = true;
-            }
+    if (isExampleMode) {
+        if (exampleShowCandidates) {
+            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
+            renderAllCandidates();
+        } else {
+            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
         }
-        renderAllCandidates();
-        showTemporaryMessage('练习模式：候选数编辑模式，点击候选数或按数字键可添加/删除', 'info');
     } else {
-        if (dropdownBtn) dropdownBtn.classList.remove('active');
-        if (editMenuItem) editMenuItem?.classList.remove('active');
-        // 退出候选数编辑模式：格子恢复可输入
-        for (let i = 0; i < 9; i++) {
-            for (let j = 0; j < 9; j++) {
-                const input = document.getElementById(`cell-${i}-${j}`);
-                if (input && originalBoard[i][j] === 0) input.readOnly = false;
+        if (practiceShowCandidates) {
+            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
+            for (let i = 0; i < 9; i++) {
+                for (let j = 0; j < 9; j++) {
+                    renderCellCandidates(i, j);
+                }
             }
+        } else {
+            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
         }
-        if (practiceShowCandidates) renderAllCandidates();
-        showTemporaryMessage('练习模式：数字输入模式，点击底部数字按钮或按数字键填入', 'info');
     }
 }
 
@@ -1573,10 +1577,13 @@ function enterExampleMode() {
         modeBadge.innerHTML = '📖 例题模式';
     }
     
+    // 格子只读，不弹出键盘
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
-            if (input && originalBoard[i][j] === 0) input.readOnly = true;
+            if (input) {
+                input.setAttribute('readonly', 'readonly');
+            }
         }
     }
     
@@ -1630,10 +1637,13 @@ function exitExampleMode() {
         modeBadge.innerHTML = '✏️ 练习模式';
     }
     
+    // 格子只读，不弹出键盘
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
-            if (input && originalBoard[i][j] === 0) input.readOnly = false;
+            if (input) {
+                input.setAttribute('readonly', 'readonly');
+            }
         }
     }
     
@@ -1663,9 +1673,6 @@ function exitExampleMode() {
     const manualHint = document.getElementById('manualEditHint');
     if (manualHint) manualHint.remove();
     
-    // 更新自由模式状态
-    updateFreeModeStatus();
-    
     showTemporaryMessage('已切换到练习模式', 'info');
 }
 
@@ -1677,10 +1684,14 @@ function enableManualEditInExampleMode() {
     modeBadge.className = 'mode-badge manual-mode';
     modeBadge.innerHTML = '✏️ 手动编辑';
     
+    // 解除只读，允许用户输入（但手机端仍然使用底部键盘）
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
-            if (input && originalBoard[i][j] === 0) input.readOnly = false;
+            if (input && originalBoard[i][j] === 0) {
+                // 注意：仍然设为只读，使用底部键盘输入
+                input.setAttribute('readonly', 'readonly');
+            }
         }
     }
     
@@ -1700,7 +1711,7 @@ function enableManualEditInExampleMode() {
     }
     renderAllCandidates();
     showManualEditHint();
-    showTemporaryMessage('已切换到手动编辑模式', 'info');
+    showTemporaryMessage('已切换到手动编辑模式，点击底部数字按钮输入', 'info');
 }
 
 function showManualEditHint() {
