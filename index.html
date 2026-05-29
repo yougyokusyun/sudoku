@@ -27,6 +27,10 @@
             </select>
         </div>
         <div class="action-buttons">
+            <!-- 独立按钮：编辑候选数（切换模式） -->
+            <button id="editModeBtn" class="edit-mode-btn">✏️ 编辑候选数</button>
+            
+            <!-- 下拉按钮 -->
             <div class="dropdown-wrapper" id="candidatesDropdown">
                 <button class="dropdown-btn" id="candidatesDropdownBtn">
                     🧰 更多操作 ▼
@@ -38,8 +42,6 @@
                     <div class="menu-item" data-action="practice">✏️ 练习模式</div>
                     <div class="menu-item" data-action="fillCandidates">🔢 补全候选数</div>
                     <div class="menu-item" data-action="nextHint">💡 下一步提示</div>
-                    <div class="menu-item" data-action="edit" id="editCandidatesMenuItem">✏️ 编辑候选数</div>
-                    <div class="menu-item" data-action="toggle" id="toggleCandidatesMenuItem">🔢 显示候选数</div>
                 </div>
             </div>
             <div id="exampleControls" style="display: none;">
@@ -92,7 +94,7 @@
                 <tbody id="sudoku-body"></tbody>
             </table>
         </div>
-        <!-- 数字键盘放在 game-area 内部，棋盘右侧 -->
+        <!-- 数字键盘 -->
         <div class="number-pad" id="numberPad"></div>
         <div class="explanation-sidebar" id="explanationSidebar">
             <div class="explanation-panel">

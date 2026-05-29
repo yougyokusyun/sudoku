@@ -2,27 +2,7 @@
  * 数独解题器 - UI交互逻辑
  * 依赖：sudoku-core.js（核心解题）、puzzles.js（题库）
  */
-// 检查用户候选数与系统候选数是否完全一致
-function isUserCandidatesMatchSystem() {
-    const sysCandidates = getSystemCandidates();
-    for (let i = 0; i < 9; i++) {
-        for (let j = 0; j < 9; j++) {
-            if (currentBoard[i][j] === 0) {
-                const userSet = userCandidates[i][j];
-                const sysSet = sysCandidates[i][j];
-                
-                // 检查大小是否相同
-                if (userSet.size !== sysSet.size) return false;
-                
-                // 检查每个数字是否都存在
-                for (const num of userSet) {
-                    if (!sysSet.has(num)) return false;
-                }
-            }
-        }
-    }
-    return true;
-}
+
 // ==================== 错误计数变量 ====================
 let errorCount = 0;
 let isFreeMode = false;  // 自由模式：当没有任何格子可以推导时允许任意操作
@@ -58,14 +38,12 @@ function resetErrorCount() {
 // ==================== 推导检查函数 ====================
 
 // 检查当前格子是否能通过数独规则唯一确定数字
-// 返回：{ canDerive: boolean, value: number|null, technique: string }
 function canDeriveCellValue(row, col) {
-    // 如果已经有数字，返回 false
     if (currentBoard[row][col] !== 0) {
         return { canDerive: false, value: null, technique: '' };
     }
     
-    // 1. 唯一候选数法（Naked Single）：检查候选数是否只有一个
+    // 1. 唯一候选数法
     const candidates = new Set();
     for (let n = 1; n <= 9; n++) {
         if (isValidMove(row, col, n)) {
@@ -77,8 +55,7 @@ function canDeriveCellValue(row, col) {
         return { canDerive: true, value: value, technique: `唯一候选数法：格子 (${row+1},${col+1}) 只剩下数字 ${value}` };
     }
     
-    // 2. 唯余法（Hidden Single）：检查行中该数字是否只出现在这个格子
-    // 检查行
+    // 2. 唯余法 - 检查行
     for (let num = 1; num <= 9; num++) {
         let count = 0;
         let pos = -1;
@@ -134,7 +111,6 @@ function canDeriveCellValue(row, col) {
 }
 
 // 检查整个盘面是否有任何格子可以唯一确定数字
-// 返回：{ hasDerivable: boolean, row: number, col: number, value: number, technique: string }
 function hasAnyDerivableCell() {
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
@@ -155,6 +131,24 @@ function hasAnyDerivableCell() {
     return { hasDerivable: false, row: -1, col: -1, value: null, technique: '' };
 }
 
+// 检查用户候选数与系统候选数是否完全一致
+function isUserCandidatesMatchSystem() {
+    const sysCandidates = getSystemCandidates();
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            if (currentBoard[i][j] === 0) {
+                const userSet = userCandidates[i][j];
+                const sysSet = sysCandidates[i][j];
+                if (userSet.size !== sysSet.size) return false;
+                for (const num of userSet) {
+                    if (!sysSet.has(num)) return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
 // 检查并更新自由模式状态
 function updateFreeModeStatus() {
     if (isExampleMode) return;
@@ -163,7 +157,6 @@ function updateFreeModeStatus() {
     const candidatesMatch = isUserCandidatesMatchSystem();
     
     if (!derivable.hasDerivable && candidatesMatch) {
-        // 没有任何格子可以推导，且候选数一致，进入自由模式
         if (!isFreeMode) {
             isFreeMode = true;
             showTemporaryMessage('当前没有任何格子可以推导，已进入自由模式，可任意填写', 'warning');
@@ -174,7 +167,6 @@ function updateFreeModeStatus() {
             }
         }
     } else if (!derivable.hasDerivable && !candidatesMatch) {
-        // 没有任何格子可以推导，但候选数不一致
         if (isFreeMode) {
             isFreeMode = false;
             const modeBadge = document.getElementById('modeBadge');
@@ -184,13 +176,7 @@ function updateFreeModeStatus() {
                 modeBadge.classList.add('practice-mode');
             }
         }
-        // 提示用户候选数不一致（不自动弹出，只在顶部显示）
-        const modeBadge = document.getElementById('modeBadge');
-        if (modeBadge && !modeBadge.innerHTML.includes('候选数')) {
-            // 可以在徽章上添加标记，但不强制弹窗
-        }
     } else if (derivable.hasDerivable) {
-        // 有格子可以确定，退出自由模式
         if (isFreeMode) {
             isFreeMode = false;
             const modeBadge = document.getElementById('modeBadge');
@@ -216,7 +202,6 @@ function initUserCandidates() {
         }
     }
     
-    // 清空显示区域
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const div = document.getElementById(`candidates-${i}-${j}`);
@@ -241,11 +226,9 @@ function syncUserCandidatesToDisplay() {
         }
     }
     
-    if (!isExampleMode && practiceShowCandidates) {
-        for (let i = 0; i < 9; i++) {
-            for (let j = 0; j < 9; j++) {
-                renderCellCandidates(i, j);
-            }
+    for (let i = 0; i < 9; i++) {
+        for (let j = 0; j < 9; j++) {
+            renderCellCandidates(i, j);
         }
     }
 }
@@ -271,14 +254,6 @@ function fillCandidates() {
             }
         }
     }
-    
-    if (!practiceShowCandidates) {
-        practiceShowCandidates = true;
-        const toggleMenuItem = document.querySelector('[data-action="toggle"]');
-        if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
-    }
-    
-    document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
     
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
@@ -322,7 +297,7 @@ function fillCandidates() {
     showTemporaryMessage(`已补全候选数，共添加 ${filledCount} 个候选数`, 'success');
 }
 
-// 获取系统计算的候选数（用于对比提示）
+// 获取系统计算的候选数
 function getSystemCandidates() {
     const sysCandidates = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
     for (let i = 0; i < 9; i++) {
@@ -396,7 +371,6 @@ function practiceToggleCandidate(row, col, num) {
         return;
     }
     
-    // 添加或删除候选数
     if (userCandidates[row][col].has(num)) {
         userCandidates[row][col].delete(num);
         showTemporaryMessage(`已删除候选数 ${num}`, 'info');
@@ -405,15 +379,6 @@ function practiceToggleCandidate(row, col, num) {
         showTemporaryMessage(`已添加候选数 ${num}`, 'info');
     }
     
-    // 确保候选数显示开启
-    if (!practiceShowCandidates) {
-        practiceShowCandidates = true;
-        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
-        const toggleMenuItem = document.querySelector('[data-action="toggle"]');
-        if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
-    }
-    
-    // 直接刷新这个格子的显示
     const div = document.getElementById(`candidates-${row}-${col}`);
     if (div) {
         div.innerHTML = '';
@@ -436,17 +401,13 @@ function practiceToggleCandidate(row, col, num) {
         });
     }
     
-    // 同步到显示用数组
     cellCandidates[row][col].clear();
     for (const n of userCandidates[row][col]) {
         cellCandidates[row][col].add(n);
     }
-    
-    // 输出日志确认
-    console.log(`格子(${row+1},${col+1}) 候选数:`, Array.from(userCandidates[row][col]));
 }
 
-// 获取单个格子的系统候选数（基于当前盘面排除法）
+// 获取单个格子的系统候选数
 function getSystemCandidatesForCell(row, col) {
     const candidates = new Set();
     if (currentBoard[row][col] !== 0) return candidates;
@@ -471,10 +432,8 @@ const TOTAL_FLASH_TIME = FLASH_DURATION * FLASH_REPEAT;
 
 // ==================== 模式变量 ====================
 let isExampleMode = false;
-let practiceShowCandidates = false;
-let practiceEditMode = false;
-let exampleShowCandidates = true;
-let exampleEditMode = false;
+let practiceEditMode = false;        // 练习模式：是否编辑候选数（false=数字输入模式，true=编辑候选数模式）
+let exampleEditMode = false;         // 例题模式：是否编辑候选数
 
 // ==================== 计时器变量 ====================
 let timerInterval = null;
@@ -575,12 +534,6 @@ function checkPuzzleCompletion() {
 // ==================== 渲染函数 ====================
 
 function renderAllCandidates() {
-    if (isExampleMode) {
-        if (!exampleShowCandidates) return;
-    } else {
-        if (!practiceShowCandidates) return;
-    }
-    
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             renderCellCandidates(i, j);
@@ -592,7 +545,6 @@ function renderCellCandidates(row, col) {
     const div = document.getElementById(`candidates-${row}-${col}`);
     if (!div) return;
     
-    // 如果格子有数字，清空候选数区域
     if (currentBoard[row][col] !== 0) {
         div.innerHTML = '';
         return;
@@ -600,7 +552,6 @@ function renderCellCandidates(row, col) {
     
     div.innerHTML = '';
     
-    // 练习模式：从 userCandidates 获取候选数
     let candidatesSource;
     if (isExampleMode) {
         candidatesSource = cellCandidates[row][col];
@@ -642,42 +593,22 @@ function updateBoardDisplay() {
                 if (originalBoard[i][j] !== 0) {
                     input.classList.add('original');
                     input.classList.remove('user-filled');
-                    // 原始题目格子只读，不弹出键盘
                     input.setAttribute('readonly', 'readonly');
                 } else if (val !== 0) {
                     input.classList.remove('original');
                     input.classList.add('user-filled');
-                    // 用户填入的数字格子只读，不弹出键盘
                     input.setAttribute('readonly', 'readonly');
                 } else {
                     input.classList.remove('original');
                     input.classList.remove('user-filled');
-                    // 空格子也只读，不弹出键盘，使用底部数字按钮输入
                     input.setAttribute('readonly', 'readonly');
                 }
             }
         }
     }
     
-    if (isExampleMode) {
-        if (exampleShowCandidates) {
-            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
-            renderAllCandidates();
-        } else {
-            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
-        }
-    } else {
-        if (practiceShowCandidates) {
-            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
-            for (let i = 0; i < 9; i++) {
-                for (let j = 0; j < 9; j++) {
-                    renderCellCandidates(i, j);
-                }
-            }
-        } else {
-            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
-        }
-    }
+    document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
+    renderAllCandidates();
 }
 
 function createBoard() {
@@ -696,7 +627,6 @@ function createBoard() {
             input.maxLength = 1;
             input.id = `cell-${i}-${j}`;
             input.className = 'main-number';
-            // 禁止手机弹出系统键盘
             input.setAttribute('readonly', 'readonly');
             input.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -717,14 +647,12 @@ function createBoard() {
     }
 }
 
-// 创建底部数字键盘（放在 game-area 内部）
+// 创建底部数字键盘
 function createNumberPad() {
     const existingPad = document.getElementById('numberPad');
     if (existingPad) {
-        // 清空现有内容
         existingPad.innerHTML = '';
     } else {
-        // 如果不存在，创建容器（但 HTML 中已经有了）
         return;
     }
     
@@ -807,31 +735,9 @@ function getErrorDetail(row, col, num) {
     
     return {
         title: `❌ 不能填入数字 ${num}`,
-        content: `在格子 (${row+1}, ${col+1}) 中，填入 ${num} 会违反以下规则：`,
+        content: `在格子 (${row+1}, ${col+1}) 填入 ${num} 会违反以下规则：`,
         reasons: reasons,
         suggestion: '请尝试其他数字，或者先检查该行、列、宫中已有的数字。'
-    };
-}
-
-// 获取当前格子无法推导的错误详情（但有其他格子可推导）
-function getOtherDerivableErrorDetail(row, col, num, derivableCell) {
-    return {
-        title: `❌ 不能填入数字 ${num}`,
-        content: `在格子 (${row+1}, ${col+1}) 中，数字 ${num} 无法通过当前盘面的数独规则推导出来。`,
-        reasons: [
-            `${derivableCell.technique}`,
-            `请先处理这个可以确定的格子，然后再尝试填入其他格子。`
-        ],
-        suggestion: `请先处理格子 (${derivableCell.row+1}, ${derivableCell.col+1})，填入数字 ${derivableCell.value}。`
-    };
-}
-
-// 获取当前格子推导出的正确数字提示
-function getCorrectDerivableDetail(row, col, num, derivableResult) {
-    return {
-        title: `✅ 正确填入 ${num}`,
-        content: `${derivableResult.technique}`,
-        suggestion: ''
     };
 }
 
@@ -872,29 +778,8 @@ function showErrorHintDialog(errorInfo) {
     dialog.style.display = 'flex';
 }
 
-// 显示成功提示对话框（可选）
-function showSuccessHintDialog(successInfo) {
-    const dialog = document.getElementById('hintDialog');
-    const body = document.getElementById('hintDialogBody');
-    
-    if (!dialog || !body) return;
-    
-    body.innerHTML = `
-        <div style="background: #e8f5e9; padding: 15px; border-radius: 10px;">
-            <div style="font-size: 18px; font-weight: bold; color: #2e7d32; margin-bottom: 10px;">${successInfo.title}</div>
-            <div>${successInfo.content}</div>
-        </div>
-    `;
-    
-    dialog.style.display = 'flex';
-    setTimeout(() => {
-        dialog.style.display = 'none';
-    }, 2000);
-}
-
 // ==================== 核心填入函数 ====================
 
-// 向当前选中的格子填入数字
 // 向当前选中的格子填入数字
 function fillNumberToSelectedCell(num) {
     if (currentSelectedRow === -1 || currentSelectedCol === -1) {
@@ -905,19 +790,16 @@ function fillNumberToSelectedCell(num) {
     const row = currentSelectedRow;
     const col = currentSelectedCol;
     
-    // 原始题目格子不能修改
     if (originalBoard[row][col] !== 0) {
         showTemporaryMessage('原始题目格子不能修改', 'warning');
         return;
     }
     
-    // 例题模式下且非手动编辑模式，不允许输入
     if (isExampleMode && !window.isManualEditMode) {
         showTemporaryMessage('例题模式下请使用"下一步"按钮', 'warning');
         return;
     }
     
-    // 1. 首先检查是否违反基本规则（行列宫冲突）
     if (!isValidMove(row, col, num)) {
         addError();
         const errorDetail = getErrorDetail(row, col, num);
@@ -925,18 +807,11 @@ function fillNumberToSelectedCell(num) {
         return;
     }
     
-    // 2. 检查当前格子是否能通过规则唯一确定
     const derivableCurrent = canDeriveCellValue(row, col);
-    
-    // 3. 检查整个盘面是否有任何格子可以确定
     const derivableAny = hasAnyDerivableCell();
-    
-    // 4. 检查用户候选数与系统候选数是否一致
     const candidatesMatch = isUserCandidatesMatchSystem();
     
-    // 自由模式判断：没有任何格子可以确定，且候选数一致
     if (!derivableAny.hasDerivable && candidatesMatch) {
-        // 自由模式：允许任意填入（只要不违反基本规则）
         if (!isFreeMode) {
             isFreeMode = true;
             showTemporaryMessage('当前没有任何格子可以推导，已进入自由模式，可任意填写', 'warning');
@@ -965,7 +840,6 @@ function fillNumberToSelectedCell(num) {
         return;
     }
     
-    // 5. 如果没有可推导的格子，但候选数不一致，提示用户调整候选数
     if (!derivableAny.hasDerivable && !candidatesMatch) {
         addError();
         const errorDetail = {
@@ -981,7 +855,6 @@ function fillNumberToSelectedCell(num) {
         return;
     }
     
-    // 6. 有格子可以确定，退出自由模式（如果之前是自由模式）
     if (isFreeMode) {
         isFreeMode = false;
         const modeBadge = document.getElementById('modeBadge');
@@ -993,11 +866,8 @@ function fillNumberToSelectedCell(num) {
         showTemporaryMessage('已恢复标准模式', 'info');
     }
     
-    // 7. 检查当前格子是否能确定
     if (derivableCurrent.canDerive) {
-        // 当前格子可以确定，检查填入的数字是否正确
         if (derivableCurrent.value === num) {
-            // 正确填入
             saveToHistory();
             currentBoard[row][col] = num;
             
@@ -1014,7 +884,6 @@ function fillNumberToSelectedCell(num) {
             
             showTemporaryMessage(`正确！${derivableCurrent.technique}`, 'success');
         } else {
-            // 错误：当前格子应该填入其他数字
             addError();
             const errorDetail = {
                 title: `❌ 不能填入数字 ${num}`,
@@ -1025,7 +894,6 @@ function fillNumberToSelectedCell(num) {
             showErrorHintDialog(errorDetail);
         }
     } else {
-        // 当前格子不能确定，但盘面有其他格子可以确定
         addError();
         const errorDetail = {
             title: `❌ 不能填入数字 ${num}`,
@@ -1036,6 +904,7 @@ function fillNumberToSelectedCell(num) {
         showErrorHintDialog(errorDetail);
     }
 }
+
 function selectCell(row, col) {
     currentSelectedRow = row;
     currentSelectedCol = col;
@@ -1049,21 +918,18 @@ function selectCell(row, col) {
     const container = document.getElementById(`cell-container-${row}-${col}`);
     if (container) container.classList.add('highlighted');
     
-    // 高亮同一行
     for (let c = 0; c < 9; c++) {
         if (c === col) continue;
         const cell = document.getElementById(`cell-container-${row}-${c}`);
         if (cell) cell.classList.add('highlight-row-col');
     }
     
-    // 高亮同一列
     for (let r = 0; r < 9; r++) {
         if (r === row) continue;
         const cell = document.getElementById(`cell-container-${r}-${col}`);
         if (cell) cell.classList.add('highlight-row-col');
     }
     
-    // 高亮同一宫
     const boxRow = Math.floor(row / 3) * 3;
     const boxCol = Math.floor(col / 3) * 3;
     for (let i = 0; i < 3; i++) {
@@ -1126,12 +992,9 @@ function updateStepsListDisplay() {
 // ==================== UI操作函数 ====================
 
 function handleKeyDown(e, row, col) {
-    // 高亮当前操作的格子
     selectCell(row, col);
     
-    // 例题模式下
     if (isExampleMode) {
-        // 手动编辑模式：可以直接输入数字
         if (window.isManualEditMode) {
             if (e.key >= '1' && e.key <= '9') {
                 e.preventDefault();
@@ -1155,7 +1018,6 @@ function handleKeyDown(e, row, col) {
             return;
         }
         
-        // 正常例题模式：只允许编辑候选数
         if (exampleEditMode && e.key >= '1' && e.key <= '9') {
             e.preventDefault();
             toggleCandidateNumberUI(row, col, parseInt(e.key));
@@ -1163,9 +1025,7 @@ function handleKeyDown(e, row, col) {
         return;
     }
     
-    // 练习模式
     if (practiceEditMode) {
-        // 候选数编辑模式：按数字键编辑候选数
         if (e.key >= '1' && e.key <= '9') {
             e.preventDefault();
             practiceToggleCandidate(row, col, parseInt(e.key));
@@ -1173,7 +1033,6 @@ function handleKeyDown(e, row, col) {
         return;
     }
     
-    // 练习模式 - 数字输入模式
     if (e.key >= '1' && e.key <= '9') {
         e.preventDefault();
         fillNumberToSelectedCell(parseInt(e.key));
@@ -1195,114 +1054,34 @@ function handleKeyDown(e, row, col) {
     }
 }
 
-function updateBoardDisplay() {
-    for (let i = 0; i < 9; i++) {
-        for (let j = 0; j < 9; j++) {
-            const input = document.getElementById(`cell-${i}-${j}`);
-            if (input) {
-                const val = currentBoard[i][j];
-                input.value = val === 0 ? '' : val;
-                
-                if (originalBoard[i][j] !== 0) {
-                    input.classList.add('original');
-                    input.classList.remove('user-filled');
-                    // 原始题目格子只读，不弹出键盘
-                    input.setAttribute('readonly', 'readonly');
-                } else if (val !== 0) {
-                    input.classList.remove('original');
-                    input.classList.add('user-filled');
-                    // 用户填入的数字格子只读，不弹出键盘
-                    input.setAttribute('readonly', 'readonly');
-                } else {
-                    input.classList.remove('original');
-                    input.classList.remove('user-filled');
-                    // 空格子也只读，不弹出键盘，使用底部数字按钮输入
-                    input.setAttribute('readonly', 'readonly');
-                }
-            }
-        }
-    }
-    
+// 切换编辑候选数模式（独立按钮）
+function toggleEditMode() {
     if (isExampleMode) {
-        if (exampleShowCandidates) {
-            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
-            renderAllCandidates();
+        exampleEditMode = !exampleEditMode;
+        const editBtn = document.getElementById('editModeBtn');
+        
+        if (exampleEditMode) {
+            editBtn.classList.add('active');
+            showTemporaryMessage('例题模式：候选数编辑模式，点击候选数可添加/删除', 'info');
         } else {
-            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
+            editBtn.classList.remove('active');
+            showTemporaryMessage('例题模式：数字输入模式，点击底部数字按钮填入', 'info');
         }
-    } else {
-        if (practiceShowCandidates) {
-            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
-            for (let i = 0; i < 9; i++) {
-                for (let j = 0; j < 9; j++) {
-                    renderCellCandidates(i, j);
-                }
-            }
-        } else {
-            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
-        }
-    }
-}
-
-function toggleCandidatesDisplay() {
-    if (isExampleMode) {
-        exampleShowCandidates = !exampleShowCandidates;
-        const toggleMenuItem = document.querySelector('[data-action="toggle"]');
-        if (exampleShowCandidates) {
-            if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
-            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
-            renderAllCandidates();
-            showTemporaryMessage('例题模式：候选数已显示', 'info');
-        } else {
-            if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 显示候选数';
-            document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
-            showTemporaryMessage('例题模式：候选数已隐藏', 'info');
-        }
+        renderAllCandidates();
         return;
     }
     
-    practiceShowCandidates = !practiceShowCandidates;
-    const toggleMenuItem = document.querySelector('[data-action="toggle"]');
+    practiceEditMode = !practiceEditMode;
+    const editBtn = document.getElementById('editModeBtn');
     
-    if (practiceShowCandidates) {
-        if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
-        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
-        
-        for (let i = 0; i < 9; i++) {
-            for (let j = 0; j < 9; j++) {
-                const div = document.getElementById(`candidates-${i}-${j}`);
-                if (div) {
-                    if (currentBoard[i][j] === 0) {
-                        div.innerHTML = '';
-                        const sorted = Array.from(userCandidates[i][j]).sort((a, b) => a - b);
-                        const isEditable = practiceEditMode;
-                        
-                        sorted.forEach(num => {
-                            const span = document.createElement('span');
-                            span.className = 'candidate-note';
-                            if (isEditable) {
-                                span.classList.add('editing-mode');
-                                span.style.cursor = 'pointer';
-                                span.onclick = (e) => {
-                                    e.stopPropagation();
-                                    practiceToggleCandidate(i, j, num);
-                                };
-                            }
-                            span.textContent = num;
-                            div.appendChild(span);
-                        });
-                    } else {
-                        div.innerHTML = '';
-                    }
-                }
-            }
-        }
-        showTemporaryMessage('练习模式：候选数已显示', 'info');
+    if (practiceEditMode) {
+        editBtn.classList.add('active');
+        showTemporaryMessage('练习模式：候选数编辑模式，点击候选数可添加/删除', 'info');
     } else {
-        if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 显示候选数';
-        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
-        showTemporaryMessage('练习模式：候选数已隐藏', 'info');
+        editBtn.classList.remove('active');
+        showTemporaryMessage('练习模式：数字输入模式，点击底部数字按钮填入', 'info');
     }
+    renderAllCandidates();
 }
 
 function loadPuzzle(name) {
@@ -1320,9 +1099,6 @@ function loadPuzzle(name) {
     initCandidates();
     initUserCandidates();
     
-    if (!isExampleMode && !practiceShowCandidates) {
-        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
-    }
     updateBoardDisplay();
     
     historyBoards = [cloneBoardUI(currentBoard)];
@@ -1344,7 +1120,10 @@ function loadPuzzle(name) {
         modeBadge.classList.add('practice-mode');
     }
     
-    // 更新自由模式状态
+    const editBtn = document.getElementById('editModeBtn');
+    if (editBtn) editBtn.classList.remove('active');
+    practiceEditMode = false;
+    
     updateFreeModeStatus();
     
     showTemporaryMessage(`已加载: ${name}`, 'success');
@@ -1413,7 +1192,6 @@ function undo() {
             startTimer();
         }
         
-        // 更新自由模式状态
         updateFreeModeStatus();
         
         showTemporaryMessage('已回退到上一步', 'info');
@@ -1566,6 +1344,11 @@ function enterExampleMode() {
     isExampleMode = true;
     window.isManualEditMode = false;
     
+    const editBtn = document.getElementById('editModeBtn');
+    if (editBtn) editBtn.classList.remove('active');
+    practiceEditMode = false;
+    exampleEditMode = false;
+    
     document.getElementById('exampleControls').style.display = 'flex';
     document.getElementById('explanationSidebar').style.display = 'flex';
     
@@ -1581,7 +1364,6 @@ function enterExampleMode() {
         modeBadge.innerHTML = '📖 例题模式';
     }
     
-    // 格子只读，不弹出键盘
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
@@ -1590,18 +1372,6 @@ function enterExampleMode() {
             }
         }
     }
-    
-    exampleShowCandidates = true;
-    exampleEditMode = false;
-    
-    const toggleMenuItem = document.querySelector('[data-action="toggle"]');
-    if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
-    
-    const editMenuItem = document.querySelector('[data-action="edit"]');
-    if (editMenuItem) editMenuItem.classList.remove('active');
-    
-    const dropdownBtn = document.getElementById('candidatesDropdownBtn');
-    if (dropdownBtn) dropdownBtn.classList.remove('active');
     
     document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
     renderAllCandidates();
@@ -1626,6 +1396,11 @@ function exitExampleMode() {
     isExampleMode = false;
     window.isManualEditMode = false;
     
+    const editBtn = document.getElementById('editModeBtn');
+    if (editBtn) editBtn.classList.remove('active');
+    practiceEditMode = false;
+    exampleEditMode = false;
+    
     document.getElementById('exampleControls').style.display = 'none';
     document.getElementById('explanationSidebar').style.display = 'none';
     
@@ -1641,7 +1416,6 @@ function exitExampleMode() {
         modeBadge.innerHTML = '✏️ 练习模式';
     }
     
-    // 格子只读，不弹出键盘
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
@@ -1651,28 +1425,8 @@ function exitExampleMode() {
         }
     }
     
-    if (practiceShowCandidates) {
-        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
-        renderAllCandidates();
-    } else {
-        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
-    }
-    
-    const toggleMenuItem = document.querySelector('[data-action="toggle"]');
-    if (toggleMenuItem) {
-        toggleMenuItem.innerHTML = practiceShowCandidates ? '🔢 隐藏候选数' : '🔢 显示候选数';
-    }
-    
-    const editMenuItem = document.querySelector('[data-action="edit"]');
-    if (editMenuItem && practiceEditMode) {
-        editMenuItem.classList.add('active');
-        const dropdownBtn = document.getElementById('candidatesDropdownBtn');
-        if (dropdownBtn) dropdownBtn.classList.add('active');
-    } else if (editMenuItem) {
-        editMenuItem.classList.remove('active');
-        const dropdownBtn = document.getElementById('candidatesDropdownBtn');
-        if (dropdownBtn) dropdownBtn.classList.remove('active');
-    }
+    document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
+    renderAllCandidates();
     
     const manualHint = document.getElementById('manualEditHint');
     if (manualHint) manualHint.remove();
@@ -1688,12 +1442,10 @@ function enableManualEditInExampleMode() {
     modeBadge.className = 'mode-badge manual-mode';
     modeBadge.innerHTML = '✏️ 手动编辑';
     
-    // 解除只读，允许用户输入（但手机端仍然使用底部键盘）
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
             if (input && originalBoard[i][j] === 0) {
-                // 注意：仍然设为只读，使用底部键盘输入
                 input.setAttribute('readonly', 'readonly');
             }
         }
@@ -1701,18 +1453,10 @@ function enableManualEditInExampleMode() {
     
     if (!exampleEditMode) {
         exampleEditMode = true;
-        const editMenuItem = document.querySelector('[data-action="edit"]');
-        const dropdownBtn = document.getElementById('candidatesDropdownBtn');
-        if (editMenuItem) editMenuItem.classList.add('active');
-        if (dropdownBtn) dropdownBtn.classList.add('active');
+        const editBtn = document.getElementById('editModeBtn');
+        if (editBtn) editBtn.classList.add('active');
     }
     
-    if (!exampleShowCandidates) {
-        exampleShowCandidates = true;
-        const toggleMenuItem = document.querySelector('[data-action="toggle"]');
-        if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
-        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
-    }
     renderAllCandidates();
     showManualEditHint();
     showTemporaryMessage('已切换到手动编辑模式，点击底部数字按钮输入', 'info');
@@ -1763,15 +1507,15 @@ function retryAutoSolve() {
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             const input = document.getElementById(`cell-${i}-${j}`);
-            if (input && originalBoard[i][j] === 0) input.readOnly = true;
+            if (input && originalBoard[i][j] === 0) {
+                input.setAttribute('readonly', 'readonly');
+            }
         }
     }
     
     exampleEditMode = false;
-    const editMenuItem = document.querySelector('[data-action="edit"]');
-    const dropdownBtn = document.getElementById('candidatesDropdownBtn');
-    if (editMenuItem) editMenuItem.classList.remove('active');
-    if (dropdownBtn) dropdownBtn.classList.remove('active');
+    const editBtn = document.getElementById('editModeBtn');
+    if (editBtn) editBtn.classList.remove('active');
     
     renderAllCandidates();
     const manualHint = document.getElementById('manualEditHint');
@@ -1932,17 +1676,18 @@ function loadCustomPuzzle(grid) {
     
     const selector = document.getElementById('puzzleSelector');
     if (selector) selector.value = '';
-    if (!isExampleMode && !practiceShowCandidates) {
-        document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'none');
-    }
     
-    // 更新自由模式状态
     updateFreeModeStatus();
 }
 
 // ==================== 事件绑定 ====================
 
 function attachEvents() {
+    const editModeBtn = document.getElementById('editModeBtn');
+    if (editModeBtn) {
+        editModeBtn.addEventListener('click', toggleEditMode);
+    }
+    
     const dropdownBtn = document.getElementById('candidatesDropdownBtn');
     const dropdownMenu = document.getElementById('candidatesDropdownMenu');
     
@@ -1961,8 +1706,6 @@ function attachEvents() {
             else if (action === 'practice') { exitExampleMode(); dropdownMenu.classList.remove('show'); }
             else if (action === 'fillCandidates') { fillCandidates(); dropdownMenu.classList.remove('show'); }
             else if (action === 'nextHint') { showNextHint(); dropdownMenu.classList.remove('show'); }
-            else if (action === 'edit') { toggleEditMode(); dropdownMenu.classList.remove('show'); }
-            else if (action === 'toggle') { toggleCandidatesDisplay(); dropdownMenu.classList.remove('show'); }
         });
     }
     
@@ -1983,49 +1726,6 @@ function attachEvents() {
     initCustomDialogEvents();
 }
 
-function toggleEditMode() {
-    if (isExampleMode) {
-        exampleEditMode = !exampleEditMode;
-        const dropdownBtn = document.getElementById('candidatesDropdownBtn');
-        const editMenuItem = document.querySelector('[data-action="edit"]');
-        
-        if (exampleEditMode) {
-            if (dropdownBtn) dropdownBtn.classList.add('active');
-            if (editMenuItem) editMenuItem?.classList.add('active');
-            showTemporaryMessage('例题模式：候选数编辑模式，点击候选数可添加/删除', 'info');
-        } else {
-            if (dropdownBtn) dropdownBtn.classList.remove('active');
-            if (editMenuItem) editMenuItem?.classList.remove('active');
-            showTemporaryMessage('例题模式：候选数只读模式', 'info');
-        }
-        renderAllCandidates();
-        return;
-    }
-    
-    // 练习模式
-    practiceEditMode = !practiceEditMode;
-    const dropdownBtn = document.getElementById('candidatesDropdownBtn');
-    const editMenuItem = document.querySelector('[data-action="edit"]');
-    
-    if (practiceEditMode) {
-        if (dropdownBtn) dropdownBtn.classList.add('active');
-        if (editMenuItem) editMenuItem?.classList.add('active');
-        showTemporaryMessage('练习模式：候选数编辑模式，点击候选数可添加/删除', 'info');
-        // 重新渲染所有候选数，使候选数变成可点击
-        if (practiceShowCandidates) {
-            renderAllCandidates();
-        }
-    } else {
-        if (dropdownBtn) dropdownBtn.classList.remove('active');
-        if (editMenuItem) editMenuItem?.classList.remove('active');
-        showTemporaryMessage('练习模式：数字输入模式，点击底部数字按钮填入', 'info');
-        // 重新渲染所有候选数，移除可点击样式
-        if (practiceShowCandidates) {
-            renderAllCandidates();
-        }
-    }
-}
-
 // ==================== 初始化 ====================
 
 function initUI() {
@@ -2039,7 +1739,6 @@ function initUI() {
     const explanationSidebar = document.getElementById('explanationSidebar');
     if (explanationSidebar) explanationSidebar.style.display = 'none';
     
-    // 初始化自由模式状态
     updateFreeModeStatus();
 }
 

@@ -149,6 +149,31 @@ h1 {
     outline: none;
 }
 
+/* 独立编辑候选数按钮 */
+.edit-mode-btn {
+    padding: 6px 12px;
+    border: 2px solid #2a5298;
+    background: white;
+    color: #2a5298;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+
+.edit-mode-btn:hover {
+    background: #2a5298;
+    color: white;
+}
+
+.edit-mode-btn.active {
+    background: #ff9800;
+    border-color: #ff9800;
+    color: white;
+}
+
 /* 下拉按钮容器 */
 .dropdown-wrapper {
     position: relative;
@@ -484,7 +509,7 @@ h1 {
     }
 }
 
-/* 竖屏手机端 - 根据棋盘大小调整 */
+/* 竖屏手机端 */
 @media (max-aspect-ratio: 1/1) and (max-width: 550px) {
     .number-pad {
         gap: 6px;
@@ -525,7 +550,7 @@ h1 {
     }
 }
 
-/* 横屏模式 - 键盘放在右侧垂直排列，高度与棋盘匹配 */
+/* 横屏模式 */
 @media (min-aspect-ratio: 1/1) {
     .number-pad {
         flex-direction: column;
@@ -546,7 +571,6 @@ h1 {
     }
 }
 
-/* 横屏大屏幕 - 键盘按钮稍大 */
 @media (min-aspect-ratio: 1/1) and (min-width: 1200px) {
     .number-pad {
         padding: 15px 12px;
@@ -562,7 +586,6 @@ h1 {
     }
 }
 
-/* 横屏中等屏幕 */
 @media (min-aspect-ratio: 1/1) and (min-width: 768px) and (max-width: 1199px) {
     .number-pad {
         padding: 10px 8px;
@@ -576,7 +599,6 @@ h1 {
     }
 }
 
-/* 横屏手机端 - 键盘高度不超过棋盘 */
 @media (min-aspect-ratio: 1/1) and (max-width: 767px) {
     .number-pad {
         padding: 8px 6px;
@@ -592,7 +614,6 @@ h1 {
     }
 }
 
-/* 横屏超小屏 */
 @media (min-aspect-ratio: 1/1) and (max-width: 550px) {
     .number-pad {
         padding: 6px 5px;
@@ -608,7 +629,7 @@ h1 {
     }
 }
 
-/* 横屏且棋盘格子较小时，键盘相应缩小 */
+/* 横屏且棋盘格子较小时 */
 @media (min-aspect-ratio: 1/1) and (max-width: 900px) {
     .cell-container {
         width: 45px;
@@ -667,12 +688,10 @@ h1 {
     order: 3;
 }
 
-/* 例题模式时显示右侧面板 */
 .game-area.example-mode .explanation-sidebar {
     display: flex;
 }
 
-/* 横屏时右侧面板顺序 */
 @media (min-aspect-ratio: 1/1) {
     .explanation-sidebar {
         order: 2;
@@ -1062,7 +1081,6 @@ h1 {
 }
 
 /* ========== 响应式布局 ========== */
-/* 棋盘尺寸响应式 */
 @media (max-width: 1200px) {
     .cell-container { width: 55px; height: 55px; }
     .main-number { font-size: 26px; }
@@ -1103,7 +1121,6 @@ h1 {
     .candidate-note { font-size: 8px; }
 }
 
-/* 手机端布局调整 */
 @media (max-width: 650px) {
     .header-with-timer {
         flex-direction: column;
