@@ -385,7 +385,6 @@ function showHintDialog(messages) {
 }
 
 // 练习模式下编辑候选数
-// 练习模式下编辑候选数（用户自由编辑，不增加错误）
 function practiceToggleCandidate(row, col, num) {
     if (!practiceEditMode) {
         showTemporaryMessage('请先开启"编辑候选数"模式', 'warning');
@@ -397,7 +396,7 @@ function practiceToggleCandidate(row, col, num) {
         return;
     }
     
-    // 编辑候选数：不增加错误，用户可自由调整
+    // 添加或删除候选数
     if (userCandidates[row][col].has(num)) {
         userCandidates[row][col].delete(num);
         showTemporaryMessage(`已删除候选数 ${num}`, 'info');
@@ -406,6 +405,7 @@ function practiceToggleCandidate(row, col, num) {
         showTemporaryMessage(`已添加候选数 ${num}`, 'info');
     }
     
+    // 确保候选数显示开启
     if (!practiceShowCandidates) {
         practiceShowCandidates = true;
         document.querySelectorAll('.candidates-area').forEach(d => d.style.display = 'flex');
@@ -413,6 +413,7 @@ function practiceToggleCandidate(row, col, num) {
         if (toggleMenuItem) toggleMenuItem.innerHTML = '🔢 隐藏候选数';
     }
     
+    // 直接刷新这个格子的显示
     const div = document.getElementById(`candidates-${row}-${col}`);
     if (div) {
         div.innerHTML = '';
@@ -435,13 +436,14 @@ function practiceToggleCandidate(row, col, num) {
         });
     }
     
+    // 同步到显示用数组
     cellCandidates[row][col].clear();
     for (const n of userCandidates[row][col]) {
         cellCandidates[row][col].add(n);
     }
     
-    // 编辑候选数后，重新检查自由模式状态（但不自动退出，只是更新提示）
-    updateFreeModeStatus();
+    // 输出日志确认
+    console.log(`格子(${row+1},${col+1}) 候选数:`, Array.from(userCandidates[row][col]));
 }
 
 // 获取单个格子的系统候选数（基于当前盘面排除法）
@@ -590,6 +592,7 @@ function renderCellCandidates(row, col) {
     const div = document.getElementById(`candidates-${row}-${col}`);
     if (!div) return;
     
+    // 如果格子有数字，清空候选数区域
     if (currentBoard[row][col] !== 0) {
         div.innerHTML = '';
         return;
@@ -597,6 +600,7 @@ function renderCellCandidates(row, col) {
     
     div.innerHTML = '';
     
+    // 练习模式：从 userCandidates 获取候选数
     let candidatesSource;
     if (isExampleMode) {
         candidatesSource = cellCandidates[row][col];
@@ -1977,6 +1981,49 @@ function attachEvents() {
     });
     
     initCustomDialogEvents();
+}
+
+function toggleEditMode() {
+    if (isExampleMode) {
+        exampleEditMode = !exampleEditMode;
+        const dropdownBtn = document.getElementById('candidatesDropdownBtn');
+        const editMenuItem = document.querySelector('[data-action="edit"]');
+        
+        if (exampleEditMode) {
+            if (dropdownBtn) dropdownBtn.classList.add('active');
+            if (editMenuItem) editMenuItem?.classList.add('active');
+            showTemporaryMessage('例题模式：候选数编辑模式，点击候选数可添加/删除', 'info');
+        } else {
+            if (dropdownBtn) dropdownBtn.classList.remove('active');
+            if (editMenuItem) editMenuItem?.classList.remove('active');
+            showTemporaryMessage('例题模式：候选数只读模式', 'info');
+        }
+        renderAllCandidates();
+        return;
+    }
+    
+    // 练习模式
+    practiceEditMode = !practiceEditMode;
+    const dropdownBtn = document.getElementById('candidatesDropdownBtn');
+    const editMenuItem = document.querySelector('[data-action="edit"]');
+    
+    if (practiceEditMode) {
+        if (dropdownBtn) dropdownBtn.classList.add('active');
+        if (editMenuItem) editMenuItem?.classList.add('active');
+        showTemporaryMessage('练习模式：候选数编辑模式，点击候选数可添加/删除', 'info');
+        // 重新渲染所有候选数，使候选数变成可点击
+        if (practiceShowCandidates) {
+            renderAllCandidates();
+        }
+    } else {
+        if (dropdownBtn) dropdownBtn.classList.remove('active');
+        if (editMenuItem) editMenuItem?.classList.remove('active');
+        showTemporaryMessage('练习模式：数字输入模式，点击底部数字按钮填入', 'info');
+        // 重新渲染所有候选数，移除可点击样式
+        if (practiceShowCandidates) {
+            renderAllCandidates();
+        }
+    }
 }
 
 // ==================== 初始化 ====================
