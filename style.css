@@ -126,20 +126,57 @@ h1 {
 /* 控制区域 */
 .controls {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     align-items: center;
     margin-bottom: 20px;
     flex-wrap: wrap;
     gap: 12px;
 }
 
+/* 棋盘列：下拉框 + (棋盘+数字键盘) 纵向排列，下拉框与「棋盘+数字键盘」同宽 */
+.board-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+/* 棋盘行：横屏时棋盘与竖排数字键盘并排；竖屏时数字键盘落到棋盘下方 */
+.board-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+@media (max-aspect-ratio: 1/1) {
+    .board-row {
+        flex-direction: column;
+    }
+}
+
 .puzzle-selector {
-    flex: 2;
-    min-width: 180px;
+    /* 位于棋盘正上方，与棋盘同宽 */
+    width: 100%;
+    display: flex;
+    gap: 8px;
+}
+
+#gradeSelector {
+    flex: 1;
+    min-width: 0;
+    padding: 8px 12px;
+    border: 2px solid #2a5298;
+    border-radius: 30px;
+    font-size: 13px;
+    background: white;
+    cursor: pointer;
+    outline: none;
 }
 
 #puzzleSelector {
-    width: 100%;
+    flex: 1;
+    min-width: 0;
     padding: 8px 12px;
     border: 2px solid #2a5298;
     border-radius: 30px;
@@ -416,6 +453,23 @@ h1 {
     color: #ff9800;
     border-radius: 3px;
     cursor: pointer;
+}
+
+/* 候选数完整性着色：该格候选已写全 = 黄色；只写了一部分 = 绿色 */
+.candidates-area.cand-full .candidate-note {
+    color: #c58a00;
+    background: #fff8e1;
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+.candidates-area.cand-partial .candidate-note {
+    color: #1f9d55;
+    background: #eafaf1;
+    font-weight: 600;
+    border-radius: 3px;
+    padding: 0 2px;
 }
 
 /* 候选数闪烁动画效果 */
@@ -767,6 +821,25 @@ h1 {
 .step-item:hover {
     transform: translateX(3px);
     background: #eef2ff;
+}
+
+/* 教学模式：步骤历史里按需查看该步推导过程的按钮 */
+.step-derive-btn {
+    margin-top: 6px;
+    padding: 3px 10px;
+    font-size: 11px;
+    border: 1px solid #c5cee0;
+    border-radius: 12px;
+    background: #f8faff;
+    color: #2c3e66;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.step-derive-btn:hover {
+    background: #2c3e66;
+    color: #fff;
+    border-color: #2c3e66;
 }
 
 /* 临时提示消息 */
@@ -1204,5 +1277,801 @@ h1 {
     
     .timer-display {
         padding: 3px 10px;
+    }
+}
+
+/* ==================== 修复补丁：数字键盘删除键 & 移动端适配 ==================== */
+.number-pad-btn.number-pad-del {
+    border-color: #c0392b;
+    color: #c0392b;
+    font-size: 22px;
+}
+
+.number-pad-btn.number-pad-del:hover {
+    background: #c0392b;
+    color: #ffffff;
+}
+
+/* 10 个按键在窄屏下会溢出：收紧尺寸并允许换行 */
+@media (max-width: 640px) {
+    .number-pad {
+        gap: 4px;
+        padding: 8px 10px;
+        border-radius: 30px;
+        flex-wrap: wrap;
+        max-width: 100%;
+    }
+
+    .number-pad-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 15px;
+        border-radius: 17px;
+        border-width: 1.5px;
+    }
+
+    .number-pad-btn.number-pad-del {
+        font-size: 17px;
+    }
+}
+
+
+/* ==================== 步骤可视化：盘面覆盖层 ==================== */
+.sudoku-container {
+    position: relative;
+}
+
+.step-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 30;
+    overflow: visible;
+}
+
+.step-overlay .link-strong {
+    stroke: #e74c3c;
+    stroke-width: 3.2;
+    fill: none;
+    stroke-linecap: round;
+}
+
+.step-overlay .link-weak {
+    stroke: #3498db;
+    stroke-width: 2.4;
+    fill: none;
+    stroke-dasharray: 8 5;
+    stroke-linecap: round;
+}
+
+.step-overlay .node-circle {
+    fill: rgba(255, 255, 255, 0.94);
+    stroke: #2c3e50;
+    stroke-width: 2.4;
+}
+
+.step-overlay .node-circle.is-start {
+    stroke: #e74c3c;
+    stroke-width: 3.6;
+}
+
+.step-overlay .node-circle.is-end {
+    stroke: #8e44ad;
+    stroke-width: 3.6;
+}
+
+.step-overlay .node-text {
+    font-weight: 700;
+    fill: #2c3e50;
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
+.step-overlay .node-order {
+    font-weight: 700;
+    fill: #ffffff;
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
+.step-overlay .order-bg {
+    fill: #2c3e50;
+}
+
+.step-overlay .order-bg.is-start {
+    fill: #e74c3c;
+}
+
+.step-overlay .order-bg.is-end {
+    fill: #8e44ad;
+}
+
+.step-overlay .band-base {
+    fill: rgba(231, 76, 60, 0.13);
+    stroke: rgba(231, 76, 60, 0.45);
+    stroke-width: 1.5;
+}
+
+.step-overlay .band-cover {
+    fill: rgba(52, 152, 219, 0.13);
+    stroke: rgba(52, 152, 219, 0.45);
+    stroke-width: 1.5;
+}
+
+.step-overlay .target-x {
+    stroke: #e67e22;
+    stroke-width: 3.4;
+    stroke-linecap: round;
+}
+
+.step-overlay .target-circle {
+    fill: none;
+    stroke: #e67e22;
+    stroke-width: 2;
+    stroke-dasharray: 4 3;
+}
+
+.step-overlay .fill-marker {
+    fill: rgba(39, 174, 96, 0.18);
+    stroke: #27ae60;
+    stroke-width: 3;
+}
+
+/* 教学模式：候选数标注时给目标格加的圈 */
+.step-overlay .annotate-marker {
+    fill: rgba(52, 152, 219, 0.10);
+    stroke: #2980b9;
+    stroke-width: 2.6;
+    stroke-dasharray: 6 4;
+}
+
+/* 教学模式：候选数写下后的短促反馈 */
+.cell-container.annotate-flash {
+    animation: annotateFlash 0.9s ease-out;
+}
+
+@keyframes annotateFlash {
+    0%   { box-shadow: inset 0 0 0 3px rgba(41, 128, 185, 0.95); }
+    100% { box-shadow: inset 0 0 0 3px rgba(41, 128, 185, 0); }
+}
+
+/* ==================== 步骤可视化弹窗（底部/右侧浮层，不遮挡盘面） ==================== */
+.step-viz-dialog {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 3000;
+    display: flex;
+    justify-content: center;
+    padding: 10px 12px 14px;
+    pointer-events: none;
+}
+
+.step-viz-content {
+    pointer-events: auto;
+    background: #ffffff;
+    border: 1px solid #e3e9ef;
+    border-radius: 14px;
+    width: min(760px, 100%);
+    max-height: 46vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.28);
+    overflow: hidden;
+}
+
+.step-viz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 16px;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.step-viz-level {
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 10px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+.step-viz-body {
+    padding: 14px 16px;
+    overflow-y: auto;
+    flex: 1;
+    font-size: 14px;
+    color: #2c3e50;
+    line-height: 1.65;
+}
+
+.step-viz-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    border-top: 1px solid #e8ecf1;
+    background: #fafbfc;
+    flex-shrink: 0;
+}
+
+.step-viz-hint {
+    font-size: 12px;
+    color: #7f8c8d;
+}
+
+.step-viz-btn {
+    background: #27ae60;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 28px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.step-viz-btn:hover {
+    background: #229954;
+}
+
+/* 宽屏时改为右侧停靠，进一步避免遮挡盘面 */
+@media (min-width: 1100px) {
+    .step-viz-dialog {
+        left: auto;
+        right: 16px;
+        bottom: 16px;
+        padding: 0;
+        justify-content: flex-end;
+    }
+
+    .step-viz-content {
+        width: 400px;
+        max-height: 72vh;
+    }
+}
+
+/* 知识卡片内部排版 */
+.kv-section {
+    margin-bottom: 13px;
+}
+
+.kv-section:last-child {
+    margin-bottom: 0;
+}
+
+.kv-label {
+    display: inline-block;
+    font-size: 12px;
+    font-weight: 700;
+    color: #ffffff;
+    background: #5d6d7e;
+    border-radius: 6px;
+    padding: 2px 9px;
+    margin-bottom: 6px;
+}
+
+.kv-label.kv-idea { background: #e74c3c; }
+.kv-label.kv-logic { background: #2980b9; }
+.kv-label.kv-bg { background: #8e44ad; }
+.kv-label.kv-steps { background: #16a085; }
+.kv-label.kv-pitfall { background: #e67e22; }
+.kv-label.kv-chain { background: #34495e; }
+
+.kv-text {
+    margin: 0 0 4px 0;
+}
+
+.kv-list {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.kv-list li {
+    margin-bottom: 3px;
+}
+
+.kv-chain-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.kv-chain-table th,
+.kv-chain-table td {
+    border: 1px solid #dfe6ec;
+    padding: 5px 8px;
+    text-align: center;
+}
+
+.kv-chain-table th {
+    background: #f0f4f8;
+    font-weight: 700;
+}
+
+.kv-strong-tag {
+    color: #e74c3c;
+    font-weight: 700;
+}
+
+.kv-weak-tag {
+    color: #3498db;
+    font-weight: 700;
+}
+
+.kv-legend {
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 6px;
+}
+
+.kv-elim {
+    background: #fff6e5;
+    border-left: 4px solid #e67e22;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+}
+
+/* 本步推导过程：生成式判定表 + 盘面定位图 */
+.kv-label.kv-derive { background: #0f766e; }
+
+.kv-preline {
+    white-space: pre-line;
+    background: #f7f9fc;
+    padding: 6px 9px;
+    border-radius: 6px;
+}
+
+.kv-derive-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 6px 0 8px;
+}
+
+.kv-derive-table th,
+.kv-derive-table td {
+    border: 1px solid #dde3ee;
+    padding: 4px 7px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.kv-derive-table th {
+    background: #eef3fb;
+    font-weight: 700;
+}
+
+.kv-derive-table td.dg-yes {
+    color: #1f9d55;
+    font-weight: 700;
+}
+
+.kv-derive-table td.dg-no {
+    color: #c0392b;
+    font-weight: 700;
+}
+
+.dg-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 1px;
+    background: #cbd5e1;
+    border: 2px solid #8296b0;
+    width: 100%;
+    max-width: 300px;
+}
+
+.dg-cell {
+    background: #fff;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: #2c3e66;
+}
+
+.dg-cell.dg-peer { background: #fffbe6; }
+.dg-cell.dg-node { background: #dbeafe; }
+.dg-cell.dg-elim {
+    background: #ffe9e6;
+    color: #c0392b;
+    text-decoration: line-through;
+}
+.dg-cell.dg-target {
+    background: #ffd8a8;
+    outline: 2px solid #e67e22;
+    outline-offset: -2px;
+    font-weight: 700;
+}
+.dg-cell.dg-rborder { border-right: 2px solid #8296b0; }
+.dg-cell.dg-bborder { border-bottom: 2px solid #8296b0; }
+
+.dg-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 11px;
+    color: #56637a;
+    margin-top: 6px;
+}
+
+.dg-legend span { display: inline-flex; align-items: center; gap: 4px; }
+
+.dg-swatch {
+    width: 11px;
+    height: 11px;
+    border-radius: 3px;
+    display: inline-block;
+    border: 1px solid #cbd5e1;
+}
+.dg-swatch.dg-target { background: #ffd8a8; border-color: #e67e22; }
+.dg-swatch.dg-peer { background: #fffbe6; }
+.dg-swatch.dg-node { background: #dbeafe; border-color: #93c5fd; }
+.dg-swatch.dg-elim { background: #ffe9e6; border-color: #f5b7b1; }
+
+@media (max-width: 640px) {
+    .step-viz-content {
+        max-height: 56vh;
+    }
+
+    .step-viz-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .step-viz-btn {
+        width: 100%;
+    }
+
+    .step-viz-hint {
+        text-align: center;
+    }
+}
+
+/* ========== 技法详解学习面板 ========== */
+.tech-learn-dialog {
+    position: fixed;
+    inset: 0;
+    background: rgba(18, 24, 33, 0.62);
+    z-index: 3200;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 18px;
+    box-sizing: border-box;
+}
+
+.tech-learn-content {
+    background: #ffffff;
+    border-radius: 16px;
+    width: min(880px, 100%);
+    max-height: 88vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.4);
+}
+
+.tech-learn-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, #1f3a5f, #2c3e50);
+    color: #ffffff;
+    font-size: 16px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+#techLearnTitle {
+    flex: 1;
+    min-width: 0;
+    line-height: 1.35;
+}
+
+.tech-learn-level {
+    font-size: 12px;
+    font-weight: 600;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    padding: 3px 10px;
+    white-space: nowrap;
+}
+
+.tech-learn-close {
+    background: rgba(255, 255, 255, 0.16);
+    border: none;
+    color: #ffffff;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.tech-learn-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.tech-learn-body {
+    padding: 18px 20px;
+    overflow-y: auto;
+    flex: 1;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tech-learn-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 18px;
+    border-top: 1px solid #eef2f6;
+    background: #fafcfd;
+    flex-shrink: 0;
+}
+
+.tech-learn-hint {
+    font-size: 12px;
+    color: #7f8c8d;
+    line-height: 1.5;
+}
+
+.tech-learn-btn {
+    background: #2c3e50;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    padding: 9px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.tech-learn-btn:hover {
+    background: #1f2d3a;
+}
+
+/* 学习面板内部板块 */
+.lw-hero {
+    background: #f4f8fb;
+    border-left: 4px solid #2980b9;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #2c3e50;
+}
+
+.lw-block {
+    margin-bottom: 18px;
+}
+
+.lw-block:last-child {
+    margin-bottom: 0;
+}
+
+.lw-block-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f3a5f;
+    margin-bottom: 8px;
+    padding-left: 9px;
+    border-left: 4px solid #3498db;
+    line-height: 1.3;
+}
+
+.lw-steps {
+    margin: 0;
+    padding-left: 22px;
+    font-size: 13.5px;
+    line-height: 1.85;
+    color: #34495e;
+}
+
+.lw-steps li {
+    margin-bottom: 5px;
+}
+
+.lw-steps.lw-proof {
+    counter-reset: pf;
+    list-style: none;
+    padding-left: 0;
+}
+
+.lw-steps.lw-proof li {
+    counter-increment: pf;
+    position: relative;
+    padding: 6px 10px 6px 34px;
+    background: #fbfdff;
+    border: 1px solid #e8eff6;
+    border-radius: 7px;
+    margin-bottom: 6px;
+}
+
+.lw-steps.lw-proof li::before {
+    content: counter(pf);
+    position: absolute;
+    left: 8px;
+    top: 6px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #3498db;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lw-example {
+    background: #fffdf5;
+    border: 1px solid #f5e3b3;
+    border-left: 4px solid #e67e22;
+    border-radius: 8px;
+    padding: 12px 14px;
+    font-size: 13.5px;
+    line-height: 1.85;
+    color: #5b4a2f;
+}
+
+.lw-warn {
+    margin: 0;
+    padding-left: 20px;
+    font-size: 13.5px;
+    line-height: 1.8;
+    color: #b03a2e;
+}
+
+.lw-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.lw-chip {
+    background: #eef4fa;
+    border: 1px solid #cfe0ef;
+    color: #1f5f9a;
+    border-radius: 18px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.lw-chip:hover {
+    background: #dbeaf7;
+    border-color: #a9c9e4;
+}
+
+.lw-chip.is-current {
+    background: #2c3e50;
+    border-color: #2c3e50;
+    color: #ffffff;
+    cursor: default;
+}
+
+.lw-tip {
+    background: #f0f9f4;
+    border-left: 4px solid #27ae60;
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 13.5px;
+    line-height: 1.7;
+    color: #1e6b45;
+}
+
+/* 步骤弹窗里的「深入学习」链接 */
+.kv-learn-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    box-sizing: border-box;
+    background: linear-gradient(135deg, #2c3e50, #34495e);
+    color: #ffffff;
+    border: none;
+    border-radius: 9px;
+    padding: 11px 14px;
+    font-size: 13.5px;
+    font-weight: 700;
+    cursor: pointer;
+    text-align: left;
+    line-height: 1.4;
+}
+
+.kv-learn-link:hover {
+    background: linear-gradient(135deg, #1f2d3a, #2c3e50);
+}
+
+.kv-learn-link .kv-learn-arrow {
+    margin-left: auto;
+    font-size: 15px;
+}
+
+/* 技法手册列表 */
+.lw-manual-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+}
+
+.lw-manual-item {
+    text-align: left;
+    background: #ffffff;
+    border: 1px solid #e3ebf3;
+    border-radius: 10px;
+    padding: 11px 13px;
+    cursor: pointer;
+    line-height: 1.45;
+}
+
+.lw-manual-item:hover {
+    border-color: #3498db;
+    background: #f7fbff;
+}
+
+.lw-manual-name {
+    display: block;
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #1f3a5f;
+    margin-bottom: 3px;
+}
+
+.lw-manual-cat {
+    display: block;
+    font-size: 11.5px;
+    color: #7f8c8d;
+}
+
+@media (max-width: 640px) {
+    .tech-learn-dialog {
+        padding: 0;
+    }
+
+    .tech-learn-content {
+        width: 100%;
+        max-height: 100vh;
+        height: 100%;
+        border-radius: 0;
+    }
+
+    .tech-learn-footer {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .tech-learn-btn {
+        width: 100%;
+    }
+
+    .lw-manual-grid {
+        grid-template-columns: 1fr;
     }
 }

@@ -2,9 +2,9 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数独解题器</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=20261023">
 </head>
 <body>
 <div class="container">
@@ -21,11 +21,6 @@
     </div>
     
     <div class="controls">
-        <div class="puzzle-selector">
-            <select id="puzzleSelector">
-                <option value="">-- 选择题目 --</option>
-            </select>
-        </div>
         <div class="action-buttons">
             <!-- 独立按钮：编辑候选数（切换模式） -->
             <button id="editModeBtn" class="edit-mode-btn">✏️ 编辑候选数</button>
@@ -38,12 +33,15 @@
                 <div class="dropdown-menu" id="candidatesDropdownMenu">
                     <div class="menu-item" data-action="random">🎲 随机题目</div>
                     <div class="menu-item" data-action="custom">📝 自定义题目</div>
-                    <div class="menu-item" data-action="example">📖 例题模式</div>
+                    <div class="menu-item" data-action="teaching">🎓 教学模式</div>
                     <div class="menu-item" data-action="practice">✏️ 练习模式</div>
                     <div class="menu-item" data-action="fillCandidates">🔢 补全候选数</div>
                     <div class="menu-item" data-action="nextHint">💡 下一步提示</div>
+                    <div class="menu-item" data-action="techManual">📚 技法手册（全解法图文教程）</div>
                 </div>
             </div>
+            <!-- 常驻撤销按钮：练习/自由模式下同样可用（修复撤销入口缺失） -->
+            <button id="practiceUndoBtn" class="edit-mode-btn" title="撤销上一步操作">↩️ 撤销</button>
             <div id="exampleControls" style="display: none;">
                 <button id="nextStepBtn">➡️ 下一步</button>
                 <button id="undoBtn">↩️ 上一步</button>
@@ -65,6 +63,37 @@
         </div>
     </div>
     
+    <!-- 步骤可视化 / 技法知识弹窗（仅「确定」可关闭） -->
+    <div id="stepVizDialog" class="step-viz-dialog" style="display: none;">
+        <div class="step-viz-content">
+            <div class="step-viz-header">
+                <span id="stepVizTitle">链路可视化</span>
+                <span id="stepVizLevel" class="step-viz-level"></span>
+            </div>
+            <div class="step-viz-body" id="stepVizBody"></div>
+            <div class="step-viz-footer">
+                <span class="step-viz-hint">请对照盘面箭头人工核对，确认无误后点击「确定」</span>
+                <button id="stepVizOk" class="step-viz-btn">确 定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技法详解学习面板（可在步骤弹窗内点击「深入学习」打开） -->
+    <div id="techLearnDialog" class="tech-learn-dialog" style="display: none;">
+        <div class="tech-learn-content">
+            <div class="tech-learn-header">
+                <span id="techLearnTitle">技法详解</span>
+                <span id="techLearnLevel" class="tech-learn-level"></span>
+                <button id="techLearnClose" class="tech-learn-close" title="关闭">&times;</button>
+            </div>
+            <div class="tech-learn-body" id="techLearnBody"></div>
+            <div class="tech-learn-footer">
+                <span class="tech-learn-hint">学习完关闭本页，回到盘面继续核对该步推理</span>
+                <button id="techLearnBack" class="tech-learn-btn">返 回</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 自定义题目弹窗 -->
     <div id="customPuzzleDialog" class="custom-dialog" style="display: none;">
         <div class="custom-dialog-content">
@@ -89,13 +118,38 @@
     </div>
     
     <div class="game-area" id="gameArea">
-        <div class="sudoku-container">
+        <div class="board-column">
+        <div class="puzzle-selector">
+            <select id="gradeSelector">
+                <option value="">-- 选择级别 --</option>
+            </select>
+            <select id="puzzleSelector">
+                <option value="">-- 选择题目 --</option>
+            </select>
+        </div>
+        <div class="board-row">
+        <div class="sudoku-container" id="sudokuContainer">
             <table id="sudoku-board">
                 <tbody id="sudoku-body"></tbody>
             </table>
+            <!-- 链路/图形覆盖层：绘制箭头、节点编号与排除标记 -->
+            <svg id="stepOverlay" class="step-overlay" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs>
+                    <marker id="arrowStrong" viewBox="0 0 10 10" refX="9" refY="5"
+                            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#e74c3c"></path>
+                    </marker>
+                    <marker id="arrowWeak" viewBox="0 0 10 10" refX="9" refY="5"
+                            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3498db"></path>
+                    </marker>
+                </defs>
+            </svg>
         </div>
         <!-- 数字键盘 -->
         <div class="number-pad" id="numberPad"></div>
+        </div>
+        </div>
         <div class="explanation-sidebar" id="explanationSidebar">
             <div class="explanation-panel">
                 <h3>📖 解题过程</h3>
@@ -111,8 +165,8 @@
     </div>
 </div>
 
-<script src="puzzles.js"></script>
-<script src="sudoku-core.js"></script>
-<script src="sudoku-ui.js"></script>
+<script src="puzzles.js?v=20261023"></script>
+<script src="sudoku-core.js?v=20261023"></script>
+<script src="sudoku-ui.js?v=20261023"></script>
 </body>
 </html>
