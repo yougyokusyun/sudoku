@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数独解题器</title>
-    <link rel="stylesheet" href="style.css?v=20261023">
+    <link rel="stylesheet" href="style.css?v=20261027e">
 </head>
 <body>
 <div class="container">
@@ -14,38 +14,55 @@
             <span id="modeBadge" class="mode-badge practice-mode">✏️ 练习模式</span>
             <span id="errorCountBadge" class="error-count-badge">❌ 错误: 0</span>
         </div>
-        <div class="timer-display">
-            <span class="timer-icon">⏱️</span>
-            <span id="timerDisplay">00:00:00</span>
+        <!-- 二级菜单选题：点击弹出 → 级别 → 题目；选完后按钮自动缩短显示 -->
+        <div class="puzzle-picker" id="puzzlePicker">
+            <button class="pp-btn" id="ppBtn" type="button" title="点击选择题目">📚 选题 ▾</button>
+            <div class="pp-panel" id="ppPanel" style="display:none;">
+                <!-- JS 填充：四个级别，每个级别下 hover 展开题目列表 -->
+            </div>
+            <!-- 隐藏的原生 select：供 loadPuzzle / restoreProgress 等旧逻辑读取 value -->
+            <select id="gradeSelector" style="display:none;"></select>
+            <select id="puzzleSelector" style="display:none;"></select>
         </div>
-    </div>
-    
-    <div class="controls">
         <div class="action-buttons">
-            <!-- 独立按钮：编辑候选数（切换模式） -->
-            <button id="editModeBtn" class="edit-mode-btn">✏️ 编辑候选数</button>
-            
-            <!-- 下拉按钮 -->
+            <!-- 练习模式专属：候选数编辑（独立按钮，方便操作） -->
+            <button id="editCandBtn" class="edit-mode-btn" title="开启后可点击格子上的候选数进行编辑">✏️ 编辑候选数</button>
+            <!-- 更多操作下拉 -->
             <div class="dropdown-wrapper" id="candidatesDropdown">
                 <button class="dropdown-btn" id="candidatesDropdownBtn">
                     🧰 更多操作 ▼
                 </button>
                 <div class="dropdown-menu" id="candidatesDropdownMenu">
-                    <div class="menu-item" data-action="random">🎲 随机题目</div>
-                    <div class="menu-item" data-action="custom">📝 自定义题目</div>
+                    <!-- 做题辅助 -->
+                    <div class="menu-item" data-action="nextHint">💡 下一步提示</div>
+                    <div class="menu-item mode-only" data-action="candMode" id="candModeMenuItem">🔢 候选数：自动</div>
+                    <div class="menu-item cand-only" data-action="fillCandidates">🧮 补全候选数</div>
+                    <div class="menu-divider"></div>
+                    <!-- 教学专属 -->
+                    <div class="menu-item teach-only" data-action="prevStep">↩️ 教学上一步</div>
+                    <div class="menu-divider teach-only"></div>
+                    <!-- 题目与模式 -->
                     <div class="menu-item" data-action="teaching">🎓 教学模式</div>
                     <div class="menu-item" data-action="practice">✏️ 练习模式</div>
-                    <div class="menu-item" data-action="fillCandidates">🔢 补全候选数</div>
-                    <div class="menu-item" data-action="nextHint">💡 下一步提示</div>
-                    <div class="menu-item" data-action="techManual">📚 技法手册（全解法图文教程）</div>
+                    <div class="menu-divider"></div>
+                    <!-- 数据与资源 -->
+                    <div class="menu-item" data-action="exportPuzzle">📤 导出当前题目</div>
+                    <div class="menu-item" data-action="importClipboard">📥 从剪贴板导入</div>
+                    <div class="menu-item" data-action="custom">📝 自定义题目</div>
+                    <div class="menu-item" data-action="techManual">📚 技法手册</div>
+                    <div class="menu-divider"></div>
+                    <!-- 外观 -->
+                    <div class="menu-item" data-action="theme" id="themeMenuItem">🌙 夜间模式</div>
                 </div>
             </div>
-            <!-- 常驻撤销按钮：练习/自由模式下同样可用（修复撤销入口缺失） -->
-            <button id="practiceUndoBtn" class="edit-mode-btn" title="撤销上一步操作">↩️ 撤销</button>
+            <!-- 教学模式专属：下一步按钮（上一步已移入更多操作） -->
             <div id="exampleControls" style="display: none;">
                 <button id="nextStepBtn">➡️ 下一步</button>
-                <button id="undoBtn">↩️ 上一步</button>
             </div>
+        </div>
+        <div class="timer-display">
+            <span class="timer-icon">⏱️</span>
+            <span id="timerDisplay">00:00:00</span>
         </div>
     </div>
     
@@ -63,6 +80,21 @@
         </div>
     </div>
     
+    <!-- 解题成功对话框（练习模式） -->
+    <div id="completionDialog" class="hint-dialog" style="display: none;">
+        <div class="hint-dialog-content completion-dialog-content">
+            <div class="hint-dialog-header">
+                <span>🎉 恭喜解题成功</span>
+                <button class="hint-dialog-close" id="completionDialogClose">&times;</button>
+            </div>
+            <div id="completionDialogBody" class="hint-dialog-body"></div>
+            <div class="hint-dialog-footer">
+                <button id="completionRestartBtn" class="hint-dialog-btn">🔄 重新答题</button>
+                <button id="completionCloseBtn" class="hint-dialog-btn completion-secondary-btn">关闭</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 步骤可视化 / 技法知识弹窗（仅「确定」可关闭） -->
     <div id="stepVizDialog" class="step-viz-dialog" style="display: none;">
         <div class="step-viz-content">
@@ -119,14 +151,6 @@
     
     <div class="game-area" id="gameArea">
         <div class="board-column">
-        <div class="puzzle-selector">
-            <select id="gradeSelector">
-                <option value="">-- 选择级别 --</option>
-            </select>
-            <select id="puzzleSelector">
-                <option value="">-- 选择题目 --</option>
-            </select>
-        </div>
         <div class="board-row">
         <div class="sudoku-container" id="sudokuContainer">
             <table id="sudoku-board">
@@ -151,6 +175,9 @@
         </div>
         </div>
         <div class="explanation-sidebar" id="explanationSidebar">
+            <button class="sidebar-toggle" id="sidebarToggle" title="折叠/展开侧栏">◀ 折叠</button>
+            <button class="sidebar-quick-info" id="sidebarQuickInfo" title="查看上一步骤原因（折叠时也可点）">📖</button>
+            <div class="sidebar-resize-handle" id="sidebarResize" title="拖动调整侧栏宽度"></div>
             <div class="explanation-panel">
                 <h3>📖 解题过程</h3>
                 <div id="explanation-content">
@@ -161,12 +188,13 @@
                 <h3>📋 步骤历史</h3>
                 <div id="steps-list"></div>
             </div>
+            <div id="stats-panel" style="margin-top:12px;"></div>
         </div>
     </div>
 </div>
 
-<script src="puzzles.js?v=20261023"></script>
-<script src="sudoku-core.js?v=20261023"></script>
-<script src="sudoku-ui.js?v=20261023"></script>
+<script src="puzzles.js?v=20261027e"></script>
+<script src="sudoku-core.js?v=20261027e"></script>
+<script src="sudoku-ui.js?v=20261027e"></script>
 </body>
 </html>

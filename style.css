@@ -11,6 +11,36 @@ body {
     padding: 15px;
 }
 
+/* ============ 夜间模式 ============ */
+body.dark-mode {
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 100%);
+}
+body.dark-mode .container {
+    background: #1b263b;
+    color: #e0e0e0;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+body.dark-mode h1 { color: #fff; }
+body.dark-mode .cell-container {
+    background: #2a3a4d;
+    color: #e0e0e0;
+    border-color: #3d5168;
+}
+body.dark-mode .cell-container.highlight-row-col { background: #2a4a7a; }
+body.dark-mode .cell-container.highlight-box { background: #2d3f5c; }
+body.dark-mode .cell-container.highlight-same-num { background: #1e4a30 !important; }
+body.dark-mode .cell-container.highlighted { background: #5a4a1a !important; box-shadow: inset 0 0 0 3px #ffa726; }
+body.dark-mode .cell-container.border-box { border-color: #5a7595; }
+body.dark-mode .main-number { color: #e0e0e0; }
+body.dark-mode .cell-container.fixed .main-number { color: #90caf9; }
+body.dark-mode .cand-num { color: #78909c; }
+body.dark-mode select, body.dark-mode button {
+    background: #2a3a4d;
+    color: #e0e0e0;
+    border-color: #3d5168;
+}
+body.dark-mode .sudoku-container { border-color: #5a7595; }
+
 .container {
     max-width: 1600px;
     width: 100%;
@@ -24,17 +54,18 @@ body {
 /* ========== 顶部布局 ========== */
 .header-with-timer {
     display: flex;
-    justify-content: space-between;
+    /* 从左紧凑排列，右侧由计时器的 margin-left:auto 顶到行尾 */
+    justify-content: flex-start;
     align-items: center;
     margin-bottom: 15px;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 6px;
 }
 
 .title-section {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 6px;
     flex-wrap: wrap;
 }
 
@@ -103,6 +134,9 @@ h1 {
     display: flex;
     align-items: center;
     gap: 6px;
+    flex-shrink: 0;
+    /* 靠最右：其余控件保持左侧紧凑 */
+    margin-left: auto;
     background: linear-gradient(135deg, #1e3c72, #2a5298);
     padding: 4px 14px;
     border-radius: 40px;
@@ -155,24 +189,125 @@ h1 {
     }
 }
 
-.puzzle-selector {
-    /* 位于棋盘正上方，与棋盘同宽 */
-    width: 100%;
-    display: flex;
-    gap: 8px;
+/* ============ 二级菜单选题器 ============ */
+.puzzle-picker {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
 }
-
-#gradeSelector {
-    flex: 1;
-    min-width: 0;
-    padding: 8px 12px;
+.pp-btn {
+    padding: 6px 14px;
     border: 2px solid #2a5298;
-    border-radius: 30px;
-    font-size: 13px;
+    border-radius: 20px;
     background: white;
+    color: #1e3c72;
+    font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    outline: none;
+    white-space: nowrap;
+    transition: background 0.15s, color 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
 }
+.pp-btn:hover { background: #2a5298; color: white; }
+.pp-btn.has-selection {
+    background: linear-gradient(135deg, #ff9800, #e67e22);
+    border-color: #e67e22;
+    color: white;
+}
+.pp-btn .pp-grade { font-weight: 700; }
+.pp-btn .pp-name { opacity: 0.9; }
+
+.pp-panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    min-width: 280px;
+    background: white;
+    border: 1px solid #e1e8f0;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(30, 60, 120, 0.18), 0 2px 6px rgba(0,0,0,0.08);
+    z-index: 10001;
+    padding: 6px 0;
+    animation: menuFadeIn 0.15s ease-out;
+}
+.pp-group { position: relative; }
+.pp-group-title {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e3c72;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.12s;
+}
+.pp-group-title:hover { background: #e8f0ff; }
+.pp-group-title .pp-count {
+    font-size: 11px;
+    color: #95a5a6;
+    font-weight: normal;
+    background: #f0f4f8;
+    padding: 1px 8px;
+    border-radius: 10px;
+}
+.pp-group-title .pp-arrow { font-size: 10px; color: #95a5a6; margin-left: 6px; }
+.pp-sublist {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    min-width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #e1e8f0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+    z-index: 10002;
+    padding: 4px 0;
+    display: none;
+    margin-left: 4px;
+}
+.pp-group:hover > .pp-sublist,
+.pp-group.open > .pp-sublist { display: block; }
+.pp-item {
+    padding: 7px 14px;
+    cursor: pointer;
+    font-size: 12px;
+    color: #2c3e50;
+    transition: background 0.1s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #f5f7fa;
+}
+.pp-item:last-child { border-bottom: none; }
+.pp-item:hover { background: linear-gradient(135deg, #e8f0ff, #d4e4ff); color: #1a3a7a; }
+.pp-item.selected {
+    background: linear-gradient(135deg, #ff9800, #e67e22);
+    color: white;
+}
+.pp-item .pp-item-sub {
+    font-size: 10px;
+    color: #95a5a6;
+    white-space: nowrap;
+}
+.pp-item.selected .pp-item-sub { color: rgba(255,255,255,0.8); }
+
+body.dark-mode .pp-btn {
+    background: #2a3a4d; color: #e0e0e0; border-color: #3d5168;
+}
+body.dark-mode .pp-panel,
+body.dark-mode .pp-sublist {
+    background: #2a3a4d; border-color: #3d5168;
+}
+body.dark-mode .pp-group-title,
+body.dark-mode .pp-item { color: #e0e0e0; }
+body.dark-mode .pp-group-title:hover,
+body.dark-mode .pp-item:hover { background: #3d5168; }
+body.dark-mode .pp-item { border-bottom-color: #3d5168; }
 
 #puzzleSelector {
     flex: 1;
@@ -246,17 +381,24 @@ h1 {
 
 .dropdown-menu {
     position: absolute;
-    top: 100%;
+    top: calc(100% + 6px);
     right: 0;
     left: auto;
     background: white;
+    border: 1px solid #e1e8f0;
     border-radius: 12px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-    min-width: 150px;
-    z-index: 100;
-    margin-top: 8px;
+    box-shadow: 0 10px 30px rgba(30, 60, 120, 0.18), 0 2px 6px rgba(0,0,0,0.08);
+    min-width: 220px;
+    z-index: 10000;
+    margin-top: 0;
     overflow: hidden;
     display: none;
+    padding: 6px 0;
+    animation: menuFadeIn 0.15s ease-out;
+}
+@keyframes menuFadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
 }
 
 .dropdown-menu.show {
@@ -264,25 +406,48 @@ h1 {
 }
 
 .dropdown-menu .menu-item {
-    padding: 10px 14px;
+    padding: 9px 16px;
     cursor: pointer;
     font-size: 13px;
-    transition: 0.2s;
-    border-bottom: 1px solid #eee;
-    white-space: nowrap;
-}
-
-.dropdown-menu .menu-item:last-child {
+    transition: background-color 0.12s, color 0.12s;
     border-bottom: none;
+    white-space: nowrap;
+    color: #2c3e50;
+    user-select: none;
 }
 
 .dropdown-menu .menu-item:hover {
-    background: #e3f2fd;
+    background: linear-gradient(135deg, #e8f0ff, #d4e4ff);
+    color: #1a3a7a;
 }
 
 .dropdown-menu .menu-item.active {
-    background: #ff9800;
+    background: linear-gradient(135deg, #ff9800, #e67e22);
     color: white;
+}
+
+.dropdown-menu .menu-divider {
+    height: 1px;
+    margin: 4px 10px;
+    background: #eef2f7;
+    pointer-events: none;
+}
+
+/* 深色主题 */
+body.dark-mode .dropdown-menu {
+    background: #2a3a4d;
+    border-color: #3d5168;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+}
+body.dark-mode .dropdown-menu .menu-item {
+    color: #e0e0e0;
+}
+body.dark-mode .dropdown-menu .menu-item:hover {
+    background: #3d5168;
+    color: #fff;
+}
+body.dark-mode .dropdown-menu .menu-divider {
+    background: #3d5168;
 }
 
 /* 例题模式控制按钮组 */
@@ -368,8 +533,10 @@ h1 {
 
 .cell-container {
     position: relative;
-    width: 66px;
-    height: 66px;
+    /* 尺寸由 JS 按「视口 − 头部 − 30px 留白」算出，见 fitBoardSize()
+       用 !important 防止 table 自动布局把列宽压扁 */
+    width: var(--cell-size, 66px) !important;
+    height: var(--cell-size, 66px) !important;
     display: flex;
     flex-direction: column;
     background: white;
@@ -384,6 +551,25 @@ h1 {
 /* 宫高亮样式 */
 .cell-container.highlight-box {
     background-color: #f0f4ff;
+}
+
+/* 同数字高亮：选中格子有数字时，所有相同数字格子叠加更醒目的淡绿 */
+.cell-container.highlight-same-num {
+    background-color: #d4f1d8 !important;
+}
+
+/* 填完 9 个相同数字的庆祝动画：绿色脉冲 + 放大 */
+.cell-container.celebrate-num {
+    animation: celebrate-pulse 1.2s ease-out;
+    background-color: #a5d6a7 !important;
+    box-shadow: inset 0 0 0 2px #2e7d32;
+}
+
+@keyframes celebrate-pulse {
+    0%   { transform: scale(1); }
+    30%  { transform: scale(1.12); }
+    60%  { transform: scale(1.05); }
+    100% { transform: scale(1); }
 }
 
 /* 当前选中格子高亮（优先级最高） */
@@ -604,16 +790,18 @@ h1 {
     }
 }
 
-/* 横屏模式 */
+/* 横屏：键盘竖排在棋盘右侧，只占约 60px 宽，把高度全部让给棋盘 */
 @media (min-aspect-ratio: 1/1) {
     .number-pad {
         flex-direction: column;
+        flex-wrap: nowrap;
         width: auto;
         height: auto;
+        flex-shrink: 0;
         padding: 12px 10px;
         gap: 8px;
         border-radius: 30px;
-        order: 1;
+        order: 2;
         align-self: center;
     }
     
@@ -733,16 +921,37 @@ h1 {
 }
 
 /* ========== 右侧面板 ========== */
+/* 侧栏：默认折叠，练习/教学模式下都可展开 */
 .explanation-sidebar {
-    flex: 1;
-    min-width: 300px;
-    display: none;
+    width: 360px;
+    min-width: 360px;
+    flex-shrink: 0;
+    display: flex;
     flex-direction: column;
     gap: 20px;
     order: 3;
+    position: relative;
+    transition: width 0.25s ease, min-width 0.25s ease;
+    overflow: hidden;
 }
 
-.game-area.example-mode .explanation-sidebar {
+.game-area.example-mode .explanation-sidebar,
+.game-area.practice-mode .explanation-sidebar,
+.game-area.free-mode .explanation-sidebar {
+    display: flex;
+}
+
+/* 折叠状态 */
+.explanation-sidebar.collapsed {
+    width: 36px;
+    min-width: 36px;
+}
+.explanation-sidebar.collapsed > * {
+    display: none;
+}
+/* 折叠时仍保留 toggle 按钮 + 上一步原因快捷入口 */
+.explanation-sidebar.collapsed > .sidebar-toggle,
+.explanation-sidebar.collapsed > .sidebar-quick-info {
     display: flex;
 }
 
@@ -752,11 +961,148 @@ h1 {
     }
 }
 
+/* 侧栏折叠/展开按钮（贴在侧栏左边缘） */
+.sidebar-toggle {
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%) translateX(-50%);
+    width: 24px;
+    height: 56px;
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    border: none;
+    border-radius: 8px 0 0 8px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    z-index: 5;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+    box-shadow: -2px 2px 8px rgba(0,0,0,0.2);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+}
+.sidebar-toggle:hover {
+    background: linear-gradient(135deg, #2a5298, #3a62a8);
+}
+.explanation-sidebar.collapsed .sidebar-toggle {
+    writing-mode: horizontal-tb;
+    text-orientation: unset;
+}
+
+/* 侧栏宽度拖拽手柄 */
+.sidebar-resize-handle {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 6px;
+    height: 100%;
+    cursor: col-resize;
+    background: transparent;
+    transition: background 0.2s;
+    z-index: 4;
+}
+.sidebar-resize-handle:hover,
+.sidebar-resize-handle.active {
+    background: rgba(42, 82, 152, 0.4);
+}
+
+/* 折叠条上的"查看上一步原因"快捷按钮 */
+.sidebar-quick-info {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: 80px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #f39c12, #e67e22);
+    color: white;
+    cursor: pointer;
+    font-size: 14px;
+    display: none;             /* 默认隐藏，只在 collapsed 时由 CSS 规则显示 */
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    z-index: 6;
+    transition: transform 0.15s;
+}
+.sidebar-quick-info:hover {
+    transform: translateX(-50%) scale(1.08);
+}
+
+/* 上一步原因的浮层：从折叠条向左弹出 */
+.sidebar-quick-panel {
+    position: fixed;
+    right: 50px;
+    top: 80px;
+    width: 320px;
+    max-height: 60vh;
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #d5dfe8;
+    border-radius: 12px;
+    box-shadow: 0 8px 28px rgba(0,0,0,0.22);
+    padding: 14px 16px;
+    z-index: 2500;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #2c3e50;
+}
+.sidebar-quick-panel h4 {
+    margin: 0 0 8px 0;
+    font-size: 14px;
+    color: #1e3c72;
+    border-bottom: 1px solid #e3e9ef;
+    padding-bottom: 6px;
+}
+.sidebar-quick-panel .qp-close {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #95a5a6;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+}
+.sidebar-quick-panel .qp-close:hover { color: #34495e; }
+body.dark-mode .sidebar-quick-panel {
+    background: #2a3a4d;
+    color: #e0e0e0;
+    border-color: #3d5168;
+}
+body.dark-mode .sidebar-quick-panel h4 { color: #90caf9; border-bottom-color: #3d5168; }
+
 .explanation-panel {
     background: #f8faff;
     border-radius: 16px;
     padding: 18px;
     border-left: 5px solid #2a5298;
+    /* 默认隐藏：教学模式由 updateSidebarPanels() 显式 display:block */
+    display: none;
+    height: 0;
+    overflow: hidden;
+    padding: 0;
+    margin: 0;
+}
+
+/* 仅当父元素有 .teach-mode 标记时才显示（JS 同步设置此 class） */
+.game-area.teach-mode + .explanation-sidebar .explanation-panel,
+.explanation-sidebar.teach-mode .explanation-panel {
+    display: block;
+    height: auto;
+    overflow: visible;
+    padding: 18px;
+    margin: 0;
 }
 
 .explanation-panel h3 {
@@ -791,6 +1137,21 @@ h1 {
     border-radius: 16px;
     padding: 18px;
     flex: 1;
+    max-height: 350px;
+    overflow-y: auto;
+    /* 默认隐藏 */
+    display: none;
+    height: 0;
+    padding: 0;
+    margin: 0;
+    max-height: none;
+    overflow: hidden;
+}
+.explanation-sidebar.teach-mode .steps-history {
+    display: block;
+    height: auto;
+    padding: 18px;
+    margin: 0;
     max-height: 350px;
     overflow-y: auto;
 }
@@ -888,9 +1249,22 @@ h1 {
     max-width: 500px;
     width: 90%;
     max-height: 80vh;
+    min-width: 340px;
+    min-height: 240px;
     overflow: hidden;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
     animation: dialogSlideIn 0.3s ease;
+    position: relative;
+}
+
+/* 从 flex 居中切换到自由定位（用户拖动一次后） */
+.hint-dialog-content.drag-free {
+    position: absolute;
+    margin: 0;
+    max-width: none;
+    max-height: none;
+    width: auto;
+    height: auto;
 }
 
 @keyframes dialogSlideIn {
@@ -913,6 +1287,8 @@ h1 {
     align-items: center;
     font-size: 18px;
     font-weight: bold;
+    cursor: move;
+    user-select: none;
 }
 
 .hint-dialog-close {
@@ -957,6 +1333,23 @@ h1 {
 
 .hint-dialog-btn:hover {
     opacity: 0.9;
+}
+
+/* 解题成功弹框：两个按钮并排 */
+.completion-dialog-content .hint-dialog-footer {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+.completion-secondary-btn {
+    background: #fff;
+    color: #2a5298;
+    border: 2px solid #2a5298;
+}
+body.dark-mode .completion-secondary-btn {
+    background: #2a3a4d;
+    color: #90caf9;
+    border-color: #3d5168;
 }
 
 /* ========== 自定义题目弹窗样式 ========== */
@@ -1222,7 +1615,7 @@ h1 {
         align-items: stretch;
     }
     
-    .puzzle-selector {
+    .puzzle-picker {
         min-width: auto;
     }
     
@@ -2049,6 +2442,41 @@ h1 {
     color: #7f8c8d;
 }
 
+/* ============ 可拖动对话框通用样式 ============ */
+/* 右下角 resize 手柄 */
+.dialog-resize-handle {
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 18px;
+    height: 18px;
+    cursor: nwse-resize;
+    background:
+        linear-gradient(135deg, transparent 45%, rgba(120,120,120,0.5) 45%, rgba(120,120,120,0.5) 55%, transparent 55%,
+                        transparent 70%, rgba(120,120,120,0.5) 70%, rgba(120,120,120,0.5) 80%, transparent 80%,
+                        transparent 85%, rgba(120,120,120,0.5) 85%);
+    border-bottom-right-radius: 20px;
+    z-index: 10;
+}
+
+/* 拖动中的 body —— 禁止选文本干扰 */
+body.dragging-dialog {
+    user-select: none;
+    -webkit-user-select: none;
+}
+
+/* tech-learn-dialog 也支持拖动/自由定位 */
+.tech-learn-content.drag-free {
+    position: absolute;
+    margin: 0;
+    left: auto;
+    top: auto;
+}
+.tech-learn-header {
+    cursor: move;
+    user-select: none;
+}
+
 @media (max-width: 640px) {
     .tech-learn-dialog {
         padding: 0;
@@ -2074,4 +2502,156 @@ h1 {
     .lw-manual-grid {
         grid-template-columns: 1fr;
     }
+}
+
+/* ============================================================
+   最终响应式覆盖层（三档断点）
+   - ≥1100px  桌面大屏：棋盘放大，header/选关/按钮合并
+   - 600-1099px 平板：紧凑布局
+   - <600px   手机：纵向布局，棋盘占满宽度
+   此层放在文件末尾，优先级高于之前的零散规则。
+   ============================================================ */
+
+/* ====== 桌面大屏（≥1100px）====== */
+@media (min-width: 1100px) {
+    .container { padding: 14px 20px; }
+    /* 单行 header：全部控件从左连续紧凑排列 */
+    .header-with-timer {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 6px;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .title-section { gap: 6px; flex-shrink: 0; }
+    h1 { font-size: 1.3rem; }
+    .puzzle-picker { flex: 0 0 auto; }
+    .action-buttons { flex-shrink: 0; gap: 6px; }
+    .timer-display { flex-shrink: 0; }
+    .action-buttons .edit-mode-btn,
+    .action-buttons .dropdown-btn,
+    #exampleControls button {
+        padding: 5px 10px;
+        font-size: 12px;
+    }
+    /* 棋盘尺寸由 --cell-size 驱动（JS 计算），此处不再写死像素 */
+    .main-number { font-size: 30px !important; }
+    .candidates-area, .candidate-note { font-size: 10px !important; }
+    .number-pad-btn { width: 50px; height: 50px; font-size: 20px; }
+    .game-area { gap: 20px; }
+}
+
+/* ====== 平板（600–1099px）====== */
+@media (min-width: 600px) and (max-width: 1099px) {
+    .container { padding: 12px 14px; }
+    .header-with-timer { margin-bottom: 6px; }
+    h1 { font-size: 1.2rem; }
+    .controls { margin-bottom: 6px; }
+    .main-number { font-size: 24px !important; }
+    .candidates-area, .candidate-note { font-size: 9px !important; }
+    .number-pad-btn { width: 42px; height: 42px; font-size: 17px; }
+}
+
+/* ====== 手机（<600px）====== */
+@media (max-width: 599px) {
+    .container { padding: 8px 6px; border-radius: 12px; }
+    body { padding: 4px; }
+    /* 头部两行：行1=标题徽章+计时器，行2=选关 */
+    .header-with-timer {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "title    timer"
+            "selector selector";
+        gap: 4px 8px;
+        margin-bottom: 4px;
+        align-items: center;
+    }
+    .title-section {
+        grid-area: title;
+        gap: 4px;
+        flex-wrap: nowrap;
+        min-width: 0;
+        overflow: hidden;
+    }
+    h1 { font-size: 0.95rem; white-space: nowrap; }
+    .mode-badge, .error-count-badge {
+        font-size: 9px; padding: 2px 6px; white-space: nowrap;
+    }
+    .timer-display {
+        grid-area: timer;
+        padding: 2px 8px;
+    }
+    .timer-icon { font-size: 12px; }
+    #timerDisplay { font-size: 12px; }
+    .puzzle-picker {
+        grid-area: selector;
+        width: 100%;
+        max-width: none;
+        flex: 1 1 auto;
+    }
+    #gradeSelector, #puzzleSelector {
+        font-size: 11px; padding: 4px 8px;
+    }
+
+    /* 操作按钮压成一行 */
+    .controls { margin-bottom: 4px; }
+    .action-buttons { gap: 4px; flex-wrap: nowrap; justify-content: flex-start; }
+    .action-buttons .edit-mode-btn,
+    .action-buttons .dropdown-btn,
+    #exampleControls button {
+        padding: 4px 7px;
+        font-size: 11px;
+    }
+
+    /* 棋盘占满宽度 */
+    .game-area { flex-direction: column; gap: 10px; align-items: stretch; }
+    .board-column { width: 100%; }
+    .board-row { flex-direction: column; gap: 8px; }
+    .sudoku-container { width: 100%; overflow: visible; }
+    #sudoku-board { width: auto; margin: 0 auto; }
+    /* 尺寸仍由 --cell-size 控制（JS 按视口算出） */
+    .main-number { font-size: clamp(16px, 5.5vw, 24px) !important; }
+    .candidates-area, .candidate-note { font-size: clamp(7px, 2vw, 10px) !important; }
+
+    /* 数字键盘换行 */
+    .number-pad { flex-wrap: wrap; justify-content: center; gap: 6px; padding: 8px; border-radius: 24px; order: 2; }
+    .number-pad-btn { width: 40px; height: 40px; font-size: 16px; }
+
+    /* 侧栏改横向折叠条 */
+    .explanation-sidebar {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-height: 60vh;
+        overflow-y: auto;
+    }
+    .explanation-sidebar.collapsed { width: 100% !important; min-width: 0 !important; height: 40px; }
+    .explanation-sidebar.collapsed > * { display: none; }
+    .explanation-sidebar.collapsed > .sidebar-toggle,
+    .explanation-sidebar.collapsed > .sidebar-quick-info { display: flex; }
+    .sidebar-toggle {
+        left: 50%; top: 0;
+        transform: translateX(-50%);
+        writing-mode: horizontal-tb;
+        width: 60px; height: 28px;
+        border-radius: 0 0 8px 8px;
+    }
+    .sidebar-quick-info {
+        top: 6px; left: auto; right: 8px;
+        transform: none;
+    }
+    .sidebar-resize-handle { display: none; }
+
+    /* 对话框在手机上全屏化 */
+    .hint-dialog-content, .tech-learn-content {
+        width: calc(100vw - 20px) !important;
+        max-width: calc(100vw - 20px) !important;
+        margin: 10px auto;
+    }
+}
+
+/* ====== 极小手机（<400px）====== */
+@media (max-width: 399px) {
+    .main-number { font-size: clamp(14px, 5vw, 20px) !important; }
+    .number-pad-btn { width: 34px; height: 34px; font-size: 14px; }
 }

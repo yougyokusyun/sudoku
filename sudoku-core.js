@@ -2464,6 +2464,11 @@ function computeDerivableCells() {
         return r.map(function (st) { return new Set(st); });
     });
 
+    // 关键修复：练习（自主答题）模式下 cellCandidates 可能是空的或过期的
+    // （用户手动落子只同步 userCandidates），必须先按当前盘面重建候选数，
+    // 否则推演基于错误前提，提示就会漏步、错步甚至谎报"无可填"。
+    initCandidates();
+
     const map = new Map();
     let guard = 0;
     while (guard++ < 300) {
@@ -2482,6 +2487,29 @@ function computeDerivableCells() {
     cellCandidates = savedCands;
     invalidateSolutionCache();
     return map;
+}
+
+/**
+ * 练习模式"下一步提示"的第二层：当没有可直接填入的数字时，
+ * 给出当前盘面上最靠前的一个"删候选"类技巧（数对/区块/鱼形/链……）。
+ * 与 computeDerivableCells 相同：先按当前盘面重建候选数，模拟后恢复原状。
+ */
+function findHintEliminationStep() {
+    const savedBoard = currentBoard.map(function (r) { return r.slice(); });
+    const savedCands = cellCandidates.map(function (r) {
+        return r.map(function (st) { return new Set(st); });
+    });
+    initCandidates();
+    let step = null;
+    try {
+        step = findNextLogicalStep();
+    } catch (e) {
+        step = null;
+    }
+    currentBoard = savedBoard;
+    cellCandidates = savedCands;
+    invalidateSolutionCache();
+    return step;
 }
 
 
