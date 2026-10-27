@@ -457,6 +457,14 @@ body.dark-mode .dropdown-menu .menu-divider {
     align-items: center;
 }
 
+/* 选题下拉 + 操作按钮打包：保证二者始终在同一排 */
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
 #exampleControls {
     display: flex;
     gap: 8px;
@@ -2525,6 +2533,7 @@ body.dragging-dialog {
     }
     .title-section { gap: 6px; flex-shrink: 0; }
     h1 { font-size: 1.3rem; }
+    .header-controls { flex: 0 0 auto; flex-wrap: nowrap; }
     .puzzle-picker { flex: 0 0 auto; }
     .action-buttons { flex-shrink: 0; gap: 6px; }
     .timer-display { flex-shrink: 0; }
@@ -2556,16 +2565,24 @@ body.dragging-dialog {
 @media (max-width: 599px) {
     .container { padding: 8px 6px; border-radius: 12px; }
     body { padding: 4px; }
-    /* 头部两行：行1=标题徽章+计时器，行2=选关 */
+    /* 头部两行：行1=标题徽章+计时器，行2=选题+操作按钮（同一排） */
     .header-with-timer {
         display: grid;
         grid-template-columns: 1fr auto;
         grid-template-areas:
             "title    timer"
-            "selector selector";
+            "controls controls";
         gap: 4px 8px;
         margin-bottom: 4px;
         align-items: center;
+    }
+    .header-controls {
+        grid-area: controls;
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: center;
+        gap: 4px;
+        min-width: 0;
     }
     .title-section {
         grid-area: title;
@@ -2585,18 +2602,18 @@ body.dragging-dialog {
     .timer-icon { font-size: 12px; }
     #timerDisplay { font-size: 12px; }
     .puzzle-picker {
-        grid-area: selector;
-        width: 100%;
+        flex: 0 0 auto;
+        width: auto;
         max-width: none;
-        flex: 1 1 auto;
     }
+    .header-controls .pp-btn { padding: 4px 10px; font-size: 12px; }
     #gradeSelector, #puzzleSelector {
         font-size: 11px; padding: 4px 8px;
     }
 
     /* 操作按钮压成一行 */
     .controls { margin-bottom: 4px; }
-    .action-buttons { gap: 4px; flex-wrap: nowrap; justify-content: flex-start; }
+    .header-controls .action-buttons { flex: 1 1 auto; gap: 4px; flex-wrap: nowrap; justify-content: flex-start; }
     .action-buttons .edit-mode-btn,
     .action-buttons .dropdown-btn,
     #exampleControls button {
@@ -2654,4 +2671,31 @@ body.dragging-dialog {
 @media (max-width: 399px) {
     .main-number { font-size: clamp(14px, 5vw, 20px) !important; }
     .number-pad-btn { width: 34px; height: 34px; font-size: 14px; }
+}
+
+/* ====== 横屏手机（高度受限）：压缩头部把高度让给棋盘，数字键盘折成两列 ====== */
+@media (min-aspect-ratio: 1/1) and (max-height: 620px) {
+    body { padding: 4px; }
+    .container { padding: 4px 10px; border-radius: 14px; }
+    .header-with-timer { margin-bottom: 2px; gap: 6px; }
+    h1 { font-size: 1.05rem; }
+    .mode-badge, .error-count-badge { font-size: 10px; padding: 2px 8px; }
+    .header-controls .pp-btn { padding: 4px 10px; font-size: 12px; }
+    .action-buttons .edit-mode-btn,
+    .action-buttons .dropdown-btn,
+    #exampleControls button { padding: 4px 9px; font-size: 11px; }
+    .timer-display { padding: 3px 10px; }
+    .timer-icon { font-size: 14px; }
+    #timerDisplay { font-size: 14px; }
+
+    /* 键盘由单列折成两列，避免高度超过棋盘、也避免纵向溢出 */
+    .number-pad {
+        flex-wrap: wrap;
+        max-height: min(272px, calc(100vh - 110px));
+        align-content: center;
+        padding: 8px;
+        gap: 6px;
+    }
+    .number-pad-btn { width: 40px; height: 40px; font-size: 17px; border-radius: 20px; }
+    .number-pad-btn.number-pad-del { font-size: 19px; }
 }

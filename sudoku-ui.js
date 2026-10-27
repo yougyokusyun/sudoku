@@ -1543,7 +1543,9 @@ function fitBoardSize() {
 
     // 头部占高（含下边距）
     const hdrH = hdr.offsetHeight + (parseFloat(getComputedStyle(hdr).marginBottom) || 0);
-    let availH = vh - hdrH - padY - 30;   // 30px 固定留白
+    // 横屏手机高度紧张：收紧固定留白，把高度尽量让给棋盘
+    const tightH = window.matchMedia('(min-aspect-ratio: 1/1) and (max-height: 620px)').matches;
+    let availH = vh - hdrH - padY - (tightH ? 10 : 30);
     let availW = vw;
 
     // 横排时侧栏在右侧，占水平空间
@@ -1762,9 +1764,6 @@ function checkPuzzleCompletion() {
 
     if (!isPuzzleCompleted && isTimerRunning) {
         completeTimer();
-        // 记录统计
-        recordPuzzleCompletion();
-        renderStatsPanel();
         // 练习/自由模式：弹出确认框，让用户选择重新答题或结束
         // 教学模式自己按步骤推进完成，不弹框
         if (!isExampleMode) showCompletionDialog();
@@ -1779,15 +1778,9 @@ function showCompletionDialog() {
     const body = document.getElementById('completionDialogBody');
     if (!dlg || !body) return;
 
-    const stats = getStats();
-    const sel = document.getElementById('puzzleSelector');
-    const cur = sel ? stats[sel.value] : null;
     let html = '<div style="text-align:center;padding:8px 0;">';
     html += '<div style="font-size:15px;font-weight:600;color:#2e7d32;margin-bottom:8px;">🎉 恭喜解题成功！</div>';
     html += '<div style="font-size:13px;color:#555;">用时 <b>' + formatTime(timerSeconds) + '</b></div>';
-    if (cur && cur.bestMs) {
-        html += '<div style="font-size:12px;color:#888;margin-top:4px;">本题最佳 ' + formatTime(Math.floor(cur.bestMs / 1000)) + '</div>';
-    }
     html += '<div style="font-size:13px;color:#444;margin-top:12px;">是否重新答题？</div>';
     html += '</div>';
     body.innerHTML = html;
@@ -1797,59 +1790,6 @@ function showCompletionDialog() {
 function hideCompletionDialog() {
     const dlg = document.getElementById('completionDialog');
     if (dlg) dlg.style.display = 'none';
-}
-
-const STATS_KEY = 'sudoku_stats_v1';
-function getStats() {
-    try { return JSON.parse(localStorage.getItem(STATS_KEY) || '{}'); } catch (e) { return {}; }
-}
-function saveStats(s) {
-    try { localStorage.setItem(STATS_KEY, JSON.stringify(s)); } catch (e) {}
-}
-
-function recordPuzzleCompletion() {
-    const sel = document.getElementById('puzzleSelector');
-    const name = sel ? sel.value : '';
-    if (!name) return;
-    const stats = getStats();
-    const prev = stats[name] || { bestMs: null, attempts: 0 };
-    const elapsed = timerSeconds * 1000;
-    stats[name] = {
-        completed: true,
-        bestMs: prev.bestMs === null ? elapsed : Math.min(prev.bestMs, elapsed),
-        attempts: prev.attempts + 1,
-        lastMs: elapsed,
-        lastDate: new Date().toISOString().slice(0, 10)
-    };
-    saveStats(stats);
-}
-
-function renderStatsPanel() {
-    const box = document.getElementById('stats-panel');
-    if (!box) return;
-    const stats = getStats();
-    const totalDone = Object.keys(stats).length;
-    const totalPuzzles = (typeof PUZZLE_LIBRARY !== 'undefined') ? PUZZLE_LIBRARY.length : '-';
-    const sel = document.getElementById('puzzleSelector');
-    const cur = sel ? stats[sel.value] : null;
-    function fmt(ms) {
-        if (!ms && ms !== 0) return '-';
-        const s = Math.floor(ms / 1000);
-        const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
-        return (h ? h + ':' : '') + String(m).padStart(2, '0') + ':' + String(sec).padStart(2, '0');
-    }
-
-    let html = '<div class="stats-summary">';
-    html += '<b>📊 统计</b>';
-    html += '<div style="font-size:12px;color:#666;margin-top:4px;">共完成 <b>' + totalDone + '</b> / ' + totalPuzzles + ' 题</div>';
-    if (cur) {
-        html += '<div style="font-size:11px;color:#444;margin-top:6px;border-top:1px solid #eee;padding-top:4px;">';
-        html += '本题最佳: <b>' + fmt(cur.bestMs) + '</b>';
-        if (cur.attempts > 1) html += ' · 尝试 ' + cur.attempts + ' 次';
-        html += '</div>';
-    }
-    html += '</div>';
-    box.innerHTML = html;
 }
 
 /** 修复：按历史条目精确记录步骤数，避免一次撤销连带删掉多个智能步骤 */
@@ -2347,7 +2287,6 @@ function updateSidebarPanels() {
     };
     hideAll(document.querySelector('.explanation-panel'));
     hideAll(document.querySelector('.steps-history'));
-    hideAll(document.getElementById('stats-panel'));
     const quickInfo = document.getElementById('sidebarQuickInfo');
     if (quickInfo) quickInfo.style.display = showTeachPanels ? '' : 'none';
 }
@@ -2599,7 +2538,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // initUI 已在前面执行完毕，这里做进度恢复
     try { restoreProgress(); } catch (e) { console.warn('恢复进度失败:', e && e.message); }
     ppSyncFromSelects();
-    renderStatsPanel();
     syncMenuLabels();
     updateSidebarPanels();
     fitBoardSize();
@@ -2742,16 +2680,6 @@ function ppSyncFromSelects() {
     const ps = document.getElementById('puzzleSelector');
     if (gs && ps && ps.value) ppUpdateButton(ps.value, gs.value);
 }
-
-/** 首屏空状态提示，引导用户先选题目 */
-document.addEventListener('DOMContentLoaded', function () {
-    const sel = document.getElementById('puzzleSelector');
-    const badge = document.getElementById('modeBadge');
-    if (badge && (!sel || !sel.value)) {
-        badge.innerHTML = '👋 请先选择一个题目';
-        badge.className = 'mode-badge';
-    }
-});
 
 
 /* ==========================================================================

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数独解题器</title>
-    <link rel="stylesheet" href="style.css?v=20261027e">
+    <link rel="stylesheet" href="style.css?v=20261027g">
 </head>
 <body>
 <div class="container">
@@ -14,6 +14,7 @@
             <span id="modeBadge" class="mode-badge practice-mode">✏️ 练习模式</span>
             <span id="errorCountBadge" class="error-count-badge">❌ 错误: 0</span>
         </div>
+        <div class="header-controls">
         <!-- 二级菜单选题：点击弹出 → 级别 → 题目；选完后按钮自动缩短显示 -->
         <div class="puzzle-picker" id="puzzlePicker">
             <button class="pp-btn" id="ppBtn" type="button" title="点击选择题目">📚 选题 ▾</button>
@@ -59,6 +60,7 @@
             <div id="exampleControls" style="display: none;">
                 <button id="nextStepBtn">➡️ 下一步</button>
             </div>
+        </div>
         </div>
         <div class="timer-display">
             <span class="timer-icon">⏱️</span>
@@ -188,13 +190,12 @@
                 <h3>📋 步骤历史</h3>
                 <div id="steps-list"></div>
             </div>
-            <div id="stats-panel" style="margin-top:12px;"></div>
         </div>
     </div>
 </div>
 
-<script src="puzzles.js?v=20261027e"></script>
-<script src="sudoku-core.js?v=20261027e"></script>
-<script src="sudoku-ui.js?v=20261027e"></script>
+<script src="puzzles.js?v=20261027g"></script>
+<script src="sudoku-core.js?v=20261027g"></script>
+<script src="sudoku-ui.js?v=20261027g"></script>
 </body>
 </html>
