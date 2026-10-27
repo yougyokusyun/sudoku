@@ -5,12 +5,17 @@
 
 // ==================== 错误计数变量 ====================
 let errorCount = 0;
-let isFreeMode = false;  // 自由模式：当没有任何格子可以推导时允许任意操作
 
 // 更新错误次数显示
 function updateErrorCountDisplay() {
     const errorBadge = document.getElementById('errorCountBadge');
     if (errorBadge) {
+        // 教学模式下盘面由引擎按逻辑推进，不存在"填错"这回事，不显示错误次数
+        if (isExampleMode) {
+            errorBadge.style.display = 'none';
+            return;
+        }
+        errorBadge.style.display = '';
         errorBadge.innerHTML = `❌ 错误: ${errorCount}`;
         if (errorCount >= 10) {
             errorBadge.className = 'error-count-badge high';
@@ -22,11 +27,12 @@ function updateErrorCountDisplay() {
     }
 }
 
-// 增加错误次数
-function addError() {
+// 增加错误次数（msg 可自定义提示；教学模式下不计数，盘面由引擎按逻辑推进）
+function addError(msg) {
+    if (isExampleMode) return;
     errorCount++;
     updateErrorCountDisplay();
-    showTemporaryMessage(`操作不符合数独规则，错误次数 +1 (共 ${errorCount} 次)`, 'error');
+    showTemporaryMessage(msg || `操作不符合数独规则，错误次数 +1 (共 ${errorCount} 次)`, 'error');
 }
 
 // 重置错误次数
@@ -57,10 +63,6 @@ function isUserCandidatesMatchSystem() {
 
 // 练习模式专用：用户自定义候选数（独立于系统候选数）
 let userCandidates = Array(9).fill().map(() => Array(9).fill().map(() => new Set()));
-
-// 候选数模式：默认关闭避免干扰做题；用户可在菜单里开启
-let autoCandidatesMode = false;
-
 
 // 同步用户候选数到显示
 function syncUserCandidatesToDisplay() {
@@ -213,7 +215,7 @@ function showNextHint() {
     showHintDialog([{
         type: 'info',
         title: '🤔 暂无直接可填数字',
-        content: '当前没有任何格子可以通过数独规则唯一确定数字。建议：\n1. 点击"补全候选数"查看候选数\n2. 尝试使用更高级的技巧\n3. 或进入自由模式任意填写（只要不违反基本规则）'
+        content: '当前没有任何格子可以通过数独规则唯一确定数字。建议：\n1. 点击"补全候选数"查看候选数\n2. 尝试使用更高级的技巧\n3. 或按自己的判断填写（只要不违反基本规则）'
     }]);
 }
 
@@ -310,6 +312,8 @@ let currentSteps = [];
 let nextStepInProgress = false;
 let historyBoards = [];
 let historyIdx = -1;
+// 合并面板里当前"展开查看详细说明"的步骤下标；-1 表示跟随最新一步
+let viewingStepIdx = -1;
 
 const FLASH_DURATION = 800;
 const FLASH_REPEAT = 3;
@@ -319,6 +323,8 @@ const TOTAL_FLASH_TIME = FLASH_DURATION * FLASH_REPEAT;
 let isExampleMode = false;
 let practiceEditMode = false;        // 练习模式：是否编辑候选数（false=数字输入模式，true=编辑候选数模式）
 let exampleEditMode = false;         // 教学模式：是否编辑候选数
+let isWatchMode = false;             // 讲解模式：自动逐步推进并朗读讲解
+let watchTimer = null;               // 讲解模式的定时器句柄
 
 // ==================== 计时器变量 ====================
 let timerInterval = null;
@@ -423,11 +429,13 @@ function refreshCandidateCompleteness(row, col, shown) {
     if (!div) return;
     div.classList.remove('cand-full', 'cand-partial');
     if (currentBoard[row][col] !== 0) return;
+    // 教学模式下每个候选数按"绿/黄"分层着色（见 renderCellCandidates），
+    // 不再用"整格写全=黄 / 只写一部分=绿"这种整格统一着色。
+    if (isExampleMode && typeof teachingMode !== 'undefined' && teachingMode) return;
 
     let set;
     if (shown) set = shown;
     else if (isExampleMode) set = cellCandidates[row][col];
-    else if (isFreeMode) set = autoCandidatesMode ? cellCandidates[row][col] : userCandidates[row][col];
     else set = userCandidates[row][col]; // 练习模式固定读 userCandidates
     if (!set || set.size === 0) return;
 
@@ -447,19 +455,31 @@ function renderCellCandidates(row, col) {
     
     div.innerHTML = '';
     
+    // 每格每个候选的着色：绿色=部分候选（有简单依据），黄色=全部候选（完整可能数）
+    let greenSet = null, yellowSet = null;
     let candidatesSource;
     if (isExampleMode) {
-        // 教学模式：候选数由学员一步步"写"上去，只显示已经写下的那部分；
+        // 教学模式：候选数由学员一步步"写"上去，绿色/黄色分层显示；
         // 未进入教学模式时仍显示系统推算的完整候选数。
-        candidatesSource = (typeof teachingMode !== 'undefined' && teachingMode
-            && typeof teachShown !== 'undefined' && teachShown && teachShown[row] && teachShown[row][col])
-            ? teachShown[row][col]
-            : cellCandidates[row][col];
-    } else if (isFreeMode) {
-        // 自由模式（手工建题）：允许用户切换系统自动推算 ↔ 用户手动维护
-        candidatesSource = autoCandidatesMode
-            ? cellCandidates[row][col]
-            : userCandidates[row][col];
+        if (typeof teachingMode !== 'undefined' && teachingMode
+            && typeof greenCand !== 'undefined' && greenCand && yellowCand) {
+            candidatesSource = getTeachVisibleCandidates(row, col);
+            // 这一格只有两种状态：
+            //   候选已写全（等于该格真实存在的全部候选）→ 全部黄色
+            //   只写了一部分（学员逐个手工添加 / 绿色层推演出的部分候选）→ 全部绿色
+            const fullSet = getSystemCandidatesForCell(row, col);
+            const cellComplete = candidatesSource.size > 0 && fullSet.size > 0
+                && candidatesSource.size >= fullSet.size;
+            if (cellComplete) {
+                greenSet = null;
+                yellowSet = candidatesSource;
+            } else {
+                greenSet = candidatesSource;
+                yellowSet = null;
+            }
+        } else {
+            candidatesSource = cellCandidates[row][col];
+        }
     } else {
         // 练习模式：候选数固定来自 userCandidates（用户手工编辑或点"补全候选数"填入）
         // 绝不在 loadPuzzle 后自动显示系统推算的候选数
@@ -472,6 +492,11 @@ function renderCellCandidates(row, col) {
     sorted.forEach(num => {
         const span = document.createElement('span');
         span.className = 'candidate-note';
+        if (greenSet || yellowSet) {
+            // 绿色优先：同时存在于两层时按绿色显示
+            if (greenSet && greenSet.has(num)) span.classList.add('cand-green');
+            else span.classList.add('cand-yellow');
+        }
         if (isEditable) {
             span.classList.add('editing-mode');
             span.style.cursor = 'pointer';
@@ -704,37 +729,75 @@ function highlightNewNumber(row, col) {
     }
 }
 
-function addDetailedExplanation(step, stepNum) {
-    const expDiv = document.getElementById('explanation-content');
+/**
+ * 单一步骤的完整说明 HTML。
+ * 合并面板里"当前步骤"展开用它；侧栏折叠浮层也复用它。
+ */
+function buildStepDetailHtml(step, stepNum) {
+    if (!step) {
+        return '<div class="step-explanation">✨ 点击"下一步"开始智能解题</div>';
+    }
     let elimHtml = '';
     if (step.eliminations && step.eliminations.length > 0) {
-        elimHtml = `<div style="margin:8px 0;padding:6px 10px;background:#fff3e0;border-radius:6px;">
+        elimHtml = `<div class="step-elim-box">
             <strong>🗑️ 排除:</strong> ${step.eliminations.map(e => `(${e.row + 1},${e.col + 1}):${e.num}`).join(', ')}
         </div>`;
     }
-    let valHtml = step.value ? `<br>✨ 填入 (<strong>${step.row + 1},${step.col + 1}</strong>) = <strong>${step.value}</strong>` : '';
-    expDiv.innerHTML = `<div class="step-explanation">
+    const valHtml = step.value ? `<br>✨ 填入 (<strong>${step.row + 1},${step.col + 1}</strong>) = <strong>${step.value}</strong>` : '';
+    return `<div class="step-explanation">
         <strong>📌 第 ${stepNum} 步 - ${step.technique}</strong><br>
         ${step.explanation || ''}${valHtml}
     </div>${elimHtml}`;
-    expDiv.scrollTop = 0;
 }
 
+/** 历史步骤的一行摘要文字 */
+function buildStepSummaryText(step) {
+    if (step.value) {
+        return `填入 (${step.row + 1},${step.col + 1}) = ${step.value}`;
+    }
+    if (step.teachKind === 'candidates') {
+        const cnt = (step.cells && step.cells.length) || 1;
+        return `标注候选数（${cnt} 格）`;
+    }
+    return `排除 ${(step.eliminations && step.eliminations.length) || 0} 个候选数`;
+}
+
+/**
+ * 解题过程 + 步骤历史 已合并为同一个列表：
+ * 默认"当前步骤"（最新一步）展开显示完整说明，更早的步骤只显示一行摘要；
+ * 直接点击某一步即可把它的详细信息展开出来查看（不回退盘面），
+ * 每一步也都带「💡 查看本步提示」按钮，点开看该步的完整推导与盘面链路。
+ */
 function updateStepsListDisplay() {
     const listDiv = document.getElementById('steps-list');
+    if (!listDiv) return;
     listDiv.innerHTML = '';
     if (currentSteps.length === 0) {
-        listDiv.innerHTML = '<div class="step-item">暂无解题步骤</div>';
+        listDiv.innerHTML = '<div class="step-item step-empty">✨ 点击"下一步"开始智能解题</div>';
         return;
     }
+    // 展开项：用户点过的那一步；未点过或下标失效时跟随最新一步
+    const expandedIdx = (viewingStepIdx >= 0 && viewingStepIdx < currentSteps.length)
+        ? viewingStepIdx
+        : currentSteps.length - 1;
     // 倒序显示：最新一步在最上方
     for (let idx = currentSteps.length - 1; idx >= 0; idx--) {
         const step = currentSteps[idx];
+        const isExpanded = (idx === expandedIdx);
         const item = document.createElement('div');
-        item.className = 'step-item';
-        const text = step.value ? `填入 (${step.row + 1},${step.col + 1}) = ${step.value}` : `排除 ${step.eliminations?.length || 0} 个候选数`;
-        item.innerHTML = `<div><span style="font-weight:bold;">步骤 ${idx + 1}</span> <span style="background:#e3f2fd;padding:2px 6px;border-radius:10px;font-size:11px;margin-left:6px;">${step.technique}</span></div>
-            <div style="font-size:11px;color:#666;margin-top:4px;">${text}</div>`;
+        item.className = isExpanded ? 'step-item current-step' : 'step-item history-step';
+        const head = '<div class="step-head"><span class="step-no">步骤 ' + (idx + 1) +
+            '</span><span class="step-tech">' + step.technique + '</span></div>';
+        item.innerHTML = isExpanded
+            ? head + buildStepDetailHtml(step, idx + 1)
+            : head + '<div class="step-brief">' + buildStepSummaryText(step) + '</div>';
+
+        // 点击整行：展开这一步的详细信息（纯查看，不改变解题进度）
+        item.onclick = () => {
+            if (viewingStepIdx === idx) return;
+            viewingStepIdx = idx;
+            updateStepsListDisplay();
+        };
 
         // 每步都配一个按钮：点击才弹窗展示这一步是怎么推导出来的，
         // 落子时不主动展示，用户需要时自行查看。
@@ -810,41 +873,40 @@ function exportCurrentPuzzle() {
         .catch(() => showTemporaryMessage('复制失败，请手动选择文本 Ctrl+C', 'warning'));
 }
 
-/** 从剪贴板导入题目 */
-async function importFromClipboard() {
+/** 从剪贴板读取题目 → 解析 → 填入输入框（由用户确认后更新盘面）；返回是否成功 */
+async function loadClipboardIntoImportDialog() {
+    const textarea = document.getElementById('customPuzzleInput');
+    const errorDiv = document.getElementById('customPuzzleError');
     let text = '';
     try {
         text = await navigator.clipboard.readText();
     } catch (e) {
-        showTemporaryMessage('浏览器拒绝读取剪贴板，请先 Ctrl+C 然后点"📝 自定义题目"粘贴', 'warning');
-        return;
+        showCustomError('无法读取剪贴板（浏览器未授权），请手动 Ctrl+V 粘贴到输入框');
+        return false;
+    }
+    if (!text || !text.trim()) {
+        showCustomError('剪贴板为空，请手动粘贴题目数据');
+        return false;
     }
     const grid = parsePuzzleText(text);
     if (!grid) {
-        showTemporaryMessage('剪贴板内容无法识别为 9×9 数独，请检查格式', 'warning');
-        return;
+        showCustomError('剪贴板内容无法识别为 9×9 数独（支持 JSON / 单行 81 数字 / 9 行格式）');
+        return false;
     }
-    // 直接写入盘面
-    for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) currentBoard[r][c] = grid[r][c];
-    initCandidates();
-    initUserCandidates();
-    updateBoardDisplay();
-    if (typeof __completionWarned !== 'undefined') __completionWarned = false;
-    if (typeof isPuzzleCompleted !== 'undefined') isPuzzleCompleted = false;
-    resetTimer();
-    startTimer();
-    historyBoards = [cloneBoardUI(currentBoard)];
-    historyIdx = 0;
-    if (typeof currentSteps !== 'undefined') currentSteps = [];
-    if (typeof stepCount !== 'undefined') stepCount = 0;
-    if (typeof updateStepsListDisplay === 'function') updateStepsListDisplay();
-    saveProgress();
-    // 确保练习模式（不是教学模式）
-    if (typeof isExampleMode !== 'undefined' && isExampleMode && typeof exitExampleMode === 'function') {
-        exitExampleMode();
-    }
-    const fixedCount = grid.map(r => r.join('')).join('').replace(/0/g, '').length;
-    showTemporaryMessage('📥 已导入，共 ' + fixedCount + ' 个固定数字', 'success');
+    if (textarea) textarea.value = grid.map(row => row.join('')).join(',');
+    if (errorDiv) errorDiv.style.display = 'none';
+    return true;
+}
+
+/** 打开「导入题目」弹窗：自动尝试读取剪贴板并解析填入输入框，用户确认后更新盘面 */
+async function openImportPuzzleDialog() {
+    const dialog = document.getElementById('customPuzzleDialog');
+    const textarea = document.getElementById('customPuzzleInput');
+    const errorDiv = document.getElementById('customPuzzleError');
+    if (textarea) textarea.value = '';
+    if (errorDiv) errorDiv.style.display = 'none';
+    dialog.style.display = 'flex';
+    await loadClipboardIntoImportDialog();
 }
 
 /** 解析多种格式的题目文本为 9×9 数组；无效返回 null */
@@ -864,8 +926,9 @@ function parsePuzzleText(text) {
         } catch (e) { /* fallthrough */ }
     }
 
-    // 单行 81 数字（允许非数字分隔符）
-    const digitsOnly = text.replace(/[^0-9]/g, '');
+    // 先归一化占位符：. - _ * · 都按空格（0）处理，再提取数字
+    const normalized = text.replace(/[.\-_*·]/g, '0');
+    const digitsOnly = normalized.replace(/[^0-9]/g, '');
     if (digitsOnly.length === 81) {
         const g = [];
         for (let r = 0; r < 9; r++) {
@@ -881,7 +944,7 @@ function parsePuzzleText(text) {
     if (lines.length >= 9) {
         const g = [];
         for (let i = 0; i < 9; i++) {
-            const rowDigits = lines[i].replace(/[^0-9]/g, '');
+            const rowDigits = lines[i].replace(/[.\-_*·]/g, '0').replace(/[^0-9]/g, '');
             if (rowDigits.length !== 9) return null;
             g.push(rowDigits.split('').map(d => parseInt(d, 10)));
         }
@@ -967,6 +1030,69 @@ function flashCandidatesBatch(eliminations, callback) {
     }
 }
 
+/**
+ * 这一步是否"看不见"：只删掉了盘面上根本没画出来的候选数。
+ * 这类步骤既没填数、也没改动任何已显示的候选标注，
+ * 只是把后台标准候选数收窄了，不该占用一步。
+ */
+function isInvisibleElimination(step) {
+    if (!step || step.value) return false;
+    if (step.teachKind === 'candidates') return false;
+    if (!step.eliminations || !step.eliminations.length) return false;
+    return !step.eliminations.some(function (e) {
+        const visible = getTeachVisibleCandidates(e.row, e.col);
+        return visible.has(e.num);
+    });
+}
+
+/**
+ * 判断这一步删完候选后，是否会直接把某格变成唯一候选数。
+ * 条件：该格原本恰好只有 2 个候选，且这 2 个就是它的全部候选（不是残缺标注）。
+ * 必须在 applyStep 之前调用（删完候选就取不到原值了）。
+ * @returns {null|{row:number,col:number,value:number,removed:number}}
+ */
+function findTwoCandidateFill(step) {
+    if (!step || !step.eliminations || !step.eliminations.length) return null;
+    for (const elim of step.eliminations) {
+        const row = elim.row, col = elim.col, num = elim.num;
+        if (currentBoard[row][col] !== 0) continue;
+        const full = getSystemCandidatesForCell(row, col);   // 删除前的全部候选
+        if (full.size !== 2 || !full.has(num)) continue;
+        const rest = Array.from(full).filter(n => n !== num);
+        if (rest.length !== 1) continue;
+        return { row: row, col: col, value: rest[0], removed: num };
+    }
+    return null;
+}
+
+/**
+ * 2 选 1 的格子被删掉一个候选后，把剩下的唯一候选直接填上，并单独记一步。
+ * 教学/观影模式下由 nextStep 的删候选分支调用。
+ */
+function applyTwoCandidateFill(info) {
+    const text = '(' + (info.row + 1) + ',' + (info.col + 1) + ') 原本只有 ' +
+        info.removed + ' 和 ' + info.value + ' 两个候选，上一步删掉了 ' + info.removed +
+        '，这一格就只剩唯一的可能 ' + info.value + '，可以直接填入。';
+    const step = {
+        row: info.row,
+        col: info.col,
+        value: info.value,
+        technique: '唯一候选数法',
+        eliminations: [],
+        knowledge: getTechniqueKnowledge('唯一候选数法'),
+        explanation: text,
+        __board: currentBoard.map(row => row.slice())
+    };
+    saveToHistory();
+    applyStep(step);
+    stepCount++;
+    currentSteps.push(step);
+    updateBoardDisplay();
+    updateStepsListDisplay();
+    highlightNewNumber(info.row, info.col);
+    checkPuzzleCompletion();
+}
+
 // ==================== 下一步核心 ====================
 
 async function nextStep() {
@@ -975,6 +1101,7 @@ async function nextStep() {
         return;
     }
     nextStepInProgress = true;
+    viewingStepIdx = -1;   // 推进一步后重新跟随最新步骤
     const btn = document.getElementById('nextStepBtn');
     if (btn) {
         btn.disabled = true;
@@ -991,7 +1118,22 @@ async function nextStep() {
 
     setTimeout(async () => {
         try {
-            const step = findNextStep();
+            let step = findNextStep();
+
+            // 只收窄后台标准候选数、盘面上看不到任何变化的一步：静默应用后继续往下找，
+            // 直到找到真正有可见变化的一步（填数 / 写出候选 / 划掉已显示的候选）
+            if (isExampleMode) {
+                const absorbed = new Set();
+                let guard = 0;
+                while (step && guard++ < 60 && isInvisibleElimination(step)) {
+                    const sig = step.technique + '|' + step.eliminations
+                        .map(e => e.row + ',' + e.col + ',' + e.num).sort().join(';');
+                    if (absorbed.has(sig)) break;   // 引擎又给出同一步：不再吞，按普通步骤展示
+                    absorbed.add(sig);
+                    applyStep(step);
+                    step = findNextStep();
+                }
+            }
 
             if (!step) {
                 const isFull = currentBoard.every(row => row.every(v => v !== 0));
@@ -1013,15 +1155,17 @@ async function nextStep() {
 
             saveToHistory();
 
-            // 教学模式：候选数标注步骤 —— 把候选数写进该格并显示出来
+            // 教学模式：候选数标注步骤 —— 把候选数写进格子并显示出来（支持一次标一批）
             if (step.teachKind === 'candidates') {
                 applyStep(step);
                 stepCount++;
                 currentSteps.push(step);
                 updateBoardDisplay();
-                renderCellCandidates(step.row, step.col);
-                flashAnnotatedCell(step.row, step.col);
-                addDetailedExplanation(step, stepCount);
+                const marked = (step.cells && step.cells.length)
+                    ? step.cells
+                    : [{ row: step.row, col: step.col }];
+                marked.forEach(cell => renderCellCandidates(cell.row, cell.col));
+                marked.forEach(cell => flashAnnotatedCell(cell.row, cell.col));
                 updateStepsListDisplay();
                 restoreBtn();
                 return;
@@ -1032,7 +1176,6 @@ async function nextStep() {
                 stepCount++;
                 currentSteps.push(step);
                 updateBoardDisplay();
-                addDetailedExplanation(step, stepCount);
                 updateStepsListDisplay();
                 highlightNewNumber(step.row, step.col);
                 checkPuzzleCompletion();
@@ -1041,13 +1184,18 @@ async function nextStep() {
             }
 
             if (step.eliminations && step.eliminations.length > 0) {
+                // 删候选前先判断：这一步是否会把某个"2 选 1"的格子删成唯一候选数
+                const autoFill = isExampleMode ? findTwoCandidateFill(step) : null;
                 applyStep(step);
                 flashCandidatesBatch(step.eliminations, () => {
                     stepCount++;
                     currentSteps.push(step);
-                    addDetailedExplanation(step, stepCount);
                     updateStepsListDisplay();
                     checkPuzzleCompletion();
+                    if (!autoFill) { restoreBtn(); return; }
+                    // 候选数闪动过程中已经看清删掉了谁，这一步就水落石出：
+                    // 2 选 1 被删掉一个后只剩唯一解，直接填上，不再等用户点"下一步"
+                    applyTwoCandidateFill(autoFill);
                     restoreBtn();
                 });
                 return;
@@ -1125,10 +1273,6 @@ function enterExampleMode() {
     stepCount = 0;
     currentSteps = [];
     updateStepsListDisplay();
-    const explanationContent = document.getElementById('explanation-content');
-    if (explanationContent) {
-        explanationContent.innerHTML = '<div class="step-explanation">✨ 点击"下一步"开始智能解题</div>';
-    }
     
     initCandidates();
     const manualHint = document.getElementById('manualEditHint');
@@ -1139,6 +1283,7 @@ function enterExampleMode() {
 
 function exitExampleMode() {
     if (!isExampleMode) return;
+    stopWatchMode(true);          // 退出教学模式时停止观影循环
     isExampleMode = false;
     setTeachingMode(false);
     window.isManualEditMode = false;
@@ -1181,6 +1326,9 @@ function exitExampleMode() {
     const manualHint = document.getElementById('manualEditHint');
     if (manualHint) manualHint.remove();
     
+    // 计时器：教学模式停过，回到练习模式时继续计时
+    if (typeof startTimer === 'function' && !isTimerRunning && !isPuzzleCompleted) startTimer();
+
     showTemporaryMessage('已切换到练习模式', 'info');
 }
 
@@ -1274,6 +1422,11 @@ function retryAutoSolve() {
     showTemporaryMessage('已重新尝试智能解题，请点击"下一步"继续', 'info');
 }
 
+/**
+ * 教学模式下手工添加/删除单个候选数。
+ * 手工添加的候选进入"绿色层"（表示这一格还没写全）；
+ * 当这一格的候选等于该格真实存在的全部候选时，渲染时自动整格转为黄色。
+ */
 function toggleCandidateNumberUI(row, col, num) {
     if (!isExampleMode) return;
     if (!exampleEditMode) {
@@ -1284,31 +1437,38 @@ function toggleCandidateNumberUI(row, col, num) {
         showTemporaryMessage('该格子已有数字，无法编辑候选数', 'warning');
         return;
     }
-    
-    if (cellCandidates[row][col].has(num)) {
+
+    const green = greenCand[row][col];
+    const yellow = yellowCand[row][col];
+    const visible = getTeachVisibleCandidates(row, col);
+
+    if (visible.has(num)) {
+        green.delete(num);
+        yellow.delete(num);
         cellCandidates[row][col].delete(num);
         showTemporaryMessage(`已删除候选数 ${num}`, 'info');
     } else {
         if (isValidMove(row, col, num)) {
+            green.add(num);
             cellCandidates[row][col].add(num);
-            showTemporaryMessage(`已添加候选数 ${num}`, 'info');
+            showTemporaryMessage(`已添加候选数 ${num}（绿色：尚未写全，写全后转黄色）`, 'info');
         } else {
             showTemporaryMessage(`数字 ${num} 违反数独规则，不能添加`, 'warning');
+            return;
         }
     }
+
+    // 同步"绿 + 黄"并集视图
+    if (typeof teachShown !== 'undefined' && teachShown) {
+        teachShown[row][col].clear();
+        green.forEach(n => teachShown[row][col].add(n));
+        yellow.forEach(n => teachShown[row][col].add(n));
+    }
+
     renderCellCandidates(row, col);
 }
 
-// ==================== 自定义题目函数 ====================
-
-function showCustomPuzzleDialog() {
-    const dialog = document.getElementById('customPuzzleDialog');
-    const textarea = document.getElementById('customPuzzleInput');
-    const errorDiv = document.getElementById('customPuzzleError');
-    if (textarea) textarea.value = '';
-    if (errorDiv) errorDiv.style.display = 'none';
-    dialog.style.display = 'flex';
-}
+// ==================== 导入题目弹窗 ====================
 
 function initCustomDialogEvents() {
     const dialog = document.getElementById('customPuzzleDialog');
@@ -1316,6 +1476,7 @@ function initCustomDialogEvents() {
     const cancelBtn = document.getElementById('cancelCustomBtn');
     const confirmBtn = document.getElementById('confirmCustomBtn');
     const loadExampleBtn = document.getElementById('loadExampleBtn');
+    const pasteClipboardBtn = document.getElementById('pasteClipboardBtn');
     const textarea = document.getElementById('customPuzzleInput');
     const errorDiv = document.getElementById('customPuzzleError');
     
@@ -1328,34 +1489,23 @@ function initCustomDialogEvents() {
         if (textarea) textarea.value = "530070000,600195000,098000060,800060003,400803001,700020006,060000280,000419005,000080079";
         if (errorDiv) errorDiv.style.display = 'none';
     });
+
+    pasteClipboardBtn?.addEventListener('click', () => { loadClipboardIntoImportDialog(); });
     
     confirmBtn?.addEventListener('click', () => {
         const inputValue = textarea?.value.trim();
-        if (!inputValue) { showCustomError('请输入题目数据'); return; }
+        if (!inputValue) { showCustomError('请输入或粘贴题目数据'); return; }
         
-        const parts = inputValue.split(',').map(s => s.trim());
-        if (parts.length !== 9) { showCustomError(`需要输入9行数据，当前输入了 ${parts.length} 行`); return; }
-        
-        const grid = [];
-        for (let i = 0; i < 9; i++) {
-            const rowStr = parts[i];
-            if (rowStr.length !== 9) { showCustomError(`第 ${i+1} 行长度不是9个字符`); return; }
-            const row = [];
-            for (let j = 0; j < 9; j++) {
-                const char = rowStr[j];
-                const num = parseInt(char, 10);
-                if (isNaN(num) || num < 0 || num > 9) { showCustomError(`第 ${i+1} 行第 ${j+1} 列无效`); return; }
-                row.push(num);
-            }
-            grid.push(row);
-        }
+        // 统一用 parsePuzzleText 解析：兼容 JSON / 单行 81 数字 / 9 行 / 逗号分隔
+        const grid = parsePuzzleText(inputValue);
+        if (!grid) { showCustomError('无法解析为 9×9 数独，请检查格式（支持 JSON / 单行 81 数字 / 9 行格式）'); return; }
         
         const validationError = validatePuzzle(grid);
         if (validationError) { showCustomError(validationError); return; }
         
         loadCustomPuzzle(grid);
         closeDialog();
-        showTemporaryMessage('自定义题目加载成功', 'success');
+        showTemporaryMessage('📥 题目导入成功', 'success');
     });
 }
 
@@ -1396,6 +1546,10 @@ function validatePuzzle(grid) {
 }
 
 function loadCustomPuzzle(grid) {
+    // 导入的是"练习用题目"，若当前正处于教学 / 观影模式，先退出
+    if (typeof isExampleMode !== 'undefined' && isExampleMode && typeof exitExampleMode === 'function') {
+        exitExampleMode();
+    }
     for (let i = 0; i < 9; i++) {
         for (let j = 0; j < 9; j++) {
             currentBoard[i][j] = grid[i][j];
@@ -1411,14 +1565,12 @@ function loadCustomPuzzle(grid) {
     currentSteps = [];
     stepCount = 0;
     updateStepsListDisplay();
-    document.getElementById('explanation-content').innerHTML = '<div class="step-explanation">✨ 点击"下一步"开始智能解题</div>';
     resetTimer();
     startTimer();
     resetErrorCount();
-    isFreeMode = false;
     
     const modeBadge = document.getElementById('modeBadge');
-    if (modeBadge && !isExampleMode) {
+    if (modeBadge) {
         modeBadge.innerHTML = '✏️ 练习模式';
         modeBadge.classList.remove('manual-mode');
         modeBadge.classList.add('practice-mode');
@@ -1429,7 +1581,8 @@ function loadCustomPuzzle(grid) {
     const gradeSel = document.getElementById('gradeSelector');
     if (gradeSel) gradeSel.value = '';
 
-    updateFreeModeStatus();
+    updateModeBadge();
+    saveProgress();
 }
 
 // ==================== 事件绑定 ====================
@@ -1461,18 +1614,15 @@ function attachEvents() {
         dropdownMenu.addEventListener('click', (e) => {
             e.stopPropagation();
             const action = e.target.getAttribute('data-action');
-            if (action === 'custom') { showCustomPuzzleDialog(); dropdownMenu.classList.remove('show'); }
+            if (action === 'importPuzzle') { openImportPuzzleDialog(); dropdownMenu.classList.remove('show'); }
             else if (action === 'teaching') { enterTeachingMode(); dropdownMenu.classList.remove('show'); }
+            else if (action === 'watch') { toggleWatchMode(); dropdownMenu.classList.remove('show'); }
             else if (action === 'practice') { exitExampleMode(); dropdownMenu.classList.remove('show'); }
             else if (action === 'fillCandidates') { fillCandidates(); dropdownMenu.classList.remove('show'); }
-            else if (action === 'candMode') { if (typeof __applyCandMode === 'function') __applyCandMode(!autoCandidatesMode); dropdownMenu.classList.remove('show'); }
             else if (action === 'theme') { if (typeof __applyTheme === 'function') __applyTheme(!document.body.classList.contains('dark-mode')); dropdownMenu.classList.remove('show'); }
             else if (action === 'nextHint') { showNextHint(); dropdownMenu.classList.remove('show'); }
             else if (action === 'techManual') { openTechniqueManual(); dropdownMenu.classList.remove('show'); }
             else if (action === 'exportPuzzle') { exportCurrentPuzzle(); dropdownMenu.classList.remove('show'); }
-            else if (action === 'importClipboard') { importFromClipboard(); dropdownMenu.classList.remove('show'); }
-            // 教学专属：上一步
-            else if (action === 'prevStep') { undo(); dropdownMenu.classList.remove('show'); }
         });
     }
     
@@ -1481,6 +1631,14 @@ function attachEvents() {
     document.getElementById('nextStepBtn')?.addEventListener('click', nextStep);
     // 独立"编辑候选数"按钮（练习模式显示，教学模式隐藏）
     document.getElementById('editCandBtn')?.addEventListener('click', toggleEditMode);
+    // 讲解模式的语音开关
+    document.getElementById('voiceToggleBtn')?.addEventListener('click', () => {
+        toggleNarration();
+    });
+    // 语音列表是异步加载的，加载完触发一次按钮状态刷新
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.onvoiceschanged = () => updateNarrationButton();
+    }
     // 旧的 undoBtn 已移入"更多操作"下拉，不再有独立按钮
     
     document.getElementById('hintDialogClose')?.addEventListener('click', () => {
@@ -1518,7 +1676,7 @@ function initUI() {
     const gameArea = document.getElementById('gameArea');
     if (gameArea) gameArea.classList.add('practice-mode');
     
-    updateFreeModeStatus();
+    updateModeBadge();
 }
 
 /**
@@ -1538,7 +1696,9 @@ function fitBoardSize() {
     const wrapStyle = getComputedStyle(wrap);
     const padX = parseFloat(wrapStyle.paddingLeft) || 0;
     const padY = (parseFloat(wrapStyle.paddingTop) || 0) + (parseFloat(wrapStyle.paddingBottom) || 0);
-    const vw = document.documentElement.clientWidth - padX * 2;
+    // 用容器的实际内容区宽度，而不是窗口宽度：
+    // 窗口宽度里还含 body 的内边距，直接相减会高估，导致棋盘超宽被挤出屏幕左侧
+    const vw = wrap.clientWidth - padX * 2;
     const vh = window.innerHeight;
 
     // 头部占高（含下边距）
@@ -1548,10 +1708,11 @@ function fitBoardSize() {
     let availH = vh - hdrH - padY - (tightH ? 10 : 30);
     let availW = vw;
 
-    // 横排时侧栏在右侧，占水平空间
+    // 横排时侧栏在右侧，占水平空间（间距取实际列间距，不能写死）
     if (getComputedStyle(gameArea).flexDirection === 'row' &&
         sidebar && getComputedStyle(sidebar).display !== 'none') {
-        availW -= (sidebar.offsetWidth + 20);
+        const gap = parseFloat(getComputedStyle(gameArea).columnGap) || 0;
+        availW -= (sidebar.offsetWidth + gap);
     }
 
     // 数字键盘占位：横屏竖排在棋盘右侧（吃宽度），竖屏横排在棋盘下方（吃高度）
@@ -1695,10 +1856,8 @@ function refreshPracticeCandidates(row, col, num) {
     syncUserCandidatesToDisplay();
 }
 
-function updateFreeModeStatus() {
+function updateModeBadge() {
     if (isExampleMode) return;
-    const hasDerivable = getDerivableMap().size > 0;
-    isFreeMode = !hasDerivable;
 
     const modeBadge = document.getElementById('modeBadge');
     if (!modeBadge) return;
@@ -1711,15 +1870,9 @@ function updateFreeModeStatus() {
         ? (' · ' + (gName ? gName + ' 级' : '') + (puzzle.level ? ' 技巧等级 ' + puzzle.level : ''))
         : '';
 
-    if (isFreeMode) {
-        modeBadge.innerHTML = '✏️ 自由模式';
-        modeBadge.classList.add('manual-mode');
-        modeBadge.classList.remove('practice-mode');
-    } else {
-        modeBadge.innerHTML = '✏️ 练习模式';
-        modeBadge.classList.remove('manual-mode');
-        modeBadge.classList.add('practice-mode');
-    }
+    modeBadge.innerHTML = '✏️ 练习模式';
+    modeBadge.classList.remove('manual-mode');
+    modeBadge.classList.add('practice-mode');
 }
 
 /** 整盘是否填满且完全合法（每行/列/宫恰好 1~9） */
@@ -1764,7 +1917,7 @@ function checkPuzzleCompletion() {
 
     if (!isPuzzleCompleted && isTimerRunning) {
         completeTimer();
-        // 练习/自由模式：弹出确认框，让用户选择重新答题或结束
+        // 练习模式：弹出确认框，让用户选择重新答题或结束
         // 教学模式自己按步骤推进完成，不弹框
         if (!isExampleMode) showCompletionDialog();
         return true;
@@ -1807,6 +1960,7 @@ function undo() {
         showTemporaryMessage('没有更早的历史', 'warning');
         return;
     }
+    stopWatchMode(true);   // 手动回退时停止自动播放，避免互相打架
     historyIdx--;
     currentBoard = cloneBoardUI(historyBoards[historyIdx]);
     for (let i = 0; i < 9; i++) {
@@ -1814,6 +1968,7 @@ function undo() {
     }
     initCandidates();
     if (!isExampleMode) initUserCandidates();
+    resetTeachProgress();   // 回退后作业过程重新从"第一遍 1—9"开始
 
     const targetCount = (historyStepCounts[historyIdx] !== undefined)
         ? historyStepCounts[historyIdx]
@@ -1821,12 +1976,6 @@ function undo() {
     currentSteps = currentSteps.slice(0, targetCount);
     stepCount = currentSteps.length;
     updateStepsListDisplay();
-    if (currentSteps.length > 0) {
-        addDetailedExplanation(currentSteps[currentSteps.length - 1], stepCount);
-    } else {
-        const box = document.getElementById('explanation-content');
-        if (box) box.innerHTML = '<div class="step-explanation">✨ 已回到初始状态</div>';
-    }
 
     __completionWarned = false;
     const isFull = currentBoard.every(r => r.every(c => c !== 0));
@@ -1837,7 +1986,7 @@ function undo() {
 
     __derivableCacheKey = null;
     updateBoardDisplay();
-    updateFreeModeStatus();
+    updateModeBadge();
     saveProgress();
     showTemporaryMessage('已回退到上一步', 'info');
 }
@@ -1848,10 +1997,12 @@ function redo() {
         showTemporaryMessage('没有可重做的操作', 'warning');
         return;
     }
+    stopWatchMode(true);
     historyIdx++;
     currentBoard = cloneBoardUI(historyBoards[historyIdx]);
     initCandidates();
     if (!isExampleMode) initUserCandidates();
+    resetTeachProgress();   // 重做后作业过程同样重新开始
 
     const targetCount = historyStepCounts[historyIdx] !== undefined
         ? historyStepCounts[historyIdx] : currentSteps.length;
@@ -1861,7 +2012,7 @@ function redo() {
 
     __derivableCacheKey = null;
     updateBoardDisplay();
-    updateFreeModeStatus();
+    updateModeBadge();
     saveProgress();
     showTemporaryMessage('已重做', 'info');
 }
@@ -1894,7 +2045,7 @@ function clearSelectedCell() {
     isPuzzleCompleted = false;
     if (!isTimerRunning) startTimer();
     updateBoardDisplay();
-    updateFreeModeStatus();
+    updateModeBadge();
     saveProgress();
     showTemporaryMessage('已清除该格', 'info');
 }
@@ -1946,8 +2097,8 @@ function fillNumberToSelectedCell(num) {
     const info = getDerivableMap().get(row + ',' + col);
 
     // 跳步判定（必须在 refreshPracticeCandidates 之前，后者会清空当前格 userCandidates）
-    const notInUserCand = !userCandidates[row][col].has(num);
     const notDerivable = !info;
+    let countedError = false;
 
     saveToHistory();
     currentBoard[row][col] = num;
@@ -1957,19 +2108,13 @@ function fillNumberToSelectedCell(num) {
         refreshPracticeCandidates(row, col, num);
         initCandidates();
 
-        // 练习模式专属：跳步提示（双判定维度）
-        // - 人类视角：userCandidates（用户自己维护的候选数）里没这个数 → 用户自己也没"看出来"
-        // - 引擎视角：getDerivableMap 里没这格 → 连引擎都推不出
-        if (notInUserCand || notDerivable) {
-            let tip;
-            if (notInUserCand && notDerivable) {
-                tip = '⚠️ 填对了，但这格你自己没标 ' + num + ' 作候选，且当前盘面也推不出（跳步）';
-            } else if (notInUserCand) {
-                tip = '💡 填对了！这格你自己没标 ' + num + ' 作候选，可以检查下候选数是否遗漏';
-            } else {
-                tip = '💡 填对了！但当前盘面还推不出此数（跳步），可点💡看线索';
-            }
-            showTemporaryMessage(tip, 'info');
+        // 练习模式专属：只对"当前盘面推导不出来"的数字记错。
+        // （用户自己的候选数记号不算依据：练习模式默认不标候选数，
+        //   若按"自己没标"记错，会把每次正确填入都算成错误。）
+        // 教学模式下不计数（盘面由引擎推进，不存在填错）。
+        if (notDerivable) {
+            countedError = true;
+            addError('⚠️ ' + num + ' 在当前盘面推导不出来（跳步），错误次数 +1，共 ' + (errorCount + 1) + ' 次');
         }
     } else {
         recalcAfterPlacement(row, col, num);
@@ -1979,7 +2124,7 @@ function fillNumberToSelectedCell(num) {
     __derivableCacheKey = null;
     updateBoardDisplay();
     checkPuzzleCompletion();
-    updateFreeModeStatus();
+    updateModeBadge();
     saveProgress();
 
     // 填完 9 个相同数字的庆祝：盘面已渲染好后检查，避免 DOM 还没更新
@@ -2001,7 +2146,9 @@ function fillNumberToSelectedCell(num) {
         }
     }, 10);
 
-    if (info) {
+    if (countedError) {
+        // addError 已经给出错误提示，此处不再覆盖
+    } else if (info) {
         showTemporaryMessage('已填入 ' + num + '（依据：' + info.technique + '）', 'success');
     } else {
         // 数字本身与唯一解一致，但当前逻辑（摒除/区块/数对等已启用技法）暂时推导不出
@@ -2013,6 +2160,7 @@ function fillNumberToSelectedCell(num) {
 function loadPuzzle(name) {
     const puzzle = PUZZLE_LIBRARY.find(p => p.name === name);
     if (!puzzle) return;
+    stopWatchMode(true);   // 换题时停止自动播放
 
     const grid = puzzle.grid.map(r => r.split('').map(ch => parseInt(ch)));
     for (let i = 0; i < 9; i++) {
@@ -2036,15 +2184,11 @@ function loadPuzzle(name) {
     stepCount = 0;
     updateStepsListDisplay();
 
-    const expBox = document.getElementById('explanation-content');
-    if (expBox) expBox.innerHTML = '<div class="step-explanation">✨ 点击"下一步"开始智能解题</div>';
-
     resetTimer();
     startTimer();
     resetErrorCount();
 
     // 完整重置所有模式开关
-    isFreeMode = false;
     isExampleMode = false;
     practiceEditMode = false;
     exampleEditMode = false;
@@ -2069,7 +2213,7 @@ function loadPuzzle(name) {
     const sel = document.getElementById('puzzleSelector');
     if (sel) sel.value = name;
 
-    updateFreeModeStatus();
+    updateModeBadge();
     saveProgress();
     showTemporaryMessage('已加载: ' + name, 'success');
     ppSyncFromSelects();
@@ -2091,7 +2235,8 @@ function createNumberPad() {
                 return;
             }
             const row = currentSelectedRow, col = currentSelectedCol;
-            if (isExampleMode && !window.isManualEditMode) {
+            // 教学模式下数字键盘默认不可用；但开启"编辑候选数"后允许逐个增删候选
+            if (isExampleMode && !window.isManualEditMode && !exampleEditMode) {
                 showTemporaryMessage('教学模式下请使用"下一步"按钮', 'warning');
                 return;
             }
@@ -2260,7 +2405,7 @@ function restoreProgress() {
     updateTimerDisplay();
     startTimer();
 
-    updateFreeModeStatus();
+    updateModeBadge();
     showTemporaryMessage('已恢复上次未完成的进度', 'info');
 }
 
@@ -2268,25 +2413,26 @@ function restoreProgress() {
 
 /**
  * 根据当前模式控制侧栏面板显隐。
- * 教学模式：三个面板都显示（解题过程 + 步骤历史 + 统计）
- * 练习/自由模式：只显示统计面板（解题过程和步骤历史是教学专属）
+ * 教学模式：显示合并后的「教学面板」（解题过程 + 步骤历史同在一个列表里）
+ * 练习模式：隐藏整条侧栏（教学专属）
  */
 function updateSidebarPanels() {
     const showTeachPanels = !!isExampleMode;
     const sidebar = document.getElementById('explanationSidebar');
     if (sidebar) {
         sidebar.classList.toggle('teach-mode', showTeachPanels);
-        // 练习/自由模式整条侧栏不占位，把 360px 宽度让给棋盘与数字键盘
+        // 练习模式整条侧栏不占位，把 360px 宽度让给棋盘与数字键盘
         sidebar.style.display = showTeachPanels ? '' : 'none';
     }
-    const hideAll = (el) => {
+    // 面板显隐完全交给 CSS（.explanation-sidebar.teach-mode 控制），
+    // 这里只清掉可能残留的行内样式，避免覆盖 CSS 的 flex 布局导致滚动失效
+    const clearInline = (el) => {
         if (!el) return;
-        el.style.display = showTeachPanels ? 'block' : 'none';
-        el.style.height = showTeachPanels ? 'auto' : '0';
-        el.style.overflow = showTeachPanels ? 'visible' : 'hidden';
+        el.style.display = '';
+        el.style.height = '';
+        el.style.overflow = '';
     };
-    hideAll(document.querySelector('.explanation-panel'));
-    hideAll(document.querySelector('.steps-history'));
+    clearInline(document.querySelector('.explanation-panel'));
     const quickInfo = document.getElementById('sidebarQuickInfo');
     if (quickInfo) quickInfo.style.display = showTeachPanels ? '' : 'none';
 }
@@ -2297,9 +2443,6 @@ function updateSidebarPanels() {
  * 所以隐藏 cand-only 标记的菜单项避免误导。
  */
 function syncMenuLabels() {
-    const candModeItem = document.getElementById('candModeMenuItem');
-    if (candModeItem) candModeItem.textContent = autoCandidatesMode ? '🔢 候选数：自动' : '✍️ 候选数：手动';
-
     // 独立"编辑候选数"按钮：同步文案 + active 状态 + 显隐（教学模式隐藏，练习模式显示）
     const editBtn = document.getElementById('editCandBtn');
     if (editBtn) {
@@ -2312,14 +2455,22 @@ function syncMenuLabels() {
     const themeItem = document.getElementById('themeMenuItem');
     if (themeItem) themeItem.textContent = document.body.classList.contains('dark-mode') ? '☀️ 日间模式' : '🌙 夜间模式';
 
-    // 显隐规则：
-    // - cand-only：教学模式隐藏（练习/自由都显示补全候选数）
-    // - teach-only：仅教学模式显示
-    // - mode-only：仅自由模式显示（autoCandidatesMode 只在自由模式生效）
+    // 显隐规则：cand-only 在教学模式隐藏（练习模式显示补全候选数）
     const isTeach = !!isExampleMode;
     document.querySelectorAll('.cand-only').forEach(el => el.style.display = isTeach ? 'none' : '');
-    document.querySelectorAll('.teach-only').forEach(el => el.style.display = isTeach ? '' : 'none');
-    document.querySelectorAll('.mode-only').forEach(el => el.style.display = isFreeMode ? '' : 'none');
+
+    // 错误次数徽章：只有自主做题（练习模式）才可能出现错误，教学模式隐藏
+    updateErrorCountDisplay();
+
+    // 计时器：教学 / 讲解模式按步骤推进，不靠用户解题速度，隐藏
+    const timerWrap = document.querySelector('.timer-display');
+    if (timerWrap) timerWrap.style.display = isTeach ? 'none' : '';
+
+    // 讲解模式菜单项文案
+    const watchItem = document.querySelector('[data-action="watch"]');
+    if (watchItem) {
+        watchItem.textContent = isWatchMode ? '⏹️ 停止讲解' : '🔊 讲解模式';
+    }
 }
 
 /**
@@ -2338,7 +2489,7 @@ function makeDraggableResizeable(contentEl) {
     contentEl.appendChild(handle);
 
     const header = contentEl.querySelector(
-        '.hint-dialog-header, .tech-learn-header, .custom-dialog-header'
+        '.hint-dialog-header, .tech-learn-header, .custom-dialog-header, .step-viz-header'
     );
 
     function toFreePosition() {
@@ -2376,8 +2527,15 @@ function makeDraggableResizeable(contentEl) {
         if (!dragState) return;
         const dx = e.clientX - dragState.startX;
         const dy = e.clientY - dragState.startY;
-        contentEl.style.left = (dragState.origLeft + dx) + 'px';
-        contentEl.style.top = (dragState.origTop + dy) + 'px';
+        // 限制在视口内，保证标题栏始终能抓得到（不会拖丢）
+        const w = contentEl.offsetWidth, h = contentEl.offsetHeight;
+        const minVisible = 80;
+        let left = dragState.origLeft + dx;
+        let top = dragState.origTop + dy;
+        left = Math.min(Math.max(left, minVisible - w), window.innerWidth - minVisible);
+        top = Math.min(Math.max(top, 0), window.innerHeight - 40);
+        contentEl.style.left = left + 'px';
+        contentEl.style.top = top + 'px';
     }
 
     function stopDrag() {
@@ -2429,20 +2587,6 @@ document.addEventListener('DOMContentLoaded', function () {
     makeDraggableResizeable(document.getElementById('techLearnDialog')?.querySelector('.tech-learn-content'));
     makeDraggableResizeable(document.getElementById('customPuzzleDialog')?.querySelector('.custom-dialog-content'));
 
-    // 候选数模式切换：自动 / 手动（菜单项驱动，按钮已收纳进"更多操作"）
-    const CAND_MODE_KEY = 'sudoku_cand_mode_v1';
-    function applyCandMode(auto) {
-        autoCandidatesMode = auto;
-        try { localStorage.setItem(CAND_MODE_KEY, auto ? 'auto' : 'manual'); } catch (e) {}
-        renderAllCandidates();
-        syncMenuLabels();
-    }
-    window.__applyCandMode = applyCandMode;
-    const savedCandMode = (() => {
-        try { return localStorage.getItem(CAND_MODE_KEY); } catch (e) { return null; }
-    })();
-    applyCandMode(savedCandMode === 'auto');
-
     // 主题切换（日间 / 夜间）
     const THEME_KEY = 'sudoku_theme_v1';
     function applyTheme(dark) {
@@ -2480,7 +2624,7 @@ document.addEventListener('DOMContentLoaded', function () {
         applySidebarState({ collapsed: !sidebar.classList.contains('collapsed'), width: w });
     });
 
-    // 折叠条上的"上一步原因"快捷按钮：弹出浮层显示当前 explanation-content
+    // 折叠条上的"上一步原因"快捷按钮：弹出浮层显示当前步骤的详细说明
     const sidebarQuickInfo = document.getElementById('sidebarQuickInfo');
     let __quickPanel = null;
     function closeQuickPanel() {
@@ -2493,8 +2637,8 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sidebarQuickInfo) sidebarQuickInfo.addEventListener('click', (e) => {
         e.stopPropagation();
         if (__quickPanel) { closeQuickPanel(); return; }
-        const src = document.getElementById('explanation-content');
-        const html = src ? src.innerHTML : '<div style="color:#95a5a6;">暂无步骤</div>';
+        const lastStep = currentSteps.length ? currentSteps[currentSteps.length - 1] : null;
+        const html = buildStepDetailHtml(lastStep, currentSteps.length);
         __quickPanel = document.createElement('div');
         __quickPanel.className = 'sidebar-quick-panel';
         __quickPanel.innerHTML =
@@ -2988,7 +3132,13 @@ function buildElimText(step) {
             + '这一步只是做草稿，不填数字、也不删候选。';
     }
     const n = (step.eliminations || []).length;
-    return '根据该方法的结构关系，可排除 <b>' + n + '</b> 个候选数（盘面上以橙色斜杠标出）。';
+    // 逐个点名位置和数字，不再只说"可排除 N 个"
+    const list = step.eliminations.map(function (e) {
+        return '(' + (e.row + 1) + ',' + (e.col + 1) + ') 的 <b>' + e.num + '</b>';
+    }).join('、');
+    // 橙色斜杠由 drawStepOverlay 在打开弹窗时画在盘面上，这里如实说明
+    return '按「<b>' + escHtml(step.technique) + '</b>」的结构，可排除 <b>' + n + '</b> 个候选数：'
+        + list + '（盘面上以橙色斜杠标出）。';
 }
 
 /** 在给定盘面上判断 (row,col) 能否填 n；不能则返回挡住它的格子及所在单元 */
@@ -3008,6 +3158,19 @@ function findBlocker(board, row, col, n) {
         }
     }
     return null;
+}
+
+/**
+ * 从盘面快照推算某格当时的候选数。
+ * 查看历史步骤时用它复算"删除前该格有哪些候选"，作为可核对的依据。
+ */
+function candidatesFromBoard(board, row, col) {
+    if (!board || board[row][col] !== 0) return null;
+    const list = [];
+    for (let n = 1; n <= 9; n++) {
+        if (!findBlocker(board, row, col, n)) list.push(n);
+    }
+    return list;
 }
 
 /** 生成 1~9 的逐数字判定表：每个数字能否填、不能填是被哪个格子挡住 */
@@ -3069,12 +3232,13 @@ function buildMiniGrid(step, board) {
         }
     }
     html += '</div>';
-    html += '<div class="dg-legend">'
-        + '<span><i class="dg-swatch dg-target"></i>目标格</span>'
-        + '<span><i class="dg-swatch dg-peer"></i>同行/同列/同宫</span>'
-        + '<span><i class="dg-swatch dg-node"></i>关键格</span>'
-        + '<span><i class="dg-swatch dg-elim"></i>被排除格</span>'
-        + '</div>';
+    // 图例只列出盘面上真正出现过的标记，避免出现"图里没有却写着有这个颜色"
+    let legend = '';
+    if (hasTarget) legend += '<span><i class="dg-swatch dg-target"></i>目标格</span>';
+    if (hasTarget) legend += '<span><i class="dg-swatch dg-peer"></i>同行/同列/同宫</span>';
+    if (nodes.size) legend += '<span><i class="dg-swatch dg-node"></i>关键格</span>';
+    if (elim.size) legend += '<span><i class="dg-swatch dg-elim"></i>被排除格</span>';
+    html += '<div class="dg-legend">' + legend + '</div>';
     return html;
 }
 
@@ -3116,15 +3280,28 @@ function buildDerivationHtml(step) {
         if (step.explanation) {
             html += '<div class="kv-text kv-preline">' + escHtml(step.explanation) + '</div>';
         }
-        html += '<ol class="kv-list"><li>按 <b>' + escHtml(step.technique)
-            + '</b> 的判定条件在盘面上找出满足结构的一组格子（定位图中蓝色格）。</li>';
+        html += '<ol class="kv-list">';
+        // 只有真的记录了结构格，才能说"定位图中蓝色格"
+        const __nodes = (step.graph && step.graph.nodes) || [];
+        html += '<li>按 <b>' + escHtml(step.technique)
+            + '</b> 的判定条件在盘面上找出满足结构的一组格子'
+            + (__nodes.length ? '（定位图中蓝色格，共 ' + __nodes.length + ' 个）' : '') + '。</li>';
         html += '<li>这些格子之间的位置关系成立后，下列候选数在逻辑上不可能成立，遂予排除：</li></ol>';
         html += '<table class="kv-derive-table"><thead><tr>'
-            + '<th>序号</th><th>位置</th><th>排除数字</th><th>依据</th></tr></thead><tbody>';
+            + '<th>序号</th><th>位置</th><th>排除数字</th><th>依据（该格删除前后的候选数）</th></tr></thead><tbody>';
         step.eliminations.forEach((e, i) => {
+            const before = candidatesFromBoard(board, e.row, e.col);
+            let why;
+            if (before && before.indexOf(e.num) >= 0) {
+                const after = before.filter(n => n !== e.num);
+                why = '删除前该格候选为 {' + before.join('、') + '}，排除 ' + e.num
+                    + ' 后剩 {' + (after.length ? after.join('、') : '空') + '}'
+                    + (before.length === 2 ? ' —— 只剩唯一解 ' + after[0] : '');
+            } else {
+                why = escHtml(step.technique) + ' 的结构成立 → 此处不可能取 ' + e.num;
+            }
             html += '<tr><td>' + (i + 1) + '</td><td>(' + (e.row + 1) + ',' + (e.col + 1)
-                + ')</td><td><b>' + e.num + '</b></td><td>' + escHtml(step.technique)
-                + ' 结构成立 → 此处不可能取 ' + e.num + '</td></tr>';
+                + ')</td><td><b>' + e.num + '</b></td><td>' + why + '</td></tr>';
         });
         html += '</tbody></table></div>';
         html += '<div class="kv-section"><span class="kv-label kv-derive">盘面定位图</span>'
@@ -3287,57 +3464,266 @@ function showStepVizDialog(step) {
 
 /* ==================== 技法详解学习面板 ==================== */
 
-/** 渲染单个技法的完整教程 */
-function buildLearningHtml(item, currentKey) {
-    if (!item) return '<div class=\"lw-hero\">暂无可用的技法详解。</div>';
-    var html = '';
+/* ==================== 技法示意图渲染（纯 SVG） ==================== */
 
-    html += '<div class=\"lw-hero\">' + escHtml(item.oneLiner || '') + '</div>';
+// 图中各类高亮格的颜色与图例文字
+const FIG_ROLES = {
+    p: { fill: '#fdeacf', stroke: '#e67e22', label: '枢纽格' },
+    d: { fill: '#d9f2e0', stroke: '#27ae60', label: '确定填入' },
+    s: { fill: '#e7e1f9', stroke: '#7d5fc4', label: '强链端点' },
+    g: { fill: '#dbeafb', stroke: '#2f80c9', label: '翼 / 结构格' },
+    w: { fill: '#e4eef1', stroke: '#7f9aa3', label: '弱链端点' },
+    f: { fill: '#fdf1cf', stroke: '#c99a0a', label: '鳍（多余格）' },
+    e: { fill: '#fbd9d4', stroke: '#c0392b', label: '可排除（划掉即删）' },
+    r: { fill: '#d3efec', stroke: '#199a8e', label: '空矩形的候选臂' },
+    z: { fill: '#f4f7fa', stroke: '#b6c6d6', label: '空交点（该数字无候选）' },
+    x: { fill: '#f0f3f7', stroke: '#c9d6e2', label: '已填数字' },
+    n: { fill: '#ffffff', stroke: 'none', label: '' }
+};
+// 连线类型的图例（与 figLinkPath 保持一致）
+const FIG_LINKS = [
+    { type: 's', color: '#7d5fc4', dash: false, label: '强链（两者必有一真）' },
+    { type: 'w', color: '#9aabbb', dash: true, label: '弱链（不可能同时为真）' },
+    { type: 'a', color: '#2f80c9', dash: true, label: '互相可见（同行/列/宫）' },
+    { type: 'c', color: '#e67e22', dash: true, label: '结论链（跨单元推出：至少一端为真）' }
+];
+const FIG_OX = 28, FIG_OY = 28, FIG_S = 36, FIG_BOARD = 9 * FIG_S;
+
+/** 单格底色 + 描边 */
+function figCellRect(r, c, role) {
+    const X = FIG_OX + c * FIG_S, Y = FIG_OY + r * FIG_S;
+    const st = FIG_ROLES[role];
+    let out = '<rect x="' + X + '" y="' + Y + '" width="' + FIG_S + '" height="' + FIG_S
+        + '" fill="' + ((st && role !== 'n' ? st.fill : '#ffffff')) + '"/>';
+    if (st && role !== 'n') {
+        out += '<rect x="' + (X + 1.2) + '" y="' + (Y + 1.2) + '" width="' + (FIG_S - 2.4) + '" height="' + (FIG_S - 2.4)
+            + '" rx="2.5" fill="none" stroke="' + st.stroke + '" stroke-width="2.4"/>';
+    }
+    return out;
+}
+
+/** 单格里的候选数字；多候选按 1~9 的九宫位置摆放，被删的候选画上删除线 */
+function figCellDigits(r, c, cands, role, strike) {
+    const X = FIG_OX + c * FIG_S, Y = FIG_OY + r * FIG_S;
+    const list = (cands || []).slice().sort(function (a, b) { return a - b; });
+    if (!list.length) return '';   // 空交点（如空矩形）只靠底色区分，不画数字
+    const fixed = (role === 'x');
+    let out = '';
+    if (list.length === 1) {
+        const killed = (role === 'e');
+        out += '<text x="' + (X + 18) + '" y="' + (Y + 25) + '" text-anchor="middle" font-size="22" font-weight="700" fill="'
+            + (killed ? '#c0392b' : (fixed ? '#8fa3b8' : '#2c3e50')) + '">' + list[0] + '</text>';
+        if (killed) {
+            out += '<line x1="' + (X + 7) + '" y1="' + (Y + 18.5) + '" x2="' + (X + 29) + '" y2="' + (Y + 18.5)
+                + '" stroke="#c0392b" stroke-width="2.2"/>';
+        }
+        return out;
+    }
+    list.forEach(function (d) {
+        const dc = (d - 1) % 3, dr = Math.floor((d - 1) / 3);
+        const tx = X + dc * 12 + 6, ty = Y + dr * 12 + 10;
+        const k = (strike && strike.indexOf(d) !== -1);
+        out += '<text x="' + tx + '" y="' + ty + '" text-anchor="middle" font-size="10.5" font-weight="'
+            + (k ? '700' : '500') + '" fill="' + (k ? '#c0392b' : '#41627f') + '">' + d + '</text>';
+        if (k) {
+            out += '<line x1="' + (tx - 4.5) + '" y1="' + (ty - 3.4) + '" x2="' + (tx + 4.5) + '" y2="' + (ty - 3.4)
+                + '" stroke="#c0392b" stroke-width="1.5"/>';
+        }
+    });
+    return out;
+}
+
+/** 两格之间的连线：s 强链（紫实线） w 弱链（灰虚线） a 互相可见（蓝箭头） */
+function figLinkPath(a, b, type) {
+    const r1 = a[0] - 1, c1 = a[1] - 1, r2 = b[0] - 1, c2 = b[1] - 1;
+    const x1 = FIG_OX + c1 * FIG_S + 18, y1 = FIG_OY + r1 * FIG_S + 18;
+    const x2 = FIG_OX + c2 * FIG_S + 18, y2 = FIG_OY + r2 * FIG_S + 18;
+
+    if (type === 'a') {
+        return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2
+            + '" stroke="#2f80c9" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#figArrow)"/>';
+    }
+    const strong = (type === 's');
+    const conc = (type === 'c');
+    const color = strong ? '#7d5fc4' : (conc ? '#e67e22' : '#9aabbb');
+    const dash = strong ? '' : ' stroke-dasharray="5 4"';
+    const w = strong ? 2.4 : (conc ? 2 : 1.8);
+    if (r1 === r2) {
+        const yb = FIG_OY + (r1 + 1) * FIG_S - 4;
+        return '<path d="M ' + x1 + ' ' + y1 + ' L ' + x1 + ' ' + yb + ' L ' + x2 + ' ' + yb + ' L ' + x2 + ' ' + y2
+            + '" fill="none" stroke="' + color + '" stroke-width="' + w + '"' + dash + ' stroke-linejoin="round"/>';
+    }
+    if (c1 === c2) {
+        const xb = FIG_OX + (c1 + 1) * FIG_S - 4;
+        return '<path d="M ' + x1 + ' ' + y1 + ' L ' + xb + ' ' + y1 + ' L ' + xb + ' ' + y2 + ' L ' + x2 + ' ' + y2
+            + '" fill="none" stroke="' + color + '" stroke-width="' + w + '"' + dash + ' stroke-linejoin="round"/>';
+    }
+    return '<line x1="' + x1 + '" y1="' + y1 + '" x2="' + x2 + '" y2="' + y2
+        + '" stroke="' + color + '" stroke-width="' + w + '"' + dash + '/>';
+}
+
+/** 渲染一张技法示意图（含坐标、图例、图注） */
+function buildTechFigureHtml(fig) {
+    if (!fig || !fig.cells || !fig.cells.length) return '';
+    let bg = '', rects = '', paths = '', texts = '';
+    let r, c, i;
+
+    for (r = 0; r < 9; r++) {
+        for (c = 0; c < 9; c++) {
+            bg += '<rect x="' + (FIG_OX + c * FIG_S) + '" y="' + (FIG_OY + r * FIG_S) + '" width="' + FIG_S
+                + '" height="' + FIG_S + '" fill="#ffffff"/>';
+        }
+    }
+    for (i = 1; i < 9; i++) {
+        const thick = (i % 3 === 0);
+        const col = thick ? '#8ea6bd' : '#e6edf4';
+        const w = thick ? 2.2 : 1;
+        bg += '<line x1="' + (FIG_OX + i * FIG_S) + '" y1="' + FIG_OY + '" x2="' + (FIG_OX + i * FIG_S)
+            + '" y2="' + (FIG_OY + FIG_BOARD) + '" stroke="' + col + '" stroke-width="' + w + '"/>';
+        bg += '<line x1="' + FIG_OX + '" y1="' + (FIG_OY + i * FIG_S) + '" x2="' + (FIG_OX + FIG_BOARD)
+            + '" y2="' + (FIG_OY + i * FIG_S) + '" stroke="' + col + '" stroke-width="' + w + '"/>';
+    }
+    bg += '<rect x="' + FIG_OX + '" y="' + FIG_OY + '" width="' + FIG_BOARD + '" height="' + FIG_BOARD
+        + '" fill="none" stroke="#5a7595" stroke-width="2.6"/>';
+    for (i = 0; i < 9; i++) {
+        bg += '<text x="' + (FIG_OX - 12) + '" y="' + (FIG_OY + i * FIG_S + 22)
+            + '" text-anchor="middle" font-size="11" fill="#94a7ba">' + (i + 1) + '</text>';
+        bg += '<text x="' + (FIG_OX + i * FIG_S + 18) + '" y="' + (FIG_OY - 10)
+            + '" text-anchor="middle" font-size="11" fill="#94a7ba">' + (i + 1) + '</text>';
+    }
+
+    const roles = {};
+    fig.cells.forEach(function (cell) {
+        const rr = cell[0] - 1, cc = cell[1] - 1;
+        const cands = cell[2] || [], role = cell[3] || 'g', strike = cell[4] || [];
+        roles[role] = true;
+        rects += figCellRect(rr, cc, role);
+        texts += figCellDigits(rr, cc, cands, role, strike);
+    });
+    (fig.links || []).forEach(function (lk) {
+        paths += figLinkPath(lk[0], lk[1], lk[2] || 's');
+    });
+
+    let legend = '';
+    ['p', 'd', 's', 'g', 'w', 'f', 'e', 'r', 'z', 'x'].forEach(function (k) {
+        if (!roles[k]) return;
+        const L = FIG_ROLES[k];
+        if (!L || !L.label) return;
+        legend += '<span class="tech-fig-key"><i style="background:' + L.fill + ';border-color:' + L.stroke
+            + '"></i>' + escHtml(L.label) + '</span>';
+    });
+
+    // 用到的连线类型也要在图例里说明，否则用户看不懂紫色/灰色/橙色的含义
+    const usedLinkTypes = {};
+    (fig.links || []).forEach(function (lk) { usedLinkTypes[lk[2] || 's'] = true; });
+    let linkLegend = '';
+    FIG_LINKS.forEach(function (L) {
+        if (!usedLinkTypes[L.type]) return;
+        linkLegend += '<span class="tech-fig-key"><i class="tech-fig-line" style="background:' + L.color
+            + (L.dash ? ';background-image:repeating-linear-gradient(90deg,' + L.color + ' 0 4px,transparent 4px 7px)' : '')
+            + '"></i>' + escHtml(L.label) + '</span>';
+    });
+
+    const svg = '<svg class="tech-fig-svg" viewBox="0 0 364 364" xmlns="http://www.w3.org/2000/svg" role="img">'
+        + '<defs><marker id="figArrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">'
+        + '<path d="M 0 0 L 10 5 L 0 10 z" fill="#2f80c9"/></marker></defs>'
+        + bg + rects + paths + texts + '</svg>';
+
+    return '<figure class="tech-fig">'
+        + (fig.t ? '<div class="tech-fig-title">' + escHtml(fig.t) + '</div>' : '')
+        + '<div class="tech-fig-canvas">' + svg + '</div>'
+        + (legend ? '<div class="tech-fig-legend">' + legend + '</div>' : '')
+        + (linkLegend ? '<div class="tech-fig-legend tech-fig-legend-lines">' + linkLegend + '</div>' : '')
+        + (fig.cap ? '<figcaption class="tech-fig-cap">' + escHtml(fig.cap) + '</figcaption>' : '')
+        + '</figure>';
+}
+
+/** 渲染「分支推演」卡片 */
+function buildTechBranchesHtml(b) {
+    if (!b || !b.cases || !b.cases.length) return '';
+    const cards = b.cases.map(function (cs) {
+        let li = '';
+        (cs.steps || []).forEach(function (s) { li += '<li>' + escHtml(s) + '</li>'; });
+        return '<div class="tech-branch-card">'
+            + '<div class="tech-branch-head">' + escHtml(cs.label || '')
+            + (cs.tag ? '<span class="tech-branch-tag">' + escHtml(cs.tag) + '</span>' : '') + '</div>'
+            + (li ? '<ul class="tech-branch-steps">' + li + '</ul>' : '')
+            + '</div>';
+    }).join('');
+    return (b.t ? '<div class="tech-branch-lead">' + escHtml(b.t) + '</div>' : '')
+        + '<div class="tech-branch-wrap">' + cards + '</div>'
+        + (b.note ? '<div class="tech-branch-note">' + escHtml(b.note) + '</div>' : '');
+}
+
+/** 渲染单个技法的完整教程（图文结合） */
+function buildLearningHtml(item, currentKey) {
+    if (!item) return '<div class="lw-hero">暂无可用的技法详解。</div>';
+    const CN = ['一', '二', '三', '四', '五', '六', '七', '八'];
+    let sec = 0;
+    const title = function (name) {
+        const s = CN[sec] || ('#' + (sec + 1));
+        sec++;
+        return s + '、' + name;
+    };
+    const key = item.__key || currentKey;
+    const figs = (typeof TECHNIQUE_DIAGRAMS !== 'undefined' && key && TECHNIQUE_DIAGRAMS[key]) || [];
+
+    let html = '<div class="lw-hero">' + escHtml(item.oneLiner || '') + '</div>';
+
+    // 结构示意：放在最前面，先看图再看文字
+    if (figs[0]) {
+        html += '<div class="lw-block"><div class="lw-block-title">🔍 结构示意（横纵坐标对应正文的「第 r 行第 c 列」）</div>'
+            + buildTechFigureHtml(figs[0]) + '</div>';
+    }
 
     if (item.howToFind && item.howToFind.length) {
-        html += '<div class=\"lw-block\"><div class=\"lw-block-title\">一、怎么在盘面上找到它</div>'
-            + '<ol class=\"lw-steps\">';
+        html += '<div class="lw-block"><div class="lw-block-title">' + title('怎么在盘面上找到它') + '</div><ol class="lw-steps">';
         item.howToFind.forEach(function (s) { html += '<li>' + escHtml(s) + '</li>'; });
         html += '</ol></div>';
     }
 
     if (item.reasoning && item.reasoning.length) {
-        html += '<div class=\"lw-block\"><div class=\"lw-block-title\">二、推理为什么成立（逐步证明）</div>'
-            + '<ol class=\"lw-steps lw-proof\">';
+        html += '<div class="lw-block"><div class="lw-block-title">' + title('推理为什么成立（逐步证明）') + '</div><ol class="lw-steps lw-proof">';
         item.reasoning.forEach(function (s) { html += '<li>' + escHtml(s) + '</li>'; });
         html += '</ol></div>';
     }
 
+    if (item.branches) {
+        html += '<div class="lw-block"><div class="lw-block-title">' + title('分支推演（把每种可能都走一遍）') + '</div>'
+            + buildTechBranchesHtml(item.branches) + '</div>';
+    }
+
     if (item.example) {
-        html += '<div class=\"lw-block\"><div class=\"lw-block-title\">三、完整实例（带行列坐标）</div>'
-            + '<div class=\"lw-example\">' + escHtml(item.example) + '</div></div>';
+        html += '<div class="lw-block"><div class="lw-block-title">' + title('完整实例（带行列坐标）') + '</div>'
+            + '<div class="lw-example">' + escHtml(item.example) + '</div>'
+            + (figs[1] ? buildTechFigureHtml(figs[1]) : '')
+            + '</div>';
     }
 
     if (item.mistakes && item.mistakes.length) {
-        html += '<div class=\"lw-block\"><div class=\"lw-block-title\">四、常见误判</div>'
-            + '<ul class=\"lw-warn\">';
+        html += '<div class="lw-block"><div class="lw-block-title">' + title('常见误判') + '</div><ul class="lw-warn">';
         item.mistakes.forEach(function (s) { html += '<li>' + escHtml(s) + '</li>'; });
         html += '</ul></div>';
     }
 
     if (item.related && item.related.length) {
-        var chips = '';
+        let chips = '';
         item.related.forEach(function (name) {
-            var k = resolveLearningKey(name);
+            const k = resolveLearningKey(name);
             if (!k) return;
-            var cls = (k === currentKey) ? 'lw-chip is-current' : 'lw-chip';
-            chips += '<button type=\"button\" class=\"' + cls + '\" data-learn-key=\"'
-                + escHtml(k) + '\">' + escHtml(name) + '</button>';
+            const cls = (k === currentKey || k === key) ? 'lw-chip is-current' : 'lw-chip';
+            chips += '<button type="button" class="' + cls + '" data-learn-key="'
+                + escHtml(k) + '">' + escHtml(name) + '</button>';
         });
         if (chips) {
-            html += '<div class=\"lw-block\"><div class=\"lw-block-title\">五、关联技法（点击切换）</div>'
-                + '<div class=\"lw-chips\">' + chips + '</div></div>';
+            html += '<div class="lw-block"><div class="lw-block-title">' + title('关联技法（点击切换）') + '</div>'
+                + '<div class="lw-chips">' + chips + '</div></div>';
         }
     }
 
     if (item.practiceTip) {
-        html += '<div class=\"lw-block\"><div class=\"lw-block-title\">六、练习建议</div>'
-            + '<div class=\"lw-tip\">' + escHtml(item.practiceTip) + '</div></div>';
+        html += '<div class="lw-block"><div class="lw-block-title">' + title('练习建议') + '</div>'
+            + '<div class="lw-tip">' + escHtml(item.practiceTip) + '</div></div>';
     }
 
     return html;
@@ -3457,16 +3843,247 @@ function bindTechniqueLearning() {
  * 的顺序推进，每一步只做一件事。
  */
 function enterTeachingMode() {
+    stopWatchMode(true);          // 重新进入教学模式时先停掉上一次的观影循环
     // 先进入教学模式的界面与状态，再叠加"按真实做题顺序"的推进方式
     enterExampleMode();
     setTeachingMode(true);
+    if (typeof stopTimer === 'function') stopTimer();   // 教学模式下不需要计时器
     if (typeof updateBoardDisplay === 'function') updateBoardDisplay();
     if (typeof renderAllCandidates === 'function') renderAllCandidates();
     const badge = document.getElementById('modeBadge');
     if (badge) badge.innerHTML = '🎓 教学模式' + (badge.innerHTML.indexOf('·') >= 0
         ? badge.innerHTML.slice(badge.innerHTML.indexOf('·'))
         : '');
+    if (typeof syncMenuLabels === 'function') syncMenuLabels();
     showTemporaryMessage('🎓 教学模式：先从最简单的摒除法开始，逐步升级到高级技法', 'info');
+}
+
+/* ==================== 讲解模式（自动播放 + 语音讲解教学步骤） ==================== */
+
+const WATCH_INTERVAL = 3000;   // 无语音时每步间隔 3 秒
+let narrationOn = true;        // 语音讲解开关（讲解模式默认开启）
+let watchGen = 0;              // 循环代次：开始/暂停/停止/切换语音时自增，使旧回调失效
+
+/**
+ * 把一步的内容转成适合朗读的中文句子：
+ * 去掉 HTML 标签，坐标从"(7,6)"读成"第7行第6列"。
+ */
+function buildStepNarration(step, stepNum) {
+    if (!step) return '';
+    const pos = (r, c) => '第' + (r + 1) + '行第' + (c + 1) + '列';
+    const plain = (s) => String(s || '').replace(/<[^>]*>/g, '，').replace(/\s+/g, ' ').trim();
+    let t = stepNum ? '第 ' + stepNum + ' 步。' : '';
+
+    if (step.teachKind === 'candidates') {
+        const cells = (step.cells && step.cells.length)
+            ? step.cells
+            : [{ row: step.row, col: step.col, candidates: step.candidates || [] }];
+        t += '候选数标注。' + cells.map(x =>
+            pos(x.row, x.col) + '，写下候选数 ' + (x.candidates || []).join('、')).join('；') + '。';
+    } else if (step.value) {
+        t += (step.technique || '') + '。' + pos(step.row, step.col) + '，填入 ' + step.value + '。';
+    } else if (step.eliminations && step.eliminations.length) {
+        t += (step.technique || '') + '，排除 ' + step.eliminations.length + ' 个候选数：'
+            + step.eliminations.map(e => pos(e.row, e.col) + '的 ' + e.num).join('、') + '。';
+    } else {
+        t += (step.technique || '') + '。';
+    }
+
+    if (step.explanation) {
+        let ex = plain(step.explanation);
+        if (step.teachKind === 'candidates') {
+            // 标注类步骤的说明本身就是在逐格念候选数，与上面的概述完全重复，去掉这段枚举
+            ex = ex.replace(/[（(]\s*\d+\s*,\s*\d+\s*[）)]\s*(→|->)\s*[0-9、，,\s]+/g, '');
+        }
+        t += ex;
+    }
+    return t;
+}
+
+/** 挑一个中文语音（没有就退回系统默认） */
+function pickChineseVoice() {
+    if (!('speechSynthesis' in window)) return null;
+    const vs = window.speechSynthesis.getVoices() || [];
+    return vs.find(v => /zh[-_]CN|zh[-_]Hans/i.test(v.lang))
+        || vs.find(v => /^zh/i.test(v.lang)) || null;
+}
+
+/** 立即停止朗读 */
+function stopNarration() {
+    watchGen++;   // 让"读完再进下一步"的等待回调失效
+    if ('speechSynthesis' in window) {
+        try { window.speechSynthesis.cancel(); } catch (e) { /* 忽略 */ }
+    }
+}
+
+/**
+ * 朗读一段讲解。onEnd 在读完时回调；
+ * 若语音不可用/被关闭，则立即回调，保证推进不会被卡住。
+ */
+function speakNarration(text, onEnd) {
+    let done = false;
+    let poll = null;
+    const finish = function () {
+        if (done) return;
+        done = true;
+        if (poll) { clearInterval(poll); poll = null; }
+        if (onEnd) onEnd();
+    };
+
+    if (!text || !narrationOn || !('speechSynthesis' in window) ||
+        typeof SpeechSynthesisUtterance === 'undefined') {
+        finish();
+        return;
+    }
+
+    const u = new SpeechSynthesisUtterance(text);
+    const voice = pickChineseVoice();
+    if (voice) u.voice = voice;
+    u.lang = voice ? voice.lang : 'zh-CN';
+    u.rate = 1;
+    u.pitch = 1;
+    u.onend = finish;
+    u.onerror = finish;
+
+    try {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+    } catch (e) {
+        finish();
+        return;
+    }
+    // 兜底一：朗读已停下但 onend 没触发（部分浏览器如此）
+    poll = setInterval(function () {
+        if (done) { clearInterval(poll); poll = null; return; }
+        if (!window.speechSynthesis.speaking) finish();
+    }, 400);
+    // 兜底二：彻底卡住时按文本长度估时强制放行
+    setTimeout(finish, Math.max(3000, text.length * 260));
+}
+
+/** 停止讲解：清定时器、停朗读、还原按钮与徽章（silent=true 时不弹提示） */
+function stopWatchMode(silent) {
+    const wasWatching = isWatchMode;
+    isWatchMode = false;
+    if (watchTimer) {
+        clearTimeout(watchTimer);
+        watchTimer = null;
+    }
+    stopNarration();
+    const controls = document.getElementById('exampleControls');
+    if (controls) controls.style.display = isExampleMode ? 'flex' : 'none';
+    const badge = document.getElementById('modeBadge');
+    if (badge && isExampleMode) {
+        badge.innerHTML = '🎓 教学模式' + (badge.innerHTML.indexOf('·') >= 0
+            ? badge.innerHTML.slice(badge.innerHTML.indexOf('·'))
+            : '');
+    }
+    if (typeof syncMenuLabels === 'function') syncMenuLabels();
+    updateNarrationButton();
+    if (wasWatching && !silent) showTemporaryMessage('⏹️ 已停止讲解', 'info');
+}
+
+/** 讲解模式：刷新第一行的 语音开关 图标按钮 */
+function updateNarrationButton() {
+    const vbtn = document.getElementById('voiceToggleBtn');
+    if (!vbtn) return;
+    vbtn.style.display = isWatchMode ? '' : 'none';
+    if (!isWatchMode) return;
+    vbtn.textContent = narrationOn ? '🔊' : '🔇';
+    vbtn.title = narrationOn ? '关闭语音讲解' : '开启语音讲解';
+}
+
+/** 切换语音讲解开关 */
+function toggleNarration() {
+    narrationOn = !narrationOn;
+    if (narrationOn) {
+        showTemporaryMessage('🔊 已开启语音讲解', 'info');
+        // 立刻把当前这一步讲一遍
+        const last = currentSteps[currentSteps.length - 1];
+        if (isWatchMode && last) {
+            const gen = watchGen;
+            speakNarration(buildStepNarration(last, currentSteps.length), () => {
+                if (gen !== watchGen || !isWatchMode) return;
+                watchTimer = setTimeout(watchLoop, 700);
+            });
+        }
+    } else {
+        showTemporaryMessage('🔇 已关闭语音讲解', 'info');
+        // 打断当前朗读，并让循环按固定间隔继续（否则会停在等朗读结束）
+        const wasWatching = isWatchMode;
+        stopNarration();
+        if (watchTimer) { clearTimeout(watchTimer); watchTimer = null; }
+        if (wasWatching) watchTimer = setTimeout(watchLoop, 500);
+    }
+    updateNarrationButton();
+}
+
+/**
+ * 讲解模式主循环：推进一步 → 用语音讲解这一步 → 讲完再进下一步。
+ * 关闭语音时退回固定间隔（3 秒）。
+ */
+async function watchLoop() {
+    if (!isWatchMode) return;
+    const gen = watchGen;
+
+    // 已完成 / 没有下一步 → 收尾
+    if (typeof isBoardSolvedLegally === 'function' && isBoardSolvedLegally()) {
+        stopWatchMode(true);
+        showTemporaryMessage('🎉 讲解结束：本题已解完', 'success');
+        return;
+    }
+    const next = (typeof findNextStep === 'function') ? findNextStep() : null;
+    if (!next) {
+        stopWatchMode(true);
+        showTemporaryMessage('⚠️ 讲解结束：没有更多可推导的步骤', 'warning');
+        return;
+    }
+
+    await nextStep();
+    // 等待上一步的动画/闪烁彻底结束
+    let guard = 0;
+    while (nextStepInProgress && guard++ < 100) {
+        await new Promise(r => setTimeout(r, 80));
+    }
+    if (!isWatchMode || gen !== watchGen) return;
+    updateNarrationButton();
+
+    // 语音讲解当前这一步，读完再继续
+    const last = currentSteps[currentSteps.length - 1];
+    if (narrationOn && last) {
+        speakNarration(buildStepNarration(last, currentSteps.length), () => {
+            if (gen !== watchGen || !isWatchMode) return;
+            watchTimer = setTimeout(watchLoop, 700);
+        });
+        return;
+    }
+
+    watchTimer = setTimeout(watchLoop, WATCH_INTERVAL);
+}
+
+/** 切换讲解模式：进入教学界面并自动逐步讲解 */
+function toggleWatchMode() {
+    if (isWatchMode) { stopWatchMode(false); return; }
+
+    enterTeachingMode();
+    if (typeof setTeachingMode === 'function') setTeachingMode(true);
+    isWatchMode = true;
+    watchGen++;
+
+    const controls = document.getElementById('exampleControls');
+    if (controls) controls.style.display = 'none';   // 讲解模式是连续播放，隐藏"下一步"
+    const badge = document.getElementById('modeBadge');
+    if (badge) {
+        badge.innerHTML = '🔊 讲解模式' + (badge.innerHTML.indexOf('·') >= 0
+            ? badge.innerHTML.slice(badge.innerHTML.indexOf('·'))
+            : '');
+    }
+    if (typeof syncMenuLabels === 'function') syncMenuLabels();
+    updateNarrationButton();
+    showTemporaryMessage(narrationOn
+        ? '🔊 讲解模式：自动推进一步并语音讲解这一步；点 🔊 可静音'
+        : '🔊 讲解模式：自动推进一步（语音已关闭）', 'info');
+    watchTimer = setTimeout(watchLoop, WATCH_INTERVAL);
 }
 
 /** 标注完成后给该格一个短促的视觉提示 */

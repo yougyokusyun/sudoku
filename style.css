@@ -4,11 +4,17 @@
     box-sizing: border-box;
 }
 
+html {
+    height: 100%;
+}
+
 body {
     font-family: 'Segoe UI', 'Microsoft YaHei', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-    min-height: 100vh;
+    height: 100%;
     padding: 15px;
+    /* 页面本身不出现滚动条：滚动只发生在内部区域（步骤历史） */
+    overflow: hidden;
 }
 
 /* ============ 夜间模式 ============ */
@@ -44,11 +50,15 @@ body.dark-mode .sudoku-container { border-color: #5a7595; }
 .container {
     max-width: 1600px;
     width: 100%;
+    height: 100%;
     margin: 0 auto;
     background: white;
     border-radius: 24px;
     box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     padding: 20px;
+    /* 纵向 flex：头部固定，游戏区占满剩余高度并内部消化溢出 */
+    display: flex;
+    flex-direction: column;
 }
 
 /* ========== 顶部布局 ========== */
@@ -497,6 +507,15 @@ body.dark-mode .dropdown-menu .menu-divider {
     align-items: center;
     justify-content: center;
     width: 100%;
+    /* 占满容器剩余高度；min-height:0 让内部（步骤历史）能真正收缩并出滚动条 */
+    flex: 1 1 auto;
+    min-height: 0;
+    /* 安全阀：万一行高不够，溢出在游戏区内部消化，页面本身始终不滚动 */
+    overflow-y: auto;
+    /* 居中；万一内容超宽，safe 保证不会往两侧同时溢出
+       （普通 center 会把左侧推出可视区且无法滚动到，表现为棋盘左边框消失） */
+    justify-content: center;
+    justify-content: safe center;
 }
 
 /* 横屏模式：改为水平布局 */
@@ -505,7 +524,21 @@ body.dark-mode .dropdown-menu .menu-divider {
         flex-direction: row;
         align-items: flex-start;
         justify-content: center;
+        justify-content: safe center;
         gap: 30px;
+    }
+
+    /* 侧栏撑满游戏区高度，内部由步骤历史滚动 */
+    .explanation-sidebar {
+        align-self: stretch;
+        height: auto;
+    }
+}
+
+/* 竖屏：内容靠上排列，超高时由游戏区自身滚动（页面依旧不滚动） */
+@media (max-aspect-ratio: 1/1) {
+    .game-area {
+        justify-content: flex-start;
     }
 }
 
@@ -664,6 +697,33 @@ body.dark-mode .dropdown-menu .menu-divider {
     font-weight: 600;
     border-radius: 3px;
     padding: 0 2px;
+}
+
+/* 教学模式双层候选着色：绿=部分候选（有简单逻辑依据），黄=全部候选（完整可能数） */
+.candidate-note.cand-green {
+    color: #1f9d55;
+    background: #eafaf1;
+    font-weight: 600;
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+.candidate-note.cand-yellow {
+    color: #c58a00;
+    background: #fff8e1;
+    font-weight: 700;
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+body.dark-mode .candidate-note.cand-green {
+    color: #6ee7a8;
+    background: rgba(31, 157, 85, 0.18);
+}
+
+body.dark-mode .candidate-note.cand-yellow {
+    color: #ffd166;
+    background: rgba(197, 138, 0, 0.18);
 }
 
 /* 候选数闪烁动画效果 */
@@ -941,6 +1001,9 @@ body.dark-mode .dropdown-menu .menu-divider {
     position: relative;
     transition: width 0.25s ease, min-width 0.25s ease;
     overflow: hidden;
+    /* 侧栏最高只能到游戏区高度，多出来的部分由内部「步骤历史」滚动 */
+    max-height: 100%;
+    min-height: 0;
 }
 
 .game-area.example-mode .explanation-sidebar,
@@ -1106,9 +1169,14 @@ body.dark-mode .sidebar-quick-panel h4 { color: #90caf9; border-bottom-color: #3
 /* 仅当父元素有 .teach-mode 标记时才显示（JS 同步设置此 class） */
 .game-area.teach-mode + .explanation-sidebar .explanation-panel,
 .explanation-sidebar.teach-mode .explanation-panel {
-    display: block;
+    /* 「解题过程」与「步骤历史」已合并为单一面板：
+       标题固定，下面的列表整体占满剩余高度并自行滚动 */
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
     height: auto;
-    overflow: visible;
+    min-height: 0;
+    overflow: hidden;
     padding: 18px;
     margin: 0;
 }
@@ -1117,16 +1185,7 @@ body.dark-mode .sidebar-quick-panel h4 { color: #90caf9; border-bottom-color: #3
     color: #1e3c72;
     margin-bottom: 15px;
     font-size: 16px;
-}
-
-#explanation-content {
-    max-height: 350px;
-    overflow-y: auto;
-    font-size: 13px;
-    line-height: 1.5;
-    background: #fafafa;
-    border-radius: 10px;
-    padding: 5px;
+    flex: 0 0 auto;
 }
 
 .step-explanation {
@@ -1140,59 +1199,78 @@ body.dark-mode .sidebar-quick-panel h4 { color: #90caf9; border-bottom-color: #3
     box-shadow: 0 1px 3px rgba(0,0,0,0.1);
 }
 
-.steps-history {
-    background: #f8faff;
-    border-radius: 16px;
-    padding: 18px;
-    flex: 1;
-    max-height: 350px;
-    overflow-y: auto;
-    /* 默认隐藏 */
-    display: none;
-    height: 0;
-    padding: 0;
-    margin: 0;
-    max-height: none;
-    overflow: hidden;
-}
-.explanation-sidebar.teach-mode .steps-history {
-    display: block;
-    height: auto;
-    padding: 18px;
-    margin: 0;
-    max-height: 350px;
-    overflow-y: auto;
-}
-
-.steps-history h3 {
-    color: #1e3c72;
-    margin-bottom: 15px;
-    font-size: 16px;
-}
-
 #steps-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
 }
 
 .step-item {
     background: white;
     padding: 8px 10px;
     border-radius: 8px;
-    cursor: pointer;
     border-left: 3px solid #4caf50;
     font-size: 12px;
-    transition: all 0.2s;
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    cursor: pointer;
+    transition: background 0.15s;
 }
 
-.step-item:hover {
-    transform: translateX(3px);
+/* 合并面板：当前步骤展开显示完整说明 */
+.step-item.current-step {
+    border-left-width: 4px;
+    border-left-color: #2a5298;
+    padding: 12px;
+    font-size: 14px;
+    line-height: 1.7;
+    box-shadow: 0 2px 10px rgba(30,60,120,0.14);
+}
+
+/* 合并面板：历史步骤只保留一行摘要，点击可展开查看该步详情 */
+.step-item.history-step {
+    padding: 7px 10px;
+}
+
+.step-item.history-step:hover {
     background: #eef2ff;
 }
 
-/* 教学模式：步骤历史里按需查看该步推导过程的按钮 */
+.step-head {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.step-head .step-no { font-weight: bold; }
+
+.step-head .step-tech {
+    background: #e3f2fd;
+    padding: 2px 6px;
+    border-radius: 10px;
+    font-size: 11px;
+}
+
+.step-brief {
+    font-size: 11px;
+    color: #666;
+    margin-top: 4px;
+}
+
+.step-empty { color: #95a5a6; }
+
+.step-elim-box {
+    margin: 8px 0;
+    padding: 6px 10px;
+    background: #fff3e0;
+    border-radius: 6px;
+}
+
+/* 教学模式：每一步按需查看完整推导过程的按钮 */
 .step-derive-btn {
     margin-top: 6px;
     padding: 3px 10px;
@@ -1838,14 +1916,39 @@ body.dark-mode .completion-secondary-btn {
     100% { box-shadow: inset 0 0 0 3px rgba(41, 128, 185, 0); }
 }
 
-/* ==================== 步骤可视化弹窗（底部/右侧浮层，不遮挡盘面） ==================== */
+/* ==================== 观影模式：停止 / 继续 图标按钮 ==================== */
+.watch-toggle-btn {
+    padding: 6px 12px;
+    border: 2px solid #2a5298;
+    background: white;
+    color: #2a5298;
+    border-radius: 30px;
+    cursor: pointer;
+    font-size: 13px;
+    line-height: 1;
+    transition: 0.2s;
+    white-space: nowrap;
+}
+
+.watch-toggle-btn:hover {
+    background: #2a5298;
+    color: white;
+}
+
+body.dark-mode .watch-toggle-btn {
+    background: #2a3a4d;
+    color: #cfe3ff;
+    border-color: #3d5168;
+}
+
+/* ==================== 步骤可视化弹窗（可拖动 / 可缩放浮层） ==================== */
 .step-viz-dialog {
     position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    /* 铺满视口的透明层：内部内容默认贴底居中，拖动后坐标基准稳定 */
+    inset: 0;
     z-index: 3000;
     display: flex;
+    align-items: flex-end;
     justify-content: center;
     padding: 10px 12px 14px;
     pointer-events: none;
@@ -1853,6 +1956,7 @@ body.dark-mode .completion-secondary-btn {
 
 .step-viz-content {
     pointer-events: auto;
+    position: relative;
     background: #ffffff;
     border: 1px solid #e3e9ef;
     border-radius: 14px;
@@ -1862,6 +1966,16 @@ body.dark-mode .completion-secondary-btn {
     flex-direction: column;
     box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.28);
     overflow: hidden;
+}
+
+/* 用户拖动过之后：脱离 flex 定位，可自由摆放与缩放 */
+.step-viz-content.drag-free {
+    position: absolute;
+    margin: 0;
+    max-width: none;
+    max-height: none;
+    width: auto;
+    height: auto;
 }
 
 .step-viz-header {
@@ -1875,6 +1989,8 @@ body.dark-mode .completion-secondary-btn {
     font-size: 15px;
     font-weight: 700;
     flex-shrink: 0;
+    cursor: move;
+    user-select: none;
 }
 
 .step-viz-level {
@@ -1927,14 +2043,11 @@ body.dark-mode .completion-secondary-btn {
     background: #229954;
 }
 
-/* 宽屏时改为右侧停靠，进一步避免遮挡盘面 */
+/* 宽屏时默认改为右侧停靠，进一步避免遮挡盘面（拖动后仍可自由摆放） */
 @media (min-width: 1100px) {
     .step-viz-dialog {
-        left: auto;
-        right: 16px;
-        bottom: 16px;
-        padding: 0;
         justify-content: flex-end;
+        padding: 0 16px 16px 0;
     }
 
     .step-viz-content {
@@ -2386,6 +2499,167 @@ body.dark-mode .completion-secondary-btn {
     color: #1e6b45;
 }
 
+/* ============ 技法示意图（SVG） ============ */
+.tech-fig {
+    margin: 0;
+    background: #f8fafc;
+    border: 1px solid #e2eaf3;
+    border-radius: 12px;
+    padding: 12px 14px 14px;
+}
+
+.tech-fig-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #1e3c72;
+    margin-bottom: 8px;
+}
+
+.tech-fig-canvas {
+    display: flex;
+    justify-content: center;
+}
+
+.tech-fig-svg {
+    width: 100%;
+    max-width: 364px;
+    height: auto;
+    display: block;
+}
+
+.tech-fig-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 14px;
+    margin-top: 10px;
+}
+
+.tech-fig-key {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    color: #5b7086;
+}
+
+.tech-fig-key i {
+    width: 13px;
+    height: 13px;
+    border-radius: 3px;
+    border: 2px solid #ccc;
+    display: inline-block;
+}
+
+/* 连线图例：画成一小条线段而不是方块 */
+.tech-fig-legend-lines {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px dashed #e2eaf3;
+}
+
+.tech-fig-key i.tech-fig-line {
+    width: 26px;
+    height: 4px;
+    border: none;
+    border-radius: 2px;
+}
+
+body.dark-mode .tech-fig-legend-lines { border-top-color: #3d5168; }
+
+.tech-fig-cap {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #dde7f0;
+    font-size: 13px;
+    line-height: 1.75;
+    color: #46586b;
+}
+
+/* ============ 分支推演卡片 ============ */
+.tech-branch-lead {
+    font-size: 13px;
+    color: #5b7086;
+    margin-bottom: 9px;
+    line-height: 1.6;
+}
+
+.tech-branch-wrap {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.tech-branch-card {
+    flex: 1 1 210px;
+    min-width: 190px;
+    background: #fff;
+    border: 1px solid #e2eaf3;
+    border-left: 4px solid #7d5fc4;
+    border-radius: 10px;
+    padding: 10px 12px;
+}
+
+.tech-branch-head {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #3d2f66;
+    margin-bottom: 6px;
+}
+
+.tech-branch-tag {
+    font-size: 11px;
+    font-weight: 600;
+    background: #efeafc;
+    color: #6b4fb5;
+    border-radius: 20px;
+    padding: 1px 8px;
+}
+
+.tech-branch-steps {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12.5px;
+    line-height: 1.7;
+    color: #46586b;
+}
+
+.tech-branch-steps li {
+    margin-bottom: 3px;
+}
+
+.tech-branch-note {
+    margin-top: 10px;
+    background: #f0f9f4;
+    border-left: 4px solid #27ae60;
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 13px;
+    line-height: 1.7;
+    color: #1e6b45;
+}
+
+body.dark-mode .tech-fig {
+    background: #22303f;
+    border-color: #3d5168;
+}
+body.dark-mode .tech-fig-title { color: #90caf9; }
+body.dark-mode .tech-fig-cap { color: #b0bfcf; border-top-color: #3d5168; }
+body.dark-mode .tech-fig-key { color: #9fb2c4; }
+body.dark-mode .tech-branch-card { background: #22303f; border-color: #3d5168; border-left-color: #8f74d6; }
+body.dark-mode .tech-branch-head { color: #cbbdf0; }
+body.dark-mode .tech-branch-tag { background: #382f5c; color: #cbbdf0; }
+body.dark-mode .tech-branch-steps { color: #b0bfcf; }
+body.dark-mode .tech-branch-lead { color: #9fb2c4; }
+body.dark-mode .tech-branch-note {
+    background: #1e3a2b;
+    border-left-color: #27ae60;
+    color: #a7e0bf;
+}
+
 /* 步骤弹窗里的「深入学习」链接 */
 .kv-learn-link {
     display: inline-flex;
@@ -2565,6 +2839,10 @@ body.dragging-dialog {
 @media (max-width: 599px) {
     .container { padding: 8px 6px; border-radius: 12px; }
     body { padding: 4px; }
+    /* 手机竖屏内容必然超过一屏：恢复页面滚动，避免棋盘/键盘被裁掉 */
+    body { overflow-y: auto; }
+    .container { height: auto; min-height: 100%; }
+    .game-area { flex: 0 0 auto; overflow-y: visible; }
     /* 头部两行：行1=标题徽章+计时器，行2=选题+操作按钮（同一排） */
     .header-with-timer {
         display: grid;
@@ -2699,3 +2977,218 @@ body.dragging-dialog {
     .number-pad-btn { width: 40px; height: 40px; font-size: 17px; border-radius: 20px; }
     .number-pad-btn.number-pad-del { font-size: 19px; }
 }
+
+/* ==================== 夜间模式 v2：统一深色配色 ====================
+   原先只有盘面变暗，面板 / 数字键盘 / 已填数字仍沿用浅色，
+   导致深底浅字看不清、浅底浅字更看不清。这里统一为一套深色阶：
+     页面 #0b111a→#131d2b ｜ 容器 #16202e ｜ 面板 #1b2634
+     棋盘空格 #1e2b3b ｜ 已给出数字格 #2a3d55 ｜ 分隔线 #34465c
+     正文 #e4ecf6 ｜ 次要文字 #9fb1c6 ｜ 强调 #5b9dff
+   ================================================================== */
+body.dark-mode {
+    background: linear-gradient(135deg, #0b111a 0%, #131d2b 100%);
+}
+body.dark-mode .container {
+    background: #16202e;
+    color: #e4ecf6;
+}
+
+/* ---------- 盘面 ---------- */
+body.dark-mode .sudoku-container { border-color: #50719a; }
+body.dark-mode .cell-container {
+    background: #1e2b3b;
+    border-color: #35465c;
+}
+body.dark-mode .cell-container.border-box { border-color: #50719a; }
+
+/* 已给出的数字：底色比空格略亮 + 亮蓝白字，一眼区分"题目给的"和"自己填的" */
+body.dark-mode .cell-container.fixed { background: #2a3d55; }
+body.dark-mode .main-number.original {
+    background: #2a3d55;
+    color: #dceaff;
+}
+body.dark-mode .main-number { color: #e4ecf6; }
+/* 玩家填入的数字：亮蓝，和题目的亮白区分开 */
+body.dark-mode .main-number.user-filled { color: #63b3ff; }
+
+/* 高亮（行列 / 宫 / 同数字 / 当前选中） */
+body.dark-mode .cell-container.highlight-row-col { background: #24384f; }
+body.dark-mode .cell-container.highlight-box { background: #223349; }
+body.dark-mode .cell-container.highlight-same-num { background: #1d4433 !important; }
+body.dark-mode .cell-container.highlighted {
+    background: #4a3f1c !important;
+    box-shadow: inset 0 0 0 3px #ffb74d;
+}
+body.dark-mode .cell-container.celebrate-num {
+    background: #1d5c3a !important;
+    box-shadow: inset 0 0 0 2px #4ade80;
+}
+
+/* ---------- 候选数 ---------- */
+body.dark-mode .candidates-area { color: #9fb1c6; }
+body.dark-mode .candidate-note { color: #b9cbe0; }
+body.dark-mode .candidate-note.editing-mode {
+    background: #4a3410;
+    color: #ffcc66;
+}
+/* 候选写全 = 黄；只写一部分 = 绿（深底上降低背景亮度，提高文字亮度） */
+body.dark-mode .candidates-area.cand-full .candidate-note {
+    background: #3a3115;
+    color: #f2c14e;
+}
+body.dark-mode .candidates-area.cand-partial .candidate-note {
+    background: #17352a;
+    color: #5ed69b;
+}
+
+/* ---------- 数字键盘 ---------- */
+body.dark-mode .number-pad { background: #1b2634; }
+body.dark-mode .number-pad-btn {
+    background: #24334a;
+    color: #cfe3ff;
+    border-color: #3b5273;
+}
+body.dark-mode .number-pad-btn:hover {
+    background: #2f4a6b;
+    color: #fff;
+}
+body.dark-mode .number-pad-btn.number-pad-del {
+    background: #3a2028;
+    color: #ff8a8a;
+    border-color: #6b3540;
+}
+body.dark-mode .number-pad-btn.number-pad-del:hover {
+    background: #5a2a33;
+}
+
+/* ---------- 侧栏：解题过程 / 步骤历史 ---------- */
+body.dark-mode .explanation-panel {
+    background: #1b2634;
+    border-left-color: #3d7dff;
+}
+body.dark-mode .explanation-panel h3 { color: #cfe3ff; }
+body.dark-mode .step-explanation {
+    background: #22303f;
+    color: #e4ecf6;
+    border-left-color: #4ade80;
+    box-shadow: none;
+}
+body.dark-mode .step-item {
+    background: #22303f;
+    color: #e4ecf6;
+    border-left-color: #4ade80;
+    box-shadow: none;
+}
+body.dark-mode .step-item.current-step {
+    background: #24344a;
+    border-left-color: #5b9dff;
+    box-shadow: none;
+}
+body.dark-mode .step-item.history-step:hover { background: #2b3f58; }
+body.dark-mode .step-head .step-tech {
+    background: #2b3f58;
+    color: #cfe3ff;
+}
+body.dark-mode .step-brief { color: #9fb1c6; }
+body.dark-mode .step-derive-btn {
+    background: #2b3f58;
+    color: #9fc4ff;
+    border-color: #3b5273;
+}
+body.dark-mode .step-derive-btn:hover {
+    background: #35496a;
+    color: #fff;
+}
+
+/* ---------- 步骤推导弹窗 ---------- */
+body.dark-mode .hint-dialog-content,
+body.dark-mode .step-viz-content {
+    background: #1b2634;
+    color: #e4ecf6;
+}
+body.dark-mode .hint-dialog-header,
+body.dark-mode .step-viz-header {
+    background: #22303f;
+    color: #cfe3ff;
+    border-bottom-color: #34465c;
+}
+body.dark-mode .hint-dialog-header h3,
+body.dark-mode .step-viz-header h3 { color: #cfe3ff; }
+body.dark-mode .hint-dialog-body,
+body.dark-mode .step-viz-body { background: #1b2634; color: #e4ecf6; }
+body.dark-mode .hint-dialog-footer,
+body.dark-mode .step-viz-footer {
+    background: #22303f;
+    border-top-color: #34465c;
+}
+body.dark-mode .step-viz-hint { color: #9fb1c6; }
+body.dark-mode .hint-dialog-close { color: #9fb1c6; }
+body.dark-mode .step-viz-level { background: #2b3f58; color: #cfe3ff; }
+
+/* ---------- 推导弹窗里的表格 / 图例 / 定位图 ---------- */
+body.dark-mode .kv-text,
+body.dark-mode .kv-list li { color: #dbe6f2; }
+/* 推导正文块底色是浅灰，若不改底色会变成"浅字浅底"看不清 */
+body.dark-mode .kv-preline { background: #22303f; color: #dbe6f2; }
+body.dark-mode .kv-chain-table th,
+body.dark-mode .kv-chain-table td,
+body.dark-mode .kv-derive-table th,
+body.dark-mode .kv-derive-table td {
+    border-color: #34465c;
+    color: #dbe6f2;
+}
+body.dark-mode .kv-chain-table th,
+body.dark-mode .kv-derive-table th {
+    background: #22303f;
+    color: #cfe3ff;
+}
+body.dark-mode .kv-derive-table td.dg-yes { color: #5ed69b; }
+body.dark-mode .kv-derive-table td.dg-no { color: #ff8a8a; }
+body.dark-mode .kv-elim { background: #3a3115; color: #f2c14e; }
+body.dark-mode .dg-cell {
+    background: #1e2b3b;
+    color: #dbe6f2;
+    border-color: #34465c;
+}
+body.dark-mode .dg-cell.dg-peer { background: #3a3520; }
+body.dark-mode .dg-cell.dg-node { background: #1e3a5f; }
+body.dark-mode .dg-cell.dg-target { background: #4a3520; border-color: #e67e22; }
+body.dark-mode .dg-cell.dg-elim { background: #42272a; }
+body.dark-mode .dg-cell.dg-rborder { border-right-color: #5b7595; }
+body.dark-mode .dg-cell.dg-bborder { border-bottom-color: #5b7595; }
+body.dark-mode .dg-swatch.dg-peer { background: #3a3520; }
+body.dark-mode .dg-swatch.dg-node { background: #1e3a5f; border-color: #5b9dff; }
+body.dark-mode .dg-swatch.dg-target { background: #4a3520; }
+body.dark-mode .dg-swatch.dg-elim { background: #42272a; border-color: #8a4a4a; }
+body.dark-mode .dg-legend { color: #9fb1c6; }
+
+/* ---------- 技法手册 / 提示弹窗 ---------- */
+body.dark-mode .tech-learn-content { background: #16202e; color: #e4ecf6; }
+body.dark-mode .tech-learn-header { background: #22303f; color: #cfe3ff; border-bottom-color: #34465c; }
+body.dark-mode .kv-learn-link { color: #9fc4ff; }
+
+/* ---------- 顶部按钮 / 徽章 ---------- */
+body.dark-mode select,
+body.dark-mode button {
+    background: #24334a;
+    color: #e4ecf6;
+    border-color: #3b5273;
+}
+body.dark-mode .dropdown-btn,
+body.dark-mode .edit-mode-btn,
+body.dark-mode .pp-btn {
+    background: #24334a;
+    color: #cfe3ff;
+    border-color: #3b5273;
+}
+body.dark-mode .dropdown-btn:hover,
+body.dark-mode .edit-mode-btn:hover,
+body.dark-mode .pp-btn:hover {
+    background: #2f4a6b;
+    color: #fff;
+}
+body.dark-mode .mode-badge.example-mode { background: #4a3410; color: #ffc766; }
+body.dark-mode .mode-badge.practice-mode { background: #17352a; color: #5ed69b; }
+body.dark-mode .mode-badge.manual-mode { background: #3a2028; color: #ff8a8a; }
+body.dark-mode .error-count-badge { background: #3a2028; color: #ff9a9a; }
+body.dark-mode .timer-display { background: #24334a; }

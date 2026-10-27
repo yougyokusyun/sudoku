@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>数独解题器</title>
-    <link rel="stylesheet" href="style.css?v=20261027g">
+    <link rel="stylesheet" href="style.css?v=20261027zi">
 </head>
 <body>
 <div class="container">
@@ -34,28 +34,26 @@
                     🧰 更多操作 ▼
                 </button>
                 <div class="dropdown-menu" id="candidatesDropdownMenu">
-                    <!-- 做题辅助 -->
-                    <div class="menu-item" data-action="nextHint">💡 下一步提示</div>
-                    <div class="menu-item mode-only" data-action="candMode" id="candModeMenuItem">🔢 候选数：自动</div>
-                    <div class="menu-item cand-only" data-action="fillCandidates">🧮 补全候选数</div>
-                    <div class="menu-divider"></div>
-                    <!-- 教学专属 -->
-                    <div class="menu-item teach-only" data-action="prevStep">↩️ 教学上一步</div>
-                    <div class="menu-divider teach-only"></div>
-                    <!-- 题目与模式 -->
+                    <!-- 教学模式 -->
                     <div class="menu-item" data-action="teaching">🎓 教学模式</div>
+                    <div class="menu-item" data-action="watch">🔊 讲解模式</div>
+                    <div class="menu-divider"></div>
+                    <!-- 练习模式（含下一步提示 / 补全候选数） -->
                     <div class="menu-item" data-action="practice">✏️ 练习模式</div>
+                    <div class="menu-item" data-action="nextHint">💡 下一步提示</div>
+                    <div class="menu-item cand-only" data-action="fillCandidates">🧮 补全候选数</div>
                     <div class="menu-divider"></div>
                     <!-- 数据与资源 -->
                     <div class="menu-item" data-action="exportPuzzle">📤 导出当前题目</div>
-                    <div class="menu-item" data-action="importClipboard">📥 从剪贴板导入</div>
-                    <div class="menu-item" data-action="custom">📝 自定义题目</div>
+                    <div class="menu-item" data-action="importPuzzle">📥 导入题目</div>
                     <div class="menu-item" data-action="techManual">📚 技法手册</div>
                     <div class="menu-divider"></div>
                     <!-- 外观 -->
                     <div class="menu-item" data-action="theme" id="themeMenuItem">🌙 夜间模式</div>
                 </div>
             </div>
+            <!-- 讲解模式：语音开关（唯一的图标按钮，仅讲解期间出现） -->
+            <button id="voiceToggleBtn" class="watch-toggle-btn" style="display:none;" title="关闭语音讲解">🔊</button>
             <!-- 教学模式专属：下一步按钮（上一步已移入更多操作） -->
             <div id="exampleControls" style="display: none;">
                 <button id="nextStepBtn">➡️ 下一步</button>
@@ -128,25 +126,26 @@
         </div>
     </div>
 
-    <!-- 自定义题目弹窗 -->
+    <!-- 导入题目弹窗（剪贴板 / 手动输入，支持 JSON 与字符串格式） -->
     <div id="customPuzzleDialog" class="custom-dialog" style="display: none;">
         <div class="custom-dialog-content">
             <div class="custom-dialog-header">
-                <span>📝 自定义题目</span>
+                <span>📥 导入题目</span>
                 <button class="custom-dialog-close" id="customDialogClose">&times;</button>
             </div>
             <div class="custom-dialog-body">
-                <p>请输入9行数独数据，每行9个数字（0表示空格），用逗号分隔：</p>
+                <p>支持 JSON 或字符串格式（单行 81 数字 / 9 行 / 逗号分隔），0 或 . 表示空格：</p>
                 <textarea id="customPuzzleInput" rows="9" placeholder="示例：
 530070000,600195000,098000060,800060003,400803001,700020006,060000280,000419005,000080079"></textarea>
                 <div class="custom-dialog-example">
-                    <button id="loadExampleBtn" class="example-btn">📋 加载示例</button>
+                    <button id="pasteClipboardBtn" class="example-btn">📋 读取剪贴板</button>
+                    <button id="loadExampleBtn" class="example-btn">📄 加载示例</button>
                 </div>
                 <div id="customPuzzleError" class="custom-error" style="display: none;"></div>
             </div>
             <div class="custom-dialog-footer">
                 <button id="cancelCustomBtn" class="custom-dialog-btn cancel">取消</button>
-                <button id="confirmCustomBtn" class="custom-dialog-btn confirm">确认加载</button>
+                <button id="confirmCustomBtn" class="custom-dialog-btn confirm">确认导入</button>
             </div>
         </div>
     </div>
@@ -182,20 +181,14 @@
             <div class="sidebar-resize-handle" id="sidebarResize" title="拖动调整侧栏宽度"></div>
             <div class="explanation-panel">
                 <h3>📖 解题过程</h3>
-                <div id="explanation-content">
-                    <div class="step-explanation">✨ 点击"下一步"开始智能解题</div>
-                </div>
-            </div>
-            <div class="steps-history">
-                <h3>📋 步骤历史</h3>
                 <div id="steps-list"></div>
             </div>
         </div>
     </div>
 </div>
 
-<script src="puzzles.js?v=20261027g"></script>
-<script src="sudoku-core.js?v=20261027g"></script>
-<script src="sudoku-ui.js?v=20261027g"></script>
+<script src="puzzles.js?v=20261027zi"></script>
+<script src="sudoku-core.js?v=20261027zi"></script>
+<script src="sudoku-ui.js?v=20261027zi"></script>
 </body>
 </html>
