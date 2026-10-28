@@ -3195,3 +3195,18 @@ body.dark-mode .mode-badge.practice-mode { background: #17352a; color: #5ed69b; 
 body.dark-mode .mode-badge.manual-mode { background: #3a2028; color: #ff8a8a; }
 body.dark-mode .error-count-badge { background: #3a2028; color: #ff9a9a; }
 body.dark-mode .timer-display { background: #24334a; }
+
+/* ====== 横屏手机：侧栏按比例收缩，避免棋盘被挤出页面 ======
+   侧栏原本固定 360px 且 flex-shrink: 0，教学/讲解模式下展开后，
+   「侧栏 360 + 间距 30 + 棋盘 + 数字键盘」在 667~915px 宽的横屏手机上必然超宽，
+   表现为表格（棋盘）溢出页面被裁掉。
+   这里在小屏横屏强制按比例收缩侧栏；用 !important 才能压过 localStorage 恢复的行内宽度。 */
+@media (min-aspect-ratio: 1/1) and (max-width: 950px) {
+    .game-area { gap: 12px; min-width: 0; }
+    .board-column, .board-row { min-width: 0; }
+    .explanation-sidebar:not(.collapsed) {
+        width: clamp(150px, 30vw, 260px) !important;
+        min-width: 0 !important;
+        flex-shrink: 1;
+    }
+}

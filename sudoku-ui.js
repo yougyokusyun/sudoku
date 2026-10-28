@@ -1620,12 +1620,21 @@ function attachEvents() {
             else if (action === 'practice') { exitExampleMode(); dropdownMenu.classList.remove('show'); }
             else if (action === 'fillCandidates') { fillCandidates(); dropdownMenu.classList.remove('show'); }
             else if (action === 'theme') { if (typeof __applyTheme === 'function') __applyTheme(!document.body.classList.contains('dark-mode')); dropdownMenu.classList.remove('show'); }
+            else if (action === 'fullscreen') { toggleFullscreen(); dropdownMenu.classList.remove('show'); }
             else if (action === 'nextHint') { showNextHint(); dropdownMenu.classList.remove('show'); }
             else if (action === 'techManual') { openTechniqueManual(); dropdownMenu.classList.remove('show'); }
             else if (action === 'exportPuzzle') { exportCurrentPuzzle(); dropdownMenu.classList.remove('show'); }
         });
     }
     
+    // 全屏状态变化（含 Esc / F11 退出）时同步菜单文案，并重新适配棋盘尺寸
+    const onFullscreenChange = () => {
+        if (typeof syncMenuLabels === 'function') syncMenuLabels();
+        if (typeof fitBoardSize === 'function') setTimeout(fitBoardSize, 150);
+    };
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
     bindTechniqueLearning();
 
     document.getElementById('nextStepBtn')?.addEventListener('click', nextStep);
@@ -1767,6 +1776,15 @@ function fitBoardSize() {
     // 3) 最后再兜一道：仍有越界就逐格递减，保证任何机型都不会把棋盘挤出屏幕
     for (let i = 0; i < 24 && cell > 26 && overshoot() > 0; i++) {
         cell -= 1;
+        applyCell(cell);
+    }
+
+    // 4) 终极兜底：整行（侧栏 + 棋盘 + 键盘）横向溢出时继续收棋盘，
+    //    直到游戏的横向滚动量为 0（下限定在 20px，避免棋盘小到看不见）
+    for (let i = 0; i < 16; i++) {
+        if (gameArea.scrollWidth <= gameArea.clientWidth + 1) break;
+        if (cell <= 20) break;
+        cell = Math.max(20, cell - 1);
         applyCell(cell);
     }
 }
@@ -2521,6 +2539,34 @@ function syncMenuLabels() {
     if (watchItem) {
         watchItem.textContent = isWatchMode ? '⏹️ 停止讲解' : '🔊 讲解模式';
     }
+
+    // 全屏菜单项文案
+    const fsItem = document.getElementById('fullscreenMenuItem');
+    if (fsItem) {
+        fsItem.textContent = (document.fullscreenElement || document.webkitFullscreenElement)
+            ? '⛶ 退出全屏' : '⛶ 全屏';
+    }
+}
+
+/** 切换全屏（整页进入/退出；不支持时给出提示） */
+function toggleFullscreen() {
+    const doc = document;
+    if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+        const exit = doc.exitFullscreen || doc.webkitExitFullscreen;
+        if (exit) {
+            const p = exit.call(doc);
+            if (p && p.catch) p.catch(() => { /* 忽略 */ });
+        }
+        return;
+    }
+    const el = doc.documentElement;
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if (!req) {
+        showTemporaryMessage('当前浏览器不支持全屏（iPhone 上请用"添加到主屏幕"）', 'warning');
+        return;
+    }
+    const p = req.call(el);
+    if (p && p.catch) p.catch(() => showTemporaryMessage('浏览器拒绝了全屏请求', 'warning'));
 }
 
 /**
@@ -2664,6 +2710,8 @@ document.addEventListener('DOMContentLoaded', function () {
         sidebar.style.minWidth = collapsed ? '36px' : Math.min(w, 360) + 'px';
         if (sidebarToggle) sidebarToggle.textContent = collapsed ? '▶ 展开' : '◀ 折叠';
         try { localStorage.setItem(SB_KEY, JSON.stringify(state)); } catch (e) {}
+        // 侧栏宽度变化会改变棋盘可用宽度：等折叠/展开动画结束再重新适配一次
+        if (typeof fitBoardSize === 'function') setTimeout(fitBoardSize, 300);
     }
     const savedSB = (() => {
         try { return JSON.parse(localStorage.getItem(SB_KEY) || 'null'); } catch (e) { return null; }
@@ -3950,73 +3998,151 @@ function buildStepNarration(step, stepNum) {
     return t;
 }
 
-// 保住当前朗读对象的强引用：Chrome 会在朗读途中回收局部变量，
+// 保住本次朗读所有语句对象的强引用：Chrome 会在朗读途中回收局部变量，
 // 表现就是念到一半突然没声/断续，这是"语音卡顿"的常见原因之一
-let currentUtterance = null;
+let currentUtterances = [];
+let speechUnlocked = false;
 
-/** 挑一个中文语音：优先本机（离线）音色 */
+/**
+ * 移动端解锁语音：iOS / 部分安卓浏览器要求第一次 speak() 必须发生在用户手势的
+ * 同步调用栈里，否则整段静音。这里在点击"讲解模式"的当口补一个静音短句来解锁。
+ */
+function unlockSpeech() {
+    if (speechUnlocked || !('speechSynthesis' in window)) return;
+    try {
+        const u = new SpeechSynthesisUtterance(' ');
+        u.volume = 1;
+        u.rate = 1;
+        u.lang = 'zh-CN';
+        window.speechSynthesis.speak(u);   // 必须同步调用，不能放进 setTimeout
+        speechUnlocked = true;
+    } catch (e) { /* 忽略 */ }
+}
+
+/** 安卓首次 getVoices() 常返回空，需要等 voiceschanged 才拿到真实音色 */
+function warmUpVoices() {
+    if (!('speechSynthesis' in window)) return;
+    const synth = window.speechSynthesis;
+    try { synth.getVoices(); } catch (e) { /* 忽略 */ }
+    if (typeof synth.addEventListener === 'function' && !warmUpVoices.bound) {
+        warmUpVoices.bound = true;
+        synth.addEventListener('voiceschanged', () => { try { synth.getVoices(); } catch (e) { /* 忽略 */ } });
+    }
+}
+
+// ===== 讲解期间保持屏幕常亮（平板/手机自动锁屏会直接掐断语音）=====
+let narrationWakeLock = null;
+
+async function acquireScreenWakeLock() {
+    if (narrationWakeLock || !navigator.wakeLock || typeof navigator.wakeLock.request !== 'function') return;
+    try {
+        narrationWakeLock = await navigator.wakeLock.request('screen');
+        narrationWakeLock.addEventListener('release', () => { narrationWakeLock = null; });
+    } catch (e) {
+        narrationWakeLock = null;   // 系统拒绝（低电量等）时静默降级
+    }
+}
+
+function releaseScreenWakeLock() {
+    try { if (narrationWakeLock) narrationWakeLock.release(); } catch (e) { /* 忽略 */ }
+    narrationWakeLock = null;
+}
+
+// 切到后台再回来时系统会回收 wake lock，这里补回来
+document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'visible' && isWatchMode) acquireScreenWakeLock();
+});
+
+/** 挑一个中文语音：优先"自然/神经网络"音色，其次本机离线音色 */
 function pickChineseVoice() {
     if (!('speechSynthesis' in window)) return null;
     const vs = window.speechSynthesis.getVoices() || [];
     const zh = vs.filter(v => /^zh/i.test(v.lang));
     if (!zh.length) return null;
-    // 联网的远端中文语音在网络抖动时会断续、吞字；优先用本机内置音色
-    const local = zh.filter(v => v.localService);
-    const pool = local.length ? local : zh;
-    return pool.find(v => /^zh[-_]CN|^zh[-_]Hans/i.test(v.lang)) || pool[0];
+    // 微软的 Natural/Online 神经网络音色听着最顺滑（接近豆包那种连贯感）；
+    // 其次是本机离线音色（远端音色在网络抖动时会断续）。
+    const score = (v) => {
+        let s = 0;
+        if (/natural|neural|online/i.test(v.name)) s += 100;
+        if (v.localService) s += 10;
+        if (/^zh[-_]CN|^zh[-_]Hans/i.test(v.lang)) s += 5;
+        return s;
+    };
+    return zh.slice().sort((a, b) => score(b) - score(a))[0];
 }
 
 /**
- * 把讲解文本切成短句。
- * 语音合成对超长文本支持很差（念十几秒后容易吞字、停顿甚至直接断掉），
- * 按标点切成短句逐句送进去，连贯性会好很多。
+ * 把讲解文本切成适合一次朗读的段落（尽量少切）。
+ * 每多切一段，引擎就要重新起播一次，听感上就是"一顿一顿"，
+ * 所以这里把相邻短句尽量合并，只有超过 80 字才另起一段。
  */
 function splitNarration(text) {
     const s = String(text || '').replace(/\s+/g, ' ').trim();
     if (!s) return [];
+    const LIMIT = 60;          // 一段约 10 秒：Chrome 对超过 ~15 秒的单条语音会突然中断
     const END = '。！？；!?;';
     const PAUSE = '，、,：:';
-    const out = [];
+
+    // 1) 先按句末标点切句
+    const sentences = [];
     let buf = '';
     for (let i = 0; i < s.length; i++) {
-        const ch = s[i];
-        buf += ch;
-        if (END.indexOf(ch) >= 0 || (PAUSE.indexOf(ch) >= 0 && buf.length >= 18) || buf.length >= 38) {
-            out.push(buf);
-            buf = '';
-        }
+        buf += s[i];
+        if (END.indexOf(s[i]) >= 0) { sentences.push(buf); buf = ''; }
     }
-    if (buf) out.push(buf);
-    return out;
+    if (buf) sentences.push(buf);
+
+    // 2) 相邻短句合并，凑成不超过 LIMIT 的一段
+    const out = [];
+    let cur = '';
+    sentences.forEach(function (sen) {
+        if (cur && cur.length + sen.length > LIMIT) { out.push(cur); cur = ''; }
+        cur += sen;
+    });
+    if (cur) out.push(cur);
+
+    // 3) 极少数超长句再按逗号补切
+    const final = [];
+    out.forEach(function (p) {
+        if (p.length <= LIMIT) { final.push(p); return; }
+        let b = '';
+        for (let i = 0; i < p.length; i++) {
+            b += p[i];
+            if (b.length >= 55 && PAUSE.indexOf(p[i]) >= 0) { final.push(b); b = ''; }
+        }
+        if (b) final.push(b);
+    });
+    return final;
 }
 
 /** 立即停止朗读 */
 function stopNarration() {
     watchGen++;   // 让"读完再进下一步"的等待回调失效
-    currentUtterance = null;
+    currentUtterances = [];
     if ('speechSynthesis' in window) {
         try { window.speechSynthesis.cancel(); } catch (e) { /* 忽略 */ }
     }
 }
 
 /**
- * 朗读一段讲解：把文本切成短句排队逐句读，读完最后一句时回调 onEnd。
- * 若语音不可用/被关闭，则立即回调，保证推进不会被卡住。
+ * 朗读一段讲解：整段文本切好的各段一次性排进播放队列，让引擎连着念，
+ * 最后一段读完时回调 onEnd。若语音不可用/被关闭，则立即回调，保证推进不会被卡住。
  */
 function speakNarration(text, onEnd) {
     let done = false;
-    let poll = null;
-    let hardTimer = null;
-    let idx = 0;
-    let chunks = [];
-    let lastProgressAt = 0;
+    let ticker = null;
+    let deadlineAt = 0;
 
     const finish = function () {
         if (done) return;
         done = true;
-        if (poll) { clearInterval(poll); poll = null; }
-        if (hardTimer) { clearTimeout(hardTimer); hardTimer = null; }
+        if (ticker) { clearInterval(ticker); ticker = null; }
         if (onEnd) onEnd();
+    };
+    // 只要引擎还在报进度（onstart / onboundary），就把截止时间往后推，
+    // 这样既不会把正在念的句子掐断，又能在引擎真的卡死时脱身
+    const keepAlive = function (ms) {
+        deadlineAt = Math.max(deadlineAt, Date.now() + (ms || 6000));
     };
 
     if (!text || !narrationOn || !('speechSynthesis' in window) ||
@@ -4027,47 +4153,54 @@ function speakNarration(text, onEnd) {
 
     const synth = window.speechSynthesis;
     const voice = pickChineseVoice();
-    chunks = splitNarration(text);
-    if (!chunks.length) { finish(); return; }
+    const pieces = splitNarration(text);
+    if (!pieces.length) { finish(); return; }
 
-    // 先清空上一条。注意：cancel() 之后立刻 speak() 会把开头"卡"掉（爆音/吞字），
-    // 所以下面延迟一点再开口，顺便避免与上一步的尾音叠在一起。
-    try {
-        synth.cancel();
-        if (synth.paused) synth.resume();   // 切后台后可能停在 paused，否则会完全不出声
-    } catch (e) { /* 忽略 */ }
+    // 只有上一步的尾音还没播完才打断；没有残留就直接开口，少一次 cancel 就少一次爆音
+    const busy = synth.speaking || synth.pending;
+    if (busy) {
+        try { synth.cancel(); } catch (e) { /* 忽略 */ }
+    }
+    try { if (synth.paused) synth.resume(); } catch (e) { /* 忽略 */ }
 
-    const speakChunk = function () {
+    const start = function () {
         if (done) return;
         if (!isWatchMode || !narrationOn) { finish(); return; }
-        if (idx >= chunks.length) { finish(); return; }
-        const u = new SpeechSynthesisUtterance(chunks[idx++]);
-        if (voice) u.voice = voice;
-        u.lang = voice ? voice.lang : 'zh-CN';
-        u.rate = 1.2;      // 比默认略快；再快中文音色会开始吞字
-        u.pitch = 1;
-        currentUtterance = u;      // 强引用，避免朗读中途被回收导致断音
-        lastProgressAt = Date.now();
-        u.onend = function () { currentUtterance = null; speakChunk(); };
-        u.onerror = function () { currentUtterance = null; speakChunk(); };
-        try {
-            synth.speak(u);
-        } catch (e) {
-            finish();
+        currentUtterances = [];
+        for (let i = 0; i < pieces.length; i++) {
+            const u = new SpeechSynthesisUtterance(pieces[i]);
+            if (voice) u.voice = voice;
+            u.lang = voice ? voice.lang : 'zh-CN';
+            u.rate = 1.2;      // 比默认略快；再快中文音色会开始吞字
+            u.pitch = 1;
+            currentUtterances.push(u);   // 强引用，避免朗读中途被回收导致断音
+            // 引擎报进度就续命（安卓上 onboundary 不一定触发，触发时就当心跳用）
+            u.onstart = function () { keepAlive(8000); };
+            u.onboundary = function () { keepAlive(6000); };
+            // 队列交给引擎自己连着播；只有最后一段结束才算这一步讲完
+            if (i === pieces.length - 1) {
+                u.onend = finish;
+                u.onerror = finish;
+            }
+            try {
+                synth.speak(u);
+            } catch (e) {
+                finish();
+                return;
+            }
         }
     };
+    // cancel() 之后立刻 speak() 会把开头"卡"掉：只有在打断别人时才延迟一拍。
+    // 队列空闲时同步开口——iOS 要求首次 speak 在用户手势的同步栈里，异步会整段静音。
+    if (busy) setTimeout(start, 150);
+    else start();
 
-    setTimeout(speakChunk, 120);
-
-    // 兜底一：部分浏览器不触发 onend。只要引擎确实不在说话，就继续下一句
-    poll = setInterval(function () {
+    // 心跳轮询：超过截止时间仍没有任何进度 → 认为引擎卡死，放行继续下一步
+    keepAlive(Math.max(9000, text.length * 280 + 4000));
+    ticker = setInterval(function () {
         if (done) return;
-        if (synth.speaking || synth.pending) { lastProgressAt = Date.now(); return; }
-        if (Date.now() - lastProgressAt > 1200) speakChunk();
-    }, 400);
-
-    // 兜底二：整体卡死时按文本长度估时放行，避免讲解永远停在这一步
-    hardTimer = setTimeout(finish, Math.max(8000, text.length * 320));
+        if (Date.now() > deadlineAt) finish();
+    }, 1000);
 }
 
 /** 停止讲解：清定时器、停朗读、还原按钮与徽章（silent=true 时不弹提示） */
@@ -4079,6 +4212,7 @@ function stopWatchMode(silent) {
         watchTimer = null;
     }
     stopNarration();
+    releaseScreenWakeLock();
     const controls = document.getElementById('exampleControls');
     if (controls) controls.style.display = isExampleMode ? 'flex' : 'none';
     const badge = document.getElementById('modeBadge');
@@ -4106,6 +4240,9 @@ function updateNarrationButton() {
 function toggleNarration() {
     narrationOn = !narrationOn;
     if (narrationOn) {
+        unlockSpeech();   // 同样要在点击的同步栈里解锁
+        warmUpVoices();
+        acquireScreenWakeLock();
         showTemporaryMessage('🔊 已开启语音讲解', 'info');
         // 立刻把当前这一步讲一遍
         const last = currentSteps[currentSteps.length - 1];
@@ -4173,6 +4310,10 @@ async function watchLoop() {
 /** 切换讲解模式：进入教学界面并自动逐步讲解 */
 function toggleWatchMode() {
     if (isWatchMode) { stopWatchMode(false); return; }
+
+    // 必须在点击的同步栈里解锁语音（iOS 要求），并预热音色列表（安卓首次为空）
+    if (narrationOn) { unlockSpeech(); warmUpVoices(); }
+    acquireScreenWakeLock();
 
     enterTeachingMode();
     if (typeof setTeachingMode === 'function') setTeachingMode(true);
