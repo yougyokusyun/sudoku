@@ -3963,39 +3963,38 @@ let narrationOn = true;        // 语音讲解开关（讲解模式默认开启�
 let watchGen = 0;              // 循环代次：开始/暂停/停止/切换语音时自增，使旧回调失效
 
 /**
- * 把一步的内容转成适合朗读的中文句子：
- * 去掉 HTML 标签，坐标从"(7,6)"读成"第7行第6列"。
+ * 把一步转成语音稿。
+ * 只朗读右侧「解题过程」面板里实际显示的内容：步骤号 + 技法 + 这一步的说明，
+ * 以及面板里的「填入 / 排除」结论；不再额外朗读表格（盘面）里的填写细节。
  */
 function buildStepNarration(step, stepNum) {
     if (!step) return '';
-    const pos = (r, c) => '第' + (r + 1) + '行第' + (c + 1) + '列';
-    const plain = (s) => String(s || '').replace(/<[^>]*>/g, '，').replace(/\s+/g, ' ').trim();
-    let t = stepNum ? '第 ' + stepNum + ' 步。' : '';
+    const head = (stepNum ? '第 ' + stepNum + ' 步，' : '') + (step.technique || '') + '。';
 
-    if (step.teachKind === 'candidates') {
-        const cells = (step.cells && step.cells.length)
-            ? step.cells
-            : [{ row: step.row, col: step.col, candidates: step.candidates || [] }];
-        t += '候选数标注。' + cells.map(x =>
-            pos(x.row, x.col) + '，写下候选数 ' + (x.candidates || []).join('、')).join('；') + '。';
-    } else if (step.value) {
-        t += (step.technique || '') + '。' + pos(step.row, step.col) + '，填入 ' + step.value + '。';
-    } else if (step.eliminations && step.eliminations.length) {
-        t += (step.technique || '') + '，排除 ' + step.eliminations.length + ' 个候选数：'
-            + step.eliminations.map(e => pos(e.row, e.col) + '的 ' + e.num).join('、') + '。';
-    } else {
-        t += (step.technique || '') + '。';
-    }
+    const body = String(buildStepDetailHtml(step, stepNum) || '')
+        .replace(/<br\s*\/?>/gi, '，')
+        .replace(/<\/(div|p|li)>/gi, '。')
+        .replace(/<[^>]*>/g, '')          // 去掉标签，保留文字
+        .replace(/&nbsp;/g, ' ')
+        .replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]/gu, '')   // 去掉面板里的图标
+        // 候选数标注类步骤会逐格列出「(1,1)→23、(1,4)→45」，这是盘面细节，不朗读
+        .replace(/\(\d+\s*,\s*\d+\)\s*(?:→|->)\s*[0-9、,，;；\s]*/g, '')
+        .replace(/\((\d+)\s*,\s*(\d+)\)/g, (m, r, c) => '第' + r + '行第' + c + '列')
+        .replace(/\s*=\s*(?=\d)/g, '，为')
+        .replace(/[:：]\s*(?=\d)/g, '的')
+        .replace(/→/g, '，')
+        .replace(/[,，]\s*/g, '，')
+        .replace(/第\s*(\d+)\s*行\s*第\1\s*行/g, '第$1行')   // 「第 3 行 (3,2)」不要念成「第3行第3行第2列」
+        .replace(/，{2,}/g, '，')
+        .replace(/[：:]\s*。/g, '。')     // 枚举被过滤后可能留下「：。」的空档
+        .replace(/[：:]\s*，/g, '，')
+        .replace(/。\s*。/g, '。')
+        .replace(/。\s*，/g, '，')
+        .replace(/，\s*。/g, '。')
+        .replace(/\s+/g, '')
+        .trim();
 
-    if (step.explanation) {
-        let ex = plain(step.explanation);
-        if (step.teachKind === 'candidates') {
-            // 标注类步骤的说明本身就是在逐格念候选数，与上面的概述完全重复，去掉这段枚举
-            ex = ex.replace(/[（(]\s*\d+\s*,\s*\d+\s*[）)]\s*(→|->)\s*[0-9、，,\s]+/g, '');
-        }
-        t += ex;
-    }
-    return t;
+    return head + body;
 }
 
 // 保住本次朗读所有语句对象的强引用：Chrome 会在朗读途中回收局部变量，
