@@ -744,8 +744,8 @@ function buildStepDetailHtml(step, stepNum) {
         </div>`;
     }
     const valHtml = step.value ? `<br>✨ 填入 (<strong>${step.row + 1},${step.col + 1}</strong>) = <strong>${step.value}</strong>` : '';
+    // 外层 .step-head 已经显示「步骤 N + 技法」，这里不再重复一遍标题
     return `<div class="step-explanation">
-        <strong>📌 第 ${stepNum} 步 - ${step.technique}</strong><br>
         ${step.explanation || ''}${valHtml}
     </div>${elimHtml}`;
 }
@@ -1725,7 +1725,50 @@ function fitBoardSize() {
     const board = Math.min(availW, availH) - 24; // 再留出棋盘边框/描边余量
     let cell = Math.floor(board / 9);
     cell = Math.max(26, Math.min(120, cell)); // 26 ~ 120px 安全区间（大屏可放大）
-    document.documentElement.style.setProperty('--cell-size', cell + 'px');
+    const applyCell = (c) => document.documentElement.style.setProperty('--cell-size', c + 'px');
+    applyCell(cell);
+
+    // 上面的公式依赖对窗口高度的估算（手机地址栏、visualViewport 与布局视口不一致会让它偏大），
+    // 也依赖对侧栏/键盘占宽的估算（会偏大），所以最后按"实测"校准一次：
+    // 只量棋盘与数字键盘，越界多少就收多少、余多少就放大多少。
+    // 侧栏自带滚动条，不参与这里，免得反过来把棋盘压小。
+    const padRight = parseFloat(wrapStyle.paddingRight) || 0;
+    const padBottom = parseFloat(wrapStyle.paddingBottom) || 0;
+    const overshoot = () => {
+        const els = [document.querySelector('.sudoku-container'), pad].filter(
+            (el) => el && getComputedStyle(el).display !== 'none' && el.offsetHeight > 0);
+        if (!els.length) return 0;
+        const wr = wrap.getBoundingClientRect();
+        const cBottom = wr.bottom - padBottom, cRight = wr.right - padRight;
+        let over = -1e9;
+        els.forEach((el) => {
+            const r = el.getBoundingClientRect();
+            over = Math.max(over, r.bottom - cBottom, r.right - cRight);
+        });
+        return over;
+    };
+
+    // 1) 估大了（会裁掉棋盘）：按实测越界量直接收回来
+    const over0 = overshoot();
+    if (over0 > 0) {
+        cell = Math.max(26, cell - Math.ceil(over0 / 9) - 1);
+        applyCell(cell);
+    } else if (-over0 > 2) {
+        // 2) 估小了（白白浪费空间）：把富余的宽/高（取较小者）用起来，一格 9 等分
+        const grown = Math.min(120, cell + Math.floor((-over0 - 2) / 9));
+        if (grown > cell) {
+            applyCell(grown);
+            const over2 = overshoot();
+            cell = over2 > 0 ? Math.max(26, grown - Math.ceil(over2 / 9) - 1) : grown;
+            applyCell(cell);
+        }
+    }
+
+    // 3) 最后再兜一道：仍有越界就逐格递减，保证任何机型都不会把棋盘挤出屏幕
+    for (let i = 0; i < 24 && cell > 26 && overshoot() > 0; i++) {
+        cell -= 1;
+        applyCell(cell);
+    }
 }
 
 let __fitBoardTimer = null;
@@ -1733,6 +1776,13 @@ window.addEventListener('resize', () => {
     clearTimeout(__fitBoardTimer);
     __fitBoardTimer = setTimeout(fitBoardSize, 120);
 });
+// 手机地址栏收起/展开只改变可见高度，不一定触发 window.resize
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        clearTimeout(__fitBoardTimer);
+        __fitBoardTimer = setTimeout(fitBoardSize, 120);
+    });
+}
 
 document.addEventListener('DOMContentLoaded', initUI);
 
@@ -3900,33 +3950,72 @@ function buildStepNarration(step, stepNum) {
     return t;
 }
 
-/** 挑一个中文语音（没有就退回系统默认） */
+// 保住当前朗读对象的强引用：Chrome 会在朗读途中回收局部变量，
+// 表现就是念到一半突然没声/断续，这是"语音卡顿"的常见原因之一
+let currentUtterance = null;
+
+/** 挑一个中文语音：优先本机（离线）音色 */
 function pickChineseVoice() {
     if (!('speechSynthesis' in window)) return null;
     const vs = window.speechSynthesis.getVoices() || [];
-    return vs.find(v => /zh[-_]CN|zh[-_]Hans/i.test(v.lang))
-        || vs.find(v => /^zh/i.test(v.lang)) || null;
+    const zh = vs.filter(v => /^zh/i.test(v.lang));
+    if (!zh.length) return null;
+    // 联网的远端中文语音在网络抖动时会断续、吞字；优先用本机内置音色
+    const local = zh.filter(v => v.localService);
+    const pool = local.length ? local : zh;
+    return pool.find(v => /^zh[-_]CN|^zh[-_]Hans/i.test(v.lang)) || pool[0];
+}
+
+/**
+ * 把讲解文本切成短句。
+ * 语音合成对超长文本支持很差（念十几秒后容易吞字、停顿甚至直接断掉），
+ * 按标点切成短句逐句送进去，连贯性会好很多。
+ */
+function splitNarration(text) {
+    const s = String(text || '').replace(/\s+/g, ' ').trim();
+    if (!s) return [];
+    const END = '。！？；!?;';
+    const PAUSE = '，、,：:';
+    const out = [];
+    let buf = '';
+    for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+        buf += ch;
+        if (END.indexOf(ch) >= 0 || (PAUSE.indexOf(ch) >= 0 && buf.length >= 18) || buf.length >= 38) {
+            out.push(buf);
+            buf = '';
+        }
+    }
+    if (buf) out.push(buf);
+    return out;
 }
 
 /** 立即停止朗读 */
 function stopNarration() {
     watchGen++;   // 让"读完再进下一步"的等待回调失效
+    currentUtterance = null;
     if ('speechSynthesis' in window) {
         try { window.speechSynthesis.cancel(); } catch (e) { /* 忽略 */ }
     }
 }
 
 /**
- * 朗读一段讲解。onEnd 在读完时回调；
+ * 朗读一段讲解：把文本切成短句排队逐句读，读完最后一句时回调 onEnd。
  * 若语音不可用/被关闭，则立即回调，保证推进不会被卡住。
  */
 function speakNarration(text, onEnd) {
     let done = false;
     let poll = null;
+    let hardTimer = null;
+    let idx = 0;
+    let chunks = [];
+    let lastProgressAt = 0;
+
     const finish = function () {
         if (done) return;
         done = true;
         if (poll) { clearInterval(poll); poll = null; }
+        if (hardTimer) { clearTimeout(hardTimer); hardTimer = null; }
         if (onEnd) onEnd();
     };
 
@@ -3936,29 +4025,49 @@ function speakNarration(text, onEnd) {
         return;
     }
 
-    const u = new SpeechSynthesisUtterance(text);
+    const synth = window.speechSynthesis;
     const voice = pickChineseVoice();
-    if (voice) u.voice = voice;
-    u.lang = voice ? voice.lang : 'zh-CN';
-    u.rate = 1;
-    u.pitch = 1;
-    u.onend = finish;
-    u.onerror = finish;
+    chunks = splitNarration(text);
+    if (!chunks.length) { finish(); return; }
 
+    // 先清空上一条。注意：cancel() 之后立刻 speak() 会把开头"卡"掉（爆音/吞字），
+    // 所以下面延迟一点再开口，顺便避免与上一步的尾音叠在一起。
     try {
-        window.speechSynthesis.cancel();
-        window.speechSynthesis.speak(u);
-    } catch (e) {
-        finish();
-        return;
-    }
-    // 兜底一：朗读已停下但 onend 没触发（部分浏览器如此）
+        synth.cancel();
+        if (synth.paused) synth.resume();   // 切后台后可能停在 paused，否则会完全不出声
+    } catch (e) { /* 忽略 */ }
+
+    const speakChunk = function () {
+        if (done) return;
+        if (!isWatchMode || !narrationOn) { finish(); return; }
+        if (idx >= chunks.length) { finish(); return; }
+        const u = new SpeechSynthesisUtterance(chunks[idx++]);
+        if (voice) u.voice = voice;
+        u.lang = voice ? voice.lang : 'zh-CN';
+        u.rate = 1.2;      // 比默认略快；再快中文音色会开始吞字
+        u.pitch = 1;
+        currentUtterance = u;      // 强引用，避免朗读中途被回收导致断音
+        lastProgressAt = Date.now();
+        u.onend = function () { currentUtterance = null; speakChunk(); };
+        u.onerror = function () { currentUtterance = null; speakChunk(); };
+        try {
+            synth.speak(u);
+        } catch (e) {
+            finish();
+        }
+    };
+
+    setTimeout(speakChunk, 120);
+
+    // 兜底一：部分浏览器不触发 onend。只要引擎确实不在说话，就继续下一句
     poll = setInterval(function () {
-        if (done) { clearInterval(poll); poll = null; return; }
-        if (!window.speechSynthesis.speaking) finish();
+        if (done) return;
+        if (synth.speaking || synth.pending) { lastProgressAt = Date.now(); return; }
+        if (Date.now() - lastProgressAt > 1200) speakChunk();
     }, 400);
-    // 兜底二：彻底卡住时按文本长度估时强制放行
-    setTimeout(finish, Math.max(3000, text.length * 260));
+
+    // 兜底二：整体卡死时按文本长度估时放行，避免讲解永远停在这一步
+    hardTimer = setTimeout(finish, Math.max(8000, text.length * 320));
 }
 
 /** 停止讲解：清定时器、停朗读、还原按钮与徽章（silent=true 时不弹提示） */

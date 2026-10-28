@@ -12,6 +12,9 @@ body {
     font-family: 'Segoe UI', 'Microsoft YaHei', Tahoma, Geneva, Verdana, sans-serif;
     background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
     height: 100%;
+    /* 手机横屏时地址栏/工具栏会遮住布局视口底部，用动态视口高度(dvh)按"看得见的区域"算，
+       否则容器按布局视口撑满，底部棋盘会被裁掉。不支持的浏览器自动回退到上面的 100% */
+    height: 100dvh;
     padding: 15px;
     /* 页面本身不出现滚动条：滚动只发生在内部区域（步骤历史） */
     overflow: hidden;
