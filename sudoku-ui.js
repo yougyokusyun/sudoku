@@ -3962,6 +3962,16 @@ const WATCH_INTERVAL = 3000;   // 无语音时每步间隔 3 秒
 let narrationOn = true;        // 语音讲解开关（讲解模式默认开启）
 let watchGen = 0;              // 循环代次：开始/暂停/停止/切换语音时自增，使旧回调失效
 
+/** 把 0~99 的整数写成中文数字，用于语音稿（避免「2」被读成「两/俩」） */
+function numToZh(n) {
+    const d = '零一二三四五六七八九';
+    if (!isFinite(n) || n < 0) return String(n);
+    if (n < 10) return d[n];
+    if (n < 20) return '十' + (n % 10 ? d[n % 10] : '');
+    if (n < 100) return d[Math.floor(n / 10)] + '十' + (n % 10 ? d[n % 10] : '');
+    return String(n);
+}
+
 /**
  * 把一步转成语音稿。
  * 只朗读右侧「解题过程」面板里实际显示的内容：步骤号 + 技法 + 这一步的说明，
@@ -3969,7 +3979,7 @@ let watchGen = 0;              // 循环代次：开始/暂停/停止/切换语�
  */
 function buildStepNarration(step, stepNum) {
     if (!step) return '';
-    const head = (stepNum ? '第 ' + stepNum + ' 步，' : '') + (step.technique || '') + '。';
+    const head = (stepNum ? '第' + numToZh(stepNum) + '步，' : '') + (step.technique || '') + '。';
 
     const body = String(buildStepDetailHtml(step, stepNum) || '')
         .replace(/<br\s*\/?>/gi, '，')
@@ -3981,7 +3991,7 @@ function buildStepNarration(step, stepNum) {
         .replace(/\(\d+\s*,\s*\d+\)\s*(?:→|->)\s*[0-9、,，;；\s]*/g, '')
         .replace(/\((\d+)\s*,\s*(\d+)\)/g, (m, r, c) => '第' + r + '行第' + c + '列')
         .replace(/\s*=\s*(?=\d)/g, '，为')
-        .replace(/[:：]\s*(?=\d)/g, '的')
+        .replace(/([行列])\s*[:：]\s*(?=\d)/g, '$1的')   // 「第7行第6列:4」→「…第6列的4」
         .replace(/→/g, '，')
         .replace(/[,，]\s*/g, '，')
         .replace(/第\s*(\d+)\s*行\s*第\1\s*行/g, '第$1行')   // 「第 3 行 (3,2)」不要念成「第3行第3行第2列」
@@ -3991,9 +4001,10 @@ function buildStepNarration(step, stepNum) {
         .replace(/(第[一二三四五六七八九十]+)行/g, '$1航')
         .replace(/同行/g, '同航')
         .replace(/(该|这一|每一|哪一|另一)行/g, '$1航')
+        // 数字统一读成中文数字：「2」在量词前会被读成「两/俩」，写成「二」可确保读 èr
+        .replace(/\d+/g, (m) => numToZh(parseInt(m, 10)))
+        .replace(/[：:]/g, '，')          // 其余冒号当停顿处理，避免读成「的」
         .replace(/，{2,}/g, '，')
-        .replace(/[：:]\s*。/g, '。')     // 枚举被过滤后可能留下「：。」的空档
-        .replace(/[：:]\s*，/g, '，')
         .replace(/。\s*。/g, '。')
         .replace(/。\s*，/g, '，')
         .replace(/，\s*。/g, '。')

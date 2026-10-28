@@ -1722,9 +1722,18 @@ body.dark-mode .completion-secondary-btn {
         justify-content: center;
     }
     
+    /* 手机上下拉菜单必须保持"浮层"：原来的 static 会让菜单条目进入文档流，
+       展开时把头部撑高、棋盘整体被顶下去。这里改成按钮下方的浮层，可内部滚动。 */
     .dropdown-menu {
-        position: static;
-        width: 100%;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        min-width: 0;
+        width: auto;
+        max-height: min(62vh, 360px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
         margin-top: 5px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
@@ -3208,5 +3217,17 @@ body.dark-mode .timer-display { background: #24334a; }
         width: clamp(150px, 30vw, 260px) !important;
         min-width: 0 !important;
         flex-shrink: 1;
+    }
+}
+
+/* ====== 小屏：下拉菜单限定高度，避免超出可视区域 ======
+   菜单本身是绝对定位浮层（不占文档流，展开不会把棋盘顶下去），
+   但条目较多时可能超出屏幕底部；这里加上高度上限并允许内部滚动。
+   650px 以下的外层规则已把它改成整行宽度的浮层，这里覆盖 651~900px 的窄屏。 */
+@media (max-width: 900px) {
+    .dropdown-menu {
+        max-height: min(62vh, 360px);
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
     }
 }
