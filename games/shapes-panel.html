@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🧩 形状嵌板 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#eef1ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e9fbf3,transparent 55%),
+             linear-gradient(160deg,#f7f9ff,#f1fcf7);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  background:rgba(255,255,255,.74);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:12px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a5f78;}
+
+/* 上方嵌板：虚线框里是形状凹槽 */
+.board{position:relative;width:min(34vh,190px);height:min(34vh,190px);border-radius:26px;
+  background:repeating-linear-gradient(45deg,#f7f9fc,#f7f9fc 8px,#eef2f8 8px,#eef2f8 16px);
+  border:3px dashed rgba(36,59,83,.22);display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 0 3px 10px rgba(36,59,83,.10);}
+.hole{position:relative;width:76%;height:76%;display:flex;align-items:center;justify-content:center;}
+.hole .ghost{position:absolute;width:100%;height:100%;background:#dbe3ee;
+  box-shadow:inset 0 6px 12px rgba(36,59,83,.22);}
+.hole .fill{position:absolute;width:100%;height:100%;opacity:0;transform:scale(.6);
+  transition:opacity .18s ease,transform .22s cubic-bezier(.3,1.4,.5,1);}
+.board.filled .hole .fill{opacity:1;transform:scale(1);}
+.board.filled .hole .ghost{opacity:0;transition:opacity .18s ease;}
+.board.filled{border-color:rgba(47,179,68,.55);animation:pop .45s ease;}
+
+/* 形状：同一套 CSS 画法，ghost 与实体共用 */
+.sh{width:100%;height:100%;}
+.sh-circle{border-radius:50%;}
+.sh-square{border-radius:14%;}
+.sh-triangle{clip-path:polygon(50% 2%,2% 98%,98% 98%);}
+.sh-star{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);}
+.c-circle{background:linear-gradient(145deg,#ff8f8f,#e63946);}
+.c-square{background:linear-gradient(145deg,#7ec8ff,#1e7fc2);}
+.c-triangle{background:linear-gradient(160deg,#ffe07a,#f2b705);}
+.c-star{background:linear-gradient(160deg,#c9a6ff,#7c3aff);}
+
+/* 下方 3 个形状块 */
+.blocks{display:flex;justify-content:center;align-items:center;gap:clamp(10px,2.6vw,20px);flex-wrap:wrap;}
+.block{width:96px;height:96px;border:0;background:transparent;padding:8px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;border-radius:20px;
+  filter:drop-shadow(0 6px 12px rgba(36,59,83,.18));
+  transition:transform .14s ease,filter .18s ease;}
+.block:active{transform:scale(.94);}
+.block.good{animation:pop .45s ease;}
+.block.badd{animation:shake .45s ease;}
+.block.badd .sh{background:#ffd9d9!important;}
+
+.feedback{min-height:30px;font-size:1.05rem;font-weight:800;text-align:center;color:var(--muted);}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;}
+.btn{min-height:46px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(124,92,255,.5);color:#fff;background:linear-gradient(135deg,#8b6bff,#6a4bff);}
+
+/* 飞向凹槽的形状 */
+.fly{position:fixed;z-index:99;pointer-events:none;
+  transition:transform .34s cubic-bezier(.3,.9,.4,1),opacity .34s ease;}
+
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:7px;padding:8px;border-radius:16px;}
+  .prompt{font-size:.82rem;}
+  .board{width:min(30vh,120px);height:min(30vh,120px);border-radius:18px;}
+  .block{width:70px;height:70px;padding:6px;border-radius:14px;}
+  .feedback{min-height:20px;font-size:.9rem;}
+  .btn{min-height:34px;font-size:.78rem;padding:0 14px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🧩 形状嵌板</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">哪个形状能放进这个洞里？点一下👇</div>
+  <div class="board" id="board">
+    <div class="hole">
+      <span class="ghost" id="ghost"></span>
+      <span class="fill" id="fill"></span>
+    </div>
+  </div>
+  <div class="blocks" id="blocks"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn primary" id="next" type="button">🔄 换一个板子</button>
+  </div>
+</div>
+
+<script>
+var SHAPES = [
+  { name: '圆形', s: 'sh-circle', c: 'c-circle' },
+  { name: '方形', s: 'sh-square', c: 'c-square' },
+  { name: '三角形', s: 'sh-triangle', c: 'c-triangle' },
+  { name: '星形', s: 'sh-star', c: 'c-star' }
+];
+
+var cur = null, blocks = [];
+var streak = 0, best = readNum('pshape.best');
+var locked = false, timer = null;
+
+var elBoard = document.getElementById('board');
+var elGhost = document.getElementById('ghost');
+var elFill = document.getElementById('fill');
+var elBlocks = document.getElementById('blocks');
+var elFb = document.getElementById('feedback');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+
+/* 「咔」一声：Web Audio 合成一小段短促音，不依赖音频文件 */
+var actx = null;
+function clickSound() {
+  try {
+    var AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return;
+    if (!actx) actx = new AC();
+    if (actx.state === 'suspended') actx.resume();
+    var o = actx.createOscillator(), g = actx.createGain();
+    o.type = 'square';
+    o.frequency.setValueAtTime(720, actx.currentTime);
+    o.frequency.exponentialRampToValueAtTime(180, actx.currentTime + 0.09);
+    g.gain.setValueAtTime(0.13, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + 0.12);
+    o.connect(g); g.connect(actx.destination);
+    o.start(); o.stop(actx.currentTime + 0.13);
+  } catch (e) { }
+}
+
+function newRound() {
+  clearTimeout(timer);
+  locked = false;
+
+  var prev = cur ? cur.name : '';
+  var pick;
+  do { pick = SHAPES[rand(SHAPES.length)]; } while (SHAPES.length > 1 && pick.name === prev);
+  cur = pick;
+
+  /* 凹槽 = 目标形状的灰色剪影 */
+  elGhost.className = 'ghost sh ' + cur.s;
+  elFill.className = 'fill sh ' + cur.s + ' ' + cur.c;
+  elBoard.classList.remove('filled');
+
+  /* 3 个形状块：1 个正确 + 2 个干扰 */
+  var others = shuffle(SHAPES.filter(function (s) { return s.name !== cur.name; })).slice(0, 2);
+  blocks = shuffle([cur].concat(others));
+
+  elBlocks.innerHTML = '';
+  blocks.forEach(function (s) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'block';
+    b.setAttribute('data-n', s.name);
+    b.setAttribute('aria-label', s.name);
+    b.innerHTML = '<span class="sh ' + s.s + ' ' + s.c + '"></span>';
+    b.addEventListener('click', function () { tap(b, s); });
+    elBlocks.appendChild(b);
+  });
+
+  window.__cur = cur.name;
+  window.__blocks = blocks.map(function (s) { return s.name; });
+  feedback('');
+  voiceSpeak('把这个形状放进去吧');
+}
+
+function tap(btn, s) {
+  if (locked) return;
+  if (s.name === cur.name) {
+    locked = true;
+    btn.classList.add('good');
+    flyTo(btn);
+    clickSound();
+    setTimeout(function () {
+      elBoard.classList.add('filled');
+      btn.style.visibility = 'hidden';
+    }, 320);
+    streak++;
+    if (streak > best) { best = streak; writeNum('pshape.best', best); }
+    updateStats();
+    feedback('✅ 咔！' + cur.name + '放进去了！', 'ok');
+    timer = setTimeout(newRound, 1200);
+  } else {
+    btn.classList.add('badd');
+    setTimeout(function () { btn.classList.remove('badd'); }, 450);
+    voiceSpeak('再看看，哪一个是这个形状');
+    feedback('❌ 这个' + s.name + '放不进去，再试试', 'bad');
+  }
+}
+
+/* 形状块飞进凹槽 */
+function flyTo(btn) {
+  var a = btn.getBoundingClientRect(), b = elFill.getBoundingClientRect();
+  var wrap = document.createElement('div');
+  wrap.className = 'fly';
+  wrap.style.cssText += 'left:' + a.left + 'px;top:' + a.top + 'px;width:' + a.width + 'px;height:' + a.height +
+    'px;padding:8px;box-sizing:border-box;filter:drop-shadow(0 6px 12px rgba(36,59,83,.2));';
+  wrap.innerHTML = '<span class="sh ' + cur.s + ' ' + cur.c + '" style="display:block;width:100%;height:100%"></span>';
+  document.body.appendChild(wrap);
+  void wrap.offsetWidth;
+  var dx = (b.left + b.width / 2) - (a.left + a.width / 2);
+  var dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+  var sc = (b.width - 16) / (a.width - 16);
+  wrap.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(' + sc + ')';
+  setTimeout(function () { wrap.remove(); }, 380);
+}
+
+document.getElementById('next').addEventListener('click', function () {
+  streak = 0;
+  updateStats();
+  newRound();
+  feedback('换了一块新板子～');
+});
+
+function initShapePanel() {
+  best = readNum('pshape.best');
+  updateStats();
+  newRound();
+}
+function resetShapePanel() {
+  streak = 0;
+  updateStats();
+  newRound();
+}
+initShapePanel();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '形状嵌板游戏。把下面的形状，放进上面一样的洞里。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进入游戏自动朗读；若浏览器拦截自动播放，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

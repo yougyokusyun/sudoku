@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🐰 动物喂食 · 认知启蒙</title>
+<style>
+:root{
+  --ink:#243b53; --muted:#6b7f95; --green:#2fb344; --red:#ff5c5c; --warm:#f9c74f;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{
+  font-family:'PingFang SC','Microsoft YaHei',system-ui,-apple-system,sans-serif;
+  color:var(--ink); user-select:none; overflow:hidden;
+  background:radial-gradient(900px 460px at 10% -10%,#fff3e6 0%,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e6f7ff 0%,transparent 55%),
+             linear-gradient(160deg,#fffdf6 0%,#f0f9ff 100%);
+  height:100dvh; display:flex; flex-direction:column; padding:10px 12px 12px;
+}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+h1{font-size:1.15rem}
+.back{
+  display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:#c26a00;font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08)
+}
+.chips{margin-left:auto;display:flex;gap:6px}
+.chip{
+  background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap
+}
+.chip b{color:#e08a00;font-size:.86rem}
+
+.stage{
+  flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;
+  background:rgba(255,255,255,.75);border:2px solid rgba(36,59,83,.08);border-radius:22px;
+  padding:10px;box-shadow:0 10px 24px rgba(36,59,83,.08)
+}
+.tip{font-size:.86rem;font-weight:800;color:#7a6a4f;text-align:center}
+
+/* 中间：一只小动物 */
+.animalWrap{flex:0 0 auto;display:flex;justify-content:center}
+.animalCard{
+  position:relative;display:flex;align-items:center;gap:12px;padding:8px 24px;
+  min-height:112px;border-radius:26px;border:3px solid rgba(240,161,26,.35);
+  background:linear-gradient(160deg,#fff8e6 0%,#ffeec9 100%);
+  box-shadow:0 10px 22px rgba(240,161,26,.20);font-family:inherit;color:inherit
+}
+.animalCard .e{font-size:clamp(2.6rem,9.5vh,4.4rem);line-height:1}
+.animalCard .ph{width:84px;height:84px;border-radius:16px;object-fit:cover;box-shadow:0 4px 10px rgba(36,59,83,.15);vertical-align:middle}
+.animalCard .t{font-size:1.05rem;font-weight:900;color:#8a5b00}
+.animalCard .mouth{
+  position:absolute;right:12px;bottom:8px;font-size:1.25rem;line-height:1;opacity:0;transform:scale(.4);
+  transition:opacity .2s ease,transform .2s ease
+}
+.animalCard.eating .mouth{opacity:1;transform:scale(1)}
+.animalCard .mouth .ph{width:24px;height:24px;border-radius:7px;object-fit:cover;vertical-align:middle}
+.animalCard.eating .e{animation:chew .5s ease 2}
+.animalCard.pop{animation:pop .5s ease}
+
+/* 下方：4 个食物选项，2×2 */
+.foods{
+  flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(2,1fr);
+  grid-template-rows:repeat(2,1fr);gap:10px
+}
+.food{
+  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  min-height:80px;border-radius:20px;border:3px solid rgba(36,59,83,.10);background:#fff;
+  box-shadow:0 6px 14px rgba(36,59,83,.08);cursor:pointer;font-family:inherit;color:inherit;
+  transition:transform .14s ease,box-shadow .14s ease,border-color .18s ease,background .18s ease;
+  overflow:hidden
+}
+.food:active{transform:scale(.97)}
+.food .e{font-size:clamp(1.9rem,7vh,3rem);line-height:1.05}
+.food .ph{width:72%;height:52px;object-fit:cover;border-radius:12px}
+.food .t{font-size:.84rem;font-weight:900;color:#4a6076}
+.food.good{border-color:var(--green);background:#e9fbee}
+.food.good .t{color:#1b7c33}
+.food.good::after{content:'✅';position:absolute;left:8px;top:5px;font-size:.9rem}
+.food.bad{border-color:var(--red);background:#ffeded;animation:shake .42s ease}
+
+/* 飞行中的食物 + 飘字 */
+.fly{position:fixed;z-index:99;font-size:1.9rem;line-height:1;pointer-events:none;
+  transition:transform .45s cubic-bezier(.3,.9,.4,1),opacity .45s ease}
+.fly img{width:34px;height:34px;border-radius:9px;object-fit:cover}
+
+.feedback{min-height:26px;text-align:center;font-size:.88rem;font-weight:800;color:var(--muted)}
+.feedback.ok{color:#1b7c33}
+.feedback.bad{color:#b02a2a;animation:shake .4s ease}
+
+.foot{display:flex;gap:8px}
+.foot button{
+  flex:1;min-height:44px;border-radius:14px;border:2px solid rgba(36,59,83,.10);background:#fff;
+  color:var(--ink);font-size:.86rem;font-weight:800;cursor:pointer;font-family:inherit
+}
+.foot button.primary{border-color:#f0a11a;color:#fff;background:linear-gradient(135deg,#ffc44d,#f0930a)}
+
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes chew{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px}
+  header{gap:6px;margin-bottom:4px}
+  h1{font-size:.95rem}
+  .chip{padding:2px 8px;font-size:.68rem}
+  .stage{gap:5px;padding:6px;border-radius:16px}
+  .tip{font-size:.74rem}
+  .animalCard{min-height:64px;padding:2px 14px;border-radius:18px;gap:8px}
+  .animalCard .e{font-size:1.9rem}
+  .animalCard .ph{width:46px;height:46px;border-radius:10px}
+  .animalCard .mouth .ph{width:16px;height:16px}
+  .animalCard .t{font-size:.8rem}
+  .animalCard .mouth{font-size:.95rem;right:8px;bottom:4px}
+  .foods{grid-template-columns:repeat(4,1fr);grid-template-rows:1fr;gap:8px}
+  .food{min-height:56px;border-radius:14px;gap:2px;border-width:2px}
+  .food .e{font-size:1.55rem}
+  .food .ph{height:32px;border-radius:8px}
+  .fly img{width:26px;height:26px}
+  .food .t{font-size:.7rem}
+  .feedback{min-height:18px;font-size:.76rem}
+  .foot button{min-height:34px;font-size:.78rem}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🐰 动物喂食</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="tip" id="tip">选出它最爱吃的那一个吧</div>
+  <div class="animalWrap">
+    <div class="animalCard" id="animal">
+      <span class="e" id="animalEmoji">🐰</span>
+      <span class="t" id="animalName">小兔子</span>
+      <span class="mouth" id="animalMouth">🥕</span>
+    </div>
+  </div>
+  <div class="foods" id="foods"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="foot">
+    <button class="primary" id="next" type="button">🔄 换一题</button>
+  </div>
+</div>
+
+<script>
+/* ===== 动物与它爱吃的东西（f = 本地照片文件 img/<f>.jpg；食物 '名|emoji|图key'） ===== */
+var ANIMALS = [
+  { n: '小兔子', e: '🐰', f: 'rabbit', eat: ['胡萝卜|🥕|carrot', '青菜|🥬|greens', '白菜|🥬|greens'] },
+  { n: '小猴子', e: '🐵', f: 'monkey', eat: ['香蕉|🍌|banana', '桃子|🍑|peach', '花生|🥜|peanut', '苹果|🍎|apple'] },
+  { n: '大熊猫', e: '🐼', f: 'panda', eat: ['竹子|🎋|bamboo'] },
+  { n: '小狗', e: '🐶', f: 'dog', eat: ['骨头|🦴|bone', '狗粮|🍖|meat'] },
+  { n: '小猫', e: '🐱', f: 'cat', eat: ['小鱼|🐟|fish', '牛奶|🥛|milk'] },
+  { n: '小鸡', e: '🐤', f: 'chick', eat: ['米粒|🍚|rice', '小虫|🐛|bug'] },
+  { n: '小鸭', e: '🦆', f: 'duck', eat: ['小鱼|🐟|fish', '青菜|🥬|greens'] },
+  { n: '小鹅', e: '🦢', f: 'goose', eat: ['青草|🌿|grass', '青菜|🥬|greens'] },
+  { n: '小牛', e: '🐮', f: 'cow', eat: ['青草|🌿|grass', '草|🌿|grass'] },
+  { n: '小羊', e: '🐑', f: 'sheep', eat: ['青草|🌿|grass', '树叶|🍃|leaves'] },
+  { n: '小马', e: '🐴', f: 'horse', eat: ['草|🌿|grass', '青草|🌿|grass'] },
+  { n: '小猪', e: '🐷', f: 'pig', eat: ['饲料|🌾|wheat', '红薯|🍠|sweetpotato'] },
+  { n: '小老鼠', e: '🐭', f: 'mouse', eat: ['大米|🍚|rice', '奶酪|🧀|cheese'] },
+  { n: '小松鼠', e: '🐿️', f: 'squirrel', eat: ['松果|🌰|pinecone', '坚果|🥜|peanut'] },
+  { n: '小刺猬', e: '🦔', f: 'hedgehog', eat: ['果子|🍎|apple', '小虫|🐛|bug'] },
+  { n: '小鸟', e: '🐦', f: 'bird', eat: ['虫子|🐛|bug', '谷粒|🌾|wheat'] },
+  { n: '小燕子', e: '🕊️', f: 'swallow', eat: ['飞虫|🦟|mosquito', '虫子|🐛|bug'] },
+  { n: '猫头鹰', e: '🦉', f: 'owl', eat: ['老鼠|🐭|mouse', '小虫|🐛|bug'] },
+  { n: '小青蛙', e: '🐸', f: 'frog', eat: ['害虫|🐛|bug', '蚊子|🦟|mosquito'] },
+  { n: '小鱼', e: '🐟', f: 'fish', eat: ['水草|🌿|grass', '鱼食|🍥|fishfood'] },
+  { n: '小乌龟', e: '🐢', f: 'turtle', eat: ['菜叶|🥬|greens', '小鱼|🐟|fish'] },
+  { n: '小螃蟹', e: '🦀', f: 'crab', eat: ['小鱼|🐟|fish', '小虾|🦐|shrimp'] },
+  { n: '小蜜蜂', e: '🐝', f: 'bee', eat: ['花蜜|🍯|honey', '蜂蜜|🍯|honey'] },
+  { n: '小蚂蚁', e: '🐜', f: 'ant', eat: ['糖粒|🍬|candy', '米粒|🍚|rice'] },
+  { n: '小蚕', e: '🐛', f: 'caterpillar', eat: ['桑叶|🍃|leaves', '树叶|🍃|leaves'] },
+  { n: '小蜗牛', e: '🐌', f: 'snail', eat: ['菜叶|🥬|greens', '青菜|🥬|greens'] },
+  { n: '长颈鹿', e: '🦒', f: 'giraffe', eat: ['树叶|🍃|leaves', '青草|🌿|grass'] },
+  { n: '大象', e: '🐘', f: 'elephant', eat: ['青草|🌿|grass', '香蕉|🍌|banana'] },
+  { n: '老虎', e: '🐯', f: 'tiger', eat: ['肉|🍖|meat', '小鸡|🐤|chick'] },
+  { n: '狮子', e: '🦁', f: 'lion', eat: ['肉|🍖|meat', '大骨头|🦴|bone'] },
+  { n: '狐狸', e: '🦊', f: 'fox', eat: ['小鸡|🐤|chick', '肉|🍖|meat'] },
+  { n: '狗熊', e: '🐻', f: 'bear', eat: ['蜂蜜|🍯|honey', '果子|🍎|apple'] },
+  { n: '小仓鼠', e: '🐹', f: 'hamster', eat: ['瓜子|🌻|sunflower', '坚果|🥜|peanut'] },
+  { n: '啄木鸟', e: '🦜', f: 'woodpecker', eat: ['树虫|🐛|bug', '虫子|🐛|bug'] }
+];
+
+var OPTION_COUNT = 4;     // 4 个食物选项，其中 1 个正确
+var q = null;             // { animal, correct:{name,emoji}, options:[...] }
+var streak = 0, best = readNum('pgr.best');
+var lock = false, timer = null, lastAnimal = '';
+
+var elAnimal = document.getElementById('animal');
+var elAnimalEmoji = document.getElementById('animalEmoji');
+var elAnimalName = document.getElementById('animalName');
+var elAnimalMouth = document.getElementById('animalMouth');
+var elFoods = document.getElementById('foods');
+var elFb = document.getElementById('feedback');
+var elTip = document.getElementById('tip');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function parseFood(s) { var seg = s.split('|'); return { name: seg[0], emoji: seg[1], f: seg[2] }; }
+/* 本地照片，加载失败时回退 emoji */
+function setPhoto(host, f, emoji) {
+  host.innerHTML = '';
+  var img = new Image();
+  img.className = 'ph';
+  img.alt = emoji;
+  img.onerror = function () { host.innerHTML = ''; host.textContent = emoji; };
+  img.src = 'img/' + f + '.jpg';
+  host.appendChild(img);
+}
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+function speak(text) {
+  try {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.15;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+/* 随机出一题：1 只动物 + 1 个正确食物 + 3 个干扰食物
+   干扰项不可是这只动物爱吃的东西（名字、图案都不能重复），
+   且 4 个选项的名字和图案互不相同 */
+function makeQuestion() {
+  var pool = ANIMALS.slice();
+  if (pool.length > 1 && lastAnimal) {
+    pool = pool.filter(function (a) { return a.n !== lastAnimal; });
+  }
+
+  for (var tryN = 0; tryN < 40; tryN++) {
+    var a = pool[rand(pool.length)];
+    var correct = parseFood(a.eat[rand(a.eat.length)]);
+    var forbidName = {}, forbidEmoji = {};
+    a.eat.forEach(function (s) { var f = parseFood(s); forbidName[f.name] = forbidEmoji[f.emoji] = 1; });
+
+    var usedName = {}, usedEmoji = {};
+    usedName[correct.name] = usedEmoji[correct.emoji] = 1;
+
+    var distractors = [], cands = [];
+    ANIMALS.forEach(function (o) { o.eat.forEach(function (s) { cands.push(s); }); });
+    cands = shuffle(cands);
+
+    for (var i = 0; i < cands.length && distractors.length < OPTION_COUNT - 1; i++) {
+      var d = parseFood(cands[i]);
+      if (forbidName[d.name] || forbidEmoji[d.emoji]) continue;
+      if (usedName[d.name] || usedEmoji[d.emoji]) continue;
+      usedName[d.name] = usedEmoji[d.emoji] = 1;
+      distractors.push(d);
+    }
+    if (distractors.length < OPTION_COUNT - 1) continue;
+
+    return {
+      animal: a,
+      correct: correct,
+      options: shuffle([correct].concat(distractors))
+    };
+  }
+  /* 兜底（理论上不会走到） */
+  var a2 = ANIMALS[0], c2 = parseFood(a2.eat[0]);
+  return { animal: a2, correct: c2, options: [c2, { name: '香蕉', emoji: '🍌', f: 'banana' }, { name: '骨头', emoji: '🦴', f: 'bone' }, { name: '蜂蜜', emoji: '🍯', f: 'honey' }] };
+}
+
+function renderQuestion() {
+  q = makeQuestion();
+  lastAnimal = q.animal.n;
+
+  elAnimal.classList.remove('eating', 'pop');
+  setPhoto(elAnimalEmoji, q.animal.f, q.animal.e);
+  elAnimalName.textContent = q.animal.n;
+  setPhoto(elAnimalMouth, q.correct.f, q.correct.emoji);
+  elTip.textContent = q.animal.n + '饿啦，选出它最爱吃的那一个吧';
+
+  elFoods.innerHTML = '';
+  q.options.forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'food';
+    b.setAttribute('data-n', o.name);
+    var ehost = document.createElement('span');
+    ehost.className = 'e';
+    setPhoto(ehost, o.f, o.emoji);
+    var t = document.createElement('span');
+    t.className = 't';
+    t.textContent = o.name;
+    b.appendChild(ehost);
+    b.appendChild(t);
+    b.addEventListener('click', function () { tapFood(o, b); });
+    elFoods.appendChild(b);
+  });
+
+  window.__question = { animal: q.animal.n, correct: q.correct.name, options: q.options.map(function (o) { return o.name; }) };
+  feedback('');
+  speak(q.animal.n + '饿了，它最爱吃什么呀？');
+}
+
+function newRound() {
+  clearTimeout(timer);
+  lock = false;
+  renderQuestion();
+}
+
+function tapFood(o, btn) {
+  if (lock) return;
+
+  if (o.name === q.correct.name) {
+    lock = true;
+    btn.classList.add('good');
+    elAnimal.classList.add('pop', 'eating');
+    flyTo(btn, elAnimal, o);
+    feedback('✅ ' + q.animal.n + '爱吃' + o.name + '！', 'ok');
+    speak(q.animal.n + '爱吃' + o.name);
+    streak++;
+    if (streak > best) { best = streak; writeNum('pgr.best', best); }
+    updateStats();
+    timer = setTimeout(function () {
+      elAnimal.classList.remove('pop', 'eating');
+      newRound();
+    }, 1200);
+  } else {
+    lock = true;
+    btn.classList.add('bad');
+    feedback('❌ ' + q.animal.n + '不爱吃' + o.name + '，再试试～', 'bad');
+    setTimeout(function () {
+      btn.classList.remove('bad');
+      lock = false;
+    }, 480);
+  }
+}
+
+/* 把食物从选项位置“飞”到动物嘴边 */
+function flyTo(fromEl, toEl, o) {
+  if (!fromEl) return;
+  var a = fromEl.getBoundingClientRect(), b = toEl.getBoundingClientRect();
+  var f = document.createElement('div');
+  f.className = 'fly';
+  var img = new Image();
+  img.alt = o.emoji;
+  img.onerror = function () { f.innerHTML = ''; f.textContent = o.emoji; };
+  img.src = 'img/' + o.f + '.jpg';
+  f.appendChild(img);
+  f.style.left = (a.left + a.width / 2 - 17) + 'px';
+  f.style.top = (a.top + a.height / 2 - 17) + 'px';
+  document.body.appendChild(f);
+  void f.offsetWidth;
+  var dx = (b.left + b.width * 0.85) - (a.left + a.width / 2);
+  var dy = (b.top + b.height * 0.62) - (a.top + a.height / 2);
+  f.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(.6)';
+  f.style.opacity = '.2';
+  setTimeout(function () { f.remove(); }, 480);
+}
+
+document.getElementById('next').addEventListener('click', function () {
+  streak = 0;
+  updateStats();
+  newRound();
+  feedback('换了一只小动物～');
+});
+
+function initAnimalFeed() {
+  best = readNum('pgr.best');
+  updateStats();
+  newRound();
+}
+function resetAnimalFeed() {
+  streak = 0;
+  updateStats();
+  newRound();
+}
+initAnimalFeed();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '动物喂食游戏。看看上面是什么小动物，从下面四个食物里，选出它最爱吃的那一个。';
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.1);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { speak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+(function () {
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);   /* 不打断正在读的题目，排队播报玩法 */
+  } catch (e) { }
+  setTimeout(function () {
+    if (!window.speechSynthesis || window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () { document.removeEventListener('pointerdown', once); speak(VOICE_TEXT); };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+})();
+</script>
+</body>
+</html>

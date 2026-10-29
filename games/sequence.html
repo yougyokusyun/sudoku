@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>找规律填数 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9f2,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#fff9f4,#f3f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  padding:7px 14px;font-weight:800;font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);
+  display:flex;align-items:center;min-height:40px;}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.prompt{font-size:1.1rem;font-weight:800;text-align:center;}
+.feedback{min-height:32px;font-size:1.2rem;font-weight:800;text-align:center;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .prompt{font-size:.95rem;} .feedback{min-height:24px;font-size:1rem;} }
+/* ---------- 本游戏样式 ---------- */
+.bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.chip{background:#fff;border-radius:999px;padding:5px 12px;font-size:.85rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);display:flex;align-items:center;gap:4px;}
+.levels{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.lv{border:none;border-radius:999px;padding:8px 14px;min-height:40px;background:#fff;color:var(--ink);
+  font-family:inherit;font-size:.85rem;font-weight:800;box-shadow:0 3px 10px rgba(36,59,83,.10);cursor:pointer;}
+.lv.on{background:linear-gradient(135deg,#7c5cff,#5a3ee6);color:#fff;box-shadow:0 6px 16px rgba(124,92,255,.35);}
+.seq{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;align-items:center;max-width:100%;}
+.card{width:clamp(46px,12.5vw,66px);aspect-ratio:1;border-radius:14px;background:#fff;
+  box-shadow:0 6px 16px rgba(36,59,83,.13);display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:clamp(.8rem,3.4vw,1.15rem);font-variant-numeric:tabular-nums;}
+.qcard{position:relative;width:clamp(46px,12.5vw,66px);aspect-ratio:1;perspective:600px;}
+.qinner{position:relative;width:100%;height:100%;transform-style:preserve-3d;transition:transform .6s ease;}
+.qinner.flip{transform:rotateY(180deg);}
+.qface{position:absolute;inset:0;border-radius:14px;display:flex;align-items:center;justify-content:center;
+  font-weight:800;font-size:clamp(.95rem,4vw,1.35rem);backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+.qfront{background:#fff;border:2px dashed var(--accent);color:var(--accent);animation:pulse 1.4s ease-in-out infinite;}
+.qback{background:linear-gradient(135deg,#7c5cff,#5a3ee6);color:#fff;transform:rotateY(180deg);}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(124,92,255,.35);}50%{box-shadow:0 0 0 12px rgba(124,92,255,0);}}
+.choices{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;width:100%;max-width:440px;}
+.choice{min-height:54px;border:none;border-radius:16px;background:#fff;color:var(--ink);
+  font-family:inherit;font-size:1.15rem;font-weight:800;box-shadow:0 5px 14px rgba(36,59,83,.13);
+  cursor:pointer;font-variant-numeric:tabular-nums;}
+.choice:active{transform:scale(.96);}
+@media (max-height:430px){
+  .stage{gap:8px;}
+  .lv{min-height:40px;padding:6px 10px;font-size:.78rem;}
+  .card,.qcard{width:clamp(40px,8.5vh,54px);}
+  .choices{gap:6px;max-width:420px;}
+  .choice{min-height:44px;border-radius:12px;font-size:1rem;}
+  .bar .chip{font-size:.76rem;padding:4px 10px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🔢 找规律填数</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="bar">
+  <span class="chip">🔥 连对 <b id="cur">0</b></span>
+  <span class="chip">🏆 最佳连对 <b id="best">0</b></span>
+</div>
+<div class="stage">
+  <div class="prompt" id="prompt">看看数字怎么变化，问号处该填几？</div>
+  <div class="levels" id="levels"></div>
+  <div class="seq" id="seq"></div>
+  <div class="choices" id="choices"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+<script>
+function rnd(a,b){return a+Math.floor(Math.random()*(b-a+1));}
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function feedback(text,good){var f=document.getElementById('feedback');f.className='feedback '+(good?'ok':'bad');f.textContent=text;}
+function clearFeedback(){var f=document.getElementById('feedback');f.className='feedback';f.textContent='';}
+function replay(node,cls){node.classList.remove('pop','shake');void node.offsetWidth;node.classList.add(cls);}
+function readBest(k){try{return parseInt(localStorage.getItem(k)||'0',10)||0;}catch(e){return 0;}}
+function saveBest(k,v){try{localStorage.setItem(k,String(v));}catch(e){}}
+
+/* ================= 生成器：返回 {seq,answer,rule,...} ================= */
+function geoQuestion(r){
+  var v=r===4?rnd(1,2):rnd(1,3), seq=[];
+  for(var i=0;i<4;i++){seq.push(v);v*=r;}
+  return {kind:'geo',r:r,seq:seq,answer:v,rule:'这是每次乘 '+r+' 的等比规律'};
+}
+var GENS={
+  /* 等差：步长 1~9，可正可负，保证不出现负数 */
+  arith:function(){
+    var step=pick([1,2,3,4,5,6,7,8,9,-1,-2,-3,-4,-5,-6,-7,-8,-9]);
+    var start=step>0?rnd(1,30):Math.max(0,-4*step)+rnd(0,20);
+    var seq=[],v=start;
+    for(var i=0;i<4;i++){seq.push(v);v+=step;}
+    return {kind:'arith',step:step,seq:seq,answer:v,rule:'这是每次'+(step>0?'加 ':'减 ')+Math.abs(step)+' 的等差规律'};
+  },
+  /* 等比 ×2 */
+  geo2:function(){return geoQuestion(2);},
+  /* 等比 ×2 / ×3 / ×4 */
+  geo:function(){return geoQuestion(pick([2,3,4]));},
+  /* 交替加减 +a, -b, +a, -b ... */
+  alt:function(){
+    var a=rnd(2,7),b=rnd(1,5),start=2*b+rnd(0,8),seq=[start];
+    seq.push(start+a); seq.push(start+a-b); seq.push(start+2*a-b);
+    var ans=start+2*a-2*b;
+    return {kind:'alt',a:a,b:b,seq:seq,answer:ans,rule:'这是先加 '+a+'、再减 '+b+' 交替进行的规律'};
+  },
+  /* 平方数 */
+  square:function(){
+    var n0=rnd(1,4),seq=[];
+    for(var i=0;i<4;i++)seq.push((n0+i)*(n0+i));
+    return {kind:'square',n0:n0,seq:seq,answer:(n0+4)*(n0+4),rule:'这是平方数规律，每项都是 n×n'};
+  },
+  /* 立方数 */
+  cube:function(){
+    var n0=rnd(1,3),seq=[];
+    for(var i=0;i<4;i++)seq.push((n0+i)*(n0+i)*(n0+i));
+    var m=n0+4;
+    return {kind:'cube',n0:n0,seq:seq,answer:m*m*m,rule:'这是立方数规律，每项都是 n×n×n'};
+  },
+  /* 斐波那契式：每项等于前两项之和 */
+  fib:function(){
+    var a=rnd(1,9),b=rnd(1,9),seq=[a,b,a+b,a+2*b];
+    return {kind:'fib',a:a,b:b,seq:seq,answer:2*a+3*b,rule:'这是斐波那契规律：每项等于前两项之和'};
+  },
+  /* 混合规则：先连续 +A 两次，再连续 ×B 两次 */
+  mixed:function(){
+    var A=rnd(1,5),B=pick([2,3]),t0=rnd(1,9),seq=[t0,t0+A,t0+2*A];
+    var t3=(t0+2*A)*B;
+    seq.push(t3);
+    return {kind:'mixed',A:A,B:B,seq:seq,answer:t3*B,rule:'这是先连续加 '+A+'，再连续乘 '+B+' 的两段规律'};
+  },
+  /* 两项交替递增 +p, +q, +p, +q ... */
+  altInc:function(){
+    var p=rnd(1,6),q=rnd(1,6);
+    while(q===p)q=rnd(1,6);
+    var t0=rnd(0,9),seq=[t0,t0+p,t0+p+q,t0+2*p+q];
+    return {kind:'altInc',p:p,q:q,seq:seq,answer:t0+2*p+2*q,rule:'这是每次加 '+p+'、加 '+q+' 交替递增的规律'};
+  }
+};
+
+var DIFF={
+  easy:{label:'🙂 简单',gens:['arith','geo2']},
+  medium:{label:'😃 中等',gens:['alt','square']},
+  hard:{label:'🚀 挑战',gens:['fib','cube','mixed','altInc']}
+};
+
+/* 4 个选项：正确答案 + 3 个干扰项（去重、非负、打乱） */
+function buildOptions(ans){
+  var pool=shuffle([ans+1,ans-1,ans+2,ans-2,ans+3,ans-3,ans+4,ans-4,ans+5,ans+6]);
+  var out=[];
+  for(var i=0;i<pool.length&&out.length<3;i++){
+    var v=pool[i];
+    if(v<0||v===ans||out.indexOf(v)>=0)continue;
+    out.push(v);
+  }
+  var k=1;
+  while(out.length<3){
+    var v2=ans+6+k; k++;
+    if(out.indexOf(v2)<0)out.push(v2);
+  }
+  return shuffle([ans].concat(out));
+}
+
+function makeQuestion(diff){
+  var q=GENS[pick(DIFF[diff].gens)]();
+  q.options=buildOptions(q.answer);
+  return q;
+}
+
+/* ================= 游戏状态与渲染 ================= */
+var diff='easy',cur=null,locked=false,streak=0,best=0,timer=null,qinnerEl=null;
+
+function initSequence(){
+  best=readBest('pseq.best');
+  document.getElementById('best').textContent=best;
+  renderLevels();
+  document.getElementById('choices').addEventListener('click',function(e){
+    var b=e.target&&e.target.closest?e.target.closest('.choice'):null;
+    if(!b)return;
+    answer(parseInt(b.getAttribute('data-v'),10),b);
+  });
+  resetSequence();
+}
+
+function renderLevels(){
+  var box=document.getElementById('levels');
+  box.innerHTML='';
+  Object.keys(DIFF).forEach(function(k){
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='lv'+(k===diff?' on':'');
+    b.textContent=DIFF[k].label;
+    b.onclick=function(){ if(k===diff)return; diff=k; renderLevels(); resetSequence(); };
+    box.appendChild(b);
+  });
+}
+
+function resetSequence(){
+  clearTimeout(timer);
+  locked=false;
+  streak=0;
+  updateStats();
+  nextQuestion();
+}
+
+function nextQuestion(){
+  clearTimeout(timer);
+  locked=false;
+  cur=makeQuestion(diff);
+  var box=document.getElementById('seq');
+  box.innerHTML='';
+  cur.seq.forEach(function(n){
+    var c=document.createElement('div');
+    c.className='card';
+    c.textContent=n;
+    box.appendChild(c);
+  });
+  var q=document.createElement('div');
+  q.className='qcard';
+  q.innerHTML='<div class="qinner"><div class="qface qfront">?</div><div class="qface qback">'+cur.answer+'</div></div>';
+  box.appendChild(q);
+  qinnerEl=q.querySelector('.qinner');
+
+  var ch=document.getElementById('choices');
+  ch.innerHTML='';
+  cur.options.forEach(function(v){
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='choice';
+    b.setAttribute('data-v',String(v));
+    b.textContent=v;
+    ch.appendChild(b);
+  });
+  clearFeedback();
+}
+
+function answer(v,btn){
+  if(locked||!cur)return;
+  if(v===cur.answer){
+    locked=true;
+    if(qinnerEl)qinnerEl.classList.add('flip');
+    replay(btn,'pop');
+    streak+=1;
+    if(streak>best){best=streak;saveBest('pseq.best',best);}
+    updateStats();
+    feedback('✅ 答对啦！'+cur.rule,true);
+    clearTimeout(timer);
+    timer=setTimeout(nextQuestion,1500);
+  }else{
+    streak=0;
+    updateStats();
+    replay(btn,'shake');
+    feedback('❌ 再看看相邻数字的关系',false);
+  }
+}
+
+function updateStats(){
+  document.getElementById('cur').textContent=streak;
+  document.getElementById('best').textContent=best;
+}
+
+/* ---------- 启动 ---------- */
+initSequence();
+</script>
+</body>
+</html>

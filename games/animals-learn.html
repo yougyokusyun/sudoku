@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🐶 动物认识 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#e08a00;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff4e9,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eaf9f0,transparent 55%),
+             linear-gradient(160deg,#fffbf5,#f2fbf6);
+  height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;overflow:hidden;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;
+  background:rgba(255,255,255,.76);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:10px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:.98rem;font-weight:800;text-align:center;color:#4a5f78;}
+
+/* 一页一只动物：左右箭头 + 左右滑动切换 */
+.board{flex:1 1 auto;min-height:0;display:flex;align-items:stretch;justify-content:center;gap:10px;
+  width:100%;touch-action:none;}
+.pageWrap{flex:1 1 auto;min-width:0;max-width:640px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:6px;min-height:0;}
+.animalPage{width:100%;flex:1 1 auto;min-height:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:6px;padding:10px 14px;border:3px solid rgba(224,138,0,.25);border-radius:26px;
+  background:linear-gradient(160deg,#fffdf7,#fff3df);box-shadow:0 12px 26px rgba(224,138,0,.16);
+  cursor:pointer;font-family:inherit;color:inherit;overflow:hidden;}
+.pic{flex:1 1 auto;min-height:0;width:100%;display:flex;align-items:center;justify-content:center;}
+.pic img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:18px;display:block;}
+.pic .bigEmoji{font-size:clamp(4.5rem,24vh,10rem);line-height:1;}
+.names{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;justify-content:center;flex:none;}
+.bigName{font-size:clamp(1.35rem,4.6vh,2.05rem);font-weight:900;color:#8a5b00;}
+.call{font-size:clamp(1rem,3.2vh,1.35rem);font-weight:800;color:#b07c2a;}
+.pager{flex:none;font-size:.78rem;font-weight:800;color:#9aa8b8;letter-spacing:.04em;}
+.animalPage.good{border-color:var(--ok);background:#eafbf0;animation:pop .45s ease;}
+.animalPage.badd{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+.animalPage.bounce{animation:bounce .55s ease;}
+.animalPage.slideL{animation:slideL .32s ease;}
+.animalPage.slideR{animation:slideR .32s ease;}
+
+.arrow{flex:none;align-self:center;width:clamp(62px,15vw,86px);height:clamp(62px,15vw,86px);border-radius:999px;
+  border:3px solid rgba(36,59,83,.08);background:#fff;color:#3f5872;font-family:inherit;
+  font-size:clamp(1.7rem,6vw,2.4rem);font-weight:900;line-height:1;cursor:pointer;
+  box-shadow:0 6px 16px rgba(36,59,83,.12);display:flex;align-items:center;justify-content:center;
+  transition:transform .12s ease;}
+.arrow:active{transform:scale(.93);}
+
+.feedback{min-height:32px;font-size:1.08rem;font-weight:900;text-align:center;color:var(--muted);}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.86rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.on{border-color:rgba(224,138,0,.6);background:rgba(224,138,0,.14);color:#a56200;}
+
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes bounce{0%{transform:scale(1)}30%{transform:scale(1.08) translateY(-6px)}60%{transform:scale(.98)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+@keyframes slideL{0%{opacity:.35;transform:translateX(46px)}100%{opacity:1;transform:translateX(0)}}
+@keyframes slideR{0%{opacity:.35;transform:translateX(-46px)}100%{opacity:1;transform:translateX(0)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:5px;padding:7px;border-radius:16px;}
+  .prompt{font-size:.8rem;}
+  .board{gap:6px;}
+  .animalPage{border-radius:16px;padding:4px 8px;gap:2px;border-width:2px;}
+  .arrow{width:52px;height:52px;font-size:1.5rem;border-width:2px;}
+  .bigName{font-size:1.05rem;}
+  .call{font-size:.85rem;}
+  .pager{font-size:.66rem;}
+  .pic .bigEmoji{font-size:3.2rem;}
+  .feedback{min-height:20px;font-size:.86rem;}
+  .btn{min-height:32px;font-size:.76rem;padding:0 12px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🐶 动物认识</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">点一点小动物，听听它怎么叫👇</div>
+  <div class="board" id="board">
+    <button class="arrow" id="prev" type="button" aria-label="上一只">‹</button>
+    <div class="pageWrap">
+      <button class="animalPage" id="animalPage" type="button">
+        <div class="pic" id="pic"></div>
+        <div class="names">
+          <span class="bigName" id="animalName">小狗</span>
+          <span class="call" id="animalCall">汪汪汪</span>
+        </div>
+      </button>
+      <div class="pager" id="pager">1 / 18</div>
+    </div>
+    <button class="arrow" id="next" type="button" aria-label="下一只">›</button>
+  </div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn" id="sayBtn" type="button" style="display:none">🔊 再听一遍</button>
+    <button class="btn" id="quiz" type="button">🎯 听名字找动物</button>
+  </div>
+</div>
+
+<script>
+/* 常见动物：名称 + 叫声 + 本地真实照片（img/ 目录下） */
+var ANIMALS = [
+  { e: '🐶', n: '小狗', s: '汪汪汪', f: 'dog' },
+  { e: '🐱', n: '小猫', s: '喵喵喵', f: 'cat' },
+  { e: '🐰', n: '小兔', s: '吱吱吱', f: 'rabbit' },
+  { e: '🐘', n: '大象', s: '呜——', f: 'elephant' },
+  { e: '🦁', n: '狮子', s: '吼——', f: 'lion' },
+  { e: '🐸', n: '青蛙', s: '呱呱呱', f: 'frog' },
+  { e: '🐷', n: '小猪', s: '哼哼哼', f: 'pig' },
+  { e: '🐮', n: '小牛', s: '哞——', f: 'cow' },
+  { e: '🐑', n: '小羊', s: '咩咩咩', f: 'sheep' },
+  { e: '🐵', n: '小猴', s: '吱吱吱', f: 'monkey' },
+  { e: '🐯', n: '老虎', s: '嗷——', f: 'tiger' },
+  { e: '🐼', n: '熊猫', s: '嗯嗯', f: 'panda' },
+  { e: '🐔', n: '小鸡', s: '叽叽叽', f: 'chick' },
+  { e: '🦆', n: '小鸭', s: '嘎嘎嘎', f: 'duck' },
+  { e: '🐴', n: '小马', s: '嘶——', f: 'horse' },
+  { e: '🐭', n: '小鼠', s: '吱吱', f: 'mouse' },
+  { e: '🐦', n: '小鸟', s: '喳喳喳', f: 'bird' },
+  { e: '🐟', n: '小鱼', s: '咕噜咕噜', f: 'fish' }
+];
+
+/* 本地真实照片，加载失败时回退到 emoji */
+function animalPhoto(name) { return 'img/' + name + '.jpg'; }
+
+var idx = 0;                 /* 当前页码，一页一只动物 */
+var quizMode = false;        /* false = 纯探索；true = 听名字找动物 */
+var target = null;
+var streak = 0, best = readNum('panimal.best');
+var locked = false, timer = null;
+var drag = null, dragMoved = false;
+
+var elBoard = document.getElementById('board');
+var elPage = document.getElementById('animalPage');
+var elPic = document.getElementById('pic');
+var elName = document.getElementById('animalName');
+var elCall = document.getElementById('animalCall');
+var elPager = document.getElementById('pager');
+var elFb = document.getElementById('feedback');
+var elPrompt = document.getElementById('prompt');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+var btnSay = document.getElementById('sayBtn');
+var btnQuiz = document.getElementById('quiz');
+var btnPrev = document.getElementById('prev');
+var btnNext = document.getElementById('next');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+
+var canSpeak = typeof window.speechSynthesis !== 'undefined';
+function say(text) {
+  if (!canSpeak) return;
+  try {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.92;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+/* 渲染当前页：一只动物（照片加载失败就换成大 emoji） */
+function renderPage(dir, readAloud) {
+  var a = ANIMALS[idx];
+
+  elPic.innerHTML = '';
+  var img = document.createElement('img');
+  img.src = animalPhoto(a.f);
+  img.alt = a.n;
+  img.addEventListener('error', function () {
+    var em = document.createElement('span');
+    em.className = 'bigEmoji';
+    em.textContent = a.e;
+    if (img.parentNode) img.parentNode.replaceChild(em, img);
+  });
+  elPic.appendChild(img);
+
+  elName.textContent = a.n;
+  elCall.textContent = a.s;
+  elPager.textContent = (idx + 1) + ' / ' + ANIMALS.length;
+
+  elPage.classList.remove('good', 'badd', 'bounce', 'slideL', 'slideR');
+  if (dir) { void elPage.offsetWidth; elPage.classList.add(dir > 0 ? 'slideL' : 'slideR'); }
+
+  window.__index = idx;
+  window.__animal = a.n;
+
+  if (readAloud && !quizMode) say(a.n + '，' + a.s + '！');
+}
+
+/* 左右切换上一只 / 下一只，循环往复 */
+function step(dir) {
+  if (locked) return;
+  idx = (idx + dir + ANIMALS.length) % ANIMALS.length;
+  renderPage(dir, true);
+}
+
+function newQuiz() {
+  locked = false;
+  var guard = 0;
+  do { target = ANIMALS[rand(ANIMALS.length)]; guard++; }
+  while (target.n === ANIMALS[idx].n && guard < 30);
+  elPrompt.textContent = '找一找' + target.n + '👇';
+  voiceSpeak(target.n + '在哪里呀？点一点它');
+  feedback('');
+  window.__target = target.n;
+}
+
+/* 点动物本体：探索模式发声，认名字模式判对错 */
+function tapAnimal() {
+  if (dragMoved) { dragMoved = false; return; }
+  var a = ANIMALS[idx];
+
+  if (quizMode) {
+    if (locked) return;
+    if (a.n === (target && target.n)) {
+      locked = true;
+      elPage.classList.add('good', 'bounce');
+      streak++;
+      if (streak > best) { best = streak; writeNum('panimal.best', best); }
+      updateStats();
+      say('对啦，这是' + a.n + '，' + a.s + '！');
+      feedback('🎉 对啦，这是' + a.n + '，' + a.s + '！', 'ok');
+      window.__last = a.n;
+      timer = setTimeout(function () {
+        elPage.classList.remove('good', 'bounce');
+        newQuiz();
+      }, 1300);
+    } else {
+      elPage.classList.remove('badd');
+      void elPage.offsetWidth;
+      elPage.classList.add('badd');
+      setTimeout(function () { elPage.classList.remove('badd'); }, 450);
+      feedback('❌ 这是' + a.n + '，我们要找' + target.n, 'bad');
+      voiceSpeak('这是' + a.n + '，再翻一翻，找找' + target.n);
+    }
+    return;
+  }
+
+  elPage.classList.remove('bounce');
+  void elPage.offsetWidth;
+  elPage.classList.add('bounce');
+  setTimeout(function () { elPage.classList.remove('bounce'); }, 560);
+  say(a.n + '，' + a.s + '！');
+  feedback(a.n + '，' + a.s + '！', 'ok');
+  window.__last = a.n;
+}
+
+btnPrev.addEventListener('click', function () { step(-1); });
+btnNext.addEventListener('click', function () { step(1); });
+elPage.addEventListener('click', tapAnimal);
+
+/* 平板上左右滑动卡片切换上一只 / 下一只 */
+elBoard.addEventListener('pointerdown', function (e) {
+  if (e.target.closest('.arrow')) return;
+  drag = { x: e.clientX, y: e.clientY, id: e.pointerId };
+  dragMoved = false;
+});
+elBoard.addEventListener('pointermove', function (e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+    dragMoved = true;
+    if (elPage.style.animation) elPage.style.animation = '';
+    elPage.style.transform = 'translateX(' + (dx * 0.32) + 'px)';
+  }
+});
+function endDrag(e) {
+  if (!drag || e.pointerId !== drag.id) return;
+  var dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  var moved = dragMoved;
+  drag = null;
+  elPage.style.transform = '';
+  if (moved) setTimeout(function () { dragMoved = false; }, 0);
+  if (Math.abs(dx) >= 46 && Math.abs(dx) > Math.abs(dy) * 1.2) {
+    step(dx < 0 ? 1 : -1);
+  }
+}
+elBoard.addEventListener('pointerup', endDrag);
+elBoard.addEventListener('pointercancel', function () {
+  drag = null;
+  elPage.style.transform = '';
+  dragMoved = false;
+});
+
+/* 键盘左右键也能翻页 */
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'ArrowRight') step(1);
+  else if (e.key === 'ArrowLeft') step(-1);
+});
+
+btnSay.addEventListener('click', function () {
+  if (quizMode && target) say(target.n + '在哪里呀？点一点它');
+});
+
+btnQuiz.addEventListener('click', function () {
+  quizMode = !quizMode;
+  btnQuiz.classList.toggle('on', quizMode);
+  btnQuiz.textContent = quizMode ? '👂 随便点一点' : '🎯 听名字找动物';
+  btnSay.style.display = quizMode ? '' : 'none';
+  if (quizMode) {
+    newQuiz();
+  } else {
+    clearTimeout(timer);
+    locked = false;
+    elPrompt.textContent = '点一点小动物，听听它怎么叫👇';
+    feedback('');
+    say(ANIMALS[idx].n + '，' + ANIMALS[idx].s + '！');
+  }
+});
+
+best = readNum('panimal.best');
+updateStats();
+renderPage(0, false);
+
+function initAnimalsLearn() { idx = 0; locked = false; renderPage(0, false); }
+function resetAnimalsLearn() { locked = false; feedback(''); }
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '动物认识游戏。一只动物一页，按左右的箭头换一只，也可以左右滑一滑。点一点小动物，听一听它怎么叫。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进入游戏自动朗读；若浏览器拦截自动播放，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🔺 形状认识 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#f1ecff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e7f7ff,transparent 55%),
+             linear-gradient(160deg,#fbf8ff,#f0f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  background:rgba(255,255,255,.74);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:12px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a5f78;}
+
+/* 大形状：整块都可点 */
+.shape-btn{border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;
+  justify-content:center;width:min(46vh,240px);height:min(46vh,240px);max-width:78vw;max-height:78vw;
+  transition:transform .12s ease,filter .25s ease;filter:drop-shadow(0 8px 16px rgba(36,59,83,.18));}
+.shape-btn:active{transform:scale(.96);}
+.shape-btn.bounce{animation:bounce .55s ease;}
+.shape-btn.glow{filter:drop-shadow(0 0 16px rgba(255,214,10,.95)) drop-shadow(0 8px 16px rgba(36,59,83,.18));}
+.shape{width:100%;height:100%;}
+.s-circle{border-radius:50%;background:linear-gradient(145deg,#ff8f8f,#e63946);}
+.s-square{border-radius:14%;background:linear-gradient(145deg,#7ec8ff,#1e7fc2);}
+.s-triangle{clip-path:polygon(50% 2%,2% 98%,98% 98%);background:linear-gradient(160deg,#ffe07a,#f2b705);}
+.s-star{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  background:linear-gradient(160deg,#c9a6ff,#7c3aff);}
+
+.feedback{min-height:30px;font-size:1.15rem;font-weight:900;text-align:center;color:var(--muted);}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+/* 认名称模式的 4 个选项 */
+.names{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.name{min-width:104px;min-height:64px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:18px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:900;font-size:1.1rem;cursor:pointer;
+  box-shadow:0 6px 14px rgba(36,59,83,.10);transition:transform .14s ease,border-color .18s ease,background .18s ease;}
+.name:active{transform:scale(.96);}
+.name.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;animation:pop .45s ease;}
+.name.badd{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;}
+.btn{min-height:46px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(124,92,255,.5);color:#fff;background:linear-gradient(135deg,#8b6bff,#6a4bff);}
+.btn.on{border-color:rgba(124,92,255,.55);background:rgba(124,92,255,.12);color:#5b3fd6;}
+
+@keyframes bounce{0%{transform:scale(1)}30%{transform:scale(1.18) translateY(-8px)}60%{transform:scale(.96) translateY(2px)}100%{transform:scale(1)}}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:7px;padding:8px;border-radius:16px;}
+  .prompt{font-size:.82rem;}
+  .shape-btn{width:min(46vh,150px);height:min(46vh,150px);}
+  .feedback{min-height:20px;font-size:.92rem;}
+  .name{min-width:84px;min-height:44px;font-size:.92rem;border-radius:14px;}
+  .btn{min-height:34px;font-size:.78rem;padding:0 14px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🔺 形状认识</h1>
+  <div class="chips">
+    <span class="chip">👂 点一点，听名字</span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">点一下形状，听听它叫什么👇</div>
+  <button class="shape-btn" id="shapeBtn" type="button" aria-label="形状">
+    <span class="shape" id="shape"></span>
+  </button>
+  <div class="names" id="names" style="display:none"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn primary" id="next" type="button">🔄 换一个</button>
+    <button class="btn" id="quiz" type="button">🎯 认名称</button>
+  </div>
+</div>
+
+<script>
+var SHAPES = [
+  { name: '圆形', cls: 's-circle', color: '#e63946' },
+  { name: '方形', cls: 's-square', color: '#1e7fc2' },
+  { name: '三角形', cls: 's-triangle', color: '#f2b705' },
+  { name: '星形', cls: 's-star', color: '#7c3aff' }
+];
+
+var cur = null;
+var quizMode = false;          // false = 纯探索；true = 4 个名称选项
+var locked = false, timer = null;
+
+var elShapeBtn = document.getElementById('shapeBtn');
+var elShape = document.getElementById('shape');
+var elNames = document.getElementById('names');
+var elPrompt = document.getElementById('prompt');
+var elFb = document.getElementById('feedback');
+var btnNext = document.getElementById('next');
+var btnQuiz = document.getElementById('quiz');
+
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+
+/* 语音朗读（不支持时静默跳过） */
+var canSpeak = typeof window.speechSynthesis !== 'undefined';
+function say(text) {
+  if (!canSpeak) return;
+  try {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.95;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+function paint(shape) {
+  elShape.className = 'shape ' + shape.cls;
+  elShape.innerHTML = '';
+}
+
+function newRound() {
+  clearTimeout(timer);
+  locked = false;
+
+  var prev = cur ? cur.name : '';
+  var pick;
+  do { pick = SHAPES[rand(SHAPES.length)]; } while (SHAPES.length > 1 && pick.name === prev);
+  cur = pick;
+
+  paint(cur);
+  elShapeBtn.classList.remove('bounce', 'glow');
+  void elShapeBtn.offsetWidth;
+
+  elNames.innerHTML = '';
+  if (quizMode) {
+    elNames.style.display = 'flex';
+    var others = shuffle(SHAPES.filter(function (s) { return s.name !== cur.name; })).slice(0, 3);
+    shuffle([cur].concat(others)).forEach(function (s) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'name';
+      b.setAttribute('data-n', s.name);
+      b.textContent = s.name;
+      b.addEventListener('click', function () { guess(b, s); });
+      elNames.appendChild(b);
+    });
+    elPrompt.textContent = '这是什么形状？点一下它的名字👇';
+    feedback('');
+    voiceSpeak('哪一个是' + cur.name + '？');
+  } else {
+    elNames.style.display = 'none';
+    elPrompt.textContent = '点一下形状，听听它叫什么👇';
+    feedback('');
+  }
+
+  window.__cur = cur.name;
+  window.__quiz = quizMode;
+}
+
+/* 探索模式：点形状 → 弹跳 + 发光 + 朗读 */
+function explore() {
+  if (quizMode) return;
+  elShapeBtn.classList.remove('bounce', 'glow');
+  void elShapeBtn.offsetWidth;
+  elShapeBtn.classList.add('bounce', 'glow');
+  say('这是' + cur.name);
+  feedback('这是' + cur.name + '！', 'ok');
+  timer = setTimeout(function () {
+    elShapeBtn.classList.remove('glow');
+  }, 1200);
+}
+
+/* 认名称模式：点名字 */
+function guess(btn, s) {
+  if (!quizMode || locked) return;
+  if (s.name === cur.name) {
+    locked = true;
+    btn.classList.add('good');
+    elShapeBtn.classList.add('bounce', 'glow');
+    say('对啦，这是' + cur.name);
+    feedback('✅ 对啦，这是' + cur.name + '！', 'ok');
+    timer = setTimeout(newRound, 1100);
+  } else {
+    btn.classList.add('badd');
+    setTimeout(function () { btn.classList.remove('badd'); }, 450);
+    voiceSpeak('再找一找，看看它的边和角');
+    feedback('❌ 再看看，它的边和角是什么样子？', 'bad');
+  }
+}
+
+elShapeBtn.addEventListener('click', explore);
+
+btnNext.addEventListener('click', function () {
+  newRound();
+});
+
+btnQuiz.addEventListener('click', function () {
+  quizMode = !quizMode;
+  btnQuiz.classList.toggle('on', quizMode);
+  btnQuiz.textContent = quizMode ? '👂 只听名字' : '🎯 认名称';
+  newRound();
+});
+
+function initShapeLearn() { newRound(); }
+function resetShapeLearn() { newRound(); }
+initShapeLearn();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '形状认识游戏。点一点形状，听一听它叫什么名字。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进入游戏自动朗读；若浏览器拦截自动播放，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

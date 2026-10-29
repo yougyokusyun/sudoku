@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>路径连线 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9f2,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#fff9f4,#f3f9ff);
+  min-height:100dvh;height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;
+  padding:7px 14px;font-weight:800;font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stage{flex:1;display:flex;flex-direction:column;min-height:0;overflow-y:auto;}
+.stage-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  width:100%;margin:auto;padding:2px 0;}
+.prompt{font-size:1.1rem;font-weight:800;text-align:center;}
+.feedback{min-height:32px;font-size:1.2rem;font-weight:800;text-align:center;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .prompt{font-size:.95rem;} .feedback{min-height:24px;font-size:1rem;} }
+/* 本游戏补充样式 */
+.pill{background:#fff;border-radius:999px;padding:5px 12px;font-size:.8rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);white-space:nowrap;}
+.pill b{color:var(--accent);}
+.board{--cell:clamp(48px,min(16vw,11vh),64px);display:grid;
+  grid-template-columns:repeat(5,var(--cell));grid-template-rows:repeat(5,var(--cell));
+  gap:6px;touch-action:none;}
+.cell{border:none;border-radius:14px;background:#fff;padding:0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-family:inherit;
+  font-size:calc(var(--cell)*.44);color:var(--ink);
+  box-shadow:inset 0 0 0 2px rgba(36,59,83,.06),0 3px 8px rgba(36,59,83,.06);
+  transition:background .12s ease,transform .12s ease,box-shadow .12s ease;}
+.cell:active{transform:scale(.95);}
+.cell.start{background:#e8f8ff;box-shadow:inset 0 0 0 2px #64c3e8;}
+.cell.end{background:#fff4d6;box-shadow:inset 0 0 0 2px #ffb703;}
+.cell.block{background:#e9eef5;box-shadow:none;color:#8b9aab;cursor:not-allowed;}
+.cell.path{background:#e3ddff;}
+.cell.path::after{content:'';width:26%;height:26%;border-radius:50%;background:#a08cff;}
+.cell.head{background:var(--accent);box-shadow:inset 0 0 0 3px #fff,0 5px 16px rgba(124,92,255,.45);}
+@keyframes blinkCell{0%,100%{box-shadow:inset 0 0 0 2px rgba(255,183,3,.45);background:#fff;}
+  50%{box-shadow:0 0 0 4px #ffd166 inset;background:#fff7d6;}}
+.cell.blink{animation:blinkCell .55s ease 2;}
+.controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.btn{min-height:44px;border:none;border-radius:14px;padding:9px 14px;font-weight:800;font-size:.86rem;
+  background:#fff;color:var(--ink);box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;font-family:inherit;}
+.btn:active{transform:scale(.97);}
+#confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9;}
+.confetti-bit{position:absolute;top:-40px;animation:fall 1.8s linear forwards;}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.9;}}
+@media (max-height:430px){
+  .stage-inner{gap:3px;padding:0;}
+  .board{gap:2px;}
+  .cell{border-radius:10px;}
+  .pill{font-size:.72rem;padding:3px 8px;}
+  .btn{min-height:40px;padding:6px 10px;font-size:.8rem;}
+  .controls{gap:5px;}
+  .feedback{min-height:18px;font-size:.9rem;line-height:1.1;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🚩 路径连线</h1>
+  <span class="pill">🏆 最佳步数 <b id="best">--</b></span>
+  <span class="pill">⭐ <b id="stars">--</b></span>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stage">
+  <div class="stage-inner">
+    <div class="board" id="board"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="controls">
+      <button class="btn" id="undoBtn" type="button">↩️ 退一步</button>
+      <button class="btn" id="resetBtn" type="button">🔄 重来</button>
+      <button class="btn" id="newBtn" type="button">🆕 换一关</button>
+      <button class="btn" id="hintBtn" type="button">💡 提示</button>
+    </div>
+  </div>
+</div>
+<div id="confetti"></div>
+<script>
+var KEY_BEST='ppath.best';
+var N=5;
+var START=0;
+var board=document.getElementById('board');
+var feedbackEl=document.getElementById('feedback');
+var bestEl=document.getElementById('best');
+var starsEl=document.getElementById('stars');
+var blockedSet=new Set();
+var path=[START];
+var endIdx=24;
+var done=false;
+var shortest=0;
+var dragging=false,lastDragIdx=-1;
+var blinkTimer=null;
+
+function safeGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function safeSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function rowOf(i){return Math.floor(i/N);}
+function colOf(i){return i%N;}
+function adjacent(a,b){return Math.abs(rowOf(a)-rowOf(b))+Math.abs(colOf(a)-colOf(b))===1;}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function feedback(text,good){
+  feedbackEl.className='feedback '+(good?'ok':'bad');
+  feedbackEl.textContent=text;
+}
+function clearFeedback(){feedbackEl.className='feedback';feedbackEl.textContent='';}
+function getBest(){var v=parseInt(safeGet(KEY_BEST),10);return isNaN(v)?null:v;}
+function renderBest(){var b=getBest();bestEl.textContent=(b===null?'--':b);}
+function renderStars(n){
+  starsEl.textContent=n===null?'--':('⭐'.repeat(n)+'☆'.repeat(3-n));
+}
+function confetti(){
+  var layer=document.getElementById('confetti');
+  var emojis=['🎉','🎊','⭐','✨','💫'];
+  for(var i=0;i<18;i++){
+    var s=document.createElement('span');
+    s.className='confetti-bit';
+    s.textContent=emojis[i%emojis.length];
+    s.style.left=(Math.random()*96)+'%';
+    s.style.animationDelay=(Math.random()*0.45)+'s';
+    s.style.fontSize=(0.85+Math.random()*1.1)+'rem';
+    layer.appendChild(s);
+  }
+  setTimeout(function(){layer.innerHTML='';},2100);
+}
+
+/* BFS：返回最短路径格子数组，不可达返回 null */
+function bfs(from,to,blocked,avoid){
+  var prev=new Array(N*N).fill(-1);
+  var seen=new Array(N*N).fill(false);
+  var q=[from];
+  seen[from]=true;
+  prev[from]=from;
+  while(q.length){
+    var cur=q.shift();
+    if(cur===to){
+      var res=[];
+      var x=to;
+      while(x!==from){res.push(x);x=prev[x];}
+      res.push(from);
+      res.reverse();
+      return res;
+    }
+    var r=rowOf(cur),c=colOf(cur);
+    var dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+    for(var d=0;d<4;d++){
+      var nr=r+dirs[d][0],nc=c+dirs[d][1];
+      if(nr<0||nr>=N||nc<0||nc>=N)continue;
+      var ni=nr*N+nc;
+      if(seen[ni]||blocked.has(ni)||(avoid&&avoid.has(ni)))continue;
+      seen[ni]=true;prev[ni]=cur;q.push(ni);
+    }
+  }
+  return null;
+}
+
+function createBoard(){
+  board.innerHTML='';
+  for(var i=0;i<N*N;i++){
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='cell';
+    b.dataset.idx=i;
+    b.setAttribute('aria-label','第 '+(rowOf(i)+1)+' 行第 '+(colOf(i)+1)+' 列');
+    board.appendChild(b);
+  }
+}
+function render(){
+  for(var i=0;i<N*N;i++){
+    var b=board.children[i];
+    var cls='cell';
+    if(i===START)cls+=' start';
+    if(i===endIdx)cls+=' end';
+    if(blockedSet.has(i))cls+=' block';
+    if(path.indexOf(i)>=0&&i!==START&&i!==endIdx)cls+=' path';
+    if(path[path.length-1]===i)cls+=' head';
+    b.className=cls;
+    if(i===START)b.textContent='🚩';
+    else if(i===endIdx)b.textContent='🏁';
+    else if(blockedSet.has(i))b.textContent='⛰';
+    else b.textContent='';
+  }
+}
+function generateLevel(){
+  for(var t=0;t<50;t++){
+    var end=1+Math.floor(Math.random()*(N*N-1));
+    var pool=[];
+    for(var i=0;i<N*N;i++)if(i!==START&&i!==end)pool.push(i);
+    pool=shuffle(pool);
+    var count=3+Math.floor(Math.random()*4);
+    var bl=pool.slice(0,count);
+    if(bfs(START,end,new Set(bl),null)){
+      endIdx=end;
+      blockedSet=new Set(bl);
+      return;
+    }
+  }
+  /* 兜底：无障碍地图 */
+  endIdx=1+Math.floor(Math.random()*(N*N-1));
+  blockedSet=new Set();
+}
+function resetPath(){
+  clearTimeout(blinkTimer);
+  path=[START];
+  done=false;
+  shortest=0;
+  renderStars(null);
+  clearFeedback();
+  render();
+}
+function newLevel(){
+  generateLevel();
+  resetPath();
+  feedback('🆕 新关卡来啦！从 🚩 出发，走到 🏁 吧',true);
+}
+function finish(){
+  done=true;
+  var steps=path.length-1;
+  var sp=bfs(START,endIdx,blockedSet,null);
+  shortest=sp?sp.length-1:steps;
+  var starCount=steps===shortest?3:(steps<=shortest+2?2:1);
+  renderStars(starCount);
+  var best=getBest();
+  var record=false;
+  if(best===null||steps<best){
+    safeSet(KEY_BEST,String(steps));
+    record=true;
+    renderBest();
+  }
+  feedback('✅ 到达终点！用了 '+steps+' 步，最短 '+shortest+' 步'+(record?' 🏆 新纪录！':''),true);
+  render();
+  confetti();
+}
+function tryExtend(i,silent){
+  if(done)return false;
+  var last=path[path.length-1];
+  if(i===last)return false;
+  if(blockedSet.has(i)){
+    if(!silent)feedback('❌ 这里有座大山，绕开它吧',false);
+    return false;
+  }
+  if(path.indexOf(i)>=0){
+    if(!silent)feedback('❌ 不能重复经过同一格',false);
+    return false;
+  }
+  if(!adjacent(last,i)){
+    if(!silent)feedback('❌ 只能走上下左右相邻的格子',false);
+    return false;
+  }
+  path.push(i);
+  clearFeedback();
+  render();
+  if(i===endIdx)finish();
+  return true;
+}
+function undo(){
+  if(done)return;
+  if(path.length>1){
+    path.pop();
+    render();
+    clearFeedback();
+  }
+}
+function hint(){
+  if(done)return;
+  var from=path[path.length-1];
+  if(from===endIdx)return;
+  var avoid=new Set(path.slice(0,path.length-1));
+  var sp=bfs(from,endIdx,blockedSet,avoid);
+  if(!sp||sp.length<2){
+    feedback('❌ 前面走不通了，试试退一步或重来',false);
+    return;
+  }
+  var next=sp[1];
+  clearTimeout(blinkTimer);
+  var b=board.children[next];
+  b.classList.add('blink');
+  blinkTimer=setTimeout(function(){b.classList.remove('blink');},1200);
+  feedback('💡 下一格在这里',true);
+}
+
+function initPath(){
+  createBoard();
+  board.addEventListener('pointerdown',function(e){
+    if(e.pointerType==='mouse'&&e.button!==0)return;
+    var cell=e.target.closest('.cell');
+    if(!cell)return;
+    e.preventDefault();
+    dragging=true;
+    lastDragIdx=+cell.dataset.idx;
+    if(lastDragIdx!==START)tryExtend(lastDragIdx,false);
+  });
+  document.addEventListener('pointermove',function(e){
+    if(!dragging)return;
+    var el=document.elementFromPoint(e.clientX,e.clientY);
+    var cell=el&&el.closest?el.closest('.cell'):null;
+    if(!cell||!board.contains(cell))return;
+    var i=+cell.dataset.idx;
+    if(i===lastDragIdx)return;
+    lastDragIdx=i;
+    tryExtend(i,true);
+  });
+  document.addEventListener('pointerup',function(){dragging=false;lastDragIdx=-1;});
+  document.addEventListener('pointercancel',function(){dragging=false;lastDragIdx=-1;});
+  document.getElementById('undoBtn').addEventListener('click',undo);
+  document.getElementById('resetBtn').addEventListener('click',function(){
+    resetPath();
+    feedback('🔄 路径已清空，重新出发！',true);
+  });
+  document.getElementById('newBtn').addEventListener('click',newLevel);
+  document.getElementById('hintBtn').addEventListener('click',hint);
+  renderBest();
+  newLevel();
+}
+
+initPath();
+</script>
+</body>
+</html>

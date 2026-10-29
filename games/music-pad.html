@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🥁 敲敲打打 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--accent:#ff8f3f;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff4ea,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef4ff,transparent 55%),
+             linear-gradient(160deg,#fffaf4,#f6f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  background:rgba(255,255,255,.76);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:12px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:1rem;font-weight:900;text-align:center;color:#4a5f78;}
+
+/* 四个大按钮 */
+.pads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,3.2vw,20px);
+  width:min(88vw,420px);}
+@media (min-aspect-ratio: 3/2) {
+  .pads{grid-template-columns:repeat(4,minmax(0,1fr));width:min(94vw,760px);}
+}
+.pad{position:relative;overflow:hidden;border:0;border-radius:clamp(18px,4vw,28px);cursor:pointer;
+  aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-family:inherit;color:#fff;box-shadow:0 8px 20px rgba(36,59,83,.18);
+  transition:transform .12s cubic-bezier(.3,1.5,.5,1),box-shadow .12s ease,filter .12s ease;}
+.pad .e{font-size:clamp(1.6rem,6vw,2.4rem);line-height:1.1;filter:drop-shadow(0 2px 4px rgba(0,0,0,.18));}
+.pad .n{font-size:.78rem;font-weight:900;letter-spacing:.5px;text-shadow:0 1px 3px rgba(0,0,0,.2);}
+.pad:active{filter:brightness(1.08);}
+.pad.hit{animation:pop .34s ease;}
+.pad.red   {background:linear-gradient(160deg,#ff8a8a,#e63946);}
+.pad.yellow{background:linear-gradient(160deg,#ffe07a,#f2b705);}
+.pad.blue  {background:linear-gradient(160deg,#7dc0ff,#1e6091);}
+.pad.green {background:linear-gradient(160deg,#8fe6a6,#2a9d3f);}
+
+/* 点击波纹 */
+.ripple{position:absolute;border-radius:50%;pointer-events:none;
+  width:40%;height:40%;left:30%;top:30%;background:rgba(255,255,255,.55);
+  animation:ripple .62s ease-out forwards;}
+@keyframes ripple{
+  from{transform:scale(.4);opacity:.85;}
+  to{transform:scale(3.2);opacity:0;}
+}
+
+.feedback{min-height:30px;font-size:1.05rem;font-weight:900;text-align:center;color:var(--muted);}
+.feedback.ok{color:#1e6091;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.88rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.on{border-color:rgba(255,143,63,.6);background:#fff6ec;color:#b25000;}
+
+@keyframes pop{0%{transform:scale(1)}42%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:6px;padding:7px;border-radius:16px;}
+  .prompt{font-size:.8rem;}
+  .pads{width:min(96vw,720px);gap:8px;}
+  .pad{border-radius:14px;}
+  .pad .e{font-size:1.4rem;}
+  .pad .n{font-size:.62rem;}
+  .feedback{min-height:18px;font-size:.84rem;}
+  .btn{min-height:32px;font-size:.76rem;padding:0 12px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🥁 敲敲打打</h1>
+  <div class="chips">
+    <span class="chip">👆 点一下就有声音</span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">点一拍，听它唱歌🎵</div>
+  <div class="pads" id="pads">
+    <button class="pad red" type="button" data-i="0" aria-label="红色，do"><span class="e">🔴</span><span class="n">do</span></button>
+    <button class="pad yellow" type="button" data-i="1" aria-label="黄色，re"><span class="e">🟡</span><span class="n">re</span></button>
+    <button class="pad blue" type="button" data-i="2" aria-label="蓝色，mi"><span class="e">🔵</span><span class="n">mi</span></button>
+    <button class="pad green" type="button" data-i="3" aria-label="绿色，fa"><span class="e">🟢</span><span class="n">fa</span></button>
+  </div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn" id="timbre" type="button">🎹 换个音色</button>
+  </div>
+</div>
+
+<script>
+/* do re mi fa（C4 D4 E4 F4）+ 高八度备用音阶（点「换个音色」时切到高音） */
+var NOTES = [
+  { name: 'do', freq: 261.63, color: '红' },
+  { name: 're', freq: 293.66, color: '黄' },
+  { name: 'mi', freq: 329.63, color: '蓝' },
+  { name: 'fa', freq: 349.23, color: '绿' }
+];
+var HIGH = [523.25, 587.33, 659.25, 698.46];
+
+/* 音色：sine 柔和、triangle 明亮 */
+var TIMBRES = [
+  { type: 'sine',     label: '🎹 换个音色', name: '柔和' },
+  { type: 'triangle', label: '🎺 换个音色', name: '明亮' }
+];
+
+var ctx = null, timbreIdx = 0, octave = 0;
+var elFb = document.getElementById('feedback');
+var elTimbre = document.getElementById('timbre');
+var elPads = document.getElementById('pads');
+
+/* 首次点击时才创建 AudioContext（iOS 需用户手势解锁） */
+function ensureCtx() {
+  if (ctx) return ctx;
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  try { ctx = new AC(); } catch (e) { return null; }
+  return ctx;
+}
+
+function playTone(freq) {
+  var ac = ensureCtx();
+  if (!ac) return false;
+  if (ac.state === 'suspended') { try { ac.resume(); } catch (e) { } }
+
+  var t = ac.currentTime;
+  var osc = ac.createOscillator();
+  var gain = ac.createGain();
+  osc.type = TIMBRES[timbreIdx].type;
+  osc.frequency.value = freq;
+
+  /* 简单的音头 + 衰减包络，避免爆音 */
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(0.42, t + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.62);
+
+  osc.connect(gain);
+  gain.connect(ac.destination);
+  osc.start(t);
+  osc.stop(t + 0.66);
+  return true;
+}
+
+function ripple(el) {
+  var r = document.createElement('span');
+  r.className = 'ripple';
+  el.appendChild(r);
+  setTimeout(function () { r.remove(); }, 680);
+}
+
+function hit(pad, note, idx) {
+  pad.classList.remove('hit');
+  void pad.offsetWidth;
+  pad.classList.add('hit');
+  setTimeout(function () { pad.classList.remove('hit'); }, 360);
+  ripple(pad);
+
+  var freq = octave ? HIGH[idx] : note.freq;
+  var ok = playTone(freq);
+  elFb.className = 'feedback ok';
+  elFb.textContent = note.color + '色 · ' + note.name + (octave ? '（高音）' : '');
+  window.__last = note.name + (octave ? 'H' : '');
+  window.__freq = freq;
+  window.__audioOk = ok;
+}
+
+Array.prototype.forEach.call(elPads.children, function (pad, i) {
+  pad.addEventListener('click', function () { hit(pad, NOTES[i], i); });
+});
+
+elTimbre.addEventListener('click', function () {
+  timbreIdx = (timbreIdx + 1) % TIMBRES.length;
+  octave = (timbreIdx === 1) ? 1 : 0;
+  elTimbre.textContent = TIMBRES[timbreIdx].label + '（' + TIMBRES[timbreIdx].name + '）';
+  elTimbre.classList.toggle('on', timbreIdx === 1);
+  elFb.className = 'feedback';
+  elFb.textContent = '声音换成「' + TIMBRES[timbreIdx].name + '」' + (octave ? '，音更高了' : '，回到中音');
+});
+
+function initMusicPad() {
+  elFb.textContent = '';
+}
+function resetMusicPad() {
+  elFb.textContent = '';
+}
+initMusicPad();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '敲敲打打游戏。点一点彩色的按钮，就能听到 do re mi fa 的声音。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进入游戏自动朗读；若浏览器拦截自动播放，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

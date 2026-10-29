@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>猜数字 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9f2,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#fff9f4,#f3f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  padding:7px 14px;font-weight:800;font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);
+  display:flex;align-items:center;min-height:40px;}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.prompt{font-size:1.1rem;font-weight:800;text-align:center;}
+.feedback{min-height:32px;font-size:1.2rem;font-weight:800;text-align:center;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .prompt{font-size:.95rem;} .feedback{min-height:24px;font-size:1rem;} }
+/* ---------- 本游戏样式 ---------- */
+.bar{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;max-width:470px;}
+.chips{display:flex;gap:8px;flex-wrap:wrap;}
+.chip{background:#fff;border-radius:999px;padding:4px 12px;min-height:32px;font-size:.82rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);display:flex;align-items:center;gap:4px;}
+.modes{display:flex;gap:8px;flex-wrap:wrap;margin-left:auto;}
+.mode{border:none;border-radius:999px;padding:8px 12px;min-height:40px;background:#fff;color:var(--ink);
+  font-family:inherit;font-size:.8rem;font-weight:800;box-shadow:0 3px 10px rgba(36,59,83,.10);cursor:pointer;}
+.mode.on{background:linear-gradient(135deg,#7c5cff,#5a3ee6);color:#fff;box-shadow:0 6px 16px rgba(124,92,255,.35);}
+.stage{justify-content:flex-start;gap:8px;width:100%;min-height:0;}
+.stage>*{width:100%;max-width:470px;}
+.stage .prompt{font-size:.9rem;color:#4a6484;}
+.slots{display:flex;gap:8px;justify-content:center;}
+.slot{width:clamp(44px,13vw,64px);aspect-ratio:1;border-radius:16px;background:#fff;
+  box-shadow:inset 0 0 0 2px #dfe7f3,0 4px 12px rgba(36,59,83,.08);
+  display:flex;align-items:center;justify-content:center;
+  font-size:clamp(1.2rem,5vw,1.7rem);font-weight:800;color:var(--accent);font-variant-numeric:tabular-nums;}
+.slot.filled{box-shadow:inset 0 0 0 2px #7c5cff,0 6px 16px rgba(124,92,255,.25);}
+.history{flex:1 1 44px;min-height:44px;overflow-y:auto;border-radius:16px;background:rgba(255,255,255,.55);
+  padding:6px 8px;display:flex;flex-direction:column;gap:6px;}
+.hrow{padding:5px 8px;border-radius:12px;background:#fff;box-shadow:0 2px 8px rgba(36,59,83,.08);}
+.hmain{display:flex;align-items:center;gap:10px;font-weight:800;}
+.hnums{letter-spacing:3px;font-size:1rem;color:var(--ink);font-variant-numeric:tabular-nums;}
+.dots{font-size:1rem;letter-spacing:1px;}
+.bull{color:#2fb344;font-style:normal;}
+.cow{color:#e8971e;font-style:normal;}
+.htxt{font-size:.7rem;color:#61789a;font-weight:700;margin-top:2px;}
+.empty{color:#8fa2b8;font-size:.8rem;font-weight:700;text-align:center;padding:8px;}
+.pad{display:grid;gap:6px;width:100%;max-width:470px;align-self:center;}
+.key{min-height:44px;border:none;border-radius:12px;background:#fff;color:var(--ink);
+  font-family:inherit;font-size:1.1rem;font-weight:800;box-shadow:0 3px 10px rgba(36,59,83,.12);cursor:pointer;}
+.key:active{transform:scale(.96);}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:100%;max-width:470px;align-self:center;}
+.act{min-height:44px;border:none;border-radius:12px;font-family:inherit;font-size:.88rem;font-weight:800;cursor:pointer;}
+.act.del{background:#eef2f9;color:#3d5573;}
+.act.clr{background:#fff0f0;color:#c94b4b;}
+.act.sub{background:linear-gradient(135deg,#7c5cff,#5a3ee6);color:#fff;box-shadow:0 5px 14px rgba(124,92,255,.35);}
+.act:active{transform:scale(.97);}
+.winbar{display:none;justify-content:center;}
+.winbar.show{display:flex;}
+#again{min-height:40px;padding:7px 22px;border:none;border-radius:999px;background:linear-gradient(135deg,#2fb344,#1f9e37);
+  color:#fff;font-family:inherit;font-size:.92rem;font-weight:800;box-shadow:0 6px 16px rgba(47,179,68,.35);cursor:pointer;}
+.confetti{position:fixed;top:-18px;width:9px;height:14px;border-radius:2px;pointer-events:none;z-index:50;
+  animation:fall linear forwards;}
+@keyframes fall{to{transform:translateY(105vh) rotate(540deg);opacity:.25;}}
+@media (max-height:430px){
+  body{padding:6px;gap:4px;}
+  h1{font-size:.95rem;}
+  .stage{gap:4px;}
+  .stage .prompt{font-size:.8rem;}
+  .chip{min-height:28px;padding:3px 9px;font-size:.72rem;}
+  .mode{min-height:40px;padding:5px 9px;font-size:.72rem;}
+  .slot{width:clamp(40px,9.5vh,50px);border-radius:13px;}
+  .history{min-height:40px;flex-basis:40px;padding:4px 6px;}
+  .key,.act{min-height:40px;border-radius:10px;}
+  .key{font-size:1rem;}
+  .act{font-size:.8rem;}
+  .hrow{padding:3px 6px;}
+  .hmain{font-size:.9rem;}
+  .htxt{font-size:.66rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🎯 猜数字</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="bar">
+  <div class="chips">
+    <span class="chip">💡 已猜 <b id="att">0</b> 次</span>
+    <span class="chip">🏆 最佳 <b id="best">0</b> 次</span>
+  </div>
+  <div class="modes" id="modes"></div>
+</div>
+<div class="stage">
+  <div class="prompt" id="prompt">3 个数字，1~6，不重复</div>
+  <div class="slots" id="slots"></div>
+  <div class="history" id="history"></div>
+  <div class="pad" id="pad"></div>
+  <div class="actions" id="actions">
+    <button class="act del" type="button" id="backsp">⌫ 退格</button>
+    <button class="act clr" type="button" id="clear">🗑 清空</button>
+    <button class="act sub" type="button" id="submit">✅ 提交</button>
+  </div>
+  <div class="winbar" id="winbar"><button id="again" type="button">🔄 重来</button></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+<script>
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function feedback(text,good){var f=document.getElementById('feedback');f.className='feedback '+(good?'ok':'bad');f.textContent=text;}
+function clearFeedback(){var f=document.getElementById('feedback');f.className='feedback';f.textContent='';}
+function readBest(k){try{return parseInt(localStorage.getItem(k)||'0',10)||0;}catch(e){return 0;}}
+function saveBest(k,v){try{localStorage.setItem(k,String(v));}catch(e){}}
+
+var MODES={
+  m3:{len:3,digits:[1,2,3,4,5,6],cols:6,key:'pguess.best3',desc:'3 个数字，1~6，不重复'},
+  m4:{len:4,digits:[0,1,2,3,4,5,6,7,8,9],cols:5,key:'pguess.best4',desc:'4 个数字，0~9，不重复'}
+};
+var mode='m3',secret=[],guess=[],attempts=0,guessLog=[],won=false;
+var best={m3:0,m4:0};
+
+function makeSecret(digits,len){return shuffle(digits).slice(0,len);}
+
+function judge(g,s){
+  var exact=0,cow=0,i,pool={};
+  for(i=0;i<g.length;i++) if(g[i]===s[i])exact++;
+  for(i=0;i<s.length;i++) pool[s[i]]=(pool[s[i]]||0)+1;
+  for(i=0;i<s.length;i++) if(g[i]===s[i]) pool[s[i]]--;
+  for(i=0;i<g.length;i++){
+    if(g[i]===s[i])continue;
+    if(pool[g[i]]>0){cow++;pool[g[i]]--;}
+  }
+  return {exact:exact,cow:cow};
+}
+
+function initGuess(){
+  best.m3=readBest('pguess.best3');
+  best.m4=readBest('pguess.best4');
+  renderModes();
+  document.getElementById('backsp').onclick=backspace;
+  document.getElementById('clear').onclick=clearGuess;
+  document.getElementById('submit').onclick=submitGuess;
+  document.getElementById('again').onclick=resetGuess;
+  document.addEventListener('keydown',onKey);
+  resetGuess();
+}
+
+function resetGuess(){
+  secret=makeSecret(MODES[mode].digits,MODES[mode].len);
+  guess=[];
+  attempts=0;
+  guessLog=[];
+  won=false;
+  document.getElementById('winbar').classList.remove('show');
+  document.getElementById('actions').style.display='';
+  document.getElementById('prompt').textContent=MODES[mode].desc;
+  renderPad();
+  renderSlots();
+  renderHistory();
+  updateStats();
+  clearFeedback();
+}
+
+function setMode(m){
+  if(m===mode)return;
+  mode=m;
+  renderModes();
+  resetGuess();
+}
+
+function renderModes(){
+  var box=document.getElementById('modes');
+  box.innerHTML='';
+  [['m3','3 位 · 1~6'],['m4','4 位 · 0~9']].forEach(function(p){
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='mode'+(mode===p[0]?' on':'');
+    b.textContent=p[1];
+    b.onclick=function(){setMode(p[0]);};
+    box.appendChild(b);
+  });
+}
+
+function renderPad(){
+  var pad=document.getElementById('pad');
+  pad.innerHTML='';
+  pad.style.gridTemplateColumns='repeat('+MODES[mode].cols+',minmax(0,1fr))';
+  MODES[mode].digits.forEach(function(d){
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='key';
+    b.textContent=d;
+    b.onclick=function(){inputDigit(d);};
+    pad.appendChild(b);
+  });
+}
+
+function renderSlots(){
+  var box=document.getElementById('slots');
+  box.innerHTML='';
+  for(var i=0;i<MODES[mode].len;i++){
+    var s=document.createElement('div');
+    s.className='slot'+(guess[i]!==undefined?' filled':'');
+    s.textContent=guess[i]!==undefined?guess[i]:'';
+    box.appendChild(s);
+  }
+}
+
+function renderHistory(){
+  var box=document.getElementById('history');
+  box.innerHTML='';
+  if(!guessLog.length){
+    var e=document.createElement('div');
+    e.className='empty';
+    e.textContent='还没有猜测，先选数字再提交吧';
+    box.appendChild(e);
+    return;
+  }
+  guessLog.forEach(function(h){
+    var row=document.createElement('div');
+    row.className='hrow';
+    var main=document.createElement('div');
+    main.className='hmain';
+    var nums=document.createElement('span');
+    nums.className='hnums';
+    nums.textContent=h.g.join(' ');
+    var dots=document.createElement('span');
+    dots.className='dots';
+    var html='';
+    for(var i=0;i<h.exact;i++)html+='<i class="bull">●</i>';
+    for(var j=0;j<h.cow;j++)html+='<i class="cow">○</i>';
+    dots.innerHTML=html||'<i style="color:#b9c6d6">没有对的数字</i>';
+    main.appendChild(nums);
+    main.appendChild(dots);
+    var txt=document.createElement('div');
+    txt.className='htxt';
+    txt.textContent='● '+h.exact+' 个位置对，○ '+h.cow+' 个数字对位置错';
+    row.appendChild(main);
+    row.appendChild(txt);
+    box.appendChild(row);
+  });
+  box.scrollTop=box.scrollHeight;
+}
+
+function updateStats(){
+  document.getElementById('att').textContent=attempts;
+  document.getElementById('best').textContent=best[mode]?best[mode]:0;
+}
+
+function inputDigit(d){
+  if(won)return;
+  if(guess.length>=MODES[mode].len)return;
+  if(MODES[mode].digits.indexOf(d)<0)return;
+  guess.push(d);
+  renderSlots();
+}
+
+function backspace(){
+  if(won||!guess.length)return;
+  guess.pop();
+  renderSlots();
+}
+
+function clearGuess(){
+  if(won||!guess.length)return;
+  guess=[];
+  renderSlots();
+}
+
+function submitGuess(){
+  if(won)return;
+  var need=MODES[mode].len-guess.length;
+  if(need>0){
+    feedback('❌ 还差 '+need+' 位哦',false);
+    return;
+  }
+  attempts++;
+  var r=judge(guess,secret);
+  guessLog.push({g:guess.slice(),exact:r.exact,cow:r.cow});
+  if(guessLog.length>8)guessLog.shift();
+  guess=[];
+  renderSlots();
+  renderHistory();
+  updateStats();
+  if(r.exact===secret.length){
+    win();
+  }else{
+    feedback('❌ 还没猜中，看看提示再试一次',false);
+  }
+}
+
+function win(){
+  won=true;
+  if(!best[mode]||attempts<best[mode]){
+    best[mode]=attempts;
+    saveBest(MODES[mode].key,attempts);
+  }
+  updateStats();
+  feedback('🎉 猜中了！用了 '+attempts+' 次，🏆 最佳 '+best[mode]+' 次',true);
+  document.getElementById('actions').style.display='none';
+  document.getElementById('winbar').classList.add('show');
+  confetti();
+}
+
+function confetti(){
+  var colors=['#7c5cff','#2fb344','#ffb703','#ff5c5c','#3aa0ff','#ff77c8'];
+  for(var i=0;i<36;i++){
+    var d=document.createElement('i');
+    d.className='confetti';
+    d.style.left=(Math.random()*100)+'vw';
+    d.style.background=colors[i%colors.length];
+    d.style.animationDelay=(Math.random()*0.5).toFixed(2)+'s';
+    d.style.animationDuration=(1.2+Math.random()*0.9).toFixed(2)+'s';
+    document.body.appendChild(d);
+    (function(el){
+      setTimeout(function(){ if(el.parentNode)el.parentNode.removeChild(el); },2600);
+    })(d);
+  }
+}
+
+function onKey(e){
+  if(won)return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key.length===1&&e.key>='0'&&e.key<='9'){
+    var d=parseInt(e.key,10);
+    if(MODES[mode].digits.indexOf(d)>=0){inputDigit(d);e.preventDefault();}
+  }else if(e.key==='Backspace'){
+    backspace();e.preventDefault();
+  }else if(e.key==='Enter'){
+    submitGuess();e.preventDefault();
+  }else if(e.key==='Delete'||e.key==='Escape'){
+    clearGuess();e.preventDefault();
+  }
+}
+
+/* ---------- 启动 ---------- */
+initGuess();
+</script>
+</body>
+</html>

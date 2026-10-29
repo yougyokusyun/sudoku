@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>天气与穿衣 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9f2,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#fff9f4,#f3f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  padding:7px 14px;font-weight:800;font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.prompt{font-size:1.1rem;font-weight:800;text-align:center;}
+.feedback{min-height:32px;font-size:1.2rem;font-weight:800;text-align:center;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .prompt{font-size:.95rem;} .feedback{min-height:24px;font-size:1rem;} }
+/* 每个游戏自行补充样式，但保持上面的变量与动画不变 */
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-7px)}}
+.wemoji{font-size:clamp(3.6rem,12vw,5.2rem);line-height:1;animation:bob 2.4s ease-in-out infinite;}
+.wlabel{font-weight:800;font-size:1.05rem;text-align:center;background:#fff;padding:8px 20px;
+  border-radius:999px;box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.items{display:flex;flex-wrap:wrap;justify-content:center;gap:18px;}
+.item{width:84px;height:84px;border-radius:22px;background:#fff;border:3px solid transparent;
+  display:flex;align-items:center;justify-content:center;font-size:2.3rem;cursor:pointer;
+  box-shadow:0 6px 16px rgba(36,59,83,.12);
+  transition:transform .6s cubic-bezier(.4,0,.6,1),opacity .6s ease,border-color .18s ease;}
+.item:active{transform:scale(.95);}
+.item.fly{transform:translateY(-130px) scale(.45);opacity:0;}
+.item.miss{border-color:var(--bad);animation:shake .45s ease;box-shadow:0 0 0 5px rgba(255,92,92,.18);}
+@media (max-height:430px){
+  .stage{gap:8px;}
+  .wemoji{font-size:3rem;}
+  .item{width:80px;height:80px;font-size:2rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>☀️ 天气与穿衣</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stage">
+  <!-- 游戏内容 -->
+  <div class="prompt">今天是什么天气？应该带什么？</div>
+  <div class="wemoji" id="wemoji">☀️</div>
+  <div class="wlabel" id="wlabel">晴天</div>
+  <div class="items" id="items"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+<script>
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function feedback(text,good){var f=document.getElementById('feedback');f.className='feedback '+(good?'ok':'bad');f.textContent=text;}
+function replay(node,cls){node.classList.remove('pop','shake');void node.offsetWidth;node.classList.add(cls);}
+/* 游戏逻辑 */
+var WEATHERS=[
+  {w:'☀️',label:'晴天',correct:'🕶️',wrong:['🧣','☂️']},
+  {w:'🌧️',label:'下雨',correct:'☂️',wrong:['🕶️','🧤']},
+  {w:'❄️',label:'下雪',correct:'🧥',wrong:['🕶️','☂️']},
+  {w:'🌞',label:'很热',correct:'👕',wrong:['🧥','🧣']}
+];
+var ITEM_NAMES={'🕶️':'墨镜','🧣':'围巾','☂️':'雨伞','🧤':'手套','🧥':'外套','👕':'短袖上衣'};
+var wemoji=document.getElementById('wemoji');
+var wlabel=document.getElementById('wlabel');
+var items=document.getElementById('items');
+let locked=false, flyTimer=null, missTimer=null, entryTimer=null;
+
+/* 出一题 */
+function newRound(){
+  clearTimeout(flyTimer); clearTimeout(missTimer); clearTimeout(entryTimer);
+  locked=false;
+  var wx=pick(WEATHERS);
+  wemoji.textContent=wx.w;
+  wlabel.textContent=wx.label;
+  replay(wemoji,'pop');
+  entryTimer=setTimeout(function(){wemoji.classList.remove('pop');},500);
+  items.innerHTML='';
+  shuffle([wx.correct].concat(wx.wrong)).forEach(function(c){
+    var b=document.createElement('button');
+    b.type='button'; b.className='item'; b.textContent=c;
+    b.onclick=function(){choose(b,c,wx);};
+    items.appendChild(b);
+  });
+  feedback('', true);
+  voiceSpeak('今天是' + wx.label + '，应该带什么呀？');
+}
+
+/* 判断选择 */
+function choose(btn,c,wx){
+  if(locked) return;
+  if(c===wx.correct){
+    locked=true;
+    btn.classList.add('fly');
+    replay(wemoji,'pop');
+    clearTimeout(entryTimer);
+    entryTimer=setTimeout(function(){wemoji.classList.remove('pop');},500);
+    feedback('✅ '+wx.label+'要带'+c+'！', true);
+    voiceSpeak('对啦，' + wx.label + '要带' + (ITEM_NAMES[c] || '这个'));
+    flyTimer=setTimeout(newRound,1100);
+  }else{
+    btn.classList.add('miss');
+    feedback('再想想', false);
+    voiceSpeak('再想一想，' + wx.label + '要带什么？');
+    missTimer=setTimeout(function(){btn.classList.remove('miss');},520);
+  }
+}
+
+newRound();
+
+/* ===== 语音播报：进入先读玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '天气与穿衣游戏。看看今天是什么天气，再选出应该带出门的东西。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进游戏自动朗读；若被浏览器拦截，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);   /* 不打断正在读的题目，排队播报玩法 */
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () { document.removeEventListener('pointerdown', once); voiceSpeak(VOICE_TEXT); };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.1);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

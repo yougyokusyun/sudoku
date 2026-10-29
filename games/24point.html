@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>24 点计算挑战 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9f2,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#fff9f4,#f3f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;overflow:hidden;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.05rem;}
+.back{margin-left:0;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  padding:7px 14px;font-weight:800;font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stats{margin-left:auto;display:flex;gap:8px;font-size:.78rem;font-weight:800;white-space:nowrap;
+  background:#fff;border-radius:999px;padding:7px 12px;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stats b{color:var(--accent);}
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;overflow:auto;}
+.stage>*{flex:none;}
+.prompt{font-size:1rem;font-weight:800;text-align:center;}
+.prompt b{color:var(--accent);font-size:1.15em;}
+.feedback{min-height:32px;font-size:1.05rem;font-weight:800;text-align:center;padding:0 4px;}
+.ok{color:var(--ok);} .bad{color:var(--bad);} .hint{color:var(--accent);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@keyframes fall{to{transform:translateY(95vh) rotate(320deg);opacity:.15;}}
+.cft{position:fixed;top:-26px;z-index:9;pointer-events:none;animation:fall 1.2s ease-in forwards;}
+
+/* 算式栏 */
+.expr{width:100%;max-width:520px;min-height:56px;background:#fff;border-radius:18px;
+  box-shadow:0 6px 18px rgba(36,59,83,.12);display:flex;align-items:center;justify-content:center;
+  padding:8px 14px;font-size:1.35rem;font-weight:800;letter-spacing:.5px;word-break:break-all;text-align:center;}
+.expr .ph{font-size:.82rem;font-weight:700;color:#93a3b5;letter-spacing:0;}
+/* 数字卡片 */
+.cards{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.card{position:relative;width:clamp(58px,16vw,76px);height:clamp(64px,17vw,82px);border:none;border-radius:16px;
+  background:#fff;box-shadow:0 6px 16px rgba(36,59,83,.14);font-family:inherit;font-weight:900;
+  font-size:clamp(1.35rem,5.4vw,1.75rem);color:var(--ink);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:transform .12s ease,opacity .15s ease;}
+.card:active{transform:scale(.96);}
+.card .suit{position:absolute;right:6px;bottom:3px;font-size:.8rem;opacity:.7;font-weight:400;}
+.card .suit.red{color:var(--bad);}
+.card.used{opacity:.32;pointer-events:none;filter:grayscale(.5);}
+/* 按键 */
+.keys{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;max-width:520px;}
+.key{min-width:46px;height:46px;padding:0 12px;border:none;border-radius:14px;background:#fff;
+  box-shadow:0 4px 12px rgba(36,59,83,.12);font-family:inherit;font-size:1.05rem;font-weight:800;
+  color:var(--ink);cursor:pointer;transition:transform .1s ease;}
+.key:active{transform:scale(.95);}
+.key.op{background:#eef1ff;color:#4a3aa8;font-size:1.2rem;}
+.key.verify{background:linear-gradient(140deg,#7c5cff,#a98bff);color:#fff;}
+.key.hint{background:#fff6e0;color:#9a6b00;}
+.key.ghost{background:#fff;color:#5b6b7f;}
+
+@media (max-height:430px){
+  body{padding:8px;gap:6px;}
+  h1{font-size:.95rem;}
+  .stats{font-size:.7rem;padding:5px 9px;gap:6px;}
+  .back{padding:5px 11px;font-size:.76rem;}
+  .stage{gap:8px;}
+  .prompt{font-size:.88rem;}
+  .feedback{min-height:20px;font-size:.92rem;}
+  .expr{min-height:44px;font-size:1.1rem;max-width:560px;padding:6px 12px;}
+  .expr .ph{font-size:.72rem;}
+  .card{width:64px;height:74px;border-radius:12px;font-size:1.4rem;}
+  .card .suit{font-size:.66rem;right:4px;bottom:2px;}
+  .keys{gap:6px;max-width:560px;}
+  .key{min-width:42px;height:40px;border-radius:11px;font-size:.95rem;padding:0 9px;}
+  .key.op{font-size:1.05rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧮 24 点计算挑战</h1>
+  <div class="stats"><span>🔥 连对 <b id="streak">0</b></span><span>🏆 最佳 <b id="best">0</b></span></div>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stage">
+  <div class="prompt">用 4 张牌算出 <b>24</b>，加油！</div>
+  <div class="expr" id="expr"></div>
+  <div class="cards" id="cards"></div>
+  <div class="keys" id="keys">
+    <button class="key op" type="button" data-k="+">+</button>
+    <button class="key op" type="button" data-k="-">−</button>
+    <button class="key op" type="button" data-k="×">×</button>
+    <button class="key op" type="button" data-k="÷">÷</button>
+    <button class="key op" type="button" data-k="(">(</button>
+    <button class="key op" type="button" data-k=")">)</button>
+  </div>
+  <div class="keys" id="actions">
+    <button class="key ghost" type="button" data-a="back">⌫ 退格</button>
+    <button class="key ghost" type="button" data-a="clear">🗑 清空</button>
+    <button class="key verify" type="button" data-a="verify">✅ 验证</button>
+    <button class="key ghost" type="button" data-a="new">🔄 换一组</button>
+    <button class="key hint" type="button" data-a="hint">💡 提示</button>
+  </div>
+  <div class="feedback" id="feedback"></div>
+</div>
+<script>
+var OPS=['+','-','*','/'];
+var SUITS=['♠','♥','♣','♦'];
+var BEST_KEY='p24.bestStreak';
+var streak=0,best=0,current=null,tokens=[],locked=false,newRoundTimer=null;
+
+/* ---------- 分数运算（避免浮点误差） ---------- */
+function gcd(a,b){a=Math.abs(a);b=Math.abs(b);while(b){var t=a%b;a=b;b=t;}return a||1;}
+function frac(n,d){if(d<0){n=-n;d=-d;}var g=gcd(n,d);return {n:n/g,d:d/g};}
+function fAdd(a,b){return frac(a.n*b.d+b.n*a.d,a.d*b.d);}
+function fSub(a,b){return frac(a.n*b.d-b.n*a.d,a.d*b.d);}
+function fMul(a,b){return frac(a.n*b.n,a.d*b.d);}
+function fDiv(a,b){if(b.n===0)return null;return frac(a.n*b.d,a.d*b.n);}
+function is24v(v){return v.n===24*v.d;}
+
+/* 组合两个子表达式，按优先级决定是否加括号 */
+function combine(a,op,b){
+  var sym=op==='*'?'×':op==='/'?'÷':op;
+  var p=(op==='+'||op==='-')?1:2;
+  var v=op==='+'?fAdd(a.v,b.v):op==='-'?fSub(a.v,b.v):op==='*'?fMul(a.v,b.v):fDiv(a.v,b.v);
+  if(!v)return null;
+  var L=a.prec<p?'('+a.str+')':a.str;
+  var R=(b.prec<p||(b.prec===p&&(op==='-'||op==='/')))?'('+b.str+')':b.str;
+  return {v:v,str:L+sym+R,prec:p};
+}
+function perms4(a){
+  var out=[];
+  for(var i=0;i<4;i++)for(var j=0;j<4;j++)for(var k=0;k<4;k++)for(var l=0;l<4;l++){
+    if(i===j||i===k||i===l||j===k||j===l||k===l)continue;
+    out.push([a[i],a[j],a[k],a[l]]);
+  }
+  return out;
+}
+/* 五种括号结构（配合全排列即可穷尽 4 个数的所有运算组合） */
+function treeS1(A,B,C,D,o1,o2,o3){var t=combine(A,o1,B);if(!t)return null;t=combine(t,o2,C);if(!t)return null;return combine(t,o3,D);}
+function treeS2(A,B,C,D,o1,o2,o3){var t=combine(B,o2,C);if(!t)return null;t=combine(A,o1,t);if(!t)return null;return combine(t,o3,D);}
+function treeS3(A,B,C,D,o1,o2,o3){var u=combine(A,o1,B);if(!u)return null;var w=combine(C,o3,D);if(!w)return null;return combine(u,o2,w);}
+function treeS4(A,B,C,D,o1,o2,o3){var t=combine(B,o2,C);if(!t)return null;t=combine(t,o3,D);if(!t)return null;return combine(A,o1,t);}
+function treeS5(A,B,C,D,o1,o2,o3){var t=combine(C,o3,D);if(!t)return null;t=combine(B,o2,t);if(!t)return null;return combine(A,o1,t);}
+var TREES=[treeS1,treeS2,treeS3,treeS4,treeS5];
+
+/* 穷举求解：全排列 × 运算符组合 × 五种括号结构 */
+function solve24(nums){
+  var ps=perms4(nums);
+  for(var q=0;q<ps.length;q++){
+    var p=ps[q];
+    var A={v:frac(p[0],1),str:String(p[0]),prec:3};
+    var B={v:frac(p[1],1),str:String(p[1]),prec:3};
+    var C={v:frac(p[2],1),str:String(p[2]),prec:3};
+    var D={v:frac(p[3],1),str:String(p[3]),prec:3};
+    for(var i=0;i<4;i++)for(var j=0;j<4;j++)for(var k=0;k<4;k++){
+      var o1=OPS[i],o2=OPS[j],o3=OPS[k];
+      for(var t=0;t<TREES.length;t++){
+        var node=TREES[t](A,B,C,D,o1,o2,o3);
+        if(node&&is24v(node.v))return node.str;   /* ((a b) c) d 与 (a b)(c d) 已覆盖大多数情况 */
+      }
+    }
+  }
+  return null;
+}
+
+/* ---------- 通用小工具 ---------- */
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function setFeedback(text,kind){var f=document.getElementById('feedback');f.className='feedback'+(kind?' '+kind:'');f.textContent=text;}
+function replay(node,cls){node.classList.remove('pop','shake');void node.offsetWidth;node.classList.add(cls);}
+function confetti(){
+  var chars=['🎉','✨','🎊','⭐','🌟'];
+  for(var i=0;i<14;i++){
+    var s=document.createElement('span');
+    s.className='cft';s.textContent=chars[i%chars.length];
+    s.style.left=(8+Math.random()*84)+'vw';
+    s.style.animationDelay=(Math.random()*.35)+'s';
+    s.style.fontSize=(14+Math.random()*16)+'px';
+    document.body.appendChild(s);
+    (function(el){setTimeout(function(){if(el.parentNode)el.parentNode.removeChild(el);},1800);})(s);
+  }
+}
+function readBest(){try{var v=parseInt(localStorage.getItem(BEST_KEY),10);return isNaN(v)?0:v;}catch(e){return 0;}}
+function saveBest(v){try{localStorage.setItem(BEST_KEY,String(v));}catch(e){}}
+
+/* ---------- 渲染 ---------- */
+function showExpr(){
+  var s='';
+  tokens.forEach(function(t,i){
+    if(i>0&&t.text!==')'&&tokens[i-1].text!=='(')s+=' ';
+    s+=t.text;
+  });
+  return s;
+}
+function renderExpr(){
+  var el=document.getElementById('expr');
+  if(!tokens.length){
+    el.innerHTML='<span class="ph">点下面的牌和符号，拼出算式</span>';
+    return;
+  }
+  el.textContent=showExpr();
+}
+function renderCards(){
+  var box=document.getElementById('cards');
+  box.innerHTML='';
+  current.nums.forEach(function(num,i){
+    var b=document.createElement('button');
+    b.type='button';
+    b.className='card'+(current.used[i]?' used':'');
+    b.dataset.i=i;
+    b.setAttribute('aria-label','数字 '+num);
+    var suit=document.createElement('span');
+    suit.className='suit'+(current.suits[i]==='♥'||current.suits[i]==='♦'?' red':'');
+    suit.textContent=current.suits[i];
+    var numEl=document.createElement('span');
+    numEl.className='num';
+    numEl.textContent=num;
+    b.appendChild(numEl);
+    b.appendChild(suit);
+    box.appendChild(b);
+  });
+}
+function updateStats(){
+  document.getElementById('streak').textContent=streak;
+  document.getElementById('best').textContent=best;
+}
+
+/* ---------- 出题 ---------- */
+function newRound(){
+  clearTimeout(newRoundTimer);
+  var nums=null,sol=null,tries=0;
+  while(tries++<200){
+    var cand=[1+Math.floor(Math.random()*13),1+Math.floor(Math.random()*13),
+              1+Math.floor(Math.random()*13),1+Math.floor(Math.random()*13)];
+    var s=solve24(cand);
+    if(s){nums=cand;sol=s;break;}
+  }
+  if(!nums){nums=[4,6,6,10];sol=solve24(nums)||'6×(10-6)';}
+  current={nums:nums,sol:sol,used:[false,false,false,false],suits:shuffle(SUITS)};
+  tokens=[];locked=false;
+  renderCards();
+  renderExpr();
+  setFeedback('','');
+}
+
+/* ---------- 交互 ---------- */
+function onCard(e){
+  var b=e.target.closest('.card');
+  if(!b||locked)return;
+  var i=parseInt(b.dataset.i,10);
+  if(current.used[i])return;
+  current.used[i]=true;
+  tokens.push({t:'num',text:String(current.nums[i])});
+  renderCards();
+  renderExpr();
+  setFeedback('','');
+}
+function onKey(e){
+  var b=e.target.closest('button');
+  if(!b||locked)return;
+  if(b.dataset.k){
+    tokens.push({t:'op',text:b.dataset.k});
+    renderExpr();
+    setFeedback('','');
+    return;
+  }
+  var act=b.dataset.a;
+  if(act==='back'){
+    var last=tokens.pop();
+    if(last&&last.t==='num'){
+      for(var i=current.nums.length-1;i>=0;i--){
+        if(current.used[i]&&String(current.nums[i])===last.text){current.used[i]=false;break;}
+      }
+    }
+    renderCards();renderExpr();
+  }else if(act==='clear'){
+    resetP24();
+  }else if(act==='verify'){
+    verify();
+  }else if(act==='new'){
+    streak=0;updateStats();newRound();
+  }else if(act==='hint'){
+    setFeedback('💡 试试 '+current.sol,'hint');
+    replay(document.getElementById('expr'),'pop');
+  }
+}
+/* 清空算式（恢复全部卡片） */
+function resetP24(){
+  tokens=[];
+  if(current)current.used=[false,false,false,false];
+  renderCards();
+  renderExpr();
+  setFeedback('','');
+}
+function fmtNum(v){
+  if(Math.abs(v-Math.round(v))<1e-9)return String(Math.round(v));
+  return String(Math.round(v*100)/100);
+}
+function verify(){
+  if(locked)return;
+  var exprEl=document.getElementById('expr');
+  if(!tokens.length){
+    setFeedback('❌ 先用数字和运算符组成算式哦','bad');
+    replay(exprEl,'shake');
+    return;
+  }
+  var display=showExpr();
+  if(!/^[0-9+\-*\/()×÷ ]+$/.test(display)){
+    setFeedback('❌ 先用数字和运算符组成算式哦','bad');
+    replay(exprEl,'shake');
+    return;
+  }
+  var used=0;
+  for(var i=0;i<current.used.length;i++)if(current.used[i])used++;
+  if(used<4){
+    setFeedback('❌ 4 张牌都要用上哦，再想想','bad');
+    replay(exprEl,'shake');
+    return;
+  }
+  var raw=tokens.map(function(t){return t.text;}).join(' ').replace(/×/g,'*').replace(/÷/g,'/');
+  var val;
+  try{val=Function('return ('+raw+')')();}catch(err){
+    setFeedback('❌ 先用数字和运算符组成算式哦','bad');
+    replay(exprEl,'shake');
+    return;
+  }
+  if(typeof val!=='number'||!isFinite(val)){
+    setFeedback('❌ 先用数字和运算符组成算式哦','bad');
+    replay(exprEl,'shake');
+    return;
+  }
+  if(Math.abs(val-24)<1e-6){
+    locked=true;
+    streak++;
+    if(streak>best){best=streak;saveBest(best);}
+    updateStats();
+    setFeedback('✅ 算对啦！连对 '+streak+' 组 🎉','ok');
+    replay(exprEl,'pop');
+    confetti();
+    newRoundTimer=setTimeout(function(){locked=false;newRound();},1500);
+  }else{
+    setFeedback('❌ 结果是 '+fmtNum(val)+'，不是 24 哦，再想想','bad');
+    replay(exprEl,'shake');
+  }
+}
+
+function initP24(){
+  document.getElementById('cards').addEventListener('click',onCard);
+  document.getElementById('keys').addEventListener('click',onKey);
+  document.getElementById('actions').addEventListener('click',onKey);
+  best=readBest();
+  updateStats();
+  newRound();
+}
+initP24();
+</script>
+</body>
+</html>

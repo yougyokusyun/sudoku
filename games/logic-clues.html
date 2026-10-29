@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>逻辑推理 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9f2,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#fff9f4,#f3f9ff);
+  min-height:100dvh;height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;
+  padding:7px 14px;font-weight:800;font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stage{flex:1;display:flex;flex-direction:column;min-height:0;overflow-y:auto;}
+.stage-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  width:100%;margin:auto;padding:2px 0;}
+.prompt{font-size:1.1rem;font-weight:800;text-align:center;}
+.feedback{min-height:32px;font-size:1.2rem;font-weight:800;text-align:center;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .prompt{font-size:.95rem;} .feedback{min-height:24px;font-size:1rem;} }
+/* 本游戏补充样式 */
+.hide{display:none!important;}
+.stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.stat-pill{background:#fff;border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);white-space:nowrap;}
+.stat-pill b{color:var(--accent);}
+.card{width:min(540px,100%);background:#fff;border-radius:20px;padding:10px 16px;
+  box-shadow:0 6px 18px rgba(36,59,83,.12);}
+.theme{font-size:.82rem;font-weight:900;color:var(--accent);margin-bottom:5px;}
+.clues{list-style:none;display:flex;flex-direction:column;gap:5px;}
+.clues li{display:flex;gap:6px;align-items:flex-start;font-size:.95rem;font-weight:700;line-height:1.35;}
+.clue-num{flex:none;font-size:.75rem;font-weight:900;background:#f0edff;color:var(--accent);
+  border-radius:8px;padding:1px 6px;margin-top:2px;}
+.question{font-size:1.2rem;font-weight:900;text-align:center;}
+.options{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:min(540px,100%);}
+.opt{min-height:50px;border:none;border-radius:16px;background:#fff;font-weight:900;font-size:1rem;
+  color:var(--ink);box-shadow:0 5px 14px rgba(36,59,83,.12);cursor:pointer;padding:8px 6px;
+  font-family:inherit;transition:transform .12s ease;}
+.opt:active{transform:scale(.97);}
+.opt.correct{background:#eaf8ee;color:var(--ok);box-shadow:inset 0 0 0 2px var(--ok);}
+.opt.wrong{background:#fff0f0;color:var(--bad);box-shadow:inset 0 0 0 2px var(--bad);}
+.opt.eliminated{opacity:.4;text-decoration:line-through;}
+.opt:disabled{cursor:default;}
+.hint-btn{min-height:44px;border:none;border-radius:14px;background:#fff7d6;color:#a06a00;
+  font-weight:900;font-size:.9rem;padding:8px 16px;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 12px rgba(160,106,0,.16);}
+.solution{width:min(540px,100%);display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
+.sol-title{grid-column:1/-1;font-size:.86rem;font-weight:900;color:var(--accent);text-align:center;}
+.sol-item{background:#eef7ff;border-radius:10px;padding:5px 8px;font-size:.9rem;font-weight:800;text-align:center;}
+#confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9;}
+.confetti-bit{position:absolute;top:-40px;animation:fall 1.8s linear forwards;}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.9;}}
+@media (max-height:430px){
+  .stats{gap:5px;}
+  .stat-pill{padding:3px 9px;font-size:.72rem;}
+  .card{padding:6px 10px;border-radius:14px;}
+  .theme{font-size:.72rem;margin-bottom:3px;}
+  .clues li{font-size:.82rem;line-height:1.25;gap:4px;}
+  .clue-num{font-size:.66rem;padding:0 4px;}
+  .question{font-size:1rem;}
+  .options{grid-template-columns:repeat(4,1fr);gap:6px;width:100%;}
+  .opt{min-height:44px;font-size:.86rem;border-radius:12px;padding:4px;}
+  .hint-btn{min-height:40px;padding:6px 12px;font-size:.82rem;}
+  .solution{grid-template-columns:repeat(4,1fr);gap:4px;}
+  .sol-title{font-size:.76rem;}
+  .sol-item{font-size:.76rem;padding:3px 4px;}
+  .stage-inner{gap:6px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧠 逻辑推理 · 线索破案</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stage">
+  <div class="stage-inner">
+    <div class="stats">
+      <span class="stat-pill">✅ 答对 <b id="correctCount">0</b></span>
+      <span class="stat-pill">🔥 连对 <b id="streakCount">0</b></span>
+      <span class="stat-pill">🏆 最佳连对 <b id="bestCount">0</b></span>
+    </div>
+    <div class="card">
+      <div class="theme" id="theme">主题：--</div>
+      <ul class="clues" id="clues"></ul>
+    </div>
+    <div class="question" id="question">--</div>
+    <div class="options" id="options"></div>
+    <button class="hint-btn hide" id="hintBtn" type="button">💡 提示</button>
+    <div class="solution hide" id="solution"></div>
+    <div class="feedback" id="feedback"></div>
+  </div>
+</div>
+<div id="confetti"></div>
+<script>
+var PUZZLES = [{"people":["小红","小明","小刚","小丽"],"theme":"楼层","items":["1楼","2楼","3楼","4楼"],"clues":["小红住在3楼，小刚住在2楼","小明住的楼层比小红高"],"q":"小丽住在几楼？","options":["4楼","2楼","3楼","1楼"],"answer":"1楼","solution":{"小红":"3楼","小明":"4楼","小刚":"2楼","小丽":"1楼"}},{"people":["小红","小明","小刚","小丽"],"theme":"楼层","items":["1楼","2楼","3楼","4楼"],"clues":["小红和小明住在相邻的楼层","小丽住在4楼","小红住在1楼"],"q":"小明住在几楼？","options":["3楼","2楼","4楼","1楼"],"answer":"2楼","solution":{"小红":"1楼","小明":"2楼","小刚":"3楼","小丽":"4楼"}},{"people":["小红","小明","小刚","小丽"],"theme":"楼层","items":["1楼","2楼","3楼","4楼"],"clues":["小丽和小明住在相邻的楼层","小明和小红住在相邻的楼层","小丽住在最高的楼层"],"q":"谁住在1楼？","options":["小丽","小刚","小明","小红"],"answer":"小刚","solution":{"小红":"2楼","小明":"3楼","小刚":"1楼","小丽":"4楼"}},{"people":["小红","小明","小刚","小丽"],"theme":"楼层","items":["1楼","2楼","3楼","4楼"],"clues":["小红不住在1楼","小明不住在2楼","小明住的楼层比小红高","小丽住的楼层比小明高"],"q":"小刚住在几楼？","options":["3楼","4楼","2楼","1楼"],"answer":"1楼","solution":{"小红":"2楼","小明":"3楼","小刚":"1楼","小丽":"4楼"}},{"people":["丁丁","冬冬","乐乐","安安"],"theme":"座位（从左到右）","items":["1号座位","2号座位","3号座位","4号座位"],"clues":["安安和丁丁坐在相邻的座位","乐乐坐在3号座位，安安坐在2号座位"],"q":"谁坐在4号座位？","options":["安安","冬冬","乐乐","丁丁"],"answer":"冬冬","solution":{"丁丁":"1号座位","冬冬":"4号座位","乐乐":"3号座位","安安":"2号座位"}},{"people":["丁丁","冬冬","乐乐","安安"],"theme":"座位（从左到右）","items":["1号座位","2号座位","3号座位","4号座位"],"clues":["冬冬和乐乐坐在相邻的座位","安安不坐在2号座位","乐乐坐在4号座位"],"q":"安安坐在几号座位？","options":["4号座位","1号座位","3号座位","2号座位"],"answer":"1号座位","solution":{"丁丁":"2号座位","冬冬":"3号座位","乐乐":"4号座位","安安":"1号座位"}},{"people":["丁丁","冬冬","乐乐","安安"],"theme":"座位（从左到右）","items":["1号座位","2号座位","3号座位","4号座位"],"clues":["冬冬不坐在4号座位","安安坐在2号座位","丁丁坐在3号座位"],"q":"乐乐坐在几号座位？","options":["2号座位","1号座位","3号座位","4号座位"],"answer":"4号座位","solution":{"丁丁":"3号座位","冬冬":"1号座位","乐乐":"4号座位","安安":"2号座位"}},{"people":["丁丁","冬冬","乐乐","安安"],"theme":"座位（从左到右）","items":["1号座位","2号座位","3号座位","4号座位"],"clues":["乐乐不坐在3号座位","丁丁不坐在4号座位","丁丁坐在1号座位","冬冬坐在4号座位"],"q":"谁坐在3号座位？","options":["安安","冬冬","丁丁","乐乐"],"answer":"安安","solution":{"丁丁":"1号座位","冬冬":"4号座位","乐乐":"2号座位","安安":"3号座位"}},{"people":["小雨","小风","小雷","小云"],"theme":"比赛名次","items":["第1名","第2名","第3名","第4名"],"clues":["小雷得了第3名，小云得了第4名","小风没有得第2名"],"q":"小风得了第几名？","options":["第2名","第4名","第1名","第3名"],"answer":"第1名","solution":{"小雨":"第2名","小风":"第1名","小雷":"第3名","小云":"第4名"}},{"people":["小雨","小风","小雷","小云"],"theme":"比赛名次","items":["第1名","第2名","第3名","第4名"],"clues":["小云没有得第4名","小雷得了第1名","小风和小雷的名次相邻"],"q":"小风得了第几名？","options":["第3名","第2名","第4名","第1名"],"answer":"第2名","solution":{"小雨":"第4名","小风":"第2名","小雷":"第1名","小云":"第3名"}},{"people":["小雨","小风","小雷","小云"],"theme":"比赛名次","items":["第1名","第2名","第3名","第4名"],"clues":["小云是最后一名","小雷和小雨的名次相邻","小雨得了第3名"],"q":"谁得了第2名？","options":["小云","小雨","小雷","小风"],"answer":"小雷","solution":{"小雨":"第3名","小风":"第1名","小雷":"第2名","小云":"第4名"}},{"people":["小雨","小风","小雷","小云"],"theme":"比赛名次","items":["第1名","第2名","第3名","第4名"],"clues":["小雨是最后一名","小风没有得第4名","小云没有得第1名","小雨和小风的名次相邻"],"q":"谁得了第1名？","options":["小雨","小雷","小风","小云"],"answer":"小雷","solution":{"小雨":"第4名","小风":"第3名","小雷":"第1名","小云":"第2名"}},{"people":["小星","小月","小阳","小秋"],"theme":"年龄","items":["6岁","7岁","8岁","9岁"],"clues":["小星今年不是8岁","小月今年7岁，小秋今年6岁"],"q":"谁今年8岁？","options":["小星","小月","小阳","小秋"],"answer":"小阳","solution":{"小星":"9岁","小月":"7岁","小阳":"8岁","小秋":"6岁"}},{"people":["小星","小月","小阳","小秋"],"theme":"年龄","items":["6岁","7岁","8岁","9岁"],"clues":["小月和小阳的年龄相差1岁","小秋今年不是8岁","小阳年龄最小"],"q":"小秋今年几岁？","options":["7岁","8岁","6岁","9岁"],"answer":"9岁","solution":{"小星":"8岁","小月":"7岁","小阳":"6岁","小秋":"9岁"}},{"people":["小星","小月","小阳","小秋"],"theme":"年龄","items":["6岁","7岁","8岁","9岁"],"clues":["小阳今年不是7岁","小秋年龄最大","小月年龄最小"],"q":"小星今年几岁？","options":["8岁","7岁","6岁","9岁"],"answer":"7岁","solution":{"小星":"7岁","小月":"6岁","小阳":"8岁","小秋":"9岁"}},{"people":["小星","小月","小阳","小秋"],"theme":"年龄","items":["6岁","7岁","8岁","9岁"],"clues":["小月今年不是7岁","小阳今年不是9岁","小月今年8岁","小秋今年7岁"],"q":"谁今年9岁？","options":["小星","小月","小阳","小秋"],"answer":"小星","solution":{"小星":"9岁","小月":"8岁","小阳":"6岁","小秋":"7岁"}},{"people":["可可","豆豆","糖糖","果果"],"theme":"喜欢的颜色","items":["红色","蓝色","绿色","黄色"],"clues":["可可喜欢黄色","糖糖喜欢绿色，果果喜欢红色"],"q":"谁喜欢蓝色？","options":["糖糖","果果","可可","豆豆"],"answer":"豆豆","solution":{"可可":"黄色","豆豆":"蓝色","糖糖":"绿色","果果":"红色"}},{"people":["可可","豆豆","糖糖","果果"],"theme":"喜欢的颜色","items":["红色","蓝色","绿色","黄色"],"clues":["果果不喜欢黄色","可可喜欢蓝色","豆豆喜欢红色"],"q":"果果喜欢什么颜色？","options":["绿色","红色","黄色","蓝色"],"answer":"绿色","solution":{"可可":"蓝色","豆豆":"红色","糖糖":"黄色","果果":"绿色"}},{"people":["可可","豆豆","糖糖","果果"],"theme":"喜欢的颜色","items":["红色","蓝色","绿色","黄色"],"clues":["果果喜欢黄色","可可不喜欢绿色","糖糖喜欢蓝色"],"q":"可可喜欢什么颜色？","options":["红色","黄色","绿色","蓝色"],"answer":"红色","solution":{"可可":"红色","豆豆":"绿色","糖糖":"蓝色","果果":"黄色"}},{"people":["可可","豆豆","糖糖","果果"],"theme":"喜欢的颜色","items":["红色","蓝色","绿色","黄色"],"clues":["豆豆喜欢蓝色","糖糖喜欢黄色","可可不喜欢黄色","可可喜欢红色"],"q":"果果喜欢什么颜色？","options":["红色","绿色","黄色","蓝色"],"answer":"绿色","solution":{"可可":"红色","豆豆":"蓝色","糖糖":"黄色","果果":"绿色"}},{"people":["阿宝","阿福","阿吉","阿乐"],"theme":"养的宠物","items":["小猫","小狗","小兔","小鱼"],"clues":["阿宝养了小猫，阿吉养了小狗","阿福养了小鱼"],"q":"谁养了小兔？","options":["阿吉","阿福","阿乐","阿宝"],"answer":"阿乐","solution":{"阿宝":"小猫","阿福":"小鱼","阿吉":"小狗","阿乐":"小兔"}},{"people":["阿宝","阿福","阿吉","阿乐"],"theme":"养的宠物","items":["小猫","小狗","小兔","小鱼"],"clues":["阿吉养了小狗","阿福养了小鱼","阿宝养了小兔"],"q":"阿乐养了什么宠物？","options":["小兔","小鱼","小狗","小猫"],"answer":"小猫","solution":{"阿宝":"小兔","阿福":"小鱼","阿吉":"小狗","阿乐":"小猫"}},{"people":["阿宝","阿福","阿吉","阿乐"],"theme":"养的宠物","items":["小猫","小狗","小兔","小鱼"],"clues":["阿吉养了小狗","阿宝养的不是小兔","阿乐养了小猫"],"q":"阿宝养了什么宠物？","options":["小鱼","小狗","小兔","小猫"],"answer":"小鱼","solution":{"阿宝":"小鱼","阿福":"小兔","阿吉":"小狗","阿乐":"小猫"}},{"people":["阿宝","阿福","阿吉","阿乐"],"theme":"养的宠物","items":["小猫","小狗","小兔","小鱼"],"clues":["阿宝养的不是小兔","阿乐养的不是小猫","阿吉养了小狗","阿福养了小鱼"],"q":"谁养了小兔？","options":["阿宝","阿乐","阿吉","阿福"],"answer":"阿乐","solution":{"阿宝":"小猫","阿福":"小鱼","阿吉":"小狗","阿乐":"小兔"}},{"people":["小米","小豆","小果","小桃"],"theme":"喜欢的水果","items":["苹果","香蕉","葡萄","西瓜"],"clues":["小豆最喜欢的水果不是葡萄","小米最喜欢苹果，小果最喜欢香蕉"],"q":"小桃最喜欢什么水果？","options":["葡萄","苹果","香蕉","西瓜"],"answer":"葡萄","solution":{"小米":"苹果","小豆":"西瓜","小果":"香蕉","小桃":"葡萄"}},{"people":["小米","小豆","小果","小桃"],"theme":"喜欢的水果","items":["苹果","香蕉","葡萄","西瓜"],"clues":["小桃最喜欢葡萄","小豆最喜欢香蕉","小米最喜欢的水果不是西瓜"],"q":"谁最喜欢苹果？","options":["小桃","小果","小豆","小米"],"answer":"小米","solution":{"小米":"苹果","小豆":"香蕉","小果":"西瓜","小桃":"葡萄"}},{"people":["小米","小豆","小果","小桃"],"theme":"喜欢的水果","items":["苹果","香蕉","葡萄","西瓜"],"clues":["小桃最喜欢的水果不是葡萄","小豆最喜欢苹果","小果最喜欢香蕉"],"q":"谁最喜欢葡萄？","options":["小豆","小桃","小果","小米"],"answer":"小米","solution":{"小米":"葡萄","小豆":"苹果","小果":"香蕉","小桃":"西瓜"}},{"people":["小米","小豆","小果","小桃"],"theme":"喜欢的水果","items":["苹果","香蕉","葡萄","西瓜"],"clues":["小豆最喜欢西瓜","小豆最喜欢的水果不是葡萄","小桃最喜欢的水果不是葡萄","小果最喜欢苹果"],"q":"小桃最喜欢什么水果？","options":["苹果","西瓜","香蕉","葡萄"],"answer":"香蕉","solution":{"小米":"葡萄","小豆":"西瓜","小果":"苹果","小桃":"香蕉"}},{"people":["大力","小飞","小龙","小虎"],"theme":"喜欢的运动","items":["足球","篮球","游泳","跑步"],"clues":["大力喜欢跑步","小龙喜欢游泳，小虎喜欢篮球"],"q":"谁喜欢足球？","options":["小龙","小虎","小飞","大力"],"answer":"小飞","solution":{"大力":"跑步","小飞":"足球","小龙":"游泳","小虎":"篮球"}},{"people":["大力","小飞","小龙","小虎"],"theme":"喜欢的运动","items":["足球","篮球","游泳","跑步"],"clues":["小虎不喜欢篮球","大力喜欢游泳","小飞喜欢跑步"],"q":"小虎喜欢什么运动？","options":["篮球","游泳","跑步","足球"],"answer":"足球","solution":{"大力":"游泳","小飞":"跑步","小龙":"篮球","小虎":"足球"}},{"people":["大力","小飞","小龙","小虎"],"theme":"喜欢的运动","items":["足球","篮球","游泳","跑步"],"clues":["小龙喜欢跑步","大力不喜欢足球","小虎喜欢游泳"],"q":"大力喜欢什么运动？","options":["篮球","足球","游泳","跑步"],"answer":"篮球","solution":{"大力":"篮球","小飞":"足球","小龙":"跑步","小虎":"游泳"}},{"people":["大力","小飞","小龙","小虎"],"theme":"喜欢的运动","items":["足球","篮球","游泳","跑步"],"clues":["大力不喜欢足球","小虎喜欢跑步","小龙不喜欢跑步","小龙喜欢篮球"],"q":"小飞喜欢什么运动？","options":["篮球","游泳","跑步","足球"],"answer":"足球","solution":{"大力":"游泳","小飞":"足球","小龙":"篮球","小虎":"跑步"}}];
+var KEY_BEST='pclue.best';
+var state={correct:0,streak:0,best:0,wrong:0,locked:false,current:null,hintUsed:false,timer:null,lastIdx:-1};
+var feedbackEl=document.getElementById('feedback');
+var optionsEl=document.getElementById('options');
+var hintBtn=document.getElementById('hintBtn');
+var solutionEl=document.getElementById('solution');
+
+function safeGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function safeSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function feedback(text,good){
+  feedbackEl.className='feedback '+(good?'ok':'bad');
+  feedbackEl.textContent=text;
+}
+function clearFeedback(){feedbackEl.className='feedback';feedbackEl.textContent='';}
+function renderStats(){
+  document.getElementById('correctCount').textContent=state.correct;
+  document.getElementById('streakCount').textContent=state.streak;
+  document.getElementById('bestCount').textContent=state.best;
+}
+function confetti(){
+  var layer=document.getElementById('confetti');
+  var emojis=['🎉','🎊','⭐','✨','💫'];
+  for(var i=0;i<18;i++){
+    var s=document.createElement('span');
+    s.className='confetti-bit';
+    s.textContent=emojis[i%emojis.length];
+    s.style.left=(Math.random()*96)+'%';
+    s.style.animationDelay=(Math.random()*0.45)+'s';
+    s.style.fontSize=(0.85+Math.random()*1.1)+'rem';
+    layer.appendChild(s);
+  }
+  setTimeout(function(){layer.innerHTML='';},2100);
+}
+function showSolution(p){
+  var items=p.people.map(function(name){
+    return '<div class="sol-item">'+esc(name)+' → '+esc(p.solution[name])+'</div>';
+  }).join('');
+  solutionEl.innerHTML='<div class="sol-title">✅ 完整答案</div>'+items;
+  solutionEl.classList.remove('hide');
+}
+function renderPuzzle(){
+  var p=state.current;
+  document.getElementById('theme').textContent='🧩 主题：'+p.theme;
+  document.getElementById('clues').innerHTML=p.clues.map(function(c,i){
+    return '<li><span class="clue-num">'+(i+1)+'</span><span>💡 '+esc(c)+'</span></li>';
+  }).join('');
+  document.getElementById('question').textContent=p.q;
+  optionsEl.innerHTML=p.options.map(function(o){
+    return '<button class="opt" type="button" data-val="'+esc(o)+'">'+esc(o)+'</button>';
+  }).join('');
+  hintBtn.classList.add('hide');
+  hintBtn.disabled=false;
+  solutionEl.classList.add('hide');
+  clearFeedback();
+}
+function nextPuzzle(){
+  var idx=Math.floor(Math.random()*PUZZLES.length);
+  if(PUZZLES.length>1&&idx===state.lastIdx)idx=(idx+1)%PUZZLES.length;
+  state.lastIdx=idx;
+  state.current=PUZZLES[idx];
+  state.wrong=0;
+  state.locked=false;
+  state.hintUsed=false;
+  renderPuzzle();
+}
+function resetClues(){
+  clearTimeout(state.timer);
+  nextPuzzle();
+}
+function initClues(){
+  var best=parseInt(safeGet(KEY_BEST),10);
+  state.best=isNaN(best)?0:best;
+  state.correct=0;
+  state.streak=0;
+  renderStats();
+  optionsEl.addEventListener('click',onOptionClick);
+  hintBtn.addEventListener('click',useHint);
+  resetClues();
+}
+function onOptionClick(e){
+  var btn=e.target.closest('.opt');
+  if(!btn||state.locked||btn.disabled)return;
+  var p=state.current;
+  if(btn.dataset.val===p.answer){
+    state.locked=true;
+    btn.classList.add('correct');
+    feedback('✅ 答对了！',true);
+    state.correct++;
+    state.streak++;
+    if(state.streak>state.best){
+      state.best=state.streak;
+      safeSet(KEY_BEST,String(state.best));
+    }
+    renderStats();
+    showSolution(p);
+    confetti();
+    state.timer=setTimeout(resetClues,1500);
+  }else{
+    btn.classList.remove('shake');
+    void btn.offsetWidth;
+    btn.classList.add('wrong','shake');
+    btn.disabled=true;
+    feedback('❌ 再仔细看看线索',false);
+    state.wrong++;
+    state.streak=0;
+    renderStats();
+    if(state.wrong>=2&&!state.hintUsed)hintBtn.classList.remove('hide');
+  }
+}
+function useHint(){
+  if(state.locked||state.hintUsed)return;
+  var p=state.current;
+  var wrongs=Array.prototype.slice.call(optionsEl.querySelectorAll('.opt')).filter(function(b){
+    return !b.disabled&&b.dataset.val!==p.answer;
+  });
+  if(!wrongs.length)return;
+  var b=wrongs[Math.floor(Math.random()*wrongs.length)];
+  b.disabled=true;
+  b.classList.add('eliminated');
+  state.hintUsed=true;
+  hintBtn.disabled=true;
+  hintBtn.classList.add('hide');
+  feedback('💡 已排除一个错误选项',true);
+}
+
+initClues();
+</script>
+</body>
+</html>

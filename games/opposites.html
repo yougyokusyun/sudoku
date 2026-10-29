@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>↔️ 相反词配对 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#eef2ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff0f4,transparent 55%),
+             linear-gradient(160deg,#f8faff,#fff6f8);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:rgba(255,255,255,.76);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:10px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:.96rem;font-weight:800;text-align:center;color:#4a5f78;}
+
+/* 上方：给出的那个概念 */
+.top{display:flex;align-items:center;justify-content:center;gap:10px;}
+.card{width:clamp(96px,26vw,132px);min-height:clamp(104px,28vw,140px);border-radius:22px;
+  background:#fff;border:2px solid rgba(36,59,83,.10);display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;box-shadow:0 8px 18px rgba(36,59,83,.10);
+  transition:transform .18s cubic-bezier(.3,1.4,.5,1),border-color .18s ease,background .18s ease;}
+.card .e{font-size:clamp(2.2rem,8vw,3rem);line-height:1.1;}
+.card .w{font-size:1rem;font-weight:900;color:#3d5673;}
+.card.given{border-color:rgba(124,92,255,.45);background:linear-gradient(160deg,#fff,#f4f1ff);}
+.card.good{border-color:var(--ok);background:#e9fbee;animation:pop .45s ease;}
+.card.side{animation:slideIn .4s ease;}
+.top .plus{font-size:1.4rem;font-weight:900;color:#b7c3d3;}
+
+/* 下方选项 */
+.opts{display:flex;justify-content:center;align-items:stretch;gap:clamp(8px,2.4vw,16px);flex-wrap:wrap;}
+.opt{width:clamp(88px,24vw,116px);min-height:clamp(96px,26vw,124px);border-radius:20px;background:#fff;
+  border:2px solid rgba(36,59,83,.10);cursor:pointer;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;box-shadow:0 6px 14px rgba(36,59,83,.10);font-family:inherit;color:inherit;
+  transition:transform .14s ease,border-color .18s ease,background .18s ease;}
+.opt:active{transform:scale(.95);}
+.opt .e{font-size:clamp(1.9rem,6.6vw,2.6rem);line-height:1.1;}
+.opt .w{font-size:.86rem;font-weight:800;color:#5a7290;}
+.opt.good{border-color:var(--ok);background:#e9fbee;animation:pop .45s ease;}
+.opt.badd{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+
+.feedback{min-height:30px;font-size:1.06rem;font-weight:900;text-align:center;color:var(--muted);}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.88rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(124,92,255,.5);color:#fff;background:linear-gradient(135deg,#8b6bff,#6a4bff);}
+
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-26px) scale(.9);}to{opacity:1;transform:translateX(0) scale(1);}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:6px;padding:7px;border-radius:16px;flex-direction:row;flex-wrap:wrap;}
+  .prompt{flex:1 0 100%;font-size:.8rem;}
+  .top{flex:1 1 40%;align-self:center;}
+  .card{width:78px;min-height:76px;border-radius:14px;}
+  .card .e{font-size:1.7rem;}
+  .card .w{font-size:.8rem;}
+  .opts{flex:1 1 52%;gap:8px;}
+  .opt{width:66px;min-height:72px;border-radius:12px;}
+  .opt .e{font-size:1.4rem;}
+  .opt .w{font-size:.68rem;}
+  .feedback{flex:1 0 100%;min-height:18px;font-size:.86rem;}
+  .controls{flex:1 0 100%;}
+  .btn{min-height:32px;font-size:.76rem;padding:0 12px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>↔️ 相反词配对</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">哪个和它是相反的？点一下👇</div>
+  <div class="top" id="top">
+    <div class="card given" id="given">
+      <span class="e" id="givenE">🐘</span>
+      <span class="w" id="givenW">大</span>
+    </div>
+    <span class="plus" id="plus" style="visibility:hidden">+</span>
+    <div class="card side" id="side" style="display:none">
+      <span class="e" id="sideE"></span>
+      <span class="w" id="sideW"></span>
+    </div>
+  </div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn primary" id="next" type="button">🔄 换一对</button>
+  </div>
+</div>
+
+<script>
+/* 相反词对：a / b 两侧各带 emoji 与词 */
+var PAIRS = [
+  { a: { e: '🐘', w: '大' }, b: { e: '🐭', w: '小' } },
+  { a: { e: '🌳', w: '高' }, b: { e: '🌱', w: '矮' } },
+  { a: { e: '🐇', w: '快' }, b: { e: '🐢', w: '慢' } },
+  { a: { e: '🍎🍎🍎', w: '多' }, b: { e: '🍎', w: '少' } },
+  { a: { e: '🔥', w: '热' }, b: { e: '❄️', w: '冷' } },
+  { a: { e: '⬆️', w: '上' }, b: { e: '⬇️', w: '下' } }
+];
+
+var curPair = null, given = null, answer = null;
+var streak = 0, best = readNum('popp.best');
+var locked = false, timer = null;
+
+var elGivenE = document.getElementById('givenE');
+var elGivenW = document.getElementById('givenW');
+var elGiven = document.getElementById('given');
+var elSide = document.getElementById('side');
+var elSideE = document.getElementById('sideE');
+var elSideW = document.getElementById('sideW');
+var elPlus = document.getElementById('plus');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elPrompt = document.getElementById('prompt');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+
+var canSpeak = typeof window.speechSynthesis !== 'undefined';
+function say(text) {
+  if (!canSpeak) return;
+  try {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.92;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+function newRound() {
+  clearTimeout(timer);
+  locked = false;
+
+  var prev = curPair ? curPair.a.w : '';
+  do { curPair = PAIRS[rand(PAIRS.length)]; } while (curPair.a.w === prev);
+  var flip = rand(2) === 1;                    // 随机把 a/b 哪一侧放上面
+  given = flip ? curPair.b : curPair.a;
+  answer = flip ? curPair.a : curPair.b;
+
+  elGivenE.textContent = given.e;
+  elGivenW.textContent = given.w;
+  elGiven.className = 'card given';
+  elSide.style.display = 'none';
+  elSide.className = 'card side';
+  elPlus.style.visibility = 'hidden';
+
+  /* 3 个选项：正确答案 + 2 个来自其它词对的干扰 */
+  var others = [];
+  shuffle(PAIRS.filter(function (p) { return p !== curPair; })).forEach(function (p) {
+    others.push(p.a, p.b);
+  });
+  others = others.filter(function (o) { return o.w !== given.w && o.w !== answer.w; });
+  var pick = shuffle(others).slice(0, 2);
+  var opts = shuffle([answer].concat(pick));
+
+  elOpts.innerHTML = '';
+  opts.forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.setAttribute('data-w', o.w);
+    b.setAttribute('aria-label', o.w);
+    b.innerHTML = '<span class="e">' + o.e + '</span><span class="w">' + o.w + '</span>';
+    b.addEventListener('click', function () { tap(b, o); });
+    elOpts.appendChild(b);
+  });
+
+  window.__given = given.w;
+  window.__answer = answer.w;
+  window.__opts = opts.map(function (o) { return o.w; });
+  feedback('');
+  elPrompt.textContent = '哪个和「' + given.w + '」是相反的？👇';
+  voiceSpeak(given.w + '的反义词是哪一个？');
+}
+
+function tap(btn, o) {
+  if (locked) return;
+  if (o.w === answer.w) {
+    locked = true;
+    btn.classList.add('good');
+    /* 两张卡并排展示 */
+    elSideE.textContent = answer.e;
+    elSideW.textContent = answer.w;
+    elSide.style.display = 'flex';
+    elSide.className = 'card side good';
+    elPlus.style.visibility = 'visible';
+    elGiven.className = 'card given good';
+    void elSide.offsetWidth;
+    streak++;
+    if (streak > best) { best = streak; writeNum('popp.best', best); }
+    updateStats();
+    var said = given.w + '和' + answer.w;
+    say(said + '！');
+    feedback('🎉 ' + said + '！', 'ok');
+    elPrompt.textContent = '找对啦：' + said + '是相反词';
+    timer = setTimeout(newRound, 1500);
+  } else {
+    btn.classList.add('badd');
+    setTimeout(function () { btn.classList.remove('badd'); }, 450);
+    voiceSpeak('再想一想，意思相反的那一个才对');
+    feedback('❌ 「' + o.w + '」不是「' + given.w + '」的反义词，再看看', 'bad');
+  }
+}
+
+document.getElementById('next').addEventListener('click', function () {
+  streak = 0;
+  updateStats();
+  newRound();
+});
+
+function initOpposites() {
+  best = readNum('popp.best');
+  updateStats();
+  newRound();
+}
+function resetOpposites() {
+  streak = 0;
+  updateStats();
+  newRound();
+}
+initOpposites();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '相反词配对游戏。上面有一个词，下面选出和它意思相反的那一个。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进入游戏自动朗读；若浏览器拦截自动播放，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

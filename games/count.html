@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🍎 数一数 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#e08a00;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff6e6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eafaf0,transparent 55%),
+             linear-gradient(160deg,#fffdf6,#f2fbf6);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  background:rgba(255,255,255,.76);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:12px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a5f78;}
+
+/* 实物区：数量越多格子越小，保证 1~10 个都放得下 */
+.items{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;
+  width:min(76vw,340px);min-height:120px;padding:8px;border-radius:20px;
+  background:rgba(255,236,205,.45);border:2px dashed rgba(224,138,0,.28);}
+.items .it{line-height:1;font-size:2.6rem;animation:popIn .25s ease;}
+.items[data-n="5"] .it,.items[data-n="6"] .it{font-size:2.3rem;}
+.items[data-n="7"] .it,.items[data-n="8"] .it{font-size:2rem;}
+.items[data-n="9"] .it,.items[data-n="10"] .it{font-size:1.75rem;}
+
+.nums{display:flex;justify-content:center;align-items:center;gap:clamp(10px,2.6vw,18px);flex-wrap:wrap;}
+.num{width:88px;height:88px;border-radius:22px;border:2px solid rgba(36,59,83,.10);background:#fff;
+  color:#3d5673;font-family:inherit;font-size:2.1rem;font-weight:900;cursor:pointer;
+  box-shadow:0 6px 14px rgba(36,59,83,.10);transition:transform .14s ease,border-color .18s ease,background .18s ease;}
+.num:active{transform:scale(.95);}
+.num.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;animation:pop .45s ease;}
+.num.badd{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+
+.feedback{min-height:30px;font-size:1.05rem;font-weight:800;text-align:center;color:var(--muted);}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;}
+.btn{min-height:46px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(224,138,0,.55);color:#fff;background:linear-gradient(135deg,#ffc44d,#e58f00);}
+.btn.on{border-color:rgba(224,138,0,.6);background:rgba(224,138,0,.14);color:#a56200;}
+
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes popIn{from{opacity:0;transform:scale(.6)}to{opacity:1;transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:7px;padding:8px;border-radius:16px;flex-direction:row;flex-wrap:wrap;}
+  .prompt{flex:1 0 100%;font-size:.82rem;}
+  .items{width:min(46vw,220px);min-height:80px;padding:6px;gap:4px;}
+  .items .it{font-size:1.7rem;}
+  .items[data-n="5"] .it,.items[data-n="6"] .it{font-size:1.5rem;}
+  .items[data-n="7"] .it,.items[data-n="8"] .it{font-size:1.35rem;}
+  .items[data-n="9"] .it,.items[data-n="10"] .it{font-size:1.2rem;}
+  .num{width:62px;height:62px;font-size:1.5rem;border-radius:16px;}
+  .feedback{flex:1 0 100%;min-height:18px;font-size:.88rem;}
+  .controls{flex:1 0 100%;}
+  .btn{min-height:34px;font-size:.78rem;padding:0 12px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🍎 数一数</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">数一数有几个？点出正确的数字👇</div>
+  <div class="items" id="items" data-n="3"></div>
+  <div class="nums" id="nums"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn primary" id="next" type="button">🔄 换一组</button>
+    <button class="btn" id="hard" type="button">🔟 数到 10</button>
+  </div>
+</div>
+
+<script>
+/* 实物：图案 + 中文名（语音要用） */
+var THINGS = [
+  { e: '🍎', n: '苹果' }, { e: '🍌', n: '香蕉' }, { e: '🍓', n: '草莓' }, { e: '🍊', n: '橘子' },
+  { e: '🐟', n: '小鱼' }, { e: '⚽', n: '足球' }, { e: '🎈', n: '气球' }, { e: '🌸', n: '小花' },
+  { e: '⭐', n: '星星' }, { e: '🐰', n: '小兔' }, { e: '🚗', n: '小车' }, { e: '🍪', n: '饼干' }
+];
+
+var maxN = 5;                 // 进阶后变 10
+var count = 1, thing = null;
+var streak = 0, best = readNum('pcount.best');
+var locked = false, timer = null;
+
+var elItems = document.getElementById('items');
+var elNums = document.getElementById('nums');
+var elFb = document.getElementById('feedback');
+var elPrompt = document.getElementById('prompt');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+var btnHard = document.getElementById('hard');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+
+var canSpeak = typeof window.speechSynthesis !== 'undefined';
+function say(text) {
+  if (!canSpeak) return;
+  try {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.95;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+function newRound() {
+  clearTimeout(timer);
+  locked = false;
+
+  var prev = count;
+  do { count = 1 + rand(maxN); } while (maxN > 1 && count === prev);
+  thing = THINGS[rand(THINGS.length)];
+
+  elItems.setAttribute('data-n', count);
+  elItems.innerHTML = '';
+  for (var i = 0; i < count; i++) {
+    var s = document.createElement('span');
+    s.className = 'it';
+    s.textContent = thing.e;
+    elItems.appendChild(s);
+  }
+
+  /* 4 个数字选项：答案 + 3 个不同的干扰（都在 1~maxN 内） */
+  var opts = [count];
+  var guard = 0;
+  while (opts.length < 4 && guard++ < 60) {
+    var v = 1 + rand(maxN);
+    if (opts.indexOf(v) < 0) opts.push(v);
+  }
+  /* 极窄范围（如 1~3）凑不满 4 个时，用 1~maxN+2 兜底，保证选项数足够 */
+  while (opts.length < 4) {
+    var w = 1 + rand(maxN + 2);
+    if (opts.indexOf(w) < 0) opts.push(w);
+  }
+  opts = shuffle(opts);
+
+  elNums.innerHTML = '';
+  opts.forEach(function (n) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'num';
+    b.setAttribute('data-n', n);
+    b.textContent = n;
+    b.addEventListener('click', function () { tap(b, n); });
+    elNums.appendChild(b);
+  });
+
+  window.__count = count;
+  window.__maxN = maxN;
+  window.__opts = opts.slice();
+  window.__thing = thing.n;
+  feedback('');
+  voiceSpeak('数一数，这里有几个？');
+}
+
+function tap(btn, n) {
+  if (locked) return;
+  if (n === count) {
+    locked = true;
+    btn.classList.add('good');
+    streak++;
+    if (streak > best) { best = streak; writeNum('pcount.best', best); }
+    updateStats();
+    /* 用阿拉伯数字进语音稿：合成音会自然读成「三个」，避免中文「二个」这种别扭说法 */
+    var said = count + '个' + thing.n;
+    say(said + '！');
+    feedback('🎉 ' + said + '！', 'ok');
+    timer = setTimeout(newRound, 1100);
+  } else {
+    btn.classList.add('badd');
+    setTimeout(function () { btn.classList.remove('badd'); }, 450);
+    voiceSpeak('再数一数，慢慢来');
+    feedback('❌ 再数一数～', 'bad');
+  }
+}
+
+document.getElementById('next').addEventListener('click', function () {
+  streak = 0;
+  updateStats();
+  newRound();
+  feedback('换了一组，重新数～');
+});
+
+btnHard.addEventListener('click', function () {
+  maxN = maxN === 5 ? 10 : 5;
+  btnHard.classList.toggle('on', maxN === 10);
+  btnHard.textContent = maxN === 10 ? '🖐 数到 5' : '🔟 数到 10';
+  streak = 0;
+  updateStats();
+  newRound();
+});
+
+function initCount() {
+  best = readNum('pcount.best');
+  updateStats();
+  newRound();
+}
+function resetCount() {
+  streak = 0;
+  updateStats();
+  newRound();
+}
+initCount();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '数一数游戏。数一数上面有几个，再点下面的数字。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进入游戏自动朗读；若浏览器拦截自动播放，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

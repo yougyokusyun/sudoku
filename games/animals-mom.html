@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🐘 动物找妈妈 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#e0559b;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff0f6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eaf5ff,transparent 55%),
+             linear-gradient(160deg,#fffafc,#f3faff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{position:relative;flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:10px;background:rgba(255,255,255,.76);border:2px solid rgba(36,59,83,.08);
+  border-radius:22px;padding:10px;box-shadow:0 10px 24px rgba(36,59,83,.08);overflow:hidden;}
+.prompt{font-size:.98rem;font-weight:800;text-align:center;color:#4a5f78;}
+
+/* 妈妈 */
+.mom{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 18px;border-radius:24px;
+  background:linear-gradient(160deg,#fff,#fff3f8);border:2px solid rgba(224,85,155,.22);
+  box-shadow:0 8px 18px rgba(224,85,155,.14);transition:transform .2s ease;}
+.mom.pop{animation:pop .5s ease;}
+.mom .e{font-size:4.4rem;line-height:1.05;}
+.mom .ph{width:92px;height:92px;border-radius:16px;object-fit:cover;box-shadow:0 4px 10px rgba(36,59,83,.14);}
+.mom .t{font-size:.8rem;font-weight:800;color:#b7417c;}
+
+/* 宝宝 */
+.babies{display:flex;justify-content:center;align-items:flex-end;gap:clamp(10px,3vw,20px);flex-wrap:wrap;}
+.baby{width:clamp(84px,24vw,110px);height:clamp(84px,24vw,110px);border-radius:20px;border:2px solid rgba(36,59,83,.10);
+  background:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  box-shadow:0 6px 14px rgba(36,59,83,.10);font-family:inherit;color:inherit;
+  transition:transform .14s ease,border-color .18s ease,background .18s ease;}
+.baby:active{transform:scale(.95);}
+.baby .e{font-size:2.6rem;line-height:1.05;}
+.baby .ph{width:92%;height:62px;object-fit:cover;border-radius:12px;}
+.baby .t{font-size:.66rem;font-weight:700;color:#7b8ea8;}
+.baby.good{border-color:var(--ok);background:#e9fbee;animation:pop .45s ease;}
+.baby.badd{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+.baby.gone{opacity:0;transform:scale(.5);transition:opacity .3s ease,transform .3s ease;}
+
+.feedback{min-height:30px;font-size:1.05rem;font-weight:900;text-align:center;color:var(--muted);}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.88rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(224,85,155,.5);color:#fff;background:linear-gradient(135deg,#ff8fbe,#e0559b);}
+
+/* 飞向妈妈的宝宝 */
+.fly{position:fixed;z-index:99;pointer-events:none;border-radius:16px;background:#fff;
+  border:2px solid rgba(47,179,68,.5);display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 18px rgba(36,59,83,.18);
+  transition:transform .5s cubic-bezier(.3,.9,.4,1),opacity .5s ease;}
+.fly img{width:72%;height:72%;object-fit:cover;border-radius:12px;}
+
+/* 爱心 */
+.heart{position:absolute;z-index:98;pointer-events:none;font-size:1.6rem;
+  animation:heartUp 1.1s ease-out forwards;}
+@keyframes heartUp{
+  0%{opacity:0;transform:translateY(10px) scale(.4);}
+  25%{opacity:1;}
+  100%{opacity:0;transform:translateY(-90px) scale(1.25) rotate(12deg);}
+}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:6px;padding:7px;border-radius:16px;flex-direction:row;flex-wrap:wrap;}
+  .prompt{flex:1 0 100%;font-size:.8rem;}
+  .mom{padding:6px 12px;border-radius:16px;}
+  .mom .e{font-size:2.8rem;}
+  .mom .ph{width:56px;height:56px;border-radius:10px;}
+  .mom .t{font-size:.66rem;}
+  .babies{gap:8px;}
+  .baby{width:64px;height:64px;border-radius:14px;}
+  .baby .e{font-size:1.7rem;}
+  .baby .ph{height:36px;border-radius:8px;}
+  .baby .t{font-size:.55rem;}
+  .feedback{flex:1 0 100%;min-height:18px;font-size:.86rem;}
+  .controls{flex:1 0 100%;}
+  .btn{min-height:32px;font-size:.76rem;padding:0 12px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🐘 动物找妈妈</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage" id="stage">
+  <div class="prompt" id="prompt">哪个是这个妈妈的宝宝？点一下👇</div>
+  <div class="mom" id="mom">
+    <span class="e" id="momE">🐘</span>
+    <span class="t" id="momT">大象妈妈</span>
+  </div>
+  <div class="babies" id="babies"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn primary" id="next" type="button">🔄 换一个</button>
+  </div>
+</div>
+
+<script>
+/* 常见动物：emoji + 名字 + 本地照片 f（img/<f>.jpg，妈妈和宝宝用同一张） */
+var ANIMALS = [
+  { e: '🐘', n: '大象', f: 'elephant' }, { e: '🐶', n: '小狗', f: 'dog' },
+  { e: '🐱', n: '小猫', f: 'cat' }, { e: '🐰', n: '小兔', f: 'rabbit' },
+  { e: '🦁', n: '狮子', f: 'lion' }, { e: '🐯', n: '老虎', f: 'tiger' },
+  { e: '🐮', n: '小牛', f: 'cow' }, { e: '🐷', n: '小猪', f: 'pig' },
+  { e: '🐑', n: '小羊', f: 'sheep' }, { e: '🐴', n: '小马', f: 'horse' },
+  { e: '🐵', n: '小猴', f: 'monkey' }, { e: '🐼', n: '熊猫', f: 'panda' },
+  { e: '🐔', n: '小鸡', f: 'chick' }, { e: '🦆', n: '小鸭', f: 'duck' },
+  { e: '🐸', n: '青蛙', f: 'frog' }, { e: '🐻', n: '小熊', f: 'bear' },
+  { e: '🦊', n: '狐狸', f: 'fox' }, { e: '🐭', n: '小鼠', f: 'mouse' },
+  { e: '🐨', n: '考拉', f: 'koala' }, { e: '🐧', n: '企鹅', f: 'penguin' }
+];
+
+var mom = null, babies = [];
+var streak = 0, best = readNum('pmom.best');
+var locked = false, timer = null;
+
+var elStage = document.getElementById('stage');
+var elMom = document.getElementById('mom');
+var elMomE = document.getElementById('momE');
+var elMomT = document.getElementById('momT');
+var elBabies = document.getElementById('babies');
+var elFb = document.getElementById('feedback');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+/* 本地照片，加载失败时回退 emoji */
+function setPhoto(host, f, emoji) {
+  host.innerHTML = '';
+  var img = new Image();
+  img.className = 'ph';
+  img.alt = emoji;
+  img.onerror = function () { host.innerHTML = ''; host.textContent = emoji; };
+  img.src = 'img/' + f + '.jpg';
+  host.appendChild(img);
+}
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+
+var canSpeak = typeof window.speechSynthesis !== 'undefined';
+function say(text) {
+  if (!canSpeak) return;
+  try {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.94;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+function newRound() {
+  clearTimeout(timer);
+  locked = false;
+  Array.prototype.forEach.call(elStage.querySelectorAll('.heart'), function (h) { h.remove(); });
+
+  var prev = mom ? mom.n : '';
+  do { mom = ANIMALS[rand(ANIMALS.length)]; } while (mom.n === prev);
+  var others = shuffle(ANIMALS.filter(function (a) { return a.n !== mom.n; })).slice(0, 2);
+  babies = shuffle([mom].concat(others));
+
+  setPhoto(elMomE, mom.f, mom.e);
+  elMomT.textContent = mom.n + '妈妈';
+  elMom.classList.remove('pop');
+
+  elBabies.innerHTML = '';
+  babies.forEach(function (a) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'baby';
+    b.setAttribute('data-n', a.n);
+    b.setAttribute('aria-label', a.n + '宝宝');
+    var ehost = document.createElement('span');
+    ehost.className = 'e';
+    setPhoto(ehost, a.f, a.e);
+    var t = document.createElement('span');
+    t.className = 't';
+    t.textContent = a.n + '宝宝';
+    b.appendChild(ehost);
+    b.appendChild(t);
+    b.addEventListener('click', function () { tap(b, a); });
+    elBabies.appendChild(b);
+  });
+
+  window.__mom = mom.n;
+  window.__babies = babies.map(function (a) { return a.n; });
+  feedback('');
+  var kidName = mom.n.charAt(0) === '小' ? mom.n : '小' + mom.n;
+  voiceSpeak(kidName + '的妈妈在哪里呀？');
+}
+
+function tap(btn, a) {
+  if (locked) return;
+  if (a.n === mom.n) {
+    locked = true;
+    btn.classList.add('good');
+    flyToMom(btn);
+    setTimeout(function () {
+      btn.classList.add('gone');
+      elMom.classList.add('pop');
+      hearts();
+    }, 440);
+    streak++;
+    if (streak > best) { best = streak; writeNum('pmom.best', best); }
+    updateStats();
+    say('找到' + mom.n + '妈妈啦！');
+    feedback('🎉 找到' + mom.n + '妈妈啦！', 'ok');
+    timer = setTimeout(newRound, 1500);
+  } else {
+    btn.classList.add('badd');
+    setTimeout(function () { btn.classList.remove('badd'); }, 450);
+    voiceSpeak('这不是它的妈妈，再找找');
+    feedback('❌ 这是' + a.n + '，不是' + mom.n + '的宝宝，再看看', 'bad');
+  }
+}
+
+/* 宝宝飞向妈妈 */
+function flyToMom(btn) {
+  var a = btn.getBoundingClientRect(), b = elMom.getBoundingClientRect();
+  var f = document.createElement('div');
+  f.className = 'fly';
+  f.style.cssText += 'left:' + a.left + 'px;top:' + a.top + 'px;width:' + a.width + 'px;height:' + a.height + 'px;';
+  var fimg = new Image();
+  fimg.alt = mom.e;
+  fimg.onerror = function () { f.innerHTML = '<span style="font-size:2.2rem;line-height:1">' + mom.e + '</span>'; };
+  fimg.src = 'img/' + mom.f + '.jpg';
+  f.appendChild(fimg);
+  document.body.appendChild(f);
+  void f.offsetWidth;
+  var dx = (b.left + b.width / 2) - (a.left + a.width / 2);
+  var dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+  f.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(.5)';
+  f.style.opacity = '.3';
+  setTimeout(function () { f.remove(); }, 520);
+}
+
+/* 冒爱心 */
+function hearts() {
+  var r = elMom.getBoundingClientRect(), s = elStage.getBoundingClientRect();
+  for (var i = 0; i < 5; i++) {
+    var h = document.createElement('span');
+    h.className = 'heart';
+    h.textContent = '❤️';
+    h.style.left = (r.left - s.left + r.width / 2 - 14 + (rand(60) - 30)) + 'px';
+    h.style.top = (r.top - s.top + 6 + rand(20)) + 'px';
+    h.style.animationDelay = (i * 90) + 'ms';
+    elStage.appendChild(h);
+    setTimeout(function (x) { return function () { x.remove(); }; }(h), 1500);
+  }
+}
+
+document.getElementById('next').addEventListener('click', function () {
+  streak = 0;
+  updateStats();
+  newRound();
+  feedback('换了一位新妈妈～');
+});
+
+function initAnimalMom() {
+  best = readNum('pmom.best');
+  updateStats();
+  newRound();
+}
+function resetAnimalMom() {
+  streak = 0;
+  updateStats();
+  newRound();
+}
+initAnimalMom();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '动物找妈妈游戏。帮小动物找到它的妈妈，点一下妈妈的图片。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进入游戏自动朗读；若浏览器拦截自动播放，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

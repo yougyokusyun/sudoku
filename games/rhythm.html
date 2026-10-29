@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>👏 节奏模仿 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff4d4d;--accent:#e0559b;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff1f6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef6ff,transparent 55%),
+             linear-gradient(160deg,#fff9fb,#f5f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:rgba(255,255,255,.76);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:12px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:.98rem;font-weight:900;text-align:center;color:#4a5f78;}
+.seq{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;min-height:26px;align-items:center;}
+.dots{display:flex;gap:6px;justify-content:center;min-height:26px;}
+
+/* 四个彩色节奏键 */
+.pads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(10px,2.8vw,16px);width:min(86vw,400px);}
+@media (min-aspect-ratio: 3/2){
+  .pads{grid-template-columns:repeat(4,minmax(0,1fr));width:min(94vw,720px);}
+}
+.pad{position:relative;border:0;border-radius:clamp(16px,3.6vw,24px);aspect-ratio:1/1;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:clamp(1.5rem,5.5vw,2.1rem);
+  box-shadow:0 7px 16px rgba(36,59,83,.16);transition:transform .1s ease,filter .12s ease,box-shadow .12s ease;
+  filter:saturate(.72) brightness(.97);}
+.pad.red{background:linear-gradient(160deg,#ff9a9a,#e63946);}
+.pad.yellow{background:linear-gradient(160deg,#ffe487,#f2b705);}
+.pad.blue{background:linear-gradient(160deg,#86c6ff,#1e6091);}
+.pad.green{background:linear-gradient(160deg,#9beaaf,#2a9d3f);}
+.pad.lit{filter:saturate(1.25) brightness(1.18);transform:scale(1.1);
+  box-shadow:0 0 0 5px rgba(255,255,255,.85),0 10px 24px rgba(36,59,83,.28);}
+.pad.kid{filter:saturate(1.2) brightness(1.1);transform:scale(1.06);}
+.pad.wrong{animation:redflash .5s ease;}
+.pad:active{transform:scale(.96);}
+
+.feedback{min-height:30px;font-size:1.02rem;font-weight:900;text-align:center;color:var(--muted);}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.86rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(224,85,155,.5);color:#fff;background:linear-gradient(135deg,#ff8fbe,#e0559b);}
+
+@keyframes redflash{0%,100%{filter:saturate(.72) brightness(.97);}25%,75%{filter:saturate(1.3) brightness(1.1);background:#ff3b3b;transform:scale(1.06);}50%{filter:brightness(1.2);background:#ff7b7b;}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:6px;padding:7px;border-radius:16px;flex-direction:row;flex-wrap:wrap;}
+  .prompt{flex:1 0 100%;font-size:.8rem;}
+  .pads{width:min(96vw,700px);gap:8px;}
+  .pad{aspect-ratio:1/1;max-height:104px;font-size:1.3rem;border-radius:13px;}
+  .feedback{flex:1 0 100%;min-height:18px;font-size:.84rem;}
+  .controls{flex:1 0 auto;}
+  .btn{min-height:32px;font-size:.74rem;padding:0 10px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>👏 节奏模仿</h1>
+  <div class="chips">
+    <span class="chip">🎚 第 <b id="level">1</b> 关</span>
+    <span class="chip">🏆 最高 <b id="best">1</b> 关</span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">看好顺序，然后照着拍一遍👇</div>
+  <div class="pads" id="pads">
+    <button class="pad red" type="button" data-k="0" aria-label="红"><span>🔴</span></button>
+    <button class="pad yellow" type="button" data-k="1" aria-label="黄"><span>🟡</span></button>
+    <button class="pad blue" type="button" data-k="2" aria-label="蓝"><span>🔵</span></button>
+    <button class="pad green" type="button" data-k="3" aria-label="绿"><span>🟢</span></button>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn primary" id="replay" type="button">🔊 再听一遍</button>
+    <button class="btn" id="restart" type="button">🔁 重新开始</button>
+  </div>
+</div>
+
+<script>
+var NAMES = ['红', '黄', '蓝', '绿'];
+var FREQS = [261.63, 329.63, 392.00, 523.25];   // do mi sol 高do
+var LIGHT_MS = 500;    // 每个亮 0.5 秒
+var GAP_MS = 220;      // 亮与亮之间停顿
+
+var seq = [], input = [], level = 1;
+var best = readNum('prhythm.best');
+var playing = false, accepting = false;
+var playToken = 0, ctx = null, timers = [];
+
+var elPads = document.getElementById('pads');
+var elDots = document.getElementById('dots');
+var elFb = document.getElementById('feedback');
+var elPrompt = document.getElementById('prompt');
+var elLevel = document.getElementById('level');
+var elBest = document.getElementById('best');
+var elReplay = document.getElementById('replay');
+var elRestart = document.getElementById('restart');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 1 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function updateStats() { elLevel.textContent = level; elBest.textContent = best; }
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+function padEl(k) { return elPads.children[k]; }
+function clearTimers() {
+  timers.forEach(function (t) { clearTimeout(t); });
+  timers = [];
+}
+function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+
+function ensureCtx() {
+  if (ctx) return ctx;
+  var AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  try { ctx = new AC(); } catch (e) { return null; }
+  return ctx;
+}
+function tone(freq) {
+  var ac = ensureCtx();
+  if (!ac) return;
+  if (ac.state === 'suspended') { try { ac.resume(); } catch (e) { } }
+  var t = ac.currentTime;
+  var o = ac.createOscillator(), g = ac.createGain();
+  o.type = 'sine';
+  o.frequency.value = freq;
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.28, t + 0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.4);
+  o.connect(g); g.connect(ac.destination);
+  o.start(t); o.stop(t + 0.44);
+}
+
+function flashDots() {
+  elDots.innerHTML = '';
+  seq.forEach(function (k, i) {
+    var d = document.createElement('span');
+    d.style.cssText = 'width:10px;height:10px;border-radius:50%;background:' +
+      ['#e63946', '#f2b705', '#1e6091', '#2a9d3f'][k] + ';opacity:.35;';
+    if (i < input.length) d.style.opacity = '1';
+    elDots.appendChild(d);
+  });
+}
+
+/* 播放序列：逐个点亮 */
+function playSequence(after) {
+  clearTimers();
+  playToken++;
+  var myToken = playToken;
+  playing = true;
+  accepting = false;
+  input = [];
+  flashDots();
+  elPrompt.textContent = '看好顺序…👀';
+  voiceSpeak('看仔细啦，照着顺序拍一遍');
+
+  seq.forEach(function (k, i) {
+    later(function () {
+      if (myToken !== playToken) return;
+      var el = padEl(k);
+      el.classList.add('lit');
+      tone(FREQS[k]);
+      later(function () {
+        if (myToken !== playToken) return;
+        el.classList.remove('lit');
+      }, LIGHT_MS);
+    }, i * (LIGHT_MS + GAP_MS));
+  });
+
+  later(function () {
+    if (myToken !== playToken) return;
+    playing = false;
+    accepting = true;
+    elPrompt.textContent = '轮到你啦，照着拍一遍👏';
+    if (after) after();
+  }, seq.length * (LIGHT_MS + GAP_MS));
+}
+
+function startLevel(reset) {
+  if (reset) { seq = []; level = 1; }
+  if (!seq.length) {
+    /* 简单版从 2 个开始 */
+    seq.push(rand(4));
+    seq.push(rand(4));
+  }
+  updateStats();
+  playSequence();
+}
+
+function grow() {
+  level++;
+  if (level > best) { best = level; writeNum('prhythm.best', best); }
+  updateStats();
+  seq.push(rand(4));
+  playSequence();
+}
+
+function tap(k) {
+  if (!accepting) {
+    if (playing) feedback('先看一遍，再跟着拍哦', '');
+    return;
+  }
+  var el = padEl(k);
+  el.classList.add('kid');
+  setTimeout(function () { el.classList.remove('kid'); }, 160);
+  tone(FREQS[k]);
+
+  var idx = input.length;
+  if (seq[idx] !== k) {                    // 拍错了
+    accepting = false;
+    allWrongFlash();
+    voiceSpeak('拍错啦，再听一遍顺序');
+    feedback('❌ 拍错啦，重看一遍顺序', 'bad');
+    elPrompt.textContent = '再看一次，这次跟着一起数👇';
+    setTimeout(function () { playSequence(); }, 900);
+    return;
+  }
+
+  input.push(k);
+  flashDots();
+  if (input.length === seq.length) {       // 整段拍对
+    accepting = false;
+    feedback('🎉 对啦！再加一个', 'ok');
+    elPrompt.textContent = '太棒了！马上要变长一点点…';
+    setTimeout(grow, 900);
+  } else {
+    feedback('✅ 第 ' + input.length + ' 个对了，继续', 'ok');
+  }
+}
+
+function allWrongFlash() {
+  Array.prototype.forEach.call(elPads.children, function (p) {
+    p.classList.add('wrong');
+    setTimeout(function () { p.classList.remove('wrong'); }, 520);
+  });
+}
+
+Array.prototype.forEach.call(elPads.children, function (p, k) {
+  p.addEventListener('click', function () { tap(k); });
+});
+
+elReplay.addEventListener('click', function () {
+  if (playing) return;
+  feedback('再听一遍～');
+  playSequence();
+});
+
+elRestart.addEventListener('click', function () {
+  playToken++;              // 打断当前播放
+  clearTimers();
+  playing = false;
+  accepting = false;
+  seq = [];
+  level = 1;
+  input = [];
+  elDots.innerHTML = '';
+  feedback('重新开始～');
+  updateStats();
+  setTimeout(function () { startLevel(true); }, 120);
+});
+
+function initRhythm() {
+  best = readNum('prhythm.best');
+  updateStats();
+  startLevel(true);
+}
+function resetRhythm() {
+  playToken++;
+  clearTimers();
+  seq = []; level = 1; input = [];
+  updateStats();
+  startLevel(true);
+}
+initRhythm();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '节奏模仿游戏。看清楚哪几个灯亮起来，再照着顺序拍一遍。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进入游戏自动朗读；若浏览器拦截自动播放，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

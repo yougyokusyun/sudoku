@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🎨 颜色配对 · 小脑袋乐园</title>
+<style>
+:root{
+  --ink:#243b53; --muted:#6b7f95; --ok:#2fb344; --bad:#ff5c5c; --accent:#e63946;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff4e8,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef3ff,transparent 55%),
+             linear-gradient(160deg,#fffbf6,#f2f7ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  background:rgba(255,255,255,.72);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:12px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a5f78;}
+
+/* 上方目标：色块，或「红色」这样的名字 */
+.target{width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 8px 20px rgba(36,59,83,.18),inset 0 -6px 14px rgba(0,0,0,.10);
+  border:4px solid rgba(255,255,255,.85);animation:popIn .3s ease;}
+.target.word{width:auto;min-width:150px;height:auto;padding:14px 24px;border-radius:24px;background:#fff;
+  font-size:2rem;font-weight:900;letter-spacing:4px;box-shadow:0 8px 20px rgba(36,59,83,.12);
+  border:3px solid rgba(36,59,83,.10);}
+.target.win{animation:pop .5s ease;}
+
+.dots{display:flex;justify-content:center;align-items:center;gap:clamp(10px,2.4vw,18px);flex-wrap:wrap;max-width:100%;}
+.dot{width:96px;height:96px;border-radius:50%;border:4px solid rgba(255,255,255,.9);cursor:pointer;
+  box-shadow:0 6px 16px rgba(36,59,83,.16);
+  transition:transform .15s ease,box-shadow .15s ease,outline-color .2s ease;}
+.dot:active{transform:scale(.94);}
+.dot.good{animation:pop .45s ease;outline:5px solid var(--ok);outline-offset:3px;}
+.dot.badd{animation:shake .45s ease;outline:5px solid var(--bad);outline-offset:3px;}
+
+.feedback{min-height:30px;font-size:1.05rem;font-weight:800;text-align:center;color:var(--muted);}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;}
+.btn{min-height:44px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.85rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.on{border-color:rgba(230,57,70,.55);background:rgba(230,57,70,.10);color:#b32330;}
+
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.16)}100%{transform:scale(1)}}
+@keyframes popIn{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:7px;padding:8px;border-radius:16px;}
+  .prompt{font-size:.84rem;}
+  .target{width:84px;height:84px;border-width:3px;}
+  .target.word{font-size:1.4rem;padding:8px 18px;min-width:110px;letter-spacing:2px;}
+  .dot{width:72px;height:72px;border-width:3px;}
+  .feedback{min-height:20px;font-size:.9rem;}
+  .btn{min-height:34px;font-size:.76rem;padding:0 12px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🎨 颜色配对</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">点出和上面一样的颜色👇</div>
+  <div class="target" id="target"></div>
+  <div class="dots" id="dots"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn" type="button" id="more">🔢 换成 6 色</button>
+    <button class="btn" type="button" id="byName">🔤 按名字找</button>
+  </div>
+</div>
+
+<script>
+var COLORS = [
+  { name: '红色', hex: '#e63946' },
+  { name: '橙色', hex: '#f4a261' },
+  { name: '黄色', hex: '#f2c744' },
+  { name: '绿色', hex: '#2fb344' },
+  { name: '蓝色', hex: '#1e7fc2' },
+  { name: '紫色', hex: '#9b5de5' },
+  { name: '粉色', hex: '#ff85ab' },
+  { name: '棕色', hex: '#8d6e63' }
+];
+
+var count = 4;              // 当前用到几种颜色
+var nameMode = false;       // true = 显示颜色名字，找对应圆点
+var cur = null, options = [];
+var streak = 0, best = readNum('pcolor.best');
+var locked = false, timer = null;
+
+var elTarget = document.getElementById('target');
+var elDots = document.getElementById('dots');
+var elPrompt = document.getElementById('prompt');
+var elFb = document.getElementById('feedback');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+var btnMore = document.getElementById('more');
+var btnName = document.getElementById('byName');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+function feedback(t, cls) {
+    elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+    elFb.textContent = t || '';
+}
+
+/* 语音朗读颜色名（系统不支持时静默跳过） */
+var canSpeak = typeof window.speechSynthesis !== 'undefined';
+function say(text) {
+    if (!canSpeak) return;
+    try {
+        var u = new SpeechSynthesisUtterance(text);
+        u.lang = 'zh-CN';
+        u.rate = 0.95;
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(u);
+    } catch (e) { }
+}
+
+function activeColors() { return COLORS.slice(0, count); }
+
+function newRound() {
+    clearTimeout(timer);
+    locked = false;
+
+    var list = activeColors();
+    var prev = cur ? cur.name : '';
+    var pick;
+    do { pick = list[rand(list.length)]; } while (list.length > 1 && pick.name === prev);
+    cur = pick;
+
+    var others = shuffle(list.filter(function (c) { return c.name !== cur.name; }));
+    options = shuffle([cur].concat(others.slice(0, count - 1)));
+
+    if (nameMode) {
+        elTarget.className = 'target word';
+        elTarget.textContent = cur.name;
+        elPrompt.textContent = '哪个是这个颜色？点一下👇';
+    } else {
+        elTarget.className = 'target';
+        elTarget.style.background = cur.hex;
+        elTarget.textContent = '';
+        elPrompt.textContent = '点出和上面一样的颜色👇';
+    }
+
+    elDots.innerHTML = '';
+    options.forEach(function (c) {
+        var d = document.createElement('button');
+        d.type = 'button';
+        d.className = 'dot';
+        d.setAttribute('data-name', c.name);
+        d.style.background = c.hex;
+        d.setAttribute('aria-label', c.name);
+        d.addEventListener('click', function () { tap(d, c); });
+        elDots.appendChild(d);
+    });
+
+    window.__cur = cur.name;
+    window.__count = count;
+    window.__nameMode = nameMode;
+    window.__options = options.map(function (c) { return c.name; });
+    feedback('');
+    voiceSpeak(nameMode ? '找出' + cur.name : '找出和上面一样的颜色');
+}
+
+function tap(el, c) {
+    if (locked || el.classList.contains('good')) return;
+    if (c.name === cur.name) {
+        locked = true;
+        el.classList.add('good');
+        elTarget.classList.add('win');
+        streak++;
+        if (streak > best) { best = streak; writeNum('pcolor.best', best); }
+        updateStats();
+        say(cur.name);
+        feedback('🎉 ' + cur.name + '！', 'ok');
+        timer = setTimeout(newRound, 1000);
+    } else {
+        el.classList.add('badd');
+        setTimeout(function () { el.classList.remove('badd'); }, 460);
+        voiceSpeak('再看一看，颜色不一样');
+        feedback('❌ 再看看，' + (nameMode ? '要找' + cur.name : '要和上面一样'), 'bad');
+    }
+}
+
+btnMore.addEventListener('click', function () {
+    count = count === 4 ? 6 : 4;
+    btnMore.textContent = '🔢 换成 ' + (count === 4 ? 6 : 4) + ' 色';
+    streak = 0;
+    updateStats();
+    newRound();
+});
+
+btnName.addEventListener('click', function () {
+    nameMode = !nameMode;
+    btnName.classList.toggle('on', nameMode);
+    btnName.textContent = nameMode ? '🖼 按色块找' : '🔤 按名字找';
+    streak = 0;
+    updateStats();
+    newRound();
+});
+
+function initColor() {
+    best = readNum('pcolor.best');
+    updateStats();
+    newRound();
+}
+function resetColor() {
+    streak = 0;
+    updateStats();
+    newRound();
+}
+initColor();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '颜色配对游戏。找出和上面一样的颜色。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进入游戏自动朗读；若浏览器拦截自动播放，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

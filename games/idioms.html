@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>📖 成语闯关 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#6a4bff;--warm:#f0a11a;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 480px at 0% 0%,#f2eeff,transparent 60%),
+             radial-gradient(900px 480px at 100% 0%,#fff4e3,transparent 55%),
+             linear-gradient(160deg,#fbfaff,#fffaf3);
+  height:100dvh;display:flex;flex-direction:column;padding:8px 12px 10px;gap:7px;user-select:none;overflow:hidden;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.12rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:38px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--warm);font-size:.86rem;}
+
+.tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.tab{flex:1 1 0;min-height:40px;border-radius:14px;border:2px solid rgba(36,59,83,.10);background:#fff;
+  color:#4a6076;font-family:inherit;font-weight:800;font-size:.84rem;cursor:pointer;white-space:nowrap;}
+.tab.on{border-color:rgba(106,75,255,.55);background:rgba(106,75,255,.10);color:#4a34c4;}
+
+.stage{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:7px;
+  background:rgba(255,255,255,.8);border:2px solid rgba(36,59,83,.08);border-radius:20px;padding:9px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.hint{font-size:.8rem;font-weight:800;text-align:center;color:#7a6a4f;flex:none;}
+.panel{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;}
+
+/* 猜一猜：emoji 画面 + 谜面 */
+.sceneCard{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap;
+  min-height:clamp(88px,26vh,190px);padding:8px 14px;border-radius:20px;
+  border:3px solid rgba(240,161,26,.28);background:linear-gradient(160deg,#fffbef,#fff1d8);}
+.sceneCard .s{font-size:clamp(2.1rem,9.5vh,4.4rem);line-height:1;}
+.riddle{font-size:clamp(.9rem,2.6vh,1.1rem);font-weight:800;text-align:center;color:#4a5f78;flex:none;
+  line-height:1.45;padding:0 4px;}
+
+/* 选项 */
+.opts{flex:1 1 auto;min-height:0;display:grid;gap:8px;}
+.opts.c2{grid-template-columns:repeat(2,1fr);grid-template-rows:repeat(2,1fr);}
+.opts.c3{grid-template-columns:repeat(3,1fr);grid-template-rows:1fr;}
+.opts.c4{grid-template-columns:repeat(4,1fr);grid-template-rows:1fr;}
+.opt{min-height:56px;border-radius:18px;border:3px solid rgba(36,59,83,.10);background:#fff;
+  font-family:inherit;font-weight:900;color:#31465c;cursor:pointer;padding:6px 8px;
+  font-size:clamp(.95rem,2.6vh,1.3rem);display:flex;align-items:center;justify-content:center;text-align:center;
+  box-shadow:0 5px 12px rgba(36,59,83,.07);transition:transform .12s ease,border-color .16s ease,background .16s ease;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;animation:shake .4s ease;}
+
+/* 填一填：成语 + 空格 */
+.fillCard{flex:0 0 auto;display:flex;align-items:center;justify-content:center;gap:6px;
+  min-height:clamp(70px,18vh,130px);border-radius:20px;border:3px solid rgba(106,75,255,.22);
+  background:linear-gradient(160deg,#faf8ff,#f0ecff);}
+.fillCard .ch{font-size:clamp(1.9rem,7vh,3.2rem);font-weight:900;color:#3f3a63;letter-spacing:.03em;}
+.fillCard .blank{display:inline-flex;align-items:center;justify-content:center;
+  min-width:clamp(46px,10vh,74px);height:clamp(52px,11vh,84px);border-radius:14px;
+  border:3px dashed #9c8bff;background:#fff;color:#6a4bff;font-size:clamp(1.6rem,6vh,2.6rem);}
+
+/* 配一配：翻牌 */
+.matchGrid{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(2,1fr);gap:8px;}
+.mcard{position:relative;border:none;background:transparent;padding:0;cursor:pointer;font-family:inherit;
+  perspective:700px;min-height:64px;}
+.mcard .inner{position:absolute;inset:0;transition:transform .34s ease;transform-style:preserve-3d;}
+.mcard.flip .inner{transform:rotateY(180deg);}
+.mcard .face{position:absolute;inset:0;border-radius:16px;display:flex;align-items:center;justify-content:center;
+  padding:6px;text-align:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  border:3px solid rgba(36,59,83,.10);box-shadow:0 5px 12px rgba(36,59,83,.07);}
+.mcard .back{background:linear-gradient(150deg,#7d63ff,#5a3fd6);color:#fff;font-size:1.5rem;}
+.mcard .front{background:#fff;transform:rotateY(180deg);font-weight:900;font-size:clamp(.8rem,2.2vh,1.05rem);
+  color:#31465c;line-height:1.3;}
+.mcard .front.idiom{background:#fffaf0;color:#8a5b00;font-size:clamp(1rem,3vh,1.5rem);letter-spacing:.06em;}
+.mcard.done .front{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.mcard.done{cursor:default;}
+.mcard.wrong .front{border-color:var(--bad);background:#ffeded;animation:shake .4s ease;}
+
+/* 演一演：情景 */
+.sceneText{flex:0 0 auto;display:flex;align-items:center;justify-content:center;text-align:center;
+  min-height:clamp(80px,24vh,170px);padding:10px 16px;border-radius:20px;
+  border:3px solid rgba(42,157,143,.25);background:linear-gradient(160deg,#f2fdfb,#e7faf6);
+  font-size:clamp(.95rem,2.9vh,1.25rem);font-weight:800;color:#2c4a55;line-height:1.55;}
+
+.feedback{min-height:30px;font-size:.95rem;font-weight:900;text-align:center;color:var(--muted);flex:none;}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .4s ease;}
+
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.03)}100%{transform:scale(1)}}
+
+@media (max-height:460px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .tab{min-height:32px;font-size:.76rem;border-radius:11px;}
+  .stage{gap:5px;padding:6px;border-radius:14px;}
+  .hint{font-size:.7rem;}
+  .sceneCard{min-height:70px;border-radius:14px;}
+  .sceneCard .s{font-size:1.9rem;}
+  .riddle{font-size:.78rem;}
+  .opt{min-height:42px;border-radius:12px;font-size:.82rem;}
+  .fillCard{min-height:56px;border-radius:14px;}
+  .fillCard .ch{font-size:1.4rem;}
+  .fillCard .blank{min-width:36px;height:42px;border-radius:10px;font-size:1.2rem;}
+  .sceneText{min-height:56px;border-radius:14px;font-size:.82rem;}
+  .mcard .back{font-size:1.1rem;}
+  .feedback{min-height:20px;font-size:.8rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>📖 成语闯关</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="tabs" id="tabs">
+  <button class="tab on" type="button" data-m="guess">🔍 猜一猜</button>
+  <button class="tab" type="button" data-m="fill">✏️ 填一填</button>
+  <button class="tab" type="button" data-m="match">🃏 配一配</button>
+  <button class="tab" type="button" data-m="scene">🎭 演一演</button>
+</div>
+
+<div class="stage">
+  <div class="hint" id="hint"></div>
+  <div class="panel" id="panel"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<script>
+/* ===== 成语与意思 ===== */
+var MEAN = {
+  '画蛇添足': '多此一举，反而坏事',
+  '井底之蛙': '见识短浅，只看到一点点',
+  '守株待兔': '死守经验，不知变通',
+  '亡羊补牢': '出了问题及时补救',
+  '对牛弹琴': '对不懂的人白费口舌',
+  '画龙点睛': '关键的地方一点就活',
+  '拔苗助长': '急于求成，反而坏事',
+  '掩耳盗铃': '自己骗自己',
+  '狐假虎威': '借别人的威风吓唬人',
+  '刻舟求剑': '情况变了还照老办法',
+  '自相矛盾': '说法前后打架',
+  '滥竽充数': '不会也混在里面充数',
+  '杯弓蛇影': '疑神疑鬼，自己吓自己',
+  '叶公好龙': '嘴上说喜欢，其实害怕',
+  '惊弓之鸟': '受过惊吓，特别胆小',
+  '三心二意': '不专心，注意力分散',
+  '一鸣惊人': '平时不出众，一下子做出成绩',
+  '愚公移山': '不怕困难，坚持到底',
+  '守口如瓶': '保守秘密，一个字也不说',
+  '七上八下': '心里紧张不安',
+  '未雨绸缪': '事先做好准备',
+  '各执一词': '各说各的，互不相让',
+  '兴高采烈': '非常高兴，兴头十足',
+  '持之以恒': '长期坚持，不半途而废',
+  '不耻下问': '不懂就主动向别人请教',
+  '临时抱佛脚': '事到临头才着急准备',
+  '手舞足蹈': '高兴得手脚都动起来'
+};
+
+/* 一、猜猜猜：emoji 画面 + 谜面（答案自动配 3 个干扰项） */
+var GUESSES = [
+  { a: '画蛇添足', sc: ['🐍', '✏️', '🦶'], r: '一个人画了一条蛇，画完又给蛇添上了脚。' },
+  { a: '井底之蛙', sc: ['🕳️', '🐸', '🔼'], r: '小青蛙住在井底，抬头只看见井口那么大的一块天。' },
+  { a: '守株待兔', sc: ['🌳', '🪵', '🐰'], r: '农夫不种地，天天守在树桩旁边，等兔子撞上来。' },
+  { a: '亡羊补牢', sc: ['🐑', '🕳️', '🔨'], r: '羊圈破了个洞，羊跑了，他马上把洞补好。' },
+  { a: '对牛弹琴', sc: ['🐮', '🎻', '🎵'], r: '一个人对着牛弹琴，牛只顾低头吃草，一点也听不懂。' },
+  { a: '画龙点睛', sc: ['🐉', '🖌️', '👁️'], r: '墙上画了一条龙，最后点上眼睛，龙好像活了一样。' },
+  { a: '拔苗助长', sc: ['🌱', '✋', '⬆️'], r: '他嫌小苗长得太慢，就一棵一棵往上拔。' },
+  { a: '掩耳盗铃', sc: ['🙉', '🤏', '🔔'], r: '他捂住自己的耳朵，去偷别人家的铃铛。' },
+  { a: '狐假虎威', sc: ['🦊', '😼', '🐯'], r: '狐狸走在老虎前面，别的动物吓得全跑开了。' },
+  { a: '刻舟求剑', sc: ['🛶', '✏️', '🗡️'], r: '剑掉进水里，他在船边刻了个记号，等船停了再下水找。' },
+  { a: '自相矛盾', sc: ['🛡️', '🗡️', '🤷'], r: '他先夸自己的盾最坚固，又夸自己的矛什么都能刺穿。' },
+  { a: '滥竽充数', sc: ['🎺', '🙈', '🎶'], r: '不会吹竽的人混在乐队里，假装跟着一起吹。' },
+  { a: '杯弓蛇影', sc: ['🍵', '🏹', '🐍'], r: '酒杯里弓的影子被当成了一条蛇，他吓得生了病。' },
+  { a: '叶公好龙', sc: ['🍃', '💬', '🐉'], r: '他天天说自己喜欢龙，真龙来了却吓得直跑。' },
+  { a: '惊弓之鸟', sc: ['🏹', '🐦', '😨'], r: '受过伤的小鸟，听见弓弦一响就发抖。' },
+  { a: '三心二意', sc: ['3️⃣', '❤️', '2️⃣', '💡'], r: '写作业时一会儿玩橡皮，一会儿看窗外，一点也不专心。' },
+  { a: '一鸣惊人', sc: ['📣', '🐔', '🏆'], r: '他平时成绩一般，这次比赛拿了第一名，大家都惊呆了。' },
+  { a: '愚公移山', sc: ['👴', '⛏️', '⛰️'], r: '老爷爷带着全家一点一点挖山，说子子孙孙一直挖下去。' },
+  { a: '守口如瓶', sc: ['🤐', '🔒', '🍶'], r: '别人告诉他的悄悄话，他一个字也不说出去。' },
+  { a: '七上八下', sc: ['7️⃣', '⬆️', '8️⃣', '⬇️'], r: '心里像有十五个吊桶打水，紧张得不得了。' },
+  { a: '未雨绸缪', sc: ['☁️', '☂️', '🏠'], r: '天还没下雨，他就先把伞备好，把屋顶修好。' },
+  { a: '各执一词', sc: ['🧑', '🗣️', '↔️', '🗣️', '🧑'], r: '两个人面对面，一个说东，一个说西，谁也不让谁。' },
+  { a: '兴高采烈', sc: ['🌊', '😄', '🎉'], r: '弟弟第一次看到大海，高兴得又蹦又跳。' },
+  { a: '持之以恒', sc: ['🏃', '📅', '✅'], r: '他每天坚持练习，一天也没有落下。' },
+  { a: '不耻下问', sc: ['🙋', '❓', '🧑‍🏫'], r: '遇到不会的题，他主动跑去问老师。' }
+];
+
+/* 二、填一填：挖掉一个字，从三个选项里选 */
+var FILLS = [
+  { a: '守株待兔', i: 3, o: ['兔', '猫', '鸟'] },
+  { a: '亡羊补牢', i: 3, o: ['牢', '门', '墙'] },
+  { a: '画龙点睛', i: 3, o: ['睛', '眼', '头'] },
+  { a: '对牛弹琴', i: 3, o: ['琴', '歌', '曲'] },
+  { a: '掩耳盗铃', i: 3, o: ['铃', '钟', '鼓'] },
+  { a: '拔苗助长', i: 3, o: ['长', '高', '大'] },
+  { a: '井底之蛙', i: 3, o: ['蛙', '鱼', '虫'] },
+  { a: '狐假虎威', i: 1, o: ['假', '借', '真'] },
+  { a: '刻舟求剑', i: 3, o: ['剑', '刀', '箭'] },
+  { a: '自相矛盾', i: 2, o: ['矛', '盾', '枪'] },
+  { a: '滥竽充数', i: 3, o: ['数', '量', '人'] },
+  { a: '一鸣惊人', i: 3, o: ['人', '鸟', '天'] },
+  { a: '三心二意', i: 3, o: ['意', '心', '思'] },
+  { a: '愚公移山', i: 2, o: ['移', '挖', '搬'] },
+  { a: '守口如瓶', i: 3, o: ['瓶', '罐', '缸'] },
+  { a: '惊弓之鸟', i: 3, o: ['鸟', '兔', '鱼'] },
+  { a: '兴高采烈', i: 3, o: ['烈', '热', '火'] },
+  { a: '持之以恒', i: 3, o: ['恒', '久', '长'] }
+];
+
+/* 三、配一配：成语 ↔ 意思，每轮随机 4 对翻牌 */
+var PAIRS = [
+  '守株待兔', '亡羊补牢', '井底之蛙', '拔苗助长', '画蛇添足', '画龙点睛',
+  '对牛弹琴', '狐假虎威', '刻舟求剑', '掩耳盗铃', '自相矛盾', '滥竽充数',
+  '惊弓之鸟', '守口如瓶', '三心二意', '一鸣惊人', '未雨绸缪', '各执一词',
+  '兴高采烈', '持之以恒', '叶公好龙', '杯弓蛇影', '不耻下问', '临时抱佛脚'
+];
+
+/* 四、演一演：生活情景选成语 */
+var SCENES = [
+  { s: '小明考试前不复习，考试时一道题也不会做。', a: '临时抱佛脚',
+    o: ['临时抱佛脚', '亡羊补牢', '画蛇添足', '守株待兔'] },
+  { s: '小红把同学的书弄丢了，马上道歉，还赔了一本新的。', a: '亡羊补牢',
+    o: ['亡羊补牢', '掩耳盗铃', '拔苗助长', '刻舟求剑'] },
+  { s: '弟弟第一次看到大海，高兴得又蹦又跳。', a: '兴高采烈',
+    o: ['兴高采烈', '三心二意', '井底之蛙', '对牛弹琴'] },
+  { s: '他每天练字，一天也没有落下。', a: '持之以恒',
+    o: ['持之以恒', '临时抱佛脚', '一鸣惊人', '画蛇添足'] },
+  { s: '上课时他一会儿玩橡皮，一会儿看窗外。', a: '三心二意',
+    o: ['三心二意', '持之以恒', '兴高采烈', '守口如瓶'] },
+  { s: '别人告诉他的秘密，他一个字也不说出去。', a: '守口如瓶',
+    o: ['守口如瓶', '各执一词', '一鸣惊人', '掩耳盗铃'] },
+  { s: '比赛前，他心里怦怦直跳，怎么也静不下来。', a: '七上八下',
+    o: ['七上八下', '兴高采烈', '手舞足蹈', '一鸣惊人'] },
+  { s: '他先夸自己的盾最坚固，又夸自己的矛什么都能刺穿。', a: '自相矛盾',
+    o: ['自相矛盾', '各执一词', '狐假虎威', '画蛇添足'] },
+  { s: '小苗长得慢，他干脆把每一棵苗都往上拔了一点。', a: '拔苗助长',
+    o: ['拔苗助长', '愚公移山', '守株待兔', '亡羊补牢'] },
+  { s: '遇到不会的题，他主动跑去问老师。', a: '不耻下问',
+    o: ['不耻下问', '自相矛盾', '掩耳盗铃', '对牛弹琴'] },
+  { s: '他借着爸爸的名气，在同学面前特别神气。', a: '狐假虎威',
+    o: ['狐假虎威', '一鸣惊人', '兴高采烈', '守株待兔'] },
+  { s: '他平时成绩一般，这次比赛却拿了第一名。', a: '一鸣惊人',
+    o: ['一鸣惊人', '三心二意', '未雨绸缪', '亡羊补牢'] },
+  { s: '天还没下雨，他就先把屋顶修好，把伞备好。', a: '未雨绸缪',
+    o: ['未雨绸缪', '临时抱佛脚', '井底之蛙', '刻舟求剑'] },
+  { s: '他一直说自己喜欢小狗，真见到狗却躲到妈妈身后。', a: '叶公好龙',
+    o: ['叶公好龙', '狐假虎威', '惊弓之鸟', '对牛弹琴'] }
+];
+
+/* ===== 状态 ===== */
+var mode = 'guess';
+var streak = 0, best = readNum('pidiom.best');
+var cur = null;                 /* 当前题目 */
+var lockQ = false;              /* 当前题是否已判定 */
+var timer = null;               /* 自动换题计时 */
+var matchState = null;          /* 配一配状态 */
+var lockMatch = false;
+
+var elPanel = document.getElementById('panel');
+var elHint = document.getElementById('hint');
+var elFb = document.getElementById('feedback');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+function bumpStreak() {
+  streak++;
+  if (streak > best) { best = streak; writeNum('pidiom.best', best); }
+  updateStats();
+}
+function clearTimer() { clearTimeout(timer); timer = null; }
+
+var canSpeak = typeof window.speechSynthesis !== 'undefined';
+function say(text) {
+  if (!canSpeak || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.92;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function pickWrong(pool, right, n) {
+  var others = pool.filter(function (x) { return x !== right; });
+  return shuffle(others).slice(0, n);
+}
+function el(tag, cls, text) {
+  var e = document.createElement(tag);
+  if (cls) e.className = cls;
+  if (text != null) e.textContent = text;
+  return e;
+}
+
+/* ===== 一、猜一猜 ===== */
+function newGuess() {
+  clearTimer(); lockQ = false;
+  var prev = cur && cur.a;
+  var q;
+  do { q = GUESSES[rand(GUESSES.length)]; } while (GUESSES.length > 1 && q.a === prev);
+  var opts = shuffle([q.a].concat(pickWrong(GUESSES.map(function (g) { return g.a; }), q.a, 3)));
+  cur = { a: q.a, sc: q.sc, r: q.r, o: opts };
+
+  elHint.textContent = '看看图，猜猜是哪个成语';
+  elPanel.innerHTML = '';
+  var card = el('div', 'sceneCard');
+  q.sc.forEach(function (s) { card.appendChild(el('span', 's', s)); });
+  elPanel.appendChild(card);
+  elPanel.appendChild(el('div', 'riddle', q.r));
+
+  var optsBox = el('div', 'opts c2');
+  opts.forEach(function (name) {
+    var b = el('button', 'opt', name);
+    b.type = 'button';
+    b.onclick = function () { answerGuess(name, b); };
+    optsBox.appendChild(b);
+  });
+  elPanel.appendChild(optsBox);
+  feedback('');
+  say(q.r + ' 猜一个成语。');
+  window.__answer = q.a;
+  window.__options = opts;
+}
+
+function answerGuess(name, btn) {
+  if (lockQ) return;
+  if (name === cur.a) {
+    lockQ = true;
+    btn.classList.add('good');
+    bumpStreak();
+    feedback('✅ 就是' + cur.a + '：' + (MEAN[cur.a] || ''), 'ok');
+    say('对啦，就是' + cur.a + '。' + (MEAN[cur.a] || ''));
+    Array.prototype.forEach.call(elPanel.querySelectorAll('.opt'), function (b) {
+      if (b !== btn) b.style.opacity = '.5';
+    });
+    timer = setTimeout(newGuess, 2200);
+  } else {
+    btn.classList.add('bad');
+    setTimeout(function () { btn.classList.remove('bad'); }, 430);
+    feedback('❌ 再看看图，它在做什么？', 'bad');
+    say('再看看图，想一想');
+  }
+}
+
+/* ===== 二、填一填 ===== */
+function newFill() {
+  clearTimer(); lockQ = false;
+  var prev = cur && cur.a;
+  var q;
+  do { q = FILLS[rand(FILLS.length)]; } while (FILLS.length > 1 && q.a === prev);
+  cur = { a: q.a, i: q.i, o: shuffle(q.o.slice()) };
+
+  elHint.textContent = '成语缺了一个字，把它选出来';
+  elPanel.innerHTML = '';
+  var card = el('div', 'fillCard');
+  for (var i = 0; i < q.a.length; i++) {
+    if (i === q.i) card.appendChild(el('span', 'blank', '？'));
+    else card.appendChild(el('span', 'ch', q.a[i]));
+  }
+  elPanel.appendChild(card);
+
+  var optsBox = el('div', 'opts c3');
+  cur.o.forEach(function (ch) {
+    var b = el('button', 'opt', ch);
+    b.type = 'button';
+    b.onclick = function () { answerFill(ch, b); };
+    optsBox.appendChild(b);
+  });
+  elPanel.appendChild(optsBox);
+  feedback('');
+  say('这个成语缺了一个字，把它选出来。');
+  window.__answer = q.a[q.i];
+  window.__idiom = q.a;
+  window.__options = cur.o;
+}
+
+function answerFill(ch, btn) {
+  if (lockQ) return;
+  if (ch === cur.a[cur.i]) {
+    lockQ = true;
+    btn.classList.add('good');
+    bumpStreak();
+    feedback('✅ 正是' + cur.a + '：' + (MEAN[cur.a] || ''), 'ok');
+    say('对啦，' + cur.a + '。' + (MEAN[cur.a] || ''));
+    Array.prototype.forEach.call(elPanel.querySelectorAll('.opt'), function (b) {
+      if (b !== btn) b.style.opacity = '.5';
+    });
+    timer = setTimeout(newFill, 2200);
+  } else {
+    btn.classList.add('bad');
+    setTimeout(function () { btn.classList.remove('bad'); }, 430);
+    feedback('❌ 不对哦，再想一想', 'bad');
+    say('不对哦，再想一想');
+  }
+}
+
+/* ===== 三、配一配 ===== */
+function newMatch() {
+  clearTimer();
+  lockMatch = false;
+  var picks = shuffle(PAIRS).slice(0, 4);
+  var cards = [];
+  picks.forEach(function (idm) {
+    cards.push({ kind: 'idiom', key: idm, text: idm });
+    cards.push({ kind: 'mean', key: idm, text: MEAN[idm] });
+  });
+  cards = shuffle(cards);
+  matchState = { cards: cards, open: [], done: 0, total: picks.length };
+
+  elHint.textContent = '翻两张卡片，把成语和意思配成一对';
+  elPanel.innerHTML = '';
+  var grid = el('div', 'matchGrid');
+  cards.forEach(function (c, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'mcard';
+    b.setAttribute('data-i', String(i));
+    var inner = el('div', 'inner');
+    inner.appendChild(el('div', 'face back', '？'));
+    inner.appendChild(el('div', 'face front' + (c.kind === 'idiom' ? ' idiom' : ''), c.text));
+    b.appendChild(inner);
+    b.onclick = function () { flipCard(i, b); };
+    grid.appendChild(b);
+  });
+  elPanel.appendChild(grid);
+  feedback('全部配好就赢啦');
+  say('翻两张卡片，把成语和它的意思配成一对。');
+  window.__match = matchState;
+}
+
+function flipCard(i, btn) {
+  if (lockMatch) return;
+  var st = matchState;
+  var c = st.cards[i];
+  if (c.done || btn.classList.contains('flip')) return;
+
+  btn.classList.add('flip');
+  st.open.push({ i: i, btn: btn, card: c });
+  if (c.kind === 'idiom') say(c.text);
+
+  if (st.open.length < 2) return;
+
+  var a = st.open[0], b = st.open[1];
+  st.open = [];
+  lockMatch = true;
+
+  if (a.card.key === b.card.key && a.card.kind !== b.card.kind) {
+    a.card.done = b.card.done = true;
+    a.btn.classList.add('done'); b.btn.classList.add('done');
+    st.done++;
+    bumpStreak();
+    feedback('✅ 配对成功：' + a.card.key + '——' + MEAN[a.card.key], 'ok');
+    say('配对成功，' + a.card.key + '，' + MEAN[a.card.key]);
+    lockMatch = false;
+    if (st.done === st.total) {
+      feedback('🎉 全部配对成功！', 'ok');
+      say('全部配好，真棒！');
+      timer = setTimeout(newMatch, 2000);
+    }
+  } else {
+    a.btn.classList.add('wrong'); b.btn.classList.add('wrong');
+    feedback('❌ 这两张不是一对，再想想', 'bad');
+    say('不是一对，再想想');
+    setTimeout(function () {
+      a.btn.classList.remove('flip', 'wrong');
+      b.btn.classList.remove('flip', 'wrong');
+      lockMatch = false;
+    }, 900);
+  }
+}
+
+/* ===== 四、演一演 ===== */
+function newScene() {
+  clearTimer(); lockQ = false;
+  var prev = cur && cur.s;
+  var q;
+  do { q = SCENES[rand(SCENES.length)]; } while (SCENES.length > 1 && q.s === prev);
+  cur = { s: q.s, a: q.a, o: shuffle(q.o.slice()) };
+
+  elHint.textContent = '听一听小故事，选出最合适的成语';
+  elPanel.innerHTML = '';
+  elPanel.appendChild(el('div', 'sceneText', q.s));
+
+  var optsBox = el('div', 'opts c2');
+  cur.o.forEach(function (name) {
+    var b = el('button', 'opt', name);
+    b.type = 'button';
+    b.onclick = function () { answerScene(name, b); };
+    optsBox.appendChild(b);
+  });
+  elPanel.appendChild(optsBox);
+  feedback('');
+  say(q.s + ' 用哪个成语最合适？');
+  window.__answer = q.a;
+  window.__options = cur.o;
+}
+
+function answerScene(name, btn) {
+  if (lockQ) return;
+  if (name === cur.a) {
+    lockQ = true;
+    btn.classList.add('good');
+    bumpStreak();
+    feedback('✅ ' + cur.a + '：' + (MEAN[cur.a] || ''), 'ok');
+    say('对啦，' + cur.a + '。' + (MEAN[cur.a] || ''));
+    Array.prototype.forEach.call(elPanel.querySelectorAll('.opt'), function (b) {
+      if (b !== btn) b.style.opacity = '.5';
+    });
+    timer = setTimeout(newScene, 2400);
+  } else {
+    btn.classList.add('bad');
+    setTimeout(function () { btn.classList.remove('bad'); }, 430);
+    feedback('❌ 再想想这个情景的意思', 'bad');
+    say('再想想，这个情景在说什么');
+  }
+}
+
+/* ===== 模式切换与入口 ===== */
+var MODE_TEXT = {
+  guess: '成语猜猜猜。看看图，听听谜面，猜猜是哪个成语。',
+  fill: '成语填一填。成语里缺了一个字，从下面把它选出来。',
+  match: '成语配一配。翻两张卡片，把成语和它的意思配成一对。',
+  scene: '成语演一演。听一听生活里的小故事，选出最合适的成语。'
+};
+
+var starts = {
+  guess: function () { newGuess(); },
+  fill: function () { newFill(); },
+  match: function () { newMatch(); },
+  scene: function () { newScene(); }
+};
+
+function setMode(m, silent) {
+  mode = m;
+  clearTimer();
+  streak = 0;
+  updateStats();
+  Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (t) {
+    t.classList.toggle('on', t.getAttribute('data-m') === m);
+  });
+  starts[m]();
+  if (!silent) voiceSpeak(MODE_TEXT[m]);
+  window.__mode = m;
+}
+
+document.getElementById('tabs').addEventListener('click', function (e) {
+  var t = e.target.closest('.tab');
+  if (!t) return;
+  var m = t.getAttribute('data-m');
+  if (m !== mode) setMode(m);
+});
+
+/* 键盘 1~4 切换模式 */
+document.addEventListener('keydown', function (e) {
+  var k = e.key;
+  if (k === '1') setMode('guess');
+  else if (k === '2') setMode('fill');
+  else if (k === '3') setMode('match');
+  else if (k === '4') setMode('scene');
+});
+
+updateStats();
+setMode('guess', true);
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(MODE_TEXT[mode]); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+/* 进入时若自动播放被拦截，第一次碰屏幕补读当前模式说明 */
+(function () {
+  var started = false;
+  try {
+    var u = new SpeechSynthesisUtterance(MODE_TEXT[mode]);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.05;
+    u.onstart = function () { started = true; };
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (started) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(MODE_TEXT[mode]);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+})();
+</script>
+</body>
+</html>

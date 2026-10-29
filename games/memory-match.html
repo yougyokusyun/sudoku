@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>记忆翻牌 · 词语配对 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9f2,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#fff9f4,#f3f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;
+  padding:7px 14px;font-weight:800;font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  min-height:0;overflow-y:auto;width:100%;}
+.prompt{font-size:1.1rem;font-weight:800;text-align:center;}
+.feedback{min-height:32px;font-size:1.2rem;font-weight:800;text-align:center;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .prompt{font-size:.95rem;} .feedback{min-height:24px;font-size:1rem;} }
+/* 本游戏补充样式 */
+.hide{display:none!important;}
+.modes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.mode{min-height:40px;border:none;border-radius:999px;padding:7px 16px;font-family:inherit;
+  font-weight:900;font-size:.88rem;color:var(--ink);background:#fff;cursor:pointer;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.mode.active{background:linear-gradient(135deg,#7c5cff,#5b8def);color:#fff;}
+.stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.stat-pill{background:#fff;border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);white-space:nowrap;}
+.stat-pill b{color:var(--accent);}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);
+  gap:8px;flex:none;width:min(480px,100%,calc((100dvh - 195px) * 1.35));aspect-ratio:4/3;}
+.mcard{position:relative;display:block;width:100%;height:100%;padding:0;border:none;
+  background:none;cursor:pointer;perspective:700px;font-family:inherit;}
+.mi{position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;
+  transition:transform .45s cubic-bezier(.4,.1,.3,1.3);}
+.mcard.flipped .mi{transform:rotateY(180deg);}
+.mf,.mb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;}
+.mb{background:linear-gradient(140deg,#7c5cff,#4f8df7 70%,#7cc4ff);color:#fff;
+  font-size:clamp(1.1rem,5vw,1.5rem);box-shadow:0 5px 14px rgba(36,59,83,.16);}
+.mf{background:#fff;color:var(--ink);font-weight:900;font-size:clamp(1.3rem,7vw,2.2rem);
+  box-shadow:0 5px 14px rgba(36,59,83,.14);transform:rotateY(180deg);}
+.mcard.matched .mf{background:#eaf8ee;color:var(--ok);box-shadow:inset 0 0 0 2px var(--ok),0 5px 14px rgba(47,179,68,.18);}
+.mcard.matched{cursor:default;}
+.mcard.flipped.matched .mi{transform:rotateY(180deg);}
+.result{display:flex;justify-content:center;}
+.again{min-height:44px;border:none;border-radius:999px;padding:8px 22px;font-family:inherit;
+  font-weight:900;font-size:.95rem;color:#fff;background:linear-gradient(135deg,#7c5cff,#5b8def);
+  cursor:pointer;box-shadow:0 6px 16px rgba(124,92,255,.30);}
+#confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9;}
+.confetti-bit{position:absolute;top:-40px;animation:fall 1.8s linear forwards;}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg);opacity:.9;}}
+@media (max-height:430px){
+  .modes{gap:6px;}
+  .mode{min-height:40px;padding:5px 13px;font-size:.8rem;}
+  .stats{gap:5px;}
+  .stat-pill{padding:3px 9px;font-size:.72rem;}
+  .grid{gap:6px;width:min(480px,100%,calc((100dvh - 205px) * 1.35));}
+  .mf{border-radius:11px;font-size:clamp(1.1rem,6vw,1.7rem);}
+  .mb{border-radius:11px;font-size:1rem;}
+  .stage{gap:6px;}
+  .again{min-height:40px;padding:6px 18px;font-size:.86rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🃏 记忆翻牌 · 词语配对</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="modes">
+  <button class="mode active" id="mode2Btn" type="button" data-mode="2">二字词语</button>
+  <button class="mode" id="mode4Btn" type="button" data-mode="4">四字成语</button>
+</div>
+<div class="stats">
+  <span class="stat-pill">🔁 尝试 <b id="attempts">0</b> 次</span>
+  <span class="stat-pill">🏆 最佳 <b id="best">—</b></span>
+</div>
+<div class="stage">
+  <div class="prompt" id="prompt">点两张牌，拼出一个词语</div>
+  <div class="grid" id="grid"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="result hide" id="result">
+    <button class="again" id="againBtn" type="button">🔁 再玩一次</button>
+  </div>
+</div>
+<div id="confetti"></div>
+<script>
+var WORDS=["朋友","快乐","学习","老师","同学","学校","春天","夏天","秋天","冬天","太阳","月亮","星空","白云","蓝天","大海","小河","森林","花朵","树叶","苹果","香蕉","西瓜","葡萄","面包","牛奶","米饭","面条","鸡蛋","蔬菜","动物","老虎","狮子","熊猫","兔子","蝴蝶","蜜蜂","小鸟","金鱼","汽车","火车","飞机","轮船","城市","乡村","公园","医院","超市","书店","厨房","卧室","教室","铅笔","书包","课本","图画","音乐","舞蹈","足球","篮球","游泳","跑步","游戏","语言","故事","数字","颜色","形状","方向","早上","中午","晚上","今天","明天","昨天","星期","时间","长大","开心","生气","勇敢","认真","安静","干净","明亮","温暖","香甜","微笑","帮助","再见","你好","加油","努力","幸福","美丽","可爱","聪明","健康","安全","读书","写字","唱歌","跳舞","睡觉","起床","吃饭","喝水","医生","护士","警察","司机","农民","工人","作家","画家","歌手","演员"];
+var IDIOMS=["一心一意","三心二意","四面八方","五颜六色","七上八下","九牛一毛","十全十美","百发百中","千军万马","万紫千红","画蛇添足","守株待兔","掩耳盗铃","拔苗助长","自相矛盾","井底之蛙","狐假虎威","亡羊补牢","刻舟求剑","对牛弹琴","杯弓蛇影","惊弓之鸟","叶公好龙","滥竽充数","买椟还珠","南辕北辙","朝三暮四","东张西望","左顾右盼","前因后果","大同小异","大公无私","精卫填海","愚公移山","女娲补天","夸父逐日","后羿射日","嫦娥奔月","开天辟地","鸡犬升天","一鸣惊人","一箭双雕","一举两得","一石二鸟","一目十行","一日千里","一丝不苟","一往无前","一帆风顺","万事如意","心想事成","金玉满堂","花好月圆","鸟语花香","春暖花开","春色满园","秋高气爽","冰天雪地","风和日丽","阳光明媚","兴高采烈","眉开眼笑","手舞足蹈","目瞪口呆","面红耳赤","心花怒放","神采奕奕","生龙活虎","龙飞凤舞","虎头蛇尾","马到成功","喜出望外","无与伦比","兴致勃勃","小心翼翼","全神贯注","专心致志","目不转睛","心灵手巧","足智多谋","光明磊落","恍然大悟","津津有味","恋恋不舍","念念不忘","滔滔不绝","默默无闻","栩栩如生","五光十色","千姿百态","五湖四海","天涯海角","天南地北","高高兴兴","快快乐乐","平平安安","健健康康","开开心心","明明白白","清清楚楚","干干净净","安安静静","整整齐齐"];
+var BEST_KEYS={2:'pmem.best2',4:'pmem.best4'};
+var state={mode:2,cards:[],selected:[],attempts:0,matched:0,locked:false,complete:false,
+  timer:null,best:{2:0,4:0},round:0};
+var gridEl=document.getElementById('grid');
+var feedbackEl=document.getElementById('feedback');
+var promptEl=document.getElementById('prompt');
+var attemptsEl=document.getElementById('attempts');
+var bestEl=document.getElementById('best');
+var resultEl=document.getElementById('result');
+var modeBtns=document.querySelectorAll('.mode');
+
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function safeGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function safeSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function feedback(text,good){feedbackEl.className='feedback '+(good?'ok':'bad');feedbackEl.textContent=text;}
+function clearFeedback(){feedbackEl.className='feedback';feedbackEl.textContent='';}
+function renderStats(){
+  attemptsEl.textContent=state.attempts;
+  bestEl.textContent=state.best[state.mode]?state.best[state.mode]+' 次':'—';
+}
+function confetti(){
+  var layer=document.getElementById('confetti');
+  var emojis=['🎉','🎊','⭐','✨','💫'];
+  for(var i=0;i<18;i++){
+    var s=document.createElement('span');
+    s.className='confetti-bit';
+    s.textContent=emojis[i%emojis.length];
+    s.style.left=(Math.random()*96)+'%';
+    s.style.animationDelay=(Math.random()*0.45)+'s';
+    s.style.fontSize=(0.85+Math.random()*1.1)+'rem';
+    layer.appendChild(s);
+  }
+  setTimeout(function(){layer.innerHTML='';},2100);
+}
+function findWord(a,b){
+  var k1=a+b,k2=b+a;
+  for(var i=0;i<WORDS.length;i++){if(WORDS[i]===k1||WORDS[i]===k2)return WORDS[i];}
+  return null;
+}
+function idiomKey(s){return s.split('').sort().join('');}
+function findIdiom(chars){
+  var key=idiomKey(chars.join(''));
+  for(var i=0;i<IDIOMS.length;i++){if(idiomKey(IDIOMS[i])===key)return IDIOMS[i];}
+  return null;
+}
+function pickWordSet(){
+  for(var t=0;t<600;t++){
+    var cand=shuffle(WORDS).slice(0,6);
+    var chars=[];
+    for(var i=0;i<cand.length;i++){chars.push(cand[i].charAt(0));chars.push(cand[i].charAt(1));}
+    var bad=false;
+    for(var a=0;a<chars.length&&!bad;a++){
+      for(var b=a+1;b<chars.length;b++){
+        var w=findWord(chars[a],chars[b]);
+        if(w&&cand.indexOf(w)===-1){bad=true;break;}
+      }
+    }
+    if(!bad)return cand;
+  }
+  return shuffle(WORDS).slice(0,6);
+}
+function pickIdiomSet(){
+  for(var t=0;t<400;t++){
+    var cand=shuffle(IDIOMS).slice(0,3);
+    var chars=[];
+    for(var i=0;i<cand.length;i++)chars=chars.concat(cand[i].split(''));
+    var bad=false;
+    for(var a=0;a<12&&!bad;a++){
+      for(var b=a+1;b<12&&!bad;b++){
+        for(var c=b+1;c<12&&!bad;c++){
+          for(var d=c+1;d<12&&!bad;d++){
+            var found=findIdiom([chars[a],chars[b],chars[c],chars[d]]);
+            if(found&&cand.indexOf(found)===-1)bad=true;
+          }
+        }
+      }
+    }
+    if(!bad)return cand;
+  }
+  return shuffle(IDIOMS).slice(0,3);
+}
+function buildCards(){
+  var picks=state.mode===2?pickWordSet():pickIdiomSet();
+  var chars=[];
+  for(var i=0;i<picks.length;i++)chars=chars.concat(picks[i].split(''));
+  chars=shuffle(chars);
+  state.cards=chars.map(function(ch){return {ch:ch,flipped:false,matched:false};});
+}
+function renderGrid(){
+  var html='';
+  for(var i=0;i<state.cards.length;i++){
+    html+='<button class="mcard" type="button" data-i="'+i+'">'+
+          '<span class="mi"><span class="mb">❓</span><span class="mf">'+state.cards[i].ch+'</span></span>'+
+          '</button>';
+  }
+  gridEl.innerHTML=html;
+}
+function resetMatch(){
+  clearTimeout(state.timer);
+  state.timer=null;
+  state.round++;
+  state.cards=[];
+  state.selected=[];
+  state.attempts=0;
+  state.matched=0;
+  state.locked=false;
+  state.complete=false;
+  buildCards();
+  renderGrid();
+  resultEl.classList.add('hide');
+  clearFeedback();
+  promptEl.textContent=state.mode===2?'点两张牌，拼出一个词语':'连续翻 4 张牌，拼出一个成语';
+  renderStats();
+}
+function setActiveMode(){
+  for(var i=0;i<modeBtns.length;i++){
+    modeBtns[i].classList.toggle('active',Number(modeBtns[i].dataset.mode)===state.mode);
+  }
+}
+function lockPair(idxList,cls){
+  for(var i=0;i<idxList.length;i++){
+    var el=gridEl.querySelector('.mcard[data-i="'+idxList[i]+'"]');
+    if(!el)continue;
+    state.cards[idxList[i]].matched=true;
+    el.classList.add(cls);
+  }
+}
+function finishRound(){
+  state.complete=true;
+  state.locked=true;
+  var used=state.attempts;
+  var prev=state.best[state.mode];
+  if(!prev||used<prev){
+    state.best[state.mode]=used;
+    safeSet(BEST_KEYS[state.mode],String(used));
+  }
+  renderStats();
+  feedback('🎉 完成！用了 '+used+' 次尝试',true);
+  promptEl.textContent=state.mode===2?'🎊 词语全部配对成功！':'🎊 成语全部配对成功！';
+  resultEl.classList.remove('hide');
+  confetti();
+  var box=feedbackEl;
+  box.classList.remove('pop');
+  void box.offsetWidth;
+  box.classList.add('pop');
+}
+function onCard(i){
+  if(state.locked||state.complete)return;
+  var card=state.cards[i];
+  if(!card||card.flipped||card.matched)return;
+  var el=gridEl.querySelector('.mcard[data-i="'+i+'"]');
+  card.flipped=true;
+  if(el)el.classList.add('flipped');
+  state.selected.push(i);
+  if(state.selected.length<state.mode)return;
+  var sel=state.selected.slice();
+  state.attempts++;
+  renderStats();
+  var chars=sel.map(function(k){return state.cards[k].ch;});
+  var found=state.mode===2?findWord(chars[0],chars[1]):findIdiom(chars);
+  if(found){
+    state.selected=[];
+    state.matched+=state.mode;
+    lockPair(sel,'matched');
+    feedback('✅ '+chars.join(' + ')+' = '+found, true);
+    if(state.matched>=12)finishRound();
+  }else{
+    state.locked=true;
+    state.selected=[];
+    feedback('❌ 拼不成'+(state.mode===2?'词语':'成语')+'，再试试～', false);
+    feedbackEl.classList.remove('shake');
+    void feedbackEl.offsetWidth;
+    feedbackEl.classList.add('shake');
+    state.timer=setTimeout(function(){
+      for(var k=0;k<sel.length;k++){
+        state.cards[sel[k]].flipped=false;
+        var e=gridEl.querySelector('.mcard[data-i="'+sel[k]+'"]');
+        if(e)e.classList.remove('flipped');
+      }
+      state.timer=null;
+      state.locked=false;
+    },800);
+  }
+}
+function switchMode(m){
+  if(state.mode===m)return;
+  state.mode=m;
+  setActiveMode();
+  resetMatch();
+}
+function initMatch(){
+  var b2=parseInt(safeGet(BEST_KEYS[2]),10);
+  var b4=parseInt(safeGet(BEST_KEYS[4]),10);
+  state.best[2]=isNaN(b2)||b2<=0?0:b2;
+  state.best[4]=isNaN(b4)||b4<=0?0:b4;
+  gridEl.addEventListener('click',function(e){
+    var btn=e.target.closest('.mcard');
+    if(!btn)return;
+    onCard(Number(btn.dataset.i));
+  });
+  for(var i=0;i<modeBtns.length;i++){
+    modeBtns[i].addEventListener('click',function(){switchMode(Number(this.dataset.mode));});
+  }
+  document.getElementById('againBtn').addEventListener('click',resetMatch);
+  setActiveMode();
+  resetMatch();
+}
+initMatch();
+</script>
+</body>
+</html>

@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🏠 物品分类 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#2a9d8f;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#eafaf6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff6ea,transparent 55%),
+             linear-gradient(160deg,#f6fffb,#fffaf3);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:rgba(255,255,255,.76);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:10px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:.96rem;font-weight:800;text-align:center;color:#4a5f78;}
+
+/* 三个家 */
+.houses{display:flex;justify-content:center;align-items:stretch;gap:clamp(8px,2vw,14px);
+  width:100%;max-width:520px;}
+.house{flex:1 1 0;max-width:150px;min-height:96px;border-radius:20px;border:2px dashed rgba(36,59,83,.20);
+  background:#fdfefe;cursor:pointer;padding:6px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;
+  box-shadow:0 5px 12px rgba(36,59,83,.07);transition:transform .14s ease,border-color .18s ease,background .18s ease;
+  font-family:inherit;color:inherit;}
+.house:active{transform:scale(.97);}
+.house .ico{font-size:1.9rem;line-height:1.1;}
+.house .ph{width:46px;height:46px;border-radius:11px;object-fit:cover;}
+.house .tray img.mini{width:20px;height:20px;border-radius:5px;object-fit:cover;vertical-align:middle;}
+.house .nm{font-size:.72rem;font-weight:800;color:#5a7290;}
+.house .tray{display:flex;flex-wrap:wrap;justify-content:center;gap:2px;min-height:22px;
+  font-size:1rem;line-height:1.1;}
+.house.ready{border-color:rgba(42,157,143,.85);background:#eefaf7;animation:pulse .9s ease infinite alternate;}
+.house.good{border-color:var(--ok);background:#e9fbee;animation:pop .45s ease;}
+.house.badd{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+
+/* 散落的物品 */
+.items{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(8px,2vw,12px);
+  width:min(92vw,420px);}
+.item{min-height:clamp(64px,17vw,88px);border-radius:18px;border:2px solid rgba(36,59,83,.10);background:#fff;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.9rem;
+  box-shadow:0 6px 14px rgba(36,59,83,.10);transition:transform .14s ease,border-color .18s ease,background .18s ease;}
+.item:active{transform:scale(.95);}
+.item.sel{border-color:rgba(42,157,143,.8);background:#eefaf7;transform:translateY(-4px) scale(1.04);}
+.item .pin{position:absolute;font-size:.8rem;}
+.item .ph{width:78%;height:56px;object-fit:cover;border-radius:12px;}
+.item.gone{opacity:0;transform:scale(.4);transition:opacity .3s ease,transform .3s ease;}
+.item.badd{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+/* 点错时朝家的方向冲一下再弹回原位 */
+.item.bounce-back{animation:flyBack .5s cubic-bezier(.4,0,.5,1);}
+.item.slot{visibility:hidden;}
+
+.feedback{min-height:28px;font-size:1rem;font-weight:900;text-align:center;color:var(--muted);}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.88rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(42,157,143,.5);color:#fff;background:linear-gradient(135deg,#4fc3ae,#2a9d8f);}
+
+/* 飞入家中的物品 */
+.fly{position:fixed;z-index:99;pointer-events:none;display:flex;align-items:center;justify-content:center;
+  font-size:1.7rem;transition:transform .45s cubic-bezier(.3,.9,.4,1),opacity .45s ease;}
+.fly img{width:72%;height:72%;object-fit:cover;border-radius:10px;}
+
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes pulse{from{box-shadow:0 5px 12px rgba(36,59,83,.07)}to{box-shadow:0 0 0 4px rgba(42,157,143,.18)}}
+@keyframes flyBack{
+  0%{transform:translateY(0) scale(1);}
+  45%{transform:translateY(-22px) scale(1.06);}
+  100%{transform:translateY(0) scale(1);}
+}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:6px;padding:7px;border-radius:16px;flex-direction:row;flex-wrap:wrap;}
+  .prompt{flex:1 0 100%;font-size:.8rem;}
+  .houses{flex:1 1 46%;gap:8px;align-self:center;}
+  .house{min-height:74px;border-radius:14px;padding:4px 2px;}
+  .house .ico{font-size:1.4rem;}
+  .house .ph{width:32px;height:32px;border-radius:8px;}
+  .house .nm{font-size:.62rem;}
+  .house .tray{font-size:.8rem;min-height:16px;}
+  .items{flex:1 1 46%;width:auto;gap:6px;grid-template-columns:repeat(3,minmax(0,1fr));}
+  .item{min-height:46px;font-size:1.35rem;border-radius:12px;}
+  .item .ph{height:34px;border-radius:8px;}
+  .feedback{flex:1 0 100%;min-height:18px;font-size:.84rem;}
+  .controls{flex:1 0 100%;}
+  .btn{min-height:32px;font-size:.76rem;padding:0 12px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🏠 物品分类</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">先点一个物品，再点它的家👇</div>
+  <div class="houses" id="houses"></div>
+  <div class="items" id="items"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn primary" id="next" type="button">🔄 换一批</button>
+  </div>
+</div>
+
+<script>
+/* 三个家 + 每个家里的 8 件东西（f = 本地照片 img/<f>.jpg） */
+var HOMES = [
+  { key: 'closet', ico: '👕', f: 'closet', name: '衣柜', items: [
+    { e: '🧦', f: 'socks' }, { e: '👖', f: 'pants' }, { e: '👚', f: 'shirt' }, { e: '🧥', f: 'coat' },
+    { e: '👗', f: 'dress' }, { e: '🧤', f: 'gloves' }, { e: '👒', f: 'hat' }, { e: '🩳', f: 'shorts' } ] },
+  { key: 'fridge', ico: '🍎', f: 'fridge', name: '冰箱', items: [
+    { e: '🍌', f: 'banana' }, { e: '🍇', f: 'grape' }, { e: '🥛', f: 'milk' }, { e: '🍎', f: 'apple' },
+    { e: '🧀', f: 'cheese' }, { e: '🍓', f: 'strawberry' }, { e: '🥕', f: 'carrot' }, { e: '🍊', f: 'orange' } ] },
+  { key: 'toybox', ico: '🧸', f: 'toybox', name: '玩具箱', items: [
+    { e: '🚗', f: 'car' }, { e: '⚽', f: 'soccer' }, { e: '🧸', f: 'teddy' }, { e: '🪀', f: 'yoyo' },
+    { e: '🎈', f: 'balloon' }, { e: '🪁', f: 'kite' }, { e: '🧩', f: 'puzzle' }, { e: '🚂', f: 'train' } ] }
+];
+
+var selected = null;           // 当前选中的物品 {el, key, e, f}
+var leftCount = 0;
+var streak = 0, best = readNum('phome.best');
+var locked = false, timer = null;
+
+var elHouses = document.getElementById('houses');
+var elItems = document.getElementById('items');
+var elFb = document.getElementById('feedback');
+var elPrompt = document.getElementById('prompt');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+/* 本地照片，加载失败时回退 emoji */
+function setPhoto(host, f, emoji, cls) {
+  host.innerHTML = '';
+  var img = new Image();
+  img.className = cls || 'ph';
+  img.alt = emoji;
+  img.onerror = function () { host.innerHTML = ''; host.textContent = emoji; };
+  img.src = 'img/' + f + '.jpg';
+  host.appendChild(img);
+}
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+
+var canSpeak = typeof window.speechSynthesis !== 'undefined';
+function say(text) {
+  if (!canSpeak) return;
+  try {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN';
+    u.rate = 0.94;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+function newRound() {
+  clearTimeout(timer);
+  locked = false;
+  selected = null;
+  elPrompt.textContent = '先点一个物品，再点它的家👇';
+  feedback('');
+
+  /* 3 个家，每家摆 2 件物品（共 6 件），顺序打乱 */
+  elHouses.innerHTML = '';
+  HOMES.forEach(function (h) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'house';
+    b.setAttribute('data-k', h.key);
+    var ic = document.createElement('span');
+    ic.className = 'ico';
+    setPhoto(ic, h.f, h.ico);
+    var nm = document.createElement('span');
+    nm.className = 'nm';
+    nm.textContent = h.name;
+    var tray = document.createElement('span');
+    tray.className = 'tray';
+    b.appendChild(ic);
+    b.appendChild(nm);
+    b.appendChild(tray);
+    b.addEventListener('click', function () { tapHome(b, h); });
+    elHouses.appendChild(b);
+  });
+
+  var pool = [];
+  HOMES.forEach(function (h) {
+    var picks = shuffle(h.items).slice(0, 2);
+    picks.forEach(function (o) { pool.push({ e: o.e, f: o.f, key: h.key }); });
+  });
+  pool = shuffle(pool);
+  leftCount = pool.length;
+
+  elItems.innerHTML = '';
+  pool.forEach(function (it) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'item';
+    b.setAttribute('data-k', it.key);
+    b.setAttribute('aria-label', it.e);
+    setPhoto(b, it.f, it.e);
+    b.addEventListener('click', function () { tapItem(b, it); });
+    elItems.appendChild(b);
+  });
+
+  window.__left = leftCount;
+  voiceSpeak('把它送回自己的家吧');
+}
+
+function tapItem(btn, it) {
+  if (locked || btn.classList.contains('slot')) return;
+  if (selected && selected.el === btn) {           // 再点一次取消
+    btn.classList.remove('sel');
+    selected = null;
+    elPrompt.textContent = '先点一个物品，再点它的家👇';
+    feedback('把物品放回去啦～');
+    highlight(null);
+    return;
+  }
+  Array.prototype.forEach.call(elItems.children, function (c) { c.classList.remove('sel'); });
+  btn.classList.add('sel');
+  selected = { el: btn, key: it.key, e: it.e, f: it.f };
+  elPrompt.textContent = '现在点一下它该去的家👇';
+  feedback('选好啦，送到哪个家呢？');
+  highlight(it.key);
+}
+
+/* 选好物品后，把合法的家微微高亮（不做对错暗示，只是聚焦） */
+function highlight(key) {
+  Array.prototype.forEach.call(elHouses.children, function (h) {
+    h.classList.toggle('ready', !!key);
+  });
+}
+
+function tapHome(houseEl, h) {
+  if (locked) return;
+  if (!selected) {
+    feedback('先点一个物品吧～', 'bad');
+    return;
+  }
+  var it = selected;
+  if (it.key === h.key) {
+    it.el.classList.remove('sel');
+    it.el.classList.add('good');
+    flyTo(it.el, houseEl, it);
+    setTimeout(function () {
+      it.el.classList.add('slot');
+      var tray = houseEl.querySelector('.tray');
+      var timg = new Image();
+      timg.className = 'mini';
+      timg.alt = it.e;
+      timg.onerror = function () {
+        var s = document.createElement('span');
+        s.textContent = it.e;
+        if (timg.parentNode) timg.parentNode.replaceChild(s, timg);
+      };
+      timg.src = 'img/' + it.f + '.jpg';
+      tray.appendChild(timg);
+      houseEl.classList.add('good');
+      setTimeout(function () { houseEl.classList.remove('good'); }, 400);
+    }, 420);
+    leftCount--;
+    window.__left = leftCount;
+    selected = null;
+    highlight(null);
+    if (leftCount === 0) {
+      streak++;
+      if (streak > best) { best = streak; writeNum('phome.best', best); }
+      updateStats();
+      say('全部送回家啦！');
+      feedback('🎉 全部送回家啦！真棒！', 'ok');
+      elPrompt.textContent = '🎉 都回家啦！';
+      timer = setTimeout(newRound, 1600);
+    } else {
+      feedback('✅ 送对啦，放进了' + h.name + '！', 'ok');
+      elPrompt.textContent = '还剩 ' + leftCount + ' 件，继续送～';
+    }
+  } else {
+    /* 点错：物品先朝家飞一小段再弹回原位，随后抖动并取消选中 */
+    houseEl.classList.add('badd');
+    setTimeout(function () { houseEl.classList.remove('badd'); }, 450);
+    it.el.classList.remove('sel');
+    it.el.classList.add('bounce-back');
+    setTimeout(function () { it.el.classList.remove('bounce-back'); }, 500);
+    setTimeout(function () {
+      it.el.classList.add('badd');
+      setTimeout(function () { it.el.classList.remove('badd'); }, 460);
+    }, 300);
+    selected = null;
+    highlight(null);
+    elPrompt.textContent = '先点一个物品，再点它的家👇';
+    voiceSpeak('这里不是它的家，再想一想');
+    feedback('❌ 弹回来啦，这个不属于' + h.name + '，再看看', 'bad');
+  }
+}
+
+function flyTo(itemEl, houseEl, it) {
+  var a = itemEl.getBoundingClientRect(), b = houseEl.getBoundingClientRect();
+  var f = document.createElement('div');
+  f.className = 'fly';
+  var fimg = new Image();
+  fimg.alt = it.e;
+  fimg.onerror = function () { f.innerHTML = ''; f.textContent = it.e; };
+  fimg.src = 'img/' + it.f + '.jpg';
+  f.appendChild(fimg);
+  f.style.cssText += 'left:' + a.left + 'px;top:' + a.top + 'px;width:' + a.width + 'px;height:' + a.height + 'px;';
+  document.body.appendChild(f);
+  void f.offsetWidth;
+  var dx = (b.left + b.width / 2) - (a.left + a.width / 2);
+  var dy = (b.top + b.height / 2) - (a.top + a.height / 2);
+  f.style.transform = 'translate(' + dx + 'px,' + dy + 'px) scale(.55)';
+  f.style.opacity = '.2';
+  setTimeout(function () { f.remove(); }, 470);
+}
+
+document.getElementById('next').addEventListener('click', function () {
+  streak = 0;
+  updateStats();
+  newRound();
+});
+
+function initSortHome() {
+  best = readNum('phome.best');
+  updateStats();
+  newRound();
+}
+function resetSortHome() {
+  streak = 0;
+  updateStats();
+  newRound();
+}
+initSortHome();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '物品分类游戏。把东西送回它们自己的家。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进入游戏自动朗读；若浏览器拦截自动播放，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>步骤排序 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9f2,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#fff9f4,#f3f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  padding:7px 14px;font-weight:800;font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.prompt{font-size:1.1rem;font-weight:800;text-align:center;}
+.feedback{min-height:32px;font-size:1.2rem;font-weight:800;text-align:center;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .prompt{font-size:.95rem;} .feedback{min-height:24px;font-size:1rem;} }
+/* 每个游戏自行补充样式，但保持上面的变量与动画不变 */
+.row{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;max-width:100%;}
+.card{width:clamp(80px,22vw,100px);min-height:88px;padding:6px;border:0;border-radius:18px;
+  background:#fff;color:var(--ink);cursor:pointer;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:2px;box-shadow:0 6px 16px rgba(36,59,83,.12);
+  transition:transform .18s ease,box-shadow .18s ease;}
+.card:active{transform:scale(.95);}
+.card .emoji{font-size:clamp(1.5rem,4.4vw,1.9rem);line-height:1;}
+.card .txt{font-size:clamp(.72rem,2.4vw,.85rem);font-weight:800;text-align:center;}
+.card.done{background:#e9fbee;box-shadow:0 0 0 3px var(--ok) inset;color:#1a7f2c;}
+.card.miss{box-shadow:0 0 0 3px var(--bad) inset;animation:shake .45s ease;}
+.card.pulse{animation:pulse .8s ease 2;}
+@keyframes pulse{0%,100%{transform:scale(1);box-shadow:0 6px 16px rgba(36,59,83,.12);}
+  50%{transform:scale(1.12);box-shadow:0 0 0 8px rgba(124,92,255,.2);}}
+.card.incell{width:100%;min-height:0;height:100%;padding:2px;border-radius:12px;box-shadow:none;}
+.card.incell .emoji{font-size:1.15rem;}
+.card.incell .txt{font-size:.6rem;}
+.slots{display:flex;justify-content:center;gap:16px;width:100%;max-width:520px;}
+.cell{flex:1 1 0;min-width:0;height:82px;border:3px dashed #b6c4d3;border-radius:16px;
+  background:rgba(255,255,255,.65);position:relative;display:flex;align-items:center;justify-content:center;
+  transition:background .2s ease,border-color .2s ease;}
+.cell .num{position:absolute;top:-9px;left:-7px;width:26px;height:26px;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:.85rem;font-weight:900;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(124,92,255,.35);}
+.cell.flash{border-color:var(--bad);background:rgba(255,92,92,.14);}
+.tools{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;}
+.tbtn{border:0;background:#fff;color:var(--ink);font-weight:800;font-size:.92rem;border-radius:999px;
+  padding:12px 20px;min-height:48px;box-shadow:0 3px 10px rgba(36,59,83,.12);cursor:pointer;
+  transition:transform .15s ease;}
+.tbtn:active{transform:scale(.96);}
+.tbtn.on{background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(124,92,255,.4);}
+.confetti{position:fixed;inset:0;pointer-events:none;z-index:9;}
+.confetti span{position:absolute;top:-12%;animation:fall 1.4s ease-in forwards;}
+@keyframes fall{0%{opacity:0;transform:translate(0,-20px) scale(.6) rotate(0)}
+  100%{opacity:1;transform:translate(var(--dx),108vh) scale(1.1) rotate(25deg)}}
+@media (max-height:430px){
+  .stage{gap:8px;}
+  .card{width:clamp(76px,17vw,96px);min-height:80px;}
+  .cell{height:72px;}
+  .tbtn{padding:9px 16px;min-height:44px;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧼 步骤排序</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stage">
+  <!-- 游戏内容 -->
+  <div class="prompt">按正确的顺序，把卡片放进 1、2、3、4、5 格子</div>
+  <div class="row" id="row"></div>
+  <div class="slots" id="slots"></div>
+  <div class="tools">
+    <button class="tbtn" type="button" id="hint">💡 提示</button>
+    <button class="tbtn" type="button" id="again" style="display:none">🔁 再玩一次</button>
+  </div>
+  <div class="feedback" id="feedback"></div>
+</div>
+<script>
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function feedback(text,good){var f=document.getElementById('feedback');f.className='feedback '+(good?'ok':'bad');f.textContent=text;}
+function replay(node,cls){node.classList.remove('pop','shake');void node.offsetWidth;node.classList.add(cls);}
+/* 游戏逻辑 */
+var STEPS=[
+  {order:1,emoji:'🚰',text:'开水龙头'},
+  {order:2,emoji:'🧼',text:'抹肥皂'},
+  {order:3,emoji:'🤲',text:'搓搓手'},
+  {order:4,emoji:'💧',text:'冲干净'},
+  {order:5,emoji:'🧻',text:'擦干手'}
+];
+function stepText(order){for(var i=0;i<STEPS.length;i++){if(STEPS[i].order===Number(order))return STEPS[i].text;}return '';}
+var row=document.getElementById('row');
+var slotsBox=document.getElementById('slots');
+var hintBtn=document.getElementById('hint');
+var againBtn=document.getElementById('again');
+var filled=0;
+let locked=false;
+var timers=[];
+function schedule(fn,ms){var id=setTimeout(fn,ms);timers.push(id);return id;}
+function clearTimers(){for(var i=0;i<timers.length;i++)clearTimeout(timers[i]);timers=[];}
+
+/* 发牌：固定 5 个洗手步骤（打乱后放上方待选） */
+function deal(){
+  clearTimers();
+  locked=false; filled=0;
+  againBtn.style.display='none';
+  row.innerHTML=''; slotsBox.innerHTML='';
+  shuffle(STEPS).forEach(function(s){
+    var c=document.createElement('button');
+    c.type='button'; c.className='card'; c.dataset.order=s.order;
+    c.innerHTML='<span class="emoji">'+s.emoji+'</span><span class="txt">'+s.text+'</span>';
+    c.onclick=function(){place(c);};
+    row.appendChild(c);
+  });
+  for(var i=1;i<=STEPS.length;i++){
+    var cell=document.createElement('div');
+    cell.className='cell'; cell.dataset.n=i;
+    cell.innerHTML='<span class="num">'+i+'</span>';
+    slotsBox.appendChild(cell);
+  }
+  feedback('按顺序把卡片放进格子吧～', true);
+}
+
+/* 点卡片：尝试放进下一个空格 */
+function place(c){
+  if(locked || c.classList.contains('done')) return;
+  var cell=slotsBox.children[filled];
+  if(!cell) return;
+  if(Number(c.dataset.order)===Number(cell.dataset.n)){
+    cell.appendChild(c);
+    c.classList.add('incell','done');
+    replay(c,'pop');
+    filled++;
+    feedback('✅ 对啦！', true);
+    voiceSpeak('对啦，' + stepText(c.dataset.order));
+    if(filled===slotsBox.children.length) finish();
+  }else{
+    locked=true;
+    var home=Array.prototype.indexOf.call(row.children,c);
+    cell.appendChild(c);
+    c.classList.add('incell','miss');
+    cell.classList.add('flash');
+    feedback('顺序不对哦', false);
+    voiceSpeak(stepText(c.dataset.order) + '，放这里不对哦，再想想');
+    schedule(function(){
+      row.insertBefore(c,row.children[home]||null);
+      c.classList.remove('incell','miss');
+      cell.classList.remove('flash');
+      locked=false;
+    },620);
+  }
+}
+
+/* 全部完成 */
+function finish(){
+  locked=true;
+  feedback('🎉 洗手完成！', true);
+  voiceSpeak('全部放对啦，手洗干净了');
+  againBtn.style.display='';
+  celebrate();
+}
+
+/* 撒花 */
+function celebrate(){
+  var box=document.createElement('div');
+  box.className='confetti';
+  for(var i=0;i<14;i++){
+    var s=document.createElement('span');
+    s.textContent=pick(['✨','🎉','⭐','💧','🫧','🌈']);
+    s.style.left=(5+Math.random()*90)+'%';
+    s.style.animationDelay=(Math.random()*0.4)+'s';
+    s.style.fontSize=(0.9+Math.random()*1.1)+'rem';
+    s.style.setProperty('--dx',(Math.random()*90-45)+'px');
+    box.appendChild(s);
+  }
+  document.body.appendChild(box);
+  schedule(function(){box.remove();},1900);
+}
+
+/* 提示：脉冲下一张该放的卡片 */
+hintBtn.onclick=function(){
+  if(locked) return;
+  var target=null;
+  for(var i=0;i<row.children.length;i++){
+    if(Number(row.children[i].dataset.order)===filled+1) target=row.children[i];
+  }
+  if(!target) return;
+  voiceSpeak('下一步是' + stepText(filled+1));
+  target.classList.remove('pulse');
+  void target.offsetWidth;
+  target.classList.add('pulse');
+  schedule(function(){target.classList.remove('pulse');},1700);
+};
+
+againBtn.onclick=function(){ deal(); };
+
+deal();
+
+/* ===== 语音播报：进入先读玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '步骤排序游戏。按洗手正确的顺序，把卡片放进一二三四五号格子。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进游戏自动朗读；若被浏览器拦截，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);   /* 不打断正在读的题目，排队播报玩法 */
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () { document.removeEventListener('pointerdown', once); voiceSpeak(VOICE_TEXT); };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.1);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>

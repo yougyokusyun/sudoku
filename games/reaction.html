@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>反应速度测试 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9f2,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#fff9f4,#f3f9ff);
+  min-height:100dvh;height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;
+  padding:7px 14px;font-weight:800;font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stage{flex:1;display:flex;flex-direction:column;min-height:0;overflow-y:auto;}
+.stage-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  width:100%;margin:auto;padding:2px 0;}
+.prompt{font-size:1.1rem;font-weight:800;text-align:center;}
+.feedback{min-height:32px;font-size:1.2rem;font-weight:800;text-align:center;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .prompt{font-size:.95rem;} .feedback{min-height:24px;font-size:1rem;} }
+/* 本游戏补充样式 */
+.hide{display:none!important;}
+.pad{width:clamp(220px,64vw,380px);height:clamp(104px,26vh,240px);border-radius:26px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  color:#fff;font-weight:900;text-align:center;cursor:pointer;touch-action:manipulation;
+  box-shadow:0 10px 28px rgba(36,59,83,.16);transition:background .15s ease;}
+.pad.gray{background:linear-gradient(160deg,#b7c3d0,#93a3b5);}
+.pad.red{background:linear-gradient(160deg,#ff7a7a,#e63946);}
+.pad.green{background:linear-gradient(160deg,#5fd67f,#2fb344);}
+.pad.done{background:linear-gradient(160deg,#a99bff,#7c5cff);}
+.pad-msg{font-size:clamp(1.05rem,4.2vw,1.4rem);}
+.pad-sub{font-size:.8rem;opacity:.92;font-weight:700;}
+.stat{font-size:.9rem;font-weight:800;text-align:center;}
+.stat b{color:var(--accent);}
+.rounds{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.round{background:#fff;border-radius:12px;padding:5px 10px;text-align:center;min-width:70px;
+  font-size:.74rem;font-weight:700;color:#7b8a9a;box-shadow:0 3px 10px rgba(36,59,83,.08);}
+.round b{display:block;font-size:.92rem;color:var(--ink);}
+.round.done{background:#eaf8ee;color:var(--ok);}
+.round.done b{color:var(--ok);}
+.result{font-size:.88rem;font-weight:800;text-align:center;min-height:1.1em;color:#5b6b7d;}
+.controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.btn{border:none;border-radius:14px;padding:9px 15px;font-weight:800;font-size:.88rem;
+  min-height:44px;background:#fff;color:var(--ink);box-shadow:0 4px 12px rgba(36,59,83,.12);
+  cursor:pointer;font-family:inherit;}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 6px 16px rgba(124,92,255,.32);}
+.btn:active{transform:scale(.97);}
+.entry{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;}
+.entry input{height:44px;width:150px;border:2px solid #d8e1ea;border-radius:12px;
+  padding:0 12px;font-size:1rem;font-family:inherit;color:var(--ink);background:#fff;}
+.entry input:focus{outline:none;border-color:var(--accent);}
+.board-wrap{width:min(560px,100%);background:#fff;border-radius:18px;padding:8px 12px;
+  box-shadow:0 4px 14px rgba(36,59,83,.10);}
+.board-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;font-size:.85rem;}
+.board-list{display:flex;flex-direction:column;gap:3px;margin-top:5px;font-size:.8rem;}
+.board-row{display:grid;grid-template-columns:22px 1fr 62px 80px;gap:4px;align-items:center;
+  padding:2px 0;border-top:1px dashed #eef2f7;}
+.board-row.empty{grid-template-columns:1fr;color:#8b9aab;text-align:center;border-top:none;}
+.board-row .rk{font-weight:900;color:var(--accent);}
+.board-row .avg{font-weight:800;color:var(--ok);text-align:right;}
+.board-row .date{color:#8b9aab;font-size:.72rem;text-align:right;}
+.clear-btn{min-height:40px;border:none;border-radius:12px;background:#fff0f0;color:var(--bad);
+  font-weight:800;font-size:.8rem;padding:6px 12px;cursor:pointer;font-family:inherit;}
+@media (max-height:430px){
+  .pad{height:104px;width:clamp(200px,58vw,330px);border-radius:18px;}
+  .pad-msg{font-size:1rem;}
+  .rounds{display:none;}
+  .btn{min-height:40px;padding:7px 12px;font-size:.82rem;}
+  .entry input{height:40px;}
+  .board-list{max-height:88px;overflow-y:auto;}
+  .stage-inner{gap:4px;padding:0;}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>⚡ 反应速度测试</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stage">
+  <div class="stage-inner">
+    <div class="pad gray" id="pad">
+      <div class="pad-msg" id="padMsg">点击下方开始按钮</div>
+      <div class="pad-sub" id="padSub">每轮 3 次机会</div>
+    </div>
+    <div class="stat" id="stat">🏆 最佳平均：-- 毫秒</div>
+    <div class="rounds" id="rounds"></div>
+    <div class="result" id="result"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="controls">
+      <button class="btn primary" id="startBtn" type="button">▶️ 开始 / 再来一次</button>
+      <button class="btn" id="resetBtn" type="button">🔄 重置本轮</button>
+    </div>
+    <div class="entry hide" id="entry">
+      <input id="nameInput" type="text" maxlength="8" value="小小玩家" aria-label="昵称">
+      <button class="btn primary" id="saveBtn" type="button">📥 记入排行榜</button>
+    </div>
+    <div class="board-wrap">
+      <div class="board-head">
+        <span>🏅 排行榜 · 前 5 名</span>
+        <button class="clear-btn" id="clearBtn" type="button">🗑 清空排行榜</button>
+      </div>
+      <div class="board-list" id="boardList"></div>
+    </div>
+  </div>
+</div>
+<script>
+var KEY_BEST='preact.best', KEY_BOARD='preact.board';
+var MAX_TRIES=3;
+var tries=[];
+var attempt=0;
+var state='idle';
+var greenAt=0;
+var waitTimer=null,nextTimer=null;
+var lastAvg=null;
+var feedbackEl=document.getElementById('feedback');
+var pad=document.getElementById('pad');
+var padMsg=document.getElementById('padMsg');
+var padSub=document.getElementById('padSub');
+
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function safeGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
+function safeSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
+function safeDel(k){try{localStorage.removeItem(k);}catch(e){}}
+function getBest(){var v=parseInt(safeGet(KEY_BEST),10);return isNaN(v)?null:v;}
+function getBoard(){
+  try{
+    var a=JSON.parse(safeGet(KEY_BOARD)||'[]');
+    if(!Array.isArray(a))return [];
+    return a.filter(function(x){return x&&typeof x.name==='string'&&typeof x.avg==='number';});
+  }catch(e){return [];}
+}
+function feedback(text,good){
+  feedbackEl.className='feedback '+(good?'ok':'bad');
+  feedbackEl.textContent=text;
+}
+function clearFeedback(){feedbackEl.className='feedback';feedbackEl.textContent='';}
+function replay(node,cls){
+  node.classList.remove('pop','shake');
+  void node.offsetWidth;
+  node.classList.add(cls);
+}
+function setPad(cls,msg,sub){
+  pad.className='pad '+cls;
+  padMsg.textContent=msg;
+  if(typeof sub==='string')padSub.textContent=sub;
+}
+function rate(ms){return ms<300?'优秀':ms<400?'良好':'继续加油';}
+function today(){
+  var d=new Date();
+  var m=String(d.getMonth()+1); if(m.length<2)m='0'+m;
+  var day=String(d.getDate()); if(day.length<2)day='0'+day;
+  return d.getFullYear()+'-'+m+'-'+day;
+}
+
+function renderStats(){
+  var best=getBest();
+  document.getElementById('stat').innerHTML='🏆 最佳平均：<b>'+(best===null?'--':best)+'</b> 毫秒';
+}
+function renderRounds(){
+  var html='';
+  for(var i=0;i<MAX_TRIES;i++){
+    var v=tries[i];
+    html+='<div class="round'+(v!=null?' done':'')+'">第'+(i+1)+'次<b>'+(v!=null?v+' ms':'--')+'</b></div>';
+  }
+  document.getElementById('rounds').innerHTML=html;
+  if(tries.length){
+    var sum=0;
+    for(var j=0;j<tries.length;j++)sum+=tries[j];
+    var avg=Math.round(sum/tries.length);
+    document.getElementById('result').textContent='成绩：'+tries.join(' · ')+' 毫秒'+(tries.length===MAX_TRIES?' ｜ 平均 '+avg+' 毫秒':'');
+  }else{
+    document.getElementById('result').textContent='';
+  }
+}
+function renderBoard(){
+  var board=getBoard().sort(function(a,b){return a.avg-b.avg;}).slice(0,5);
+  var list=document.getElementById('boardList');
+  if(!board.length){
+    list.innerHTML='<div class="board-row empty">还没有记录，快来挑战吧！</div>';
+    return;
+  }
+  list.innerHTML=board.map(function(x,i){
+    var name=String(x.name).slice(0,8);
+    var date=String(x.date||'');
+    return '<div class="board-row"><span class="rk">'+(i+1)+'</span><span>'+esc(name)+
+      '</span><span class="avg">'+Math.round(x.avg)+' ms</span><span class="date">'+esc(date)+'</span></div>';
+  }).join('');
+}
+
+function clearTimers(){
+  clearTimeout(waitTimer);waitTimer=null;
+  clearTimeout(nextTimer);nextTimer=null;
+}
+function beginAttempt(){
+  if(attempt>=MAX_TRIES){finishRound();return;}
+  state='waiting';
+  greenAt=0;
+  setPad('red','等到变绿再点！','第 '+(attempt+1)+' / '+MAX_TRIES+' 次');
+  clearFeedback();
+  var delay=1000+Math.random()*3000;
+  waitTimer=setTimeout(goGreen,delay);
+}
+function goGreen(){
+  if(state!=='waiting')return;
+  state='ready';
+  greenAt=performance.now();
+  setPad('green','快点！','第 '+(attempt+1)+' / '+MAX_TRIES+' 次');
+  replay(pad,'pop');
+}
+function startRound(){
+  clearTimers();
+  tries=[];
+  attempt=0;
+  lastAvg=null;
+  document.getElementById('entry').classList.add('hide');
+  renderRounds();
+  clearFeedback();
+  beginAttempt();
+}
+function onPadDown(e){
+  if(e.pointerType==='mouse'&&e.button!==0)return;
+  if(state==='waiting'){
+    clearTimers();
+    state='cooldown';
+    setPad('red','太早了！','第 '+(attempt+1)+' / '+MAX_TRIES+' 次');
+    replay(pad,'shake');
+    feedback('❌ 太早了！请等变绿～',false);
+    nextTimer=setTimeout(beginAttempt,1000);
+    return;
+  }
+  if(state==='ready'){
+    var ms=Math.round(performance.now()-greenAt);
+    if(ms<0)ms=0;
+    state='cooldown';
+    tries.push(ms);
+    attempt++;
+    renderRounds();
+    feedback('✅ 你的反应时间：'+ms+' 毫秒（'+rate(ms)+'）',true);
+    setPad('green',ms+' 毫秒','第 '+attempt+' / '+MAX_TRIES+' 次完成');
+    replay(pad,'pop');
+    if(attempt>=MAX_TRIES){
+      nextTimer=setTimeout(finishRound,900);
+    }else{
+      nextTimer=setTimeout(beginAttempt,1100);
+    }
+  }
+}
+function finishRound(){
+  state='done';
+  var sum=0;
+  for(var i=0;i<tries.length;i++)sum+=tries[i];
+  lastAvg=Math.round(sum/tries.length);
+  var best=getBest();
+  if(best===null||lastAvg<best){
+    safeSet(KEY_BEST,String(lastAvg));
+    feedback('✅ 3 次完成！平均 '+lastAvg+' 毫秒，🏆 刷新最佳纪录！',true);
+  }else{
+    feedback('✅ 3 次完成！平均 '+lastAvg+' 毫秒',true);
+  }
+  renderStats();
+  renderRounds();
+  setPad('done','本轮完成！','平均 '+lastAvg+' 毫秒');
+  document.getElementById('entry').classList.remove('hide');
+  document.getElementById('nameInput').value='小小玩家';
+}
+function resetReaction(){
+  clearTimers();
+  tries=[];
+  attempt=0;
+  lastAvg=null;
+  state='idle';
+  setPad('gray','点击下方开始按钮','每轮 3 次机会');
+  renderRounds();
+  renderStats();
+  clearFeedback();
+  document.getElementById('entry').classList.add('hide');
+}
+function saveScore(){
+  if(lastAvg===null)return;
+  var nameEl=document.getElementById('nameInput');
+  var name=(nameEl.value||'').trim()||'小小玩家';
+  var board=getBoard();
+  board.push({name:name.slice(0,8),avg:lastAvg,date:today()});
+  board.sort(function(a,b){return a.avg-b.avg;});
+  board=board.slice(0,5);
+  safeSet(KEY_BOARD,JSON.stringify(board));
+  renderBoard();
+  document.getElementById('entry').classList.add('hide');
+  feedback('✅ 已记入排行榜！',true);
+}
+function clearBoard(){
+  if(!confirm('确定要清空排行榜吗？'))return;
+  safeDel(KEY_BOARD);
+  renderBoard();
+  feedback('🗑 排行榜已清空',true);
+}
+
+function initReaction(){
+  pad.addEventListener('pointerdown',onPadDown);
+  document.getElementById('startBtn').addEventListener('click',startRound);
+  document.getElementById('resetBtn').addEventListener('click',resetReaction);
+  document.getElementById('saveBtn').addEventListener('click',saveScore);
+  document.getElementById('clearBtn').addEventListener('click',clearBoard);
+  renderStats();
+  renderBoard();
+  resetReaction();
+}
+
+initReaction();
+</script>
+</body>
+</html>

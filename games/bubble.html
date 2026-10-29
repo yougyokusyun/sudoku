@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🫧 拍泡泡 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9f2,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#fff9f4,#f3f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  padding:7px 14px;font-weight:800;font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+.prompt{font-size:1.1rem;font-weight:800;text-align:center;}
+.feedback{min-height:32px;font-size:1.2rem;font-weight:800;text-align:center;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.18)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .prompt{font-size:.95rem;} .feedback{min-height:24px;font-size:1rem;} }
+/* 每个游戏自行补充样式，但保持上面的变量与动画不变 */
+/* 拍泡泡：水池与泡泡 */
+.pad{position:relative;overflow:hidden;border-radius:24px;flex:1;width:100%;max-width:560px;min-height:260px;
+  background:radial-gradient(circle at 26% 16%,rgba(255,255,255,.92),transparent 58%),
+             linear-gradient(165deg,#dcf3ff,#a9dbff 58%,#8bcaf5);
+  box-shadow:inset 0 0 46px rgba(255,255,255,.75),0 10px 26px rgba(36,59,83,.12);
+  touch-action:manipulation;}
+.count{position:absolute;top:10px;right:12px;z-index:3;pointer-events:none;
+  font-weight:800;font-size:1rem;color:#155e91;background:rgba(255,255,255,.78);
+  border-radius:999px;padding:6px 12px;box-shadow:0 2px 8px rgba(36,59,83,.10);}
+.bubble{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  border:2px solid rgba(255,255,255,.9);cursor:pointer;will-change:transform,opacity;
+  background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.96),rgba(255,255,255,.45) 40%,rgba(160,220,255,.55) 74%,rgba(108,190,255,.78));
+  box-shadow:inset -6px -8px 14px rgba(120,190,255,.42),0 8px 18px rgba(40,110,180,.18);
+  animation:blow .35s ease-out;}
+@keyframes blow{0%{transform:scale(.4);opacity:0;}100%{transform:scale(1);opacity:1;}}
+.bubble.bye{transition:opacity .5s ease,transform .5s ease;opacity:0;transform:scale(.6);}
+.bubble.burst{animation:burst .4s ease-out forwards;pointer-events:none;}
+@keyframes burst{0%{transform:scale(1);opacity:1;}55%{transform:scale(1.4);opacity:.85;}100%{transform:scale(.15);opacity:0;}}
+.plus{position:absolute;z-index:2;pointer-events:none;font-weight:800;font-size:1.05rem;color:#0f7a4a;
+  text-shadow:0 1px 0 #fff;animation:ups .9s ease-out forwards;}
+@keyframes ups{0%{transform:translateY(0);opacity:1;}100%{transform:translateY(-48px);opacity:0;}}
+.controls{display:flex;justify-content:center;}
+.btn{min-width:120px;min-height:56px;padding:0 22px;border:none;border-radius:999px;background:#fff;color:var(--ink);
+  font-family:inherit;font-weight:800;font-size:1rem;box-shadow:0 4px 12px rgba(36,59,83,.13);cursor:pointer;}
+@media (max-height:430px){ .pad{min-height:190px;} .stage{gap:8px;} }
+</style>
+</head>
+<body>
+<header>
+  <h1>🫧 拍泡泡</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stage">
+  <div class="prompt">拍一拍泡泡，看看谁藏在里面</div>
+  <div class="pad" id="pad"><div class="count" id="count">⭐ 0</div></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls"><button class="btn" id="restart">🔄 重新开始</button></div>
+</div>
+<script>
+function pick(a){return a[Math.floor(Math.random()*a.length)];}
+function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
+function feedback(text,good){var f=document.getElementById('feedback');f.className='feedback '+(good?'ok':'bad');f.textContent=text;}
+function replay(node,cls){node.classList.remove('pop','shake');void node.offsetWidth;node.classList.add(cls);}
+/* 游戏逻辑 */
+var pad=document.getElementById('pad');
+var countEl=document.getElementById('count');
+var creatures=['🫧','🐠','🐟','🐙','🦀','🐳','🐬','🐚','🐡','⭐'];
+var CREATURE_NAMES={'🫧':'泡泡','🐠':'热带鱼','🐟':'小鱼','🐙':'章鱼','🦀':'螃蟹','🐳':'鲸鱼','🐬':'海豚','🐚':'贝壳','🐡':'河豚','⭐':'星星'};
+var score=0, bubbles=[], timers=[], spawnTimer=null;
+var MAX_BUBBLES=9, LIFE=3200;
+
+/* 统一登记定时器，方便重开时全部清掉 */
+function later(fn,ms){
+  var id=setTimeout(function(){
+    timers=timers.filter(function(t){return t!==id;});
+    fn();
+  },ms);
+  timers.push(id);
+  return id;
+}
+function clearTimers(){
+  timers.forEach(function(t){clearTimeout(t);});
+  timers=[];
+  clearTimeout(spawnTimer); spawnTimer=null;
+}
+
+function makeBubble(){
+  if(bubbles.length>=MAX_BUBBLES) return;
+  var size=64+Math.random()*20;                 // 64~84px
+  var w=pad.clientWidth, h=pad.clientHeight;
+  if(w<size+4||h<size+4) return;
+  var el=document.createElement('div');
+  el.className='bubble';
+  el.style.width=el.style.height=Math.round(size)+'px';
+  el.style.left=Math.round(Math.random()*(w-size))+'px';
+  el.style.top=Math.round(Math.random()*(h-size))+'px';
+  el.style.fontSize=Math.round(size*.42)+'px';
+  el.textContent=pick(creatures);
+  pad.appendChild(el);
+  var obj={el:el, timer:null};
+  bubbles.push(obj);
+  obj.timer=later(function(){fadeBubble(obj);},LIFE);   // 3.2 秒后自己消失
+}
+
+function detach(obj){
+  bubbles=bubbles.filter(function(x){return x!==obj;});
+  if(obj.el.parentNode) obj.el.parentNode.removeChild(obj.el);
+}
+function fadeBubble(obj){
+  clearTimeout(obj.timer);
+  if(!obj.el.parentNode) return;
+  obj.el.classList.add('bye');
+  later(function(){detach(obj);},500);
+}
+
+/* 点破泡泡 */
+pad.addEventListener('click',function(ev){
+  var el=ev.target.closest('.bubble');
+  if(!el||el.classList.contains('burst')) return;
+  var obj=bubbles.filter(function(x){return x.el===el;})[0];
+  if(!obj) return;
+  clearTimeout(obj.timer);
+  el.classList.add('burst');
+  bubbles=bubbles.filter(function(x){return x!==obj;});
+  score++;
+  countEl.textContent='⭐ '+score;
+  replay(countEl,'pop');
+  feedback('拍到一个啦，真棒！',true);
+  voiceSpeak('拍到一个' + (CREATURE_NAMES[el.textContent] || '泡泡'));
+  var p=document.createElement('div');
+  p.className='plus'; p.textContent='+1';
+  p.style.left=(parseFloat(el.style.left)+parseFloat(el.style.width)/2-10)+'px';
+  p.style.top=el.style.top;
+  pad.appendChild(p);
+  later(function(){if(p.parentNode)p.parentNode.removeChild(p);},900);
+  later(function(){if(el.parentNode)el.parentNode.removeChild(el);},420);
+});
+
+/* 每 1400ms 左右（±400ms）生成一个泡泡 */
+function scheduleSpawn(){
+  clearTimeout(spawnTimer);
+  spawnTimer=setTimeout(function(){makeBubble();scheduleSpawn();},1400+(Math.random()*800-400));
+}
+
+function restart(){
+  clearTimers();
+  bubbles=[];
+  pad.textContent='';                 // 清空所有泡泡与 +1
+  pad.appendChild(countEl);
+  score=0; countEl.textContent='⭐ 0';
+  feedback('');
+  makeBubble(); makeBubble();         // 开局先给两个
+  scheduleSpawn();
+}
+
+document.getElementById('restart').addEventListener('click',restart);
+restart();
+
+/* ===== 语音播报：进入先读玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '拍泡泡游戏。用手指点一点泡泡，把泡泡拍破，看看里面藏着什么。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+/* 进游戏自动朗读；若被浏览器拦截，孩子第一次碰屏幕时补读 */
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);   /* 不打断正在读的题目，排队播报玩法 */
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () { document.removeEventListener('pointerdown', once); voiceSpeak(VOICE_TEXT); };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.1);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+</body>
+</html>
