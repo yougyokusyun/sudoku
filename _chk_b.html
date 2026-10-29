@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>chk_b</title>
+<style>body{font-family:Consolas,monospace;font-size:12.5px;background:#111;color:#0f0;padding:10px;white-space:pre-wrap}</style>
+</head>
+<body>
+<pre id="out">running...</pre>
+<script>
+var out = document.getElementById('out'), L = [];
+function log(s) { L.push(String(s)); out.textContent = L.join('\n'); }
+function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+
+(async function () {
+    var f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;left:0;top:0;opacity:0;pointer-events:none;border:0;width:900px;height:900px;';
+    f.src = 'games/animals-learn.html?nc=' + Date.now();
+    document.body.appendChild(f);
+    await wait(900);
+    var d = f.contentDocument, w = f.contentWindow;
+    var said = [];
+    if (w.speechSynthesis) w.speechSynthesis.speak = function (u) { said.push(u.text); };
+
+    /* 探索模式 */
+    var tile = d.querySelectorAll('.tile')[2];
+    var n = tile.getAttribute('data-n');
+    tile.click();
+    await wait(180);
+    log('TAP ' + n + ' cls="' + tile.className + '" fb="' + d.getElementById('feedback').textContent + '" said=' + said[said.length - 1]);
+
+    /* 认名称模式 */
+    d.getElementById('quiz').click();
+    await wait(250);
+    var tg = w.__target;
+    log('QUIZ target=' + tg + ' said=' + said[said.length - 1]);
+    var wrong = Array.prototype.filter.call(d.querySelectorAll('.tile'), function (x) { return x.getAttribute('data-n') !== tg; })[0];
+    wrong.click();
+    await wait(150);
+    log('QUIZ_WRONG same=' + (w.__target === tg) + ' fb="' + d.getElementById('feedback').textContent);
+    var right = Array.prototype.filter.call(d.querySelectorAll('.tile'), function (x) { return x.getAttribute('data-n') === tg; })[0];
+    right.click();
+    await wait(150);
+    log('QUIZ_RIGHT fb="' + d.getElementById('feedback').textContent + '" good=' + right.classList.contains('good') + ' streak=' + w.streak);
+
+    /* 图片最终加载情况 */
+    var list = d.querySelectorAll('.tile img'), loaded = 0, emojiFallback = d.querySelectorAll('.tile .e').length;
+    for (var i = 0; i < list.length; i++) if (list[i].complete && list[i].naturalWidth > 0) loaded++;
+    log('IMG ok=' + loaded + '/' + list.length + ' emojiFallback=' + emojiFallback);
+    log('DONE');
+})();
+</script>
+</body>
+</html>

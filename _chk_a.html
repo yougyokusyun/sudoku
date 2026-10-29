@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>chk_a</title>
+<style>body{font-family:Consolas,monospace;font-size:12.5px;background:#111;color:#0f0;padding:10px;white-space:pre-wrap}</style>
+</head>
+<body>
+<pre id="out">running...</pre>
+<script>
+var out = document.getElementById('out'), L = [];
+function log(s) { L.push(String(s)); out.textContent = L.join('\n'); }
+
+function mk(w, h) {
+    var f = document.createElement('iframe');
+    f.style.cssText = 'position:fixed;left:0;top:0;opacity:0;pointer-events:none;border:0;width:' + w + 'px;height:' + h + 'px;';
+    f.src = 'games/animals-learn.html?nc=' + Date.now() + Math.random();
+    document.body.appendChild(f);
+    return f;
+}
+
+var fP = mk(390, 844), fL = mk(667, 375);
+
+function measure(tag, f) {
+    var d = f.contentDocument;
+    if (!d) { log(tag + ' noDoc'); return; }
+    var se = d.scrollingElement || d.documentElement;
+    var tiles = d.querySelectorAll('.tile');
+    var imgs = d.querySelectorAll('.tile img');
+    if (!tiles.length) { log(tag + ' notReady'); return; }
+    var t0 = tiles[0].getBoundingClientRect();
+    var i0 = imgs.length ? imgs[0].getBoundingClientRect() : { height: 0 };
+    log(tag + ' ox=' + (se.scrollWidth - se.clientWidth) + ' oy=' + (se.scrollHeight - se.clientHeight) +
+        ' tiles=' + tiles.length + ' imgs=' + imgs.length +
+        ' gridCols=' + getComputedStyle(d.getElementById('grid')).gridTemplateColumns.split(' ').length +
+        ' tile=' + Math.round(t0.width) + 'x' + Math.round(t0.height) +
+        ' imgH=' + Math.round(i0.height));
+}
+
+setTimeout(function () {
+    measure('PORTRAIT', fP);
+    measure('LANDSCAPE', fL);
+    var d = fP.contentDocument;
+    var imgs = Array.prototype.map.call(d.querySelectorAll('.tile img'), function (x) { return x.src; });
+    log('SRC n=' + imgs.length + ' uniq=' + new Set(imgs).size +
+        ' pattern=' + imgs.every(function (s) {
+            return s.indexOf('https://trae-api-cn.mchost.guru/api/ide/v1/tool_text_to_image?prompt=') === 0 &&
+                   s.indexOf('&image_size=square') > 0;
+        }));
+    var loaded = 0;
+    var list = d.querySelectorAll('.tile img');
+    for (var i = 0; i < list.length; i++) if (list[i].complete && list[i].naturalWidth > 0) loaded++;
+    log('IMG loadedSoFar=' + loaded + '/' + list.length);
+    log('DONE');
+}, 1500);
+</script>
+</body>
+</html>

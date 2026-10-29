@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- 页面本身必须每次回源校验：否则浏览器会一直用缓存里的旧 index.html，
+         里面的 ?v=xxx 无论怎么改都拿不到新 JS，改动看起来"没生效" -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>数独解题器</title>
+    <link rel="stylesheet" href="style.css?v=20261030a">
+</head>
+<body>
+<div class="container">
+    <div class="header-with-timer">
+        <div class="title-section">
+            <h1>🧩 数独解题器</h1>
+            <span id="modeBadge" class="mode-badge practice-mode">✏️ 练习模式</span>
+            <span id="errorCountBadge" class="error-count-badge">❌ 错误: 0</span>
+            <a class="home-link" href="index.html" title="返回游戏首页">🏠 首页</a>
+        </div>
+        <div class="header-controls">
+        <!-- 二级菜单选题：点击弹出 → 级别 → 题目；选完后按钮自动缩短显示 -->
+        <div class="puzzle-picker" id="puzzlePicker">
+            <button class="pp-btn" id="ppBtn" type="button" title="点击选择题目">📚 选题 ▾</button>
+            <div class="pp-panel" id="ppPanel" style="display:none;">
+                <!-- JS 填充：四个级别，每个级别下 hover 展开题目列表 -->
+            </div>
+            <!-- 隐藏的原生 select：供 loadPuzzle / restoreProgress 等旧逻辑读取 value -->
+            <select id="gradeSelector" style="display:none;"></select>
+            <select id="puzzleSelector" style="display:none;"></select>
+        </div>
+        <div class="action-buttons">
+            <!-- 练习模式专属：候选数编辑（独立按钮，方便操作） -->
+            <button id="editCandBtn" class="edit-mode-btn" title="开启后可点击格子上的候选数进行编辑">✏️ 编辑候选数</button>
+            <!-- 更多操作下拉 -->
+            <div class="dropdown-wrapper" id="candidatesDropdown">
+                <button class="dropdown-btn" id="candidatesDropdownBtn">
+                    🧰 更多操作 ▼
+                </button>
+                <div class="dropdown-menu" id="candidatesDropdownMenu">
+                    <!-- 教学模式 -->
+                    <div class="menu-item" data-action="teaching">🎓 教学模式</div>
+                    <div class="menu-item" data-action="watch">🔊 讲解模式</div>
+                    <div class="menu-divider"></div>
+                    <!-- 练习模式（含下一步提示 / 补全候选数） -->
+                    <div class="menu-item" data-action="practice">✏️ 练习模式</div>
+                    <div class="menu-item" data-action="nextHint">💡 下一步提示</div>
+                    <div class="menu-item cand-only" data-action="fillCandidates">🧮 补全候选数</div>
+                    <div class="menu-divider"></div>
+                    <!-- 数据与资源 -->
+                    <div class="menu-item" data-action="exportPuzzle">📤 导出当前题目</div>
+                    <div class="menu-item" data-action="importPuzzle">📥 导入题目</div>
+                    <div class="menu-item" data-action="techManual">📚 技法手册</div>
+                    <div class="menu-divider"></div>
+                    <!-- 外观 -->
+                    <div class="menu-item" data-action="fullscreen" id="fullscreenMenuItem">⛶ 全屏</div>
+                    <div class="menu-item" data-action="theme" id="themeMenuItem">🌙 夜间模式</div>
+                </div>
+            </div>
+            <!-- 讲解模式：语音开关（唯一的图标按钮，仅讲解期间出现） -->
+            <button id="voiceToggleBtn" class="watch-toggle-btn" style="display:none;" title="关闭语音讲解">🔊</button>
+            <!-- 教学模式专属：下一步按钮（上一步已移入更多操作） -->
+            <div id="exampleControls" style="display: none;">
+                <button id="nextStepBtn">➡️ 下一步</button>
+            </div>
+        </div>
+        </div>
+        <div class="timer-display">
+            <span class="timer-icon">⏱️</span>
+            <span id="timerDisplay">00:00:00</span>
+        </div>
+    </div>
+    
+    <!-- 提示对话框 -->
+    <div id="hintDialog" class="hint-dialog" style="display: none;">
+        <div class="hint-dialog-content">
+            <div class="hint-dialog-header">
+                <span>💡 解题提示</span>
+                <button class="hint-dialog-close" id="hintDialogClose">&times;</button>
+            </div>
+            <div id="hintDialogBody" class="hint-dialog-body"></div>
+            <div class="hint-dialog-footer">
+                <button id="hintDialogOk" class="hint-dialog-btn">好的</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 解题成功对话框（练习模式） -->
+    <div id="completionDialog" class="hint-dialog" style="display: none;">
+        <div class="hint-dialog-content completion-dialog-content">
+            <div class="hint-dialog-header">
+                <span>🎉 恭喜解题成功</span>
+                <button class="hint-dialog-close" id="completionDialogClose">&times;</button>
+            </div>
+            <div id="completionDialogBody" class="hint-dialog-body"></div>
+            <div class="hint-dialog-footer">
+                <button id="completionRestartBtn" class="hint-dialog-btn">🔄 重新答题</button>
+                <button id="completionCloseBtn" class="hint-dialog-btn completion-secondary-btn">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 步骤可视化 / 技法知识弹窗（仅「确定」可关闭） -->
+    <div id="stepVizDialog" class="step-viz-dialog" style="display: none;">
+        <div class="step-viz-content">
+            <div class="step-viz-header">
+                <span id="stepVizTitle">链路可视化</span>
+                <span id="stepVizLevel" class="step-viz-level"></span>
+            </div>
+            <div class="step-viz-body" id="stepVizBody"></div>
+            <div class="step-viz-footer">
+                <span class="step-viz-hint">请对照盘面箭头人工核对，确认无误后点击「确定」</span>
+                <button id="stepVizOk" class="step-viz-btn">确 定</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 技法详解学习面板（可在步骤弹窗内点击「深入学习」打开） -->
+    <div id="techLearnDialog" class="tech-learn-dialog" style="display: none;">
+        <div class="tech-learn-content">
+            <div class="tech-learn-header">
+                <span id="techLearnTitle">技法详解</span>
+                <span id="techLearnLevel" class="tech-learn-level"></span>
+                <button id="techLearnClose" class="tech-learn-close" title="关闭">&times;</button>
+            </div>
+            <div class="tech-learn-body" id="techLearnBody"></div>
+            <div class="tech-learn-footer">
+                <span class="tech-learn-hint">学习完关闭本页，回到盘面继续核对该步推理</span>
+                <button id="techLearnBack" class="tech-learn-btn">返 回</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 导入题目弹窗（剪贴板 / 手动输入，支持 JSON 与字符串格式） -->
+    <div id="customPuzzleDialog" class="custom-dialog" style="display: none;">
+        <div class="custom-dialog-content">
+            <div class="custom-dialog-header">
+                <span>📥 导入题目</span>
+                <button class="custom-dialog-close" id="customDialogClose">&times;</button>
+            </div>
+            <div class="custom-dialog-body">
+                <p>支持 JSON 或字符串格式（单行 81 数字 / 9 行 / 逗号分隔），0 或 . 表示空格：</p>
+                <textarea id="customPuzzleInput" rows="9" placeholder="示例：
+530070000,600195000,098000060,800060003,400803001,700020006,060000280,000419005,000080079"></textarea>
+                <div class="custom-dialog-example">
+                    <button id="pasteClipboardBtn" class="example-btn">📋 读取剪贴板</button>
+                    <button id="loadExampleBtn" class="example-btn">📄 加载示例</button>
+                </div>
+                <div id="customPuzzleError" class="custom-error" style="display: none;"></div>
+            </div>
+            <div class="custom-dialog-footer">
+                <button id="cancelCustomBtn" class="custom-dialog-btn cancel">取消</button>
+                <button id="confirmCustomBtn" class="custom-dialog-btn confirm">确认导入</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="game-area" id="gameArea">
+        <div class="board-column">
+        <div class="board-row">
+        <!-- 棋盘外框：负责在棋盘上方标列号 1-9、左侧标行号 A-I -->
+        <div class="board-frame" id="boardFrame">
+            <div class="board-col-labels" id="boardColLabels" aria-hidden="true"></div>
+            <div class="board-row-labels" id="boardRowLabels" aria-hidden="true"></div>
+        <div class="sudoku-container" id="sudokuContainer">
+            <table id="sudoku-board">
+                <tbody id="sudoku-body"></tbody>
+            </table>
+            <!-- 链路/图形覆盖层：绘制箭头、节点编号与排除标记 -->
+            <svg id="stepOverlay" class="step-overlay" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <defs>
+                    <marker id="arrowStrong" viewBox="0 0 10 10" refX="9" refY="5"
+                            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#e74c3c"></path>
+                    </marker>
+                    <marker id="arrowWeak" viewBox="0 0 10 10" refX="9" refY="5"
+                            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3498db"></path>
+                    </marker>
+                </defs>
+            </svg>
+        </div>
+        </div>
+        <!-- 数字键盘 -->
+        <div class="number-pad" id="numberPad"></div>
+        </div>
+        </div>
+        <div class="explanation-sidebar" id="explanationSidebar">
+            <button class="sidebar-toggle" id="sidebarToggle" title="折叠/展开侧栏">◀ 折叠</button>
+            <button class="sidebar-quick-info" id="sidebarQuickInfo" title="查看上一步骤原因（折叠时也可点）">📖</button>
+            <div class="sidebar-resize-handle" id="sidebarResize" title="拖动调整侧栏宽度"></div>
+            <div class="explanation-panel">
+                <h3>📖 解题过程</h3>
+                <div id="steps-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="puzzles.js?v=20261030a"></script>
+<script src="sudoku-core.js?v=20261030a"></script>
+<script src="sudoku-ui.js?v=20261030a"></script>
+</body>
+</html>

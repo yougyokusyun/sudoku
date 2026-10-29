@@ -2,204 +2,317 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- 页面本身必须每次回源校验：否则浏览器会一直用缓存里的旧 index.html，
-         里面的 ?v=xxx 无论怎么改都拿不到新 JS，改动看起来"没生效" -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <!-- 页面每次回源校验：避免浏览器一直用旧首页，导致新增的游戏入口看不到 -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>数独解题器</title>
-    <link rel="stylesheet" href="style.css?v=20261029b">
+    <title>小脑袋乐园 · 幼儿益智游戏</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        html, body { min-height: 100%; }
+        body {
+            font-family: 'PingFang SC', 'Microsoft YaHei', system-ui, -apple-system, sans-serif;
+            color: #243b53;
+            background:
+                radial-gradient(1200px 600px at 10% -10%, #ffe8f0 0%, transparent 60%),
+                radial-gradient(1000px 600px at 100% 0%, #e4f2ff 0%, transparent 55%),
+                linear-gradient(160deg, #fff8f2 0%, #f2f8ff 100%);
+            min-height: 100dvh;
+            padding: 20px 16px 34px;
+            user-select: none;
+        }
+        .wrap { max-width: 1080px; margin: 0 auto; }
+
+        header { text-align: center; margin-bottom: 22px; }
+        h1 { font-size: 1.7rem; letter-spacing: 1px; }
+        .sub { margin-top: 6px; font-size: .92rem; color: #6b7f95; }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(158px, 1fr));
+            gap: 14px;
+        }
+        .card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 148px;
+            padding: 16px 12px;
+            border-radius: 20px;
+            background: #fff;
+            border: 2px solid rgba(0, 0, 0, .05);
+            box-shadow: 0 8px 18px rgba(36, 59, 83, .08);
+            text-decoration: none;
+            color: inherit;
+            transition: transform .16s ease, box-shadow .16s ease;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            inset: 0 0 auto 0;
+            height: 5px;
+            background: var(--c, #7c5cff);
+        }
+        .card:active { transform: scale(.95); }
+        @media (hover: hover) {
+            .card:hover { transform: translateY(-4px); box-shadow: 0 14px 26px rgba(36, 59, 83, .16); }
+        }
+        .card .ico { font-size: 2.6rem; line-height: 1.15; }
+        .card .name { font-size: 1.02rem; font-weight: 800; }
+        .card .desc { font-size: .76rem; color: #7b8ea8; text-align: center; line-height: 1.35; }
+
+        .card.sudoku {
+            --c: #7c5cff;
+            background: linear-gradient(160deg, #ffffff, #f4f0ff);
+            border-color: rgba(124, 92, 255, .28);
+        }
+        .card.sudoku .name { color: #5b3fd6; }
+        .tag {
+            position: absolute;
+            top: 10px; right: 10px;
+            background: #7c5cff;
+            color: #fff;
+            font-size: .66rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 999px;
+        }
+
+        footer { margin-top: 26px; text-align: center; font-size: .76rem; color: #9fb1c6; }
+
+        /* 分区标题：3~5 岁 / 8~12 岁 */
+        .sect {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 26px 4px 12px;
+            font-size: 1rem;
+            font-weight: 800;
+            color: #3b5370;
+        }
+        .sect:first-of-type { margin-top: 0; }
+        .sect .line { flex: 1; height: 1px; background: rgba(36, 59, 83, .14); }
+        .sect .cnt { font-size: .72rem; font-weight: 700; color: #8aa0b8; }
+
+        @media (max-width: 380px) {
+            .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+            .card { min-height: 132px; padding: 12px 8px; }
+            .card .ico { font-size: 2.1rem; }
+        }
+    </style>
 </head>
 <body>
-<div class="container">
-    <div class="header-with-timer">
-        <div class="title-section">
-            <h1>🧩 数独解题器</h1>
-            <span id="modeBadge" class="mode-badge practice-mode">✏️ 练习模式</span>
-            <span id="errorCountBadge" class="error-count-badge">❌ 错误: 0</span>
-        </div>
-        <div class="header-controls">
-        <!-- 二级菜单选题：点击弹出 → 级别 → 题目；选完后按钮自动缩短显示 -->
-        <div class="puzzle-picker" id="puzzlePicker">
-            <button class="pp-btn" id="ppBtn" type="button" title="点击选择题目">📚 选题 ▾</button>
-            <div class="pp-panel" id="ppPanel" style="display:none;">
-                <!-- JS 填充：四个级别，每个级别下 hover 展开题目列表 -->
-            </div>
-            <!-- 隐藏的原生 select：供 loadPuzzle / restoreProgress 等旧逻辑读取 value -->
-            <select id="gradeSelector" style="display:none;"></select>
-            <select id="puzzleSelector" style="display:none;"></select>
-        </div>
-        <div class="action-buttons">
-            <!-- 练习模式专属：候选数编辑（独立按钮，方便操作） -->
-            <button id="editCandBtn" class="edit-mode-btn" title="开启后可点击格子上的候选数进行编辑">✏️ 编辑候选数</button>
-            <!-- 更多操作下拉 -->
-            <div class="dropdown-wrapper" id="candidatesDropdown">
-                <button class="dropdown-btn" id="candidatesDropdownBtn">
-                    🧰 更多操作 ▼
-                </button>
-                <div class="dropdown-menu" id="candidatesDropdownMenu">
-                    <!-- 教学模式 -->
-                    <div class="menu-item" data-action="teaching">🎓 教学模式</div>
-                    <div class="menu-item" data-action="watch">🔊 讲解模式</div>
-                    <div class="menu-divider"></div>
-                    <!-- 练习模式（含下一步提示 / 补全候选数） -->
-                    <div class="menu-item" data-action="practice">✏️ 练习模式</div>
-                    <div class="menu-item" data-action="nextHint">💡 下一步提示</div>
-                    <div class="menu-item cand-only" data-action="fillCandidates">🧮 补全候选数</div>
-                    <div class="menu-divider"></div>
-                    <!-- 数据与资源 -->
-                    <div class="menu-item" data-action="exportPuzzle">📤 导出当前题目</div>
-                    <div class="menu-item" data-action="importPuzzle">📥 导入题目</div>
-                    <div class="menu-item" data-action="techManual">📚 技法手册</div>
-                    <div class="menu-divider"></div>
-                    <!-- 外观 -->
-                    <div class="menu-item" data-action="fullscreen" id="fullscreenMenuItem">⛶ 全屏</div>
-                    <div class="menu-item" data-action="theme" id="themeMenuItem">🌙 夜间模式</div>
-                </div>
-            </div>
-            <!-- 讲解模式：语音开关（唯一的图标按钮，仅讲解期间出现） -->
-            <button id="voiceToggleBtn" class="watch-toggle-btn" style="display:none;" title="关闭语音讲解">🔊</button>
-            <!-- 教学模式专属：下一步按钮（上一步已移入更多操作） -->
-            <div id="exampleControls" style="display: none;">
-                <button id="nextStepBtn">➡️ 下一步</button>
-            </div>
-        </div>
-        </div>
-        <div class="timer-display">
-            <span class="timer-icon">⏱️</span>
-            <span id="timerDisplay">00:00:00</span>
-        </div>
-    </div>
-    
-    <!-- 提示对话框 -->
-    <div id="hintDialog" class="hint-dialog" style="display: none;">
-        <div class="hint-dialog-content">
-            <div class="hint-dialog-header">
-                <span>💡 解题提示</span>
-                <button class="hint-dialog-close" id="hintDialogClose">&times;</button>
-            </div>
-            <div id="hintDialogBody" class="hint-dialog-body"></div>
-            <div class="hint-dialog-footer">
-                <button id="hintDialogOk" class="hint-dialog-btn">好的</button>
-            </div>
-        </div>
-    </div>
-    
-    <!-- 解题成功对话框（练习模式） -->
-    <div id="completionDialog" class="hint-dialog" style="display: none;">
-        <div class="hint-dialog-content completion-dialog-content">
-            <div class="hint-dialog-header">
-                <span>🎉 恭喜解题成功</span>
-                <button class="hint-dialog-close" id="completionDialogClose">&times;</button>
-            </div>
-            <div id="completionDialogBody" class="hint-dialog-body"></div>
-            <div class="hint-dialog-footer">
-                <button id="completionRestartBtn" class="hint-dialog-btn">🔄 重新答题</button>
-                <button id="completionCloseBtn" class="hint-dialog-btn completion-secondary-btn">关闭</button>
-            </div>
-        </div>
+<div class="wrap">
+    <header>
+        <h1>🧸 小脑袋乐园</h1>
+        <div class="sub">3~12 岁宝贝的益智小游戏，点一个就能开始</div>
+    </header>
+
+    <h2 class="sect">🧸 3~5 岁 · 认知启蒙 <span class="cnt">22 个</span><span class="line"></span></h2>
+    <div class="grid">
+        <a class="card" style="--c:#e63946" href="games/shapes.html">
+            <span class="ico">🟦🔺⚪</span>
+            <span class="name">形状认知配对</span>
+            <span class="desc">圆 · 方 · 三角 · 星 · 心</span>
+        </a>
+
+        <a class="card" style="--c:#7c5cff" href="games/shapes-learn.html">
+            <span class="ico">🔺👂</span>
+            <span class="name">形状认识</span>
+            <span class="desc">点一下形状，听它叫什么</span>
+        </a>
+
+        <a class="card" style="--c:#2fb344" href="games/shapes-panel.html">
+            <span class="ico">🧩🔺</span>
+            <span class="name">形状嵌板</span>
+            <span class="desc">把形状放进对应的洞里</span>
+        </a>
+
+        <a class="card" style="--c:#e08a00" href="games/count.html">
+            <span class="ico">🍎🔢</span>
+            <span class="name">数一数</span>
+            <span class="desc">有几个苹果？数完点数字</span>
+        </a>
+
+        <a class="card" style="--c:#7c5cff" href="games/number-match.html">
+            <span class="ico">🔢🍎</span>
+            <span class="name">数字配对</span>
+            <span class="desc">找出和数字一样多的那张卡</span>
+        </a>
+
+        <a class="card" style="--c:#e08a00" href="games/animals-learn.html">
+            <span class="ico">🐶🐱🐘</span>
+            <span class="name">动物认识</span>
+            <span class="desc">一页一只，左右滑或点箭头换</span>
+        </a>
+
+        <a class="card" style="--c:#e0559b" href="games/animals-mom.html">
+            <span class="ico">🐘👶</span>
+            <span class="name">动物找妈妈</span>
+            <span class="desc">大动物配小宝宝</span>
+        </a>
+
+        <a class="card" style="--c:#2a9d8f" href="games/sort-home.html">
+            <span class="ico">👕🍎🧸</span>
+            <span class="name">物品分类</span>
+            <span class="desc">把东西送回它们的家</span>
+        </a>
+
+        <a class="card" style="--c:#2a9d8f" href="games/scene-words.html">
+            <span class="ico">🖼️👆</span>
+            <span class="name">看图说话</span>
+            <span class="desc">点图里的东西，听词语</span>
+        </a>
+
+        <a class="card" style="--c:#7c5cff" href="games/opposites.html">
+            <span class="ico">↔️🐘🐭</span>
+            <span class="name">相反词配对</span>
+            <span class="desc">大-小 · 高-矮 · 快-慢</span>
+        </a>
+
+        <a class="card" style="--c:#ff8f3f" href="games/music-pad.html">
+            <span class="ico">🥁🎵</span>
+            <span class="name">敲敲打打</span>
+            <span class="desc">四个彩色按钮，点出 do re mi fa</span>
+        </a>
+
+        <a class="card" style="--c:#e0559b" href="games/rhythm.html">
+            <span class="ico">👏🔴🟡</span>
+            <span class="name">节奏模仿</span>
+            <span class="desc">照着顺序拍一遍，越拍越长</span>
+        </a>
+
+        <a class="card" style="--c:#f4a261" href="games/odd-one.html">
+            <span class="ico">🔍</span>
+            <span class="name">找不同</span>
+            <span class="desc">5 张卡片里挑出不一样的那个</span>
+        </a>
+
+        <a class="card" style="--c:#2a9d8f" href="games/big-small.html">
+            <span class="ico">🐘🐭</span>
+            <span class="name">大小比较</span>
+            <span class="desc">哪个更大？哪个更小？</span>
+        </a>
+
+        <a class="card" style="--c:#e76f51" href="games/more-less.html">
+            <span class="ico">🍎🍎🍎</span>
+            <span class="name">多少比较</span>
+            <span class="desc">哪边多？哪边少？</span>
+        </a>
+
+        <a class="card" style="--c:#6c757d" href="games/shadow.html">
+            <span class="ico">🌑</span>
+            <span class="name">影子配对</span>
+            <span class="desc">3 个影子里找出它的形状</span>
+        </a>
+
+        <a class="card" style="--c:#48cae4" href="games/bubble.html">
+            <span class="ico">🫧</span>
+            <span class="name">拍泡泡</span>
+            <span class="desc">手眼协调 · 点破小泡泡</span>
+        </a>
+
+        <a class="card" style="--c:#f9c74f" href="games/animal-feed.html">
+            <span class="ico">🐰🥕</span>
+            <span class="name">动物喂食</span>
+            <span class="desc">4 样里挑出它最爱吃的那一个</span>
+        </a>
+
+        <a class="card" style="--c:#ef476f" href="games/pattern.html">
+            <span class="ico">🔴🔵🔴🔵</span>
+            <span class="name">规律排序</span>
+            <span class="desc">下一个应该是什么颜色？</span>
+        </a>
+
+        <a class="card" style="--c:#e63946" href="games/color.html">
+            <span class="ico">🎨🔴🔵</span>
+            <span class="name">颜色配对</span>
+            <span class="desc">找出一样的颜色，还能按名字找</span>
+        </a>
+
+        <a class="card" style="--c:#90be6d" href="games/weather.html">
+            <span class="ico">☀️🧥</span>
+            <span class="name">天气与穿衣</span>
+            <span class="desc">今天该带什么出门？</span>
+        </a>
+
+        <a class="card" style="--c:#4361ee" href="games/steps.html">
+            <span class="ico">🧼🪥</span>
+            <span class="name">步骤排序</span>
+            <span class="desc">洗手要先做什么？</span>
+        </a>
     </div>
 
-    <!-- 步骤可视化 / 技法知识弹窗（仅「确定」可关闭） -->
-    <div id="stepVizDialog" class="step-viz-dialog" style="display: none;">
-        <div class="step-viz-content">
-            <div class="step-viz-header">
-                <span id="stepVizTitle">链路可视化</span>
-                <span id="stepVizLevel" class="step-viz-level"></span>
-            </div>
-            <div class="step-viz-body" id="stepVizBody"></div>
-            <div class="step-viz-footer">
-                <span class="step-viz-hint">请对照盘面箭头人工核对，确认无误后点击「确定」</span>
-                <button id="stepVizOk" class="step-viz-btn">确 定</button>
-            </div>
-        </div>
+    <h2 class="sect">🚀 8~12 岁 · 思维挑战 <span class="cnt">10 个</span><span class="line"></span></h2>
+    <div class="grid">
+        <a class="card sudoku" href="sudoku.html">
+            <span class="tag">经典</span>
+            <span class="ico">🧩</span>
+            <span class="name">数独解题器</span>
+            <span class="desc">逻辑推理 · 教学模式 · 语音讲解</span>
+        </a>
+
+        <a class="card" style="--c:#ff7043" href="games/24point.html">
+            <span class="ico">🧮</span>
+            <span class="name">24 点挑战</span>
+            <span class="desc">4 张牌，加减乘除凑出 24</span>
+        </a>
+
+        <a class="card" style="--c:#5c6bc0" href="games/slide15.html">
+            <span class="ico">🔢</span>
+            <span class="name">数字华容道</span>
+            <span class="desc">3×3 滑动拼图 · 4×4 挑战</span>
+        </a>
+
+        <a class="card" style="--c:#26a69a" href="games/sequence.html">
+            <span class="ico">📈</span>
+            <span class="name">找规律填数</span>
+            <span class="desc">等差 · 等比 · 混合规律</span>
+        </a>
+
+        <a class="card" style="--c:#8d6e63" href="games/guess-number.html">
+            <span class="ico">🎲</span>
+            <span class="name">猜数字</span>
+            <span class="desc">●○ 提示，用推理锁定答案</span>
+        </a>
+
+        <a class="card" style="--c:#ffa000" href="games/reaction.html">
+            <span class="ico">⚡</span>
+            <span class="name">反应测试</span>
+            <span class="desc">变绿就点 · 本地排行榜</span>
+        </a>
+
+        <a class="card" style="--c:#7e57c2" href="games/logic-clues.html">
+            <span class="ico">🕵️</span>
+            <span class="name">逻辑推理</span>
+            <span class="desc">2~4 条线索，推出唯一答案</span>
+        </a>
+
+        <a class="card" style="--c:#6a4bff" href="games/idioms.html">
+            <span class="ico">📖</span>
+            <span class="name">成语闯关</span>
+            <span class="desc">猜一猜 / 填一填 / 配一配 / 演一演</span>
+        </a>
+
+        <a class="card" style="--c:#d81b60" href="games/riddle.html">
+            <span class="ico">🎯</span>
+            <span class="name">猜谜语</span>
+            <span class="desc">1000+ 条谜语 · 提示可用</span>
+        </a>
+
+        <a class="card" style="--c:#0288d1" href="games/path-connect.html">
+            <span class="ico">🗺️</span>
+            <span class="name">路径连线</span>
+            <span class="desc">5×5 网格，找最短通路</span>
+        </a>
     </div>
 
-    <!-- 技法详解学习面板（可在步骤弹窗内点击「深入学习」打开） -->
-    <div id="techLearnDialog" class="tech-learn-dialog" style="display: none;">
-        <div class="tech-learn-content">
-            <div class="tech-learn-header">
-                <span id="techLearnTitle">技法详解</span>
-                <span id="techLearnLevel" class="tech-learn-level"></span>
-                <button id="techLearnClose" class="tech-learn-close" title="关闭">&times;</button>
-            </div>
-            <div class="tech-learn-body" id="techLearnBody"></div>
-            <div class="tech-learn-footer">
-                <span class="tech-learn-hint">学习完关闭本页，回到盘面继续核对该步推理</span>
-                <button id="techLearnBack" class="tech-learn-btn">返 回</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 导入题目弹窗（剪贴板 / 手动输入，支持 JSON 与字符串格式） -->
-    <div id="customPuzzleDialog" class="custom-dialog" style="display: none;">
-        <div class="custom-dialog-content">
-            <div class="custom-dialog-header">
-                <span>📥 导入题目</span>
-                <button class="custom-dialog-close" id="customDialogClose">&times;</button>
-            </div>
-            <div class="custom-dialog-body">
-                <p>支持 JSON 或字符串格式（单行 81 数字 / 9 行 / 逗号分隔），0 或 . 表示空格：</p>
-                <textarea id="customPuzzleInput" rows="9" placeholder="示例：
-530070000,600195000,098000060,800060003,400803001,700020006,060000280,000419005,000080079"></textarea>
-                <div class="custom-dialog-example">
-                    <button id="pasteClipboardBtn" class="example-btn">📋 读取剪贴板</button>
-                    <button id="loadExampleBtn" class="example-btn">📄 加载示例</button>
-                </div>
-                <div id="customPuzzleError" class="custom-error" style="display: none;"></div>
-            </div>
-            <div class="custom-dialog-footer">
-                <button id="cancelCustomBtn" class="custom-dialog-btn cancel">取消</button>
-                <button id="confirmCustomBtn" class="custom-dialog-btn confirm">确认导入</button>
-            </div>
-        </div>
-    </div>
-    
-    <div class="game-area" id="gameArea">
-        <div class="board-column">
-        <div class="board-row">
-        <!-- 棋盘外框：负责在棋盘上方标列号 1-9、左侧标行号 A-I -->
-        <div class="board-frame" id="boardFrame">
-            <div class="board-col-labels" id="boardColLabels" aria-hidden="true"></div>
-            <div class="board-row-labels" id="boardRowLabels" aria-hidden="true"></div>
-        <div class="sudoku-container" id="sudokuContainer">
-            <table id="sudoku-board">
-                <tbody id="sudoku-body"></tbody>
-            </table>
-            <!-- 链路/图形覆盖层：绘制箭头、节点编号与排除标记 -->
-            <svg id="stepOverlay" class="step-overlay" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                <defs>
-                    <marker id="arrowStrong" viewBox="0 0 10 10" refX="9" refY="5"
-                            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#e74c3c"></path>
-                    </marker>
-                    <marker id="arrowWeak" viewBox="0 0 10 10" refX="9" refY="5"
-                            markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-                        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3498db"></path>
-                    </marker>
-                </defs>
-            </svg>
-        </div>
-        </div>
-        <!-- 数字键盘 -->
-        <div class="number-pad" id="numberPad"></div>
-        </div>
-        </div>
-        <div class="explanation-sidebar" id="explanationSidebar">
-            <button class="sidebar-toggle" id="sidebarToggle" title="折叠/展开侧栏">◀ 折叠</button>
-            <button class="sidebar-quick-info" id="sidebarQuickInfo" title="查看上一步骤原因（折叠时也可点）">📖</button>
-            <div class="sidebar-resize-handle" id="sidebarResize" title="拖动调整侧栏宽度"></div>
-            <div class="explanation-panel">
-                <h3>📖 解题过程</h3>
-                <div id="steps-list"></div>
-            </div>
-        </div>
-    </div>
+    <footer>纯 HTML 小游戏 · 无广告 · 无计时 · 不扣分</footer>
 </div>
-
-<script src="puzzles.js?v=20261029b"></script>
-<script src="sudoku-core.js?v=20261029b"></script>
-<script src="sudoku-ui.js?v=20261029b"></script>
 </body>
 </html>

@@ -3285,3 +3285,21 @@ body.dark-mode .timer-display { background: #24334a; }
         -webkit-overflow-scrolling: touch;
     }
 }
+
+/* 数独页顶部的「返回首页」入口 */
+.home-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 30px;
+    background: #fff;
+    border: 1px solid #d5e2f0;
+    color: #2a5298;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    white-space: nowrap;
+}
+.home-link:hover { background: #2a5298; color: #fff; border-color: #2a5298; }
+body.dark-mode .home-link { background: #22303f; border-color: #35465c; color: #9fc4ff; }
