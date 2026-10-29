@@ -581,6 +581,59 @@ function createBoard() {
         }
         tbody.appendChild(tr);
     }
+    buildBoardLabels();
+}
+
+/** 生成棋盘上方的列号 1-9 与左侧的行号 A-I（位置由 layoutBoardLabels 按真实格子对齐） */
+function buildBoardLabels() {
+    const cols = document.getElementById('boardColLabels');
+    const rows = document.getElementById('boardRowLabels');
+    if (!cols || !rows) return;
+    if (!cols.children.length) {
+        for (let c = 0; c < 9; c++) {
+            const s = document.createElement('span');
+            s.textContent = String(c + 1);
+            cols.appendChild(s);
+        }
+    }
+    if (!rows.children.length) {
+        for (let r = 0; r < 9; r++) {
+            const s = document.createElement('span');
+            s.textContent = String.fromCharCode(65 + r);   // A ~ I
+            rows.appendChild(s);
+        }
+    }
+}
+
+/**
+ * 把行列标尺摆到每个格子的中心。
+ * 表格边框粗细不是 1px 的整数倍（宫格粗线 4px），纯 CSS 算不准，因此按实测位置摆放。
+ */
+function layoutBoardLabels() {
+    const body = document.getElementById('sudoku-body');
+    const cols = document.getElementById('boardColLabels');
+    const rows = document.getElementById('boardRowLabels');
+    if (!body || !cols || !rows || !body.rows.length) return;
+    buildBoardLabels();
+
+    const cell = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cell-size')) || 40;
+    const labelSize = Math.max(14, Math.min(30, Math.round(cell * 0.46)));
+    const frame = document.getElementById('boardFrame');
+    if (frame) {
+        frame.style.setProperty('--label-size', labelSize + 'px');
+        frame.style.setProperty('--label-font', Math.max(9, Math.min(15, Math.round(cell * 0.26))) + 'px');
+    }
+
+    const cr = cols.getBoundingClientRect();
+    for (let i = 0; i < cols.children.length && i < body.rows[0].cells.length; i++) {
+        const rc = body.rows[0].cells[i].getBoundingClientRect();
+        cols.children[i].style.left = (rc.left + rc.width / 2 - cr.left) + 'px';
+    }
+    const rr0 = rows.getBoundingClientRect();
+    for (let i = 0; i < rows.children.length && i < body.rows.length; i++) {
+        const rr = body.rows[i].getBoundingClientRect();
+        rows.children[i].style.top = (rr.top + rr.height / 2 - rr0.top) + 'px';
+    }
 }
 
 
@@ -1731,7 +1784,7 @@ function fitBoardSize() {
         else availH -= (pad.offsetHeight + 12);
     }
 
-    const board = Math.min(availW, availH) - 24; // 再留出棋盘边框/描边余量
+    const board = Math.min(availW, availH) - 24 - 20; // 再扣棋盘边框，以及行列标尺占的约 20px
     let cell = Math.floor(board / 9);
     cell = Math.max(26, Math.min(120, cell)); // 26 ~ 120px 安全区间（大屏可放大）
     const applyCell = (c) => document.documentElement.style.setProperty('--cell-size', c + 'px');
@@ -1744,7 +1797,7 @@ function fitBoardSize() {
     const padRight = parseFloat(wrapStyle.paddingRight) || 0;
     const padBottom = parseFloat(wrapStyle.paddingBottom) || 0;
     const overshoot = () => {
-        const els = [document.querySelector('.sudoku-container'), pad].filter(
+        const els = [document.getElementById('boardFrame'), pad].filter(
             (el) => el && getComputedStyle(el).display !== 'none' && el.offsetHeight > 0);
         if (!els.length) return 0;
         const wr = wrap.getBoundingClientRect();
@@ -1787,6 +1840,9 @@ function fitBoardSize() {
         cell = Math.max(20, cell - 1);
         applyCell(cell);
     }
+
+    // 格子尺寸定了之后，行列标尺按新尺寸重新对齐
+    layoutBoardLabels();
 }
 
 let __fitBoardTimer = null;
@@ -3972,6 +4028,39 @@ function numToZh(n) {
     return String(n);
 }
 
+/** 「行」读 xíng 的常见词：替换读音前先保护起来，避免被误改成 háng */
+const XING_WORDS = ['进行', '可行', '执行', '运行', '发行', '行驶', '行政', '行为', '行人',
+    '行李', '行不通', '行得通', '不行', '行业', '银行', '行程', '行星', '举行', '施行',
+    '自行', '并行', '通行', '流行', '旅行', '例行', '现行', '实行'];
+
+/**
+ * 把语音稿改写成"不会被读错"的写法（只影响朗读，面板文字不变）：
+ * 1) 数字统一转中文数字，「2」写成「二」才不会读成 liǎng；
+ * 2) 指棋盘横排的「行」全部换成同音的「航」，强制读 háng（合成音默认读 xíng）；
+ * 3) 「进行」这类必须读 xíng 的词先占位保护，替换完再还原。
+ */
+function toSpeakableText(text) {
+    let t = String(text || '');
+    // 技法名里的「（行 3）」这种"单位+序号"写法，改成「（第3行）」才顺口
+    t = t.replace(/[(（]\s*([行列宫])\s+(\d+)\s*[)）]/g, '（第$2$1）');
+    const marks = [];
+    XING_WORDS.forEach(function (w) {
+        if (t.indexOf(w) < 0) return;
+        const token = '\u0001' + marks.length + '\u0002';
+        marks.push(w);
+        t = t.split(w).join(token);
+    });
+    t = t.replace(/行/g, '航');
+    t = t.replace(/\u0001(\d+)\u0002/g, function (m, i) { return marks[+i]; });
+    // 题库说明里写的是「两个格子」「这两格」，合成音读 liǎng。用户要求 2 一律读 èr，
+    // 因此中文「两 / 俩」也统一换成「二」。
+    t = t.replace(/两/g, '二').replace(/俩/g, '二');
+    t = t.replace(/\d+/g, function (m) { return numToZh(parseInt(m, 10)); });
+    // 括号内外不要留空格，否则合成音会停顿一下
+    t = t.replace(/\s*([()（）])\s*/g, '$1');
+    return t;
+}
+
 /**
  * 把一步转成语音稿。
  * 只朗读右侧「解题过程」面板里实际显示的内容：步骤号 + 技法 + 这一步的说明，
@@ -3995,15 +4084,7 @@ function buildStepNarration(step, stepNum) {
         .replace(/→/g, '，')
         .replace(/[,，]\s*/g, '，')
         .replace(/第\s*(\d+)\s*行\s*第\1\s*行/g, '第$1行')   // 「第 3 行 (3,2)」不要念成「第3行第3行第2列」
-        // 「行」是多音字，多数合成音默认读 xíng。这里的「行」都指棋盘的横排，应读 háng；
-        // 换成语境无歧义的「航」(同音 háng) 来强制读音，面板上的文字不受影响。
-        .replace(/([0-9])\s*行/g, '$1航')
-        .replace(/(第[一二三四五六七八九十]+)行/g, '$1航')
-        .replace(/同行/g, '同航')
-        .replace(/(该|这一|每一|哪一|另一)行/g, '$1航')
-        // 数字统一读成中文数字：「2」在量词前会被读成「两/俩」，写成「二」可确保读 èr
-        .replace(/\d+/g, (m) => numToZh(parseInt(m, 10)))
-        .replace(/[：:]/g, '，')          // 其余冒号当停顿处理，避免读成「的」
+        .replace(/[：:]/g, '，')          // 冒号当停顿处理，避免读成「的」
         .replace(/，{2,}/g, '，')
         .replace(/。\s*。/g, '。')
         .replace(/。\s*，/g, '，')
@@ -4011,13 +4092,29 @@ function buildStepNarration(step, stepNum) {
         .replace(/\s+/g, '')
         .trim();
 
-    return head + body;
+    // 标题里的技法名同样要处理（例如「区块排除法 (宫到行)」「唯余法（行 3）」）
+    return toSpeakableText(head + body);
 }
 
 // 保住本次朗读所有语句对象的强引用：Chrome 会在朗读途中回收局部变量，
 // 表现就是念到一半突然没声/断续，这是"语音卡顿"的常见原因之一
 let currentUtterances = [];
 let speechUnlocked = false;
+
+/** 是否 iOS / iPadOS（iPadOS 13+ 默认 UA 伪装成 Mac，靠触摸点数区分） */
+function isIOSDevice() {
+    const ua = navigator.userAgent || '';
+    if (/iPad|iPhone|iPod/.test(ua)) return true;
+    return navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+}
+
+/**
+ * 朗读语速：iOS 自带的系统中文音色天生偏快，同样 rate 听感比安卓快不少，
+ * 所以 iOS/iPadOS 用 0.9，其余平台（安卓、桌面 Chrome/Edge）保持 1.2。
+ */
+function pickNarrationRate() {
+    return isIOSDevice() ? 0.9 : 1.2;
+}
 
 /**
  * 移动端解锁语音：iOS / 部分安卓浏览器要求第一次 speak() 必须发生在用户手势的
@@ -4187,7 +4284,8 @@ function speakNarration(text, onEnd) {
             const u = new SpeechSynthesisUtterance(pieces[i]);
             if (voice) u.voice = voice;
             u.lang = voice ? voice.lang : 'zh-CN';
-            u.rate = 1.2;      // 比默认略快；再快中文音色会开始吞字
+            // 语速分平台：iOS / iPadOS 的系统中文音色本身偏快，降一档；安卓保持原速
+            u.rate = pickNarrationRate();
             u.pitch = 1;
             currentUtterances.push(u);   // 强引用，避免朗读中途被回收导致断音
             // 引擎报进度就续命（安卓上 onboundary 不一定触发，触发时就当心跳用）

@@ -553,6 +553,60 @@ body.dark-mode .dropdown-menu .menu-divider {
     justify-content: center;
 }
 
+/* ====== 棋盘外框与行列标尺 ======
+   上方标列号 1-9、左侧标行号 A-I。外框留出 --label-size 的内边距给标尺，
+   标尺位置由 JS 按实际格子中心对齐（表格边框粗细不是整数，没法用纯 CSS 算准）。 */
+.board-frame {
+    position: relative;
+    flex-shrink: 0;
+    padding-left: var(--label-size, 20px);
+    padding-top: var(--label-size, 20px);
+}
+
+.board-col-labels,
+.board-row-labels {
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
+    user-select: none;
+    color: #7b8ea8;
+    font-weight: 700;
+    line-height: 1;
+}
+
+.board-col-labels {
+    left: var(--label-size, 20px);
+    top: 0;
+    height: var(--label-size, 20px);
+    right: 0;
+}
+
+.board-row-labels {
+    left: 0;
+    top: var(--label-size, 20px);
+    bottom: 0;
+    width: var(--label-size, 20px);
+}
+
+.board-col-labels span {
+    position: absolute;
+    transform: translateX(-50%);
+    top: 50%;
+    font-size: var(--label-font, 13px);
+}
+
+.board-row-labels span {
+    position: absolute;
+    transform: translateY(-50%);
+    left: 50%;
+    font-size: var(--label-font, 13px);
+}
+
+body.dark-mode .board-col-labels,
+body.dark-mode .board-row-labels {
+    color: #9fb1c6;
+}
+
 #sudoku-board {
     border-collapse: collapse;
     border: 4px solid #1e3c72;
