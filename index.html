@@ -8,6 +8,14 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>小脑袋乐园 · 幼儿益智游戏</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff8fbe">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+    <link rel="apple-touch-icon" href="games/img/icon-180.png">
+    <link rel="icon" type="image/png" href="games/img/icon-192.png">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         html, body { min-height: 100%; }
@@ -133,6 +141,12 @@
             <span class="desc">把形状放进对应的洞里</span>
         </a>
 
+        <a class="card" style="--c:#7c5cff" href="games/shape-insert.html">
+            <span class="ico">🧠🔺</span>
+            <span class="name">形状嵌入</span>
+            <span class="desc">拖进缺口，方向对才算成功</span>
+        </a>
+
         <a class="card" style="--c:#e08a00" href="games/count.html">
             <span class="ico">🍎🔢</span>
             <span class="name">数一数</span>
@@ -158,21 +172,15 @@
         </a>
 
         <a class="card" style="--c:#2a9d8f" href="games/sort-home.html">
-            <span class="ico">👕🍎🧸</span>
-            <span class="name">物品分类</span>
-            <span class="desc">把东西送回它们的家</span>
+            <span class="ico">🛒🦁🧸</span>
+            <span class="name">分类找一找</span>
+            <span class="desc">点一点属于它的东西</span>
         </a>
 
         <a class="card" style="--c:#2a9d8f" href="games/scene-words.html">
             <span class="ico">🖼️👆</span>
             <span class="name">看图说话</span>
             <span class="desc">点图里的东西，听词语</span>
-        </a>
-
-        <a class="card" style="--c:#7c5cff" href="games/opposites.html">
-            <span class="ico">↔️🐘🐭</span>
-            <span class="name">相反词配对</span>
-            <span class="desc">大-小 · 高-矮 · 快-慢</span>
         </a>
 
         <a class="card" style="--c:#ff8f3f" href="games/music-pad.html">
@@ -248,6 +256,48 @@
         </a>
     </div>
 
+    <h2 class="sect">♟️ 棋类对战 · 人机 / 双人 <span class="cnt">4 个</span><span class="line"></span></h2>
+    <div class="grid">
+        <a class="card" style="--c:#6a4bff" href="games/gomoku.html">
+            <span class="ico">⚫⚪</span>
+            <span class="name">五子棋</span>
+            <span class="desc">15×15 · 棋型评估 AI · 双人 / 人机</span>
+        </a>
+
+        <a class="card" style="--c:#b03030" href="games/xiangqi.html">
+            <span class="ico">🀄</span>
+            <span class="name">中国象棋</span>
+            <span class="desc">完整规则 · 4 层搜索 AI · 双人 / 人机</span>
+        </a>
+
+        <a class="card" style="--c:#2f5bd6" href="games/junqi.html">
+            <span class="ico">🚩</span>
+            <span class="name">军棋 · 翻开版</span>
+            <span class="desc">50 张牌铺满棋盘 · 翻牌定阵营 · 公路 / 铁路走棋</span>
+        </a>
+
+        <a class="card" style="--c:#1f8a5f" href="games/animal-chess.html">
+            <span class="ico">🐘🐭</span>
+            <span class="name">动物棋 · 翻翻棋</span>
+            <span class="desc">16 枚棋子 · 4×4 交叉点 · 翻牌开战</span>
+        </a>
+    </div>
+
+    <h2 class="sect">🃏 纸牌游戏 · 单人 / 人机 <span class="cnt">2 个</span><span class="line"></span></h2>
+    <div class="grid">
+        <a class="card" style="--c:#1f8a5f" href="games/blackjack.html">
+            <span class="ico">🃏</span>
+            <span class="name">21 点</span>
+            <span class="desc">对庄家 · 要牌 / 停牌 · 教练提示</span>
+        </a>
+
+        <a class="card" style="--c:#2f5bd6" href="games/klondike.html">
+            <span class="ico">♠️♦️</span>
+            <span class="name">纸牌接龙</span>
+            <span class="desc">经典 Klondike · 点击移动 · 支持悔棋</span>
+        </a>
+    </div>
+
     <h2 class="sect">🚀 8~12 岁 · 思维挑战 <span class="cnt">10 个</span><span class="line"></span></h2>
     <div class="grid">
         <a class="card sudoku" href="sudoku.html">
@@ -290,13 +340,55 @@
         <a class="card" style="--c:#7e57c2" href="games/logic-clues.html">
             <span class="ico">🕵️</span>
             <span class="name">逻辑推理</span>
-            <span class="desc">2~4 条线索，推出唯一答案</span>
+            <span class="desc">20 道题 · 4~5 条线索推出答案</span>
         </a>
 
         <a class="card" style="--c:#6a4bff" href="games/idioms.html">
             <span class="ico">📖</span>
             <span class="name">成语闯关</span>
             <span class="desc">猜一猜 / 填一填 / 配一配 / 演一演</span>
+        </a>
+
+        <a class="card" style="--c:#c2701e" href="games/xiangxingzi.html">
+            <span class="ico">🈶</span>
+            <span class="name">象形字变变变</span>
+            <span class="desc">看古人画的字，猜猜是哪个字</span>
+        </a>
+
+        <a class="card" style="--c:#0ea5a4" href="games/bingju.html">
+            <span class="ico">🩺</span>
+            <span class="name">病句门诊</span>
+            <span class="desc">36 个病句 · 四选一找出病根</span>
+        </a>
+
+        <a class="card" style="--c:#f08a3c" href="games/yuwen-baike.html">
+            <span class="ico">📚</span>
+            <span class="name">语文小百科</span>
+            <span class="desc">30 个专题 · 看百科 / 专题问答</span>
+        </a>
+
+        <a class="card" style="--c:#f08a3c" href="games/nearby-words.html">
+            <span class="ico">🏠</span>
+            <span class="name">形近字找家</span>
+            <span class="desc">把字送回相同偏旁的家</span>
+        </a>
+
+        <a class="card" style="--c:#7c5cff" href="games/gushi.html">
+            <span class="ico">📖</span>
+            <span class="name">古诗闯关</span>
+            <span class="desc">按年级 · 填空 / 作者 / 上句接下句</span>
+        </a>
+
+        <a class="card" style="--c:#0288d1" href="games/english.html">
+            <span class="ico">🔤</span>
+            <span class="name">英语简单句型</span>
+            <span class="desc">5 单元 · 配图 + 发音</span>
+        </a>
+
+        <a class="card" style="--c:#e63946" href="games/idiom-cat.html">
+            <span class="ico">📌</span>
+            <span class="name">成语分类</span>
+            <span class="desc">寓言 / 历史 / 神话 / 动物 / 数字 / 四季</span>
         </a>
 
         <a class="card" style="--c:#d81b60" href="games/riddle.html">
@@ -314,5 +406,13 @@
 
     <footer>纯 HTML 小游戏 · 无广告 · 无计时 · 不扣分</footer>
 </div>
+<script>
+/* 离线缓存：HTTPS 环境下首次打开自动缓存全部页面和图片，之后无网络也能玩 */
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', function () {
+        navigator.serviceWorker.register('sw.js').catch(function () { });
+    });
+}
+</script>
 </body>
 </html>

@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <!-- 页面本身必须每次回源校验：否则浏览器会一直用缓存里的旧 index.html，
          里面的 ?v=xxx 无论怎么改都拿不到新 JS，改动看起来"没生效" -->
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
@@ -10,7 +10,14 @@
     <meta http-equiv="Expires" content="0">
     <title>数独解题器</title>
     <link rel="stylesheet" href="style.css?v=20261030a">
-</head>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="games/img/icon-180.png">
+<link rel="icon" type="image/png" href="games/img/icon-192.png"></head>
 <body>
 <div class="container">
     <div class="header-with-timer">
@@ -202,5 +209,10 @@
 <script src="puzzles.js?v=20261030a"></script>
 <script src="sudoku-core.js?v=20261030a"></script>
 <script src="sudoku-ui.js?v=20261030a"></script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('./sw.js').catch(function () { });
+}
+</script>
 </body>
 </html>
