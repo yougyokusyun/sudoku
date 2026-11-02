@@ -1,0 +1,701 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🃏 纸牌接龙 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--accent:#2f5bd6;
+  --cw:70px;--ch:100px;--gap:8px;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+[hidden]{display:none!important;}
+html,body{height:100%;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,-apple-system,sans-serif;color:var(--ink);
+  height:100dvh;display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px;overflow:hidden;user-select:none;
+  background:radial-gradient(900px 520px at 0% 0%,#e9f0ff,transparent 62%),
+             radial-gradient(900px 520px at 100% 0%,#eafff3,transparent 58%),
+             linear-gradient(160deg,#f7faff,#f4fff9);}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.12rem;white-space:nowrap;}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.1);color:var(--accent);font-weight:800;font-size:.78rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+.spacer{flex:1;}
+.iconbtn{min-height:38px;padding:0 14px;border-radius:999px;border:1px solid rgba(36,59,83,.1);background:#fff;
+  color:var(--ink);font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(36,59,83,.08);}
+.iconbtn:active{transform:scale(.96);}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;gap:calc(var(--gap)*1.4);padding:10px;
+  border-radius:22px;position:relative;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(255,255,255,.13),transparent 60%),
+             radial-gradient(90% 70% at 50% 110%,rgba(0,0,0,.18),transparent 60%),
+             linear-gradient(160deg,#2c8a66,#15604a 74%);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.14),0 14px 30px rgba(18,50,38,.24);}
+
+.topRow{flex:none;display:grid;grid-template-columns:repeat(7,var(--cw));
+  gap:var(--gap);justify-content:center;}
+.slot{position:relative;width:var(--cw);height:var(--ch);border-radius:calc(var(--cw)*.13);
+  border:2px dashed rgba(255,255,255,.42);}
+.slot.filled{border-color:transparent;}
+.slot.spacer{border:none;}
+.slot .ghost{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;gap:2px;color:rgba(255,255,255,.5);font-weight:900;
+  font-size:calc(var(--cw)*.4);line-height:1;}
+.slot .ghost b{font-size:calc(var(--cw)*.26);font-weight:800;}
+.slot .badge{position:absolute;right:-5px;bottom:-5px;background:#fff;color:#15604a;
+  font-size:.68rem;font-weight:900;border-radius:999px;padding:2px 7px;box-shadow:0 2px 6px rgba(0,0,0,.25);}
+.slot .recycle{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.75);font-size:calc(var(--cw)*.6);}
+
+.tableau{flex:1;min-height:0;display:grid;grid-template-columns:repeat(7,var(--cw));
+  gap:var(--gap);justify-content:center;align-items:start;padding:0;}
+.pile{position:relative;width:var(--cw);min-height:var(--ch);height:100%;border-radius:calc(var(--cw)*.13);}
+.pile.hintDst{outline:3px solid rgba(255,224,102,.95);outline-offset:2px;background:rgba(255,255,255,.12);}
+
+.card{position:absolute;left:0;top:0;width:var(--cw);height:var(--ch);
+  border-radius:calc(var(--cw)*.13);background:linear-gradient(160deg,#fff,#f7f9fc);color:#243b53;
+  box-shadow:0 2px 7px rgba(0,0,0,.24),inset 0 0 0 1px rgba(0,0,0,.05);
+  cursor:pointer;transition:transform .1s ease,box-shadow .12s ease;}
+.card.red{color:#cf2b2b;}
+.card .rank{position:absolute;left:calc(var(--cw)*.075);top:calc(var(--cw)*.05);
+  font-size:calc(var(--cw)*.27);font-weight:900;line-height:1;}
+.card .suit{position:absolute;left:calc(var(--cw)*.085);top:calc(var(--cw)*.32);
+  font-size:calc(var(--cw)*.23);line-height:1;}
+.card .big{position:absolute;right:calc(var(--cw)*.08);bottom:calc(var(--cw)*.05);
+  font-size:calc(var(--cw)*.6);line-height:1;opacity:.92;}
+.card.down{background:linear-gradient(135deg,#3b5f9e,#16263f);}
+.card.down::before{content:'';position:absolute;inset:4px;border-radius:calc(var(--cw)*.07);
+  border:1px dashed rgba(255,255,255,.35);
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.10) 0 4px,transparent 4px 8px);}
+.card.down .backMark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  color:rgba(255,255,255,.65);font-size:calc(var(--cw)*.3);}
+.card.sel{box-shadow:0 0 0 3px #ffd166,0 8px 16px rgba(0,0,0,.28);transform:translateY(-3px);z-index:6;}
+.card.hint{box-shadow:0 0 0 4px #ffe066,0 0 16px #ffe066;z-index:7;}
+
+.foot{flex:none;display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding:0 6px;font-size:.72rem;color:#8d9cb0;min-height:20px;}
+.foot .msg{flex:1;text-align:center;color:#6b7f95;font-weight:700;}
+.foot .chip{background:#fff;border:1px solid rgba(36,59,83,.08);border-radius:999px;
+  padding:3px 10px;font-weight:800;color:var(--muted);white-space:nowrap;
+  box-shadow:0 3px 9px rgba(36,59,83,.06);}
+
+.banner{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.9);z-index:20;
+  background:rgba(255,255,255,.98);border:2px solid rgba(47,91,214,.3);border-radius:22px;
+  padding:20px 28px;box-shadow:0 18px 46px rgba(36,59,83,.26);text-align:center;
+  opacity:0;pointer-events:none;transition:all .22s ease;}
+.banner.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1);}
+.banner .big{font-size:1.35rem;font-weight:900;margin-bottom:6px;}
+.banner .sm{font-size:.82rem;color:var(--muted);margin-bottom:14px;}
+.banner button{min-height:42px;padding:0 24px;border:0;border-radius:999px;
+  background:linear-gradient(135deg,#7f9dff,#3b5bdb);color:#fff;font-family:inherit;
+  font-weight:800;font-size:.86rem;cursor:pointer;box-shadow:0 6px 16px rgba(47,91,214,.32);}
+
+@media (max-height:600px){
+  body{padding:6px 9px 8px;gap:5px;}
+  h1{font-size:.95rem;}
+  .back,.iconbtn{min-height:32px;font-size:.72rem;}
+  .stage{padding:7px;border-radius:16px;gap:6px;}
+  .foot{font-size:.64rem;min-height:16px;}
+}
+@media (max-width:430px){
+  header{gap:6px;}
+  h1{font-size:.98rem;}
+  .back,.iconbtn{min-height:34px;padding:0 10px;font-size:.72rem;}
+  .foot{font-size:.66rem;}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🃏 纸牌接龙</h1>
+  <div class="spacer"></div>
+  <button class="iconbtn" id="undoBtn" type="button">↩ 悔棋</button>
+  <button class="iconbtn" id="hintBtn" type="button">💡 提示</button>
+  <button class="iconbtn" id="newBtn" type="button">🔄 新局</button>
+</header>
+
+<div class="stage">
+  <div class="topRow">
+    <div class="slot" id="stock" title="点这里翻牌"></div>
+    <div class="slot" id="waste"></div>
+    <div class="slot spacer"></div>
+    <div class="slot" id="found0"></div>
+    <div class="slot" id="found1"></div>
+    <div class="slot" id="found2"></div>
+    <div class="slot" id="found3"></div>
+  </div>
+  <div class="tableau" id="tableau">
+    <div class="pile" data-col="0"></div>
+    <div class="pile" data-col="1"></div>
+    <div class="pile" data-col="2"></div>
+    <div class="pile" data-col="3"></div>
+    <div class="pile" data-col="4"></div>
+    <div class="pile" data-col="5"></div>
+    <div class="pile" data-col="6"></div>
+  </div>
+</div>
+
+<div class="foot">
+  <span></span>
+  <span class="msg" id="msg">点一张牌选中，再点目标位置移动；双击可直接收牌</span>
+  <span class="chip" id="moveChip">0 步</span>
+</div>
+
+<div class="banner" id="banner">
+  <div class="big">🎉 全部收好！</div>
+  <div class="sm" id="bannerSub"></div>
+  <button type="button" id="bannerBtn">🔄 再来一局</button>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SUITS = ['♠', '♥', '♦', '♣'];
+  var RANKS = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+  var RED = [false, true, true, false];
+
+  var state = null;
+  var selected = null;
+  var undoStack = [];
+  var won = false;
+  var CW = 70, CH = 100, OFF = 24, OFFD = 9;
+  var hintTimer = null;
+
+  var stageEl = document.querySelector('.stage');
+  var tableauEl = document.getElementById('tableau');
+  var stockEl = document.getElementById('stock');
+  var wasteEl = document.getElementById('waste');
+  var foundEls = [
+    document.getElementById('found0'),
+    document.getElementById('found1'),
+    document.getElementById('found2'),
+    document.getElementById('found3')
+  ];
+  var pileEls = Array.prototype.slice.call(document.querySelectorAll('.pile'));
+  var msgEl = document.getElementById('msg');
+  var moveChipEl = document.getElementById('moveChip');
+  var banner = document.getElementById('banner');
+  var bannerSub = document.getElementById('bannerSub');
+
+  function colorOf(s) { return (s === 1 || s === 2) ? 1 : 0; }
+
+  function makeDeck() {
+    var out = [];
+    for (var s = 0; s < 4; s++) {
+      for (var r = 1; r <= 13; r++) out.push({ r: r, s: s, up: false });
+    }
+    return out;
+  }
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function lastCard(arr) { return arr[arr.length - 1]; }
+
+  function validStack(pile, idx) {
+    if (idx < 0 || idx >= pile.length) return false;
+    for (var i = idx; i < pile.length; i++) {
+      if (!pile[i].up) return false;
+      if (i > idx) {
+        var a = pile[i - 1], b = pile[i];
+        if (a.r !== b.r + 1 || colorOf(a.s) === colorOf(b.s)) return false;
+      }
+    }
+    return true;
+  }
+
+  function newGame() {
+    var deck = shuffle(makeDeck());
+    state = {
+      stock: [],
+      waste: [],
+      foundations: [[], [], [], []],
+      tableau: [[], [], [], [], [], [], []],
+      moves: 0
+    };
+    for (var i = 0; i < 7; i++) {
+      for (var j = 0; j <= i; j++) {
+        var c = deck.pop();
+        c.up = (j === i);
+        state.tableau[i].push(c);
+      }
+    }
+    state.stock = deck;
+    selected = null;
+    undoStack = [];
+    won = false;
+    hideBanner();
+    setMsg('');
+    render();
+  }
+
+  function layout() {
+    if (!state) return;
+    var stageW = stageEl.clientWidth;
+    var gap = stageW < 430 ? 5 : 8;
+    var cw = Math.floor((stageW - 20 - gap * 6) / 7);
+    cw = Math.max(28, Math.min(cw, 94));
+    var ch = Math.round(cw * 1.42);
+    var avail = tableauEl.clientHeight - 2;
+    var maxN = 1;
+    for (var i = 0; i < 7; i++) {
+      if (state.tableau[i].length > maxN) maxN = state.tableau[i].length;
+    }
+    var off = Math.floor((avail - ch) / Math.max(1, maxN - 1));
+    off = Math.min(off, Math.round(ch * 0.34));
+    off = Math.max(7, off);
+    var offd = Math.max(5, Math.min(12, Math.round(off * 0.45)));
+    CW = cw; CH = ch; OFF = off; OFFD = offd;
+    var root = document.documentElement.style;
+    root.setProperty('--cw', cw + 'px');
+    root.setProperty('--ch', ch + 'px');
+    root.setProperty('--gap', gap + 'px');
+  }
+
+  function cardEl(card) {
+    var d = document.createElement('div');
+    if (card.up) {
+      d.className = 'card ' + (RED[card.s] ? 'red' : 'black');
+      d.innerHTML =
+        '<span class="rank">' + RANKS[card.r] + '</span>' +
+        '<span class="suit">' + SUITS[card.s] + '</span>' +
+        '<span class="big">' + SUITS[card.s] + '</span>';
+    } else {
+      d.className = 'card down';
+      d.innerHTML = '<span class="backMark">✦</span>';
+    }
+    return d;
+  }
+
+  function render() {
+    if (!state) return;
+    layout();
+
+    /* 牌堆 */
+    stockEl.innerHTML = '';
+    stockEl.classList.toggle('filled', state.stock.length > 0);
+    if (state.stock.length) {
+      stockEl.appendChild(cardEl({ r: 1, s: 0, up: false }));
+      var badge = document.createElement('span');
+      badge.className = 'badge';
+      badge.textContent = state.stock.length;
+      stockEl.appendChild(badge);
+    } else {
+      var re = document.createElement('span');
+      re.className = 'recycle';
+      re.textContent = '↻';
+      stockEl.appendChild(re);
+    }
+
+    /* 弃牌堆：只显示最上面一张 */
+    wasteEl.innerHTML = '';
+    wasteEl.classList.toggle('filled', state.waste.length > 0);
+    if (state.waste.length) {
+      var wc = cardEl(lastCard(state.waste));
+      if (selected && selected.zone === 'waste') wc.classList.add('sel');
+      wasteEl.appendChild(wc);
+    }
+
+    /* 收牌区 */
+    for (var f = 0; f < 4; f++) {
+      var fel = foundEls[f];
+      fel.innerHTML = '';
+      var fp = state.foundations[f];
+      fel.classList.toggle('filled', fp.length > 0);
+      if (fp.length) {
+        fel.appendChild(cardEl(lastCard(fp)));
+      } else {
+        var g = document.createElement('span');
+        g.className = 'ghost';
+        g.innerHTML = SUITS[f] + '<b>A</b>';
+        fel.appendChild(g);
+      }
+    }
+
+    /* 牌列 */
+    for (var col = 0; col < 7; col++) {
+      var pel = pileEls[col];
+      pel.innerHTML = '';
+      pel.classList.remove('hintDst');
+      var pile = state.tableau[col];
+      var y = 0;
+      for (var idx = 0; idx < pile.length; idx++) {
+        var card = pile[idx];
+        var d = cardEl(card);
+        d.dataset.col = col;
+        d.dataset.idx = idx;
+        d.style.top = y + 'px';
+        if (selected && selected.zone === 'tableau' && selected.col === col && idx >= selected.idx) {
+          d.classList.add('sel');
+        }
+        pel.appendChild(d);
+        y += card.up ? OFF : OFFD;
+      }
+    }
+
+    moveChipEl.textContent = state.moves + ' 步 · 剩 ' + (state.stock.length + state.waste.length) + ' 张';
+    checkWin();
+  }
+
+  function setMsg(t) {
+    msgEl.textContent = t || '点一张牌选中，再点目标位置移动；双击可直接收牌';
+  }
+
+  function snapshot() { return JSON.stringify(state); }
+
+  function flipTop(col) {
+    var p = state.tableau[col];
+    if (p.length) {
+      var c = lastCard(p);
+      if (!c.up) c.up = true;
+    }
+  }
+
+  function selectedCards() {
+    if (!selected) return null;
+    if (selected.zone === 'waste') {
+      return state.waste.length ? [lastCard(state.waste)] : null;
+    }
+    if (selected.zone === 'tableau') {
+      var p = state.tableau[selected.col];
+      if (!validStack(p, selected.idx)) return null;
+      return p.slice(selected.idx);
+    }
+    return null;
+  }
+
+  function canPlace(pile, cards) {
+    if (!cards || !cards.length) return false;
+    if (!pile.length) return cards[0].r === 13;
+    var t = lastCard(pile);
+    return t.up && colorOf(t.s) !== colorOf(cards[0].s) && t.r === cards[0].r + 1;
+  }
+
+  function canFoundation(card, f) {
+    if (f !== card.s) return false;
+    var fs = state.foundations[f];
+    if (!fs.length) return card.r === 1;
+    return card.r === lastCard(fs).r + 1;
+  }
+
+  function moveToTableau(col) {
+    var cards = selectedCards();
+    if (!cards) return false;
+    if (selected.zone === 'tableau' && selected.col === col) return false;
+    if (!canPlace(state.tableau[col], cards)) {
+      setMsg('这里放不下：要红黑交替、点数从大到小');
+      return false;
+    }
+    var snap = snapshot();
+    var from = selected.zone, fromCol = selected.col, fromIdx = selected.idx;
+    if (from === 'waste') {
+      state.waste.pop();
+    } else {
+      state.tableau[fromCol].splice(fromIdx, cards.length);
+    }
+    state.tableau[col].push.apply(state.tableau[col], cards);
+    if (from === 'tableau') flipTop(fromCol);
+    state.moves++;
+    undoStack.push(snap);
+    selected = null;
+    setMsg('');
+    render();
+    return true;
+  }
+
+  function moveToFoundation(f) {
+    var cards = selectedCards();
+    if (!cards || cards.length !== 1) return false;
+    var card = cards[0];
+    if (!canFoundation(card, f)) {
+      setMsg('这里只能按花色放 A → K');
+      return false;
+    }
+    var snap = snapshot();
+    var from = selected.zone, fromCol = selected.col, fromIdx = selected.idx;
+    if (from === 'waste') state.waste.pop();
+    else state.tableau[fromCol].splice(fromIdx, 1);
+    state.foundations[f].push(card);
+    if (from === 'tableau') flipTop(fromCol);
+    state.moves++;
+    undoStack.push(snap);
+    selected = null;
+    setMsg('');
+    render();
+    return true;
+  }
+
+  function autoFoundation(zone, col, idx) {
+    var card = null;
+    if (zone === 'waste') {
+      card = state.waste.length ? lastCard(state.waste) : null;
+    } else {
+      var p = state.tableau[col];
+      if (idx === p.length - 1) card = p[idx];
+    }
+    if (!card || !card.up) return false;
+    if (!canFoundation(card, card.s)) return false;
+    var snap = snapshot();
+    if (zone === 'waste') state.waste.pop();
+    else {
+      state.tableau[col].pop();
+      flipTop(col);
+    }
+    state.foundations[card.s].push(card);
+    state.moves++;
+    undoStack.push(snap);
+    selected = null;
+    setMsg('');
+    render();
+    return true;
+  }
+
+  function drawStock() {
+    if (!state.stock.length) {
+      if (!state.waste.length) {
+        setMsg('牌堆已经空了');
+        return;
+      }
+      var rs = snapshot();
+      state.stock = state.waste.slice().reverse();
+      state.waste = [];
+      for (var i = 0; i < state.stock.length; i++) state.stock[i].up = false;
+      state.moves++;
+      undoStack.push(rs);
+      selected = null;
+      setMsg('把弃牌收回牌堆，重新翻');
+      render();
+      return;
+    }
+    var snap = snapshot();
+    var c = state.stock.pop();
+    c.up = true;
+    state.waste.push(c);
+    state.moves++;
+    undoStack.push(snap);
+    selected = null;
+    setMsg('');
+    render();
+  }
+
+  function undo() {
+    if (!undoStack.length) {
+      setMsg('没有可悔的步了');
+      return;
+    }
+    state = JSON.parse(undoStack.pop());
+    selected = null;
+    won = false;
+    hideBanner();
+    setMsg('已悔一步');
+    render();
+  }
+
+  function checkWin() {
+    if (won) return;
+    var all = true;
+    for (var i = 0; i < 4; i++) {
+      if (state.foundations[i].length !== 13) { all = false; break; }
+    }
+    if (!all) return;
+    won = true;
+    bannerSub.textContent = '用了 ' + state.moves + ' 步，把 52 张牌全部收好';
+    banner.classList.add('show');
+  }
+
+  function hideBanner() { banner.classList.remove('show'); }
+
+  function findHint() {
+    if (state.waste.length) {
+      var wc = lastCard(state.waste);
+      if (wc.up && canFoundation(wc, wc.s)) return { type: 'found', f: wc.s, zone: 'waste' };
+    }
+    for (var col = 0; col < 7; col++) {
+      var p = state.tableau[col];
+      if (p.length) {
+        var c = lastCard(p);
+        if (c.up && canFoundation(c, c.s)) {
+          return { type: 'found', f: c.s, zone: 'tableau', col: col, idx: p.length - 1 };
+        }
+      }
+    }
+    for (var c2 = 0; c2 < 7; c2++) {
+      var pile = state.tableau[c2];
+      for (var idx = 0; idx < pile.length; idx++) {
+        if (!validStack(pile, idx)) continue;
+        var cards = pile.slice(idx);
+        for (var to = 0; to < 7; to++) {
+          if (to === c2) continue;
+          if (canPlace(state.tableau[to], cards)) {
+            return { type: 'tableau', col: c2, idx: idx, to: to };
+          }
+        }
+      }
+    }
+    if (state.stock.length) return { type: 'draw' };
+    if (state.waste.length) return { type: 'recycle' };
+    return null;
+  }
+
+  function clearHint() {
+    var els = document.querySelectorAll('.hint,.hintDst');
+    for (var i = 0; i < els.length; i++) {
+      els[i].classList.remove('hint');
+      els[i].classList.remove('hintDst');
+    }
+  }
+
+  function showHint() {
+    var h = findHint();
+    if (!h) {
+      setMsg('暂时没有能走的牌，点牌堆翻牌或开个新局');
+      return;
+    }
+    render();
+    clearHint();
+    if (h.type === 'found') {
+      var src = h.zone === 'waste'
+        ? wasteEl.querySelector('.card')
+        : pileEls[h.col].querySelector('[data-idx="' + h.idx + '"]');
+      if (src) src.classList.add('hint');
+      foundEls[h.f].classList.add('hintDst');
+      setMsg('把高亮的牌收到右上角');
+    } else if (h.type === 'tableau') {
+      var se = pileEls[h.col].querySelector('[data-idx="' + h.idx + '"]');
+      if (se) se.classList.add('hint');
+      pileEls[h.to].classList.add('hintDst');
+      setMsg('把高亮的一叠移到闪光的列');
+    } else {
+      stockEl.classList.add('hintDst');
+      setMsg(h.type === 'draw' ? '点左上角牌堆翻一张' : '牌堆空了，点左上角把弃牌收回');
+    }
+    if (hintTimer) clearTimeout(hintTimer);
+    hintTimer = setTimeout(clearHint, 1600);
+  }
+
+  function onTableauClick(e) {
+    var pileEl = e.target.closest('.pile');
+    if (!pileEl) return;
+    var col = +pileEl.dataset.col;
+    var pile = state.tableau[col];
+    var cardEl = e.target.closest('.card');
+
+    if (!cardEl) {
+      if (selected) moveToTableau(col);
+      return;
+    }
+
+    var idx = +cardEl.dataset.idx;
+
+    if (selected && selected.zone === 'tableau' && selected.col === col) {
+      if (idx === selected.idx) { selected = null; render(); return; }
+      if (validStack(pile, idx) && pile[idx].up) {
+        selected = { zone: 'tableau', col: col, idx: idx };
+        render();
+        return;
+      }
+      selected = null;
+      render();
+      return;
+    }
+
+    if (selected) {
+      if (moveToTableau(col)) return;
+    }
+
+    if (pile[idx].up && validStack(pile, idx)) {
+      selected = { zone: 'tableau', col: col, idx: idx };
+      setMsg('');
+      render();
+    } else if (!pile[idx].up) {
+      setMsg('这张牌被压住了，先把上面的牌移走');
+    } else {
+      setMsg('这一叠不是红黑交替降序，不能整叠搬走');
+    }
+  }
+
+  function onWasteClick() {
+    if (!state.waste.length) return;
+    if (selected && selected.zone === 'waste') {
+      selected = null;
+      render();
+      return;
+    }
+    selected = { zone: 'waste' };
+    setMsg('选中了弃牌堆最上面那张');
+    render();
+  }
+
+  stockEl.addEventListener('click', drawStock);
+  wasteEl.addEventListener('click', onWasteClick);
+  tableauEl.addEventListener('click', onTableauClick);
+
+  for (var fi = 0; fi < 4; fi++) {
+    (function (f) {
+      foundEls[f].addEventListener('click', function () {
+        if (selected && moveToFoundation(f)) return;
+        setMsg('这里放同花色的 A → K');
+      });
+    })(fi);
+  }
+
+  wasteEl.addEventListener('dblclick', function () { autoFoundation('waste'); });
+  tableauEl.addEventListener('dblclick', function (e) {
+    var cardEl = e.target.closest('.card');
+    if (!cardEl) return;
+    var col = +cardEl.closest('.pile').dataset.col;
+    var idx = +cardEl.dataset.idx;
+    autoFoundation('tableau', col, idx);
+  });
+
+  document.getElementById('undoBtn').addEventListener('click', undo);
+  document.getElementById('hintBtn').addEventListener('click', showHint);
+  document.getElementById('newBtn').addEventListener('click', newGame);
+  document.getElementById('bannerBtn').addEventListener('click', newGame);
+
+  window.addEventListener('resize', function () { if (state) render(); });
+
+  window.__klondike = {
+    newGame: newGame,
+    drawStock: drawStock,
+    undo: undo,
+    hint: showHint,
+    getState: function () { return JSON.parse(JSON.stringify(state)); },
+    loadState: function (o) {
+      state = JSON.parse(JSON.stringify(o));
+      if (!state.moves) state.moves = 0;
+      selected = null;
+      undoStack = [];
+      won = false;
+      hideBanner();
+      render();
+    }
+  };
+
+  newGame();
+  setTimeout(function () { if (state) render(); }, 150);
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,510 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>📚 语文小百科 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#f08a3c;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff4e6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eaf4ff,transparent 55%),
+             linear-gradient(160deg,#fffbf5,#f4faff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid var(--line);color:#c26a00;font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.tabs{display:flex;gap:8px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px;
+  box-shadow:0 4px 12px rgba(36,59,83,.07);align-self:flex-start;}
+.tabs button{min-height:38px;padding:0 18px;border:none;border-radius:999px;background:transparent;
+  font-family:inherit;font-weight:800;font-size:.86rem;color:var(--muted);cursor:pointer;}
+.tabs button.on{background:linear-gradient(135deg,#ffb15c,#f08a3c);color:#fff;box-shadow:0 4px 10px rgba(240,138,60,.28);}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;
+  background:rgba(255,255,255,.78);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:10px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);overflow:hidden;}
+
+.cats{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;flex:0 0 auto;scrollbar-width:none;}
+.cats::-webkit-scrollbar{display:none;}
+.cats button{flex:0 0 auto;min-height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line);
+  background:#fff;color:#5a7290;font-family:inherit;font-weight:800;font-size:.76rem;cursor:pointer;}
+.cats button.on{background:#fff3e6;border-color:rgba(240,138,60,.55);color:#c26a00;}
+
+.topics{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:8px;align-content:start;padding:2px;}
+.topic{border:2px solid var(--line);border-radius:18px;background:#fff;padding:10px;cursor:pointer;
+  display:flex;flex-direction:column;gap:4px;font-family:inherit;color:inherit;text-align:left;
+  box-shadow:0 5px 12px rgba(36,59,83,.07);transition:transform .14s ease,border-color .18s ease;}
+.topic:active{transform:scale(.97);}
+.topic .ic{font-size:1.5rem;line-height:1.1;}
+.topic .nm{font-size:.88rem;font-weight:900;}
+.topic .cnt{font-size:.68rem;font-weight:700;color:var(--muted);}
+.topic .in{font-size:.7rem;color:#7b8ea8;line-height:1.35;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+
+.detail{flex:1;min-height:0;display:none;flex-direction:column;gap:8px;}
+.detail.on{display:flex;}
+.dhead{display:flex;align-items:center;gap:10px;flex:0 0 auto;}
+.dhead .txt{flex:1;min-width:0;}
+.dhead .nm{font-size:1rem;font-weight:900;}
+.dhead .in{font-size:.74rem;color:var(--muted);line-height:1.4;}
+.dback{min-height:36px;padding:0 14px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  font-family:inherit;font-weight:800;font-size:.76rem;color:#c26a00;cursor:pointer;flex:0 0 auto;}
+.items{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:8px;padding-right:2px;}
+.item{border:1px solid var(--line);border-radius:16px;background:#fff;padding:10px 12px;
+  box-shadow:0 4px 10px rgba(36,59,83,.05);}
+.item .top{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;}
+.item .t{font-size:.98rem;font-weight:900;}
+.item .p{font-size:.72rem;font-weight:700;color:#9aa9bb;}
+.item .sp{margin-left:auto;border:none;background:#fff7ec;border-radius:999px;min-width:34px;min-height:34px;
+  font-size:1rem;cursor:pointer;}
+.item .d{font-size:.86rem;line-height:1.55;margin-top:4px;color:#31465c;}
+.item .e{font-size:.76rem;line-height:1.5;color:#6b7f95;margin-top:3px;}
+.item .k{font-size:.72rem;line-height:1.5;color:#b06a12;background:#fff8ee;border-radius:10px;
+  padding:5px 8px;margin-top:5px;}
+
+.quiz{flex:1;min-height:0;display:none;flex-direction:column;gap:8px;}
+.quiz.on{display:flex;}
+.qtop{display:flex;align-items:center;gap:8px;flex:0 0 auto;font-size:.76rem;font-weight:800;color:var(--muted);}
+.qtop .bar{flex:1;height:8px;border-radius:999px;background:#eef3f8;overflow:hidden;}
+.qtop .bar i{display:block;height:100%;width:0;border-radius:999px;
+  background:linear-gradient(90deg,#ffc44d,#f0930a);transition:width .3s ease;}
+.picks{flex:0 0 auto;max-height:32vh;overflow-y:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.picks button{min-height:32px;padding:0 12px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  font-family:inherit;font-weight:800;font-size:.72rem;color:#5a7290;cursor:pointer;}
+.picks button.on{background:#fff3e6;border-color:rgba(240,138,60,.55);color:#c26a00;}
+.qbox{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;justify-content:center;overflow-y:auto;}
+.qprompt{font-size:1.02rem;font-weight:900;line-height:1.55;text-align:center;color:#31465c;
+  background:#fffaf2;border:1px dashed rgba(240,138,60,.45);border-radius:16px;padding:12px;}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.opt{min-height:68px;border:2px solid var(--line);border-radius:16px;background:#fff;padding:8px 10px;
+  font-family:inherit;font-size:.86rem;font-weight:700;line-height:1.4;color:#31465c;text-align:left;cursor:pointer;
+  box-shadow:0 5px 12px rgba(36,59,83,.07);transition:transform .14s,border-color .18s,background .18s;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;color:#b02a2a;}
+.opt.wrongFlash{animation:wrongFlash .42s ease 3;}
+.opt[disabled]{opacity:.45;cursor:default;}
+.qfb{flex:0 0 auto;min-height:34px;font-size:.82rem;font-weight:800;text-align:center;color:var(--muted);line-height:1.45;}
+.qfb.ok{color:#1b7c33;}
+.qfb.bad{color:#b02a2a;}
+.qfb .ex{display:block;font-size:.72rem;font-weight:700;color:#7b8ea8;margin-top:2px;}
+
+.foot{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.btn{min-height:42px;padding:0 18px;border-radius:999px;border:2px solid var(--line);background:#fff;
+  color:var(--ink);font-family:inherit;font-weight:800;font-size:.84rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.08);}
+.btn.primary{border-color:rgba(240,138,60,.55);color:#fff;background:linear-gradient(135deg,#ffb15c,#f08a3c);}
+.btn[disabled]{opacity:.45;cursor:default;}
+.empty{padding:24px 16px;text-align:center;font-size:.86rem;color:var(--muted);line-height:1.7;}
+
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes wrongFlash{
+  0%,100%{border-color:var(--line);background:#fff;color:#31465c;transform:translateX(0);}
+  25%{border-color:var(--bad);background:#ffeded;color:#b02a2a;transform:translateX(-6px);}
+  50%{transform:translateX(6px);}
+  75%{border-color:var(--bad);background:#ffeded;color:#b02a2a;transform:translateX(-4px);}
+}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{padding:7px;border-radius:16px;}
+  .tabs button{min-height:30px;font-size:.76rem;padding:0 12px;}
+  .qbox{gap:6px;}
+  .qprompt{font-size:.86rem;padding:8px;}
+  .opt{min-height:46px;font-size:.76rem;padding:5px 8px;}
+  .picks{max-height:24vh;}
+  .btn{min-height:32px;font-size:.76rem;padding:0 12px;}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>📚 语文小百科</h1>
+  <div class="chips">
+    <span class="chip">🎯 答对 <b id="score">0</b>/<b id="total">0</b></span>
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+  </div>
+</header>
+
+<div class="tabs">
+  <button id="tabBrowse" class="on" type="button">📖 看百科</button>
+  <button id="tabQuiz" type="button">🎯 专题问答</button>
+</div>
+
+<div class="stage">
+  <!-- 浏览 -->
+  <div id="paneBrowse" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;">
+    <div class="cats" id="cats"></div>
+    <div class="topics" id="topics"></div>
+    <div class="detail" id="detail">
+      <div class="dhead">
+        <button class="dback" id="dback" type="button">← 返回专题</button>
+        <div class="txt">
+          <div class="nm" id="dName"></div>
+          <div class="in" id="dIntro"></div>
+        </div>
+      </div>
+      <div class="items" id="dItems"></div>
+    </div>
+  </div>
+
+  <!-- 问答 -->
+  <div class="quiz" id="paneQuiz">
+    <div class="picks" id="picks"></div>
+    <div class="qtop">
+      <span id="qno">第 0/0 题</span>
+      <div class="bar"><i id="qbar"></i></div>
+      <span id="qtopic"></span>
+    </div>
+    <div class="qbox" id="qbox">
+      <div class="qprompt" id="qprompt">选一个专题，点「开始问答」👇</div>
+      <div class="opts" id="opts"></div>
+    </div>
+    <div class="qfb" id="qfb"></div>
+    <div class="foot">
+      <button class="btn primary" id="btnStart" type="button">▶️ 开始问答</button>
+      <button class="btn" id="btnNext" type="button" disabled>下一题 →</button>
+    </div>
+  </div>
+</div>
+
+<script src="yuwen-data.js"></script>
+<script>
+var DATA = (window.YW_DATA || []).filter(function (t) { return t && t.items && t.items.length; });
+var state = { cat: 0, topic: null, picks: [], quiz: null, qIndex: 0, score: 0, answered: 0, streak: 0, best: 0 };
+
+var elCats = document.getElementById('cats');
+var elTopics = document.getElementById('topics');
+var elDetail = document.getElementById('detail');
+var elDName = document.getElementById('dName');
+var elDIntro = document.getElementById('dIntro');
+var elDItems = document.getElementById('dItems');
+var elPicks = document.getElementById('picks');
+var elPrompt = document.getElementById('qprompt');
+var elOpts = document.getElementById('opts');
+var elQfb = document.getElementById('qfb');
+var elQno = document.getElementById('qno');
+var elQbar = document.getElementById('qbar');
+var elQtopic = document.getElementById('qtopic');
+var elScore = document.getElementById('score');
+var elTotal = document.getElementById('total');
+var elStreak = document.getElementById('streak');
+var btnStart = document.getElementById('btnStart');
+var btnNext = document.getElementById('btnNext');
+
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+function say(text) {
+  if (typeof window.speechSynthesis === 'undefined' || !text) return;
+  try {
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.92;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function updateStats() {
+  elScore.textContent = state.score;
+  elTotal.textContent = state.answered;
+  elStreak.textContent = state.streak;
+}
+
+/* ===== 浏览 ===== */
+function buildCats() {
+  var cats = [];
+  DATA.forEach(function (t) { if (cats.indexOf(t.cat) < 0) cats.push(t.cat); });
+  elCats.innerHTML = '';
+  cats.forEach(function (c, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = c;
+    if (i === 0) b.className = 'on';
+    b.addEventListener('click', function () {
+      state.cat = i;
+      Array.prototype.forEach.call(elCats.children, function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+      buildTopics();
+      hideDetail();
+    });
+    elCats.appendChild(b);
+  });
+  buildTopics();
+}
+function buildTopics() {
+  var cats = [];
+  DATA.forEach(function (t) { if (cats.indexOf(t.cat) < 0) cats.push(t.cat); });
+  var cur = cats[state.cat] || cats[0];
+  elTopics.innerHTML = '';
+  DATA.filter(function (t) { return t.cat === cur; }).forEach(function (t) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'topic';
+    b.innerHTML = '<span class="ic">' + esc(t.icon || '📘') + '</span>' +
+      '<span class="nm">' + esc(t.name) + '</span>' +
+      '<span class="cnt">' + t.items.length + ' 条</span>' +
+      '<span class="in">' + esc(t.intro || '') + '</span>';
+    b.addEventListener('click', function () { openTopic(t); });
+    elTopics.appendChild(b);
+  });
+}
+function openTopic(t) {
+  state.topic = t;
+  elTopics.style.display = 'none';
+  elCats.style.display = 'none';
+  elDetail.classList.add('on');
+  elDName.textContent = (t.icon ? t.icon + ' ' : '') + t.name;
+  elDIntro.textContent = t.intro || '';
+  elDItems.innerHTML = '';
+  t.items.forEach(function (it) {
+    var div = document.createElement('div');
+    div.className = 'item';
+    div.innerHTML =
+      '<div class="top"><span class="t">' + esc(it.t) + '</span>' +
+      (it.p ? '<span class="p">' + esc(it.p) + '</span>' : '') +
+      '<button class="sp" type="button" aria-label="朗读">🔊</button></div>' +
+      '<div class="d">' + esc(it.d) + '</div>' +
+      (it.e ? '<div class="e">' + esc(it.e) + '</div>' : '') +
+      (it.k ? '<div class="k">' + esc(it.k) + '</div>' : '');
+    div.querySelector('.sp').addEventListener('click', function () {
+      say(it.t + '。' + it.d + (it.e ? '。' + it.e : ''));
+    });
+    elDItems.appendChild(div);
+  });
+  elDItems.scrollTop = 0;
+}
+function hideDetail() {
+  state.topic = null;
+  elDetail.classList.remove('on');
+  elTopics.style.display = '';
+  elCats.style.display = '';
+}
+document.getElementById('dback').addEventListener('click', hideDetail);
+
+/* ===== 问答 ===== */
+function buildPicks() {
+  elPicks.innerHTML = '';
+  var all = document.createElement('button');
+  all.type = 'button';
+  all.textContent = '🎲 混合';
+  all.className = 'on';
+  all.setAttribute('data-id', 'all');
+  elPicks.appendChild(all);
+  DATA.forEach(function (t) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.setAttribute('data-id', t.id);
+    b.textContent = (t.icon ? t.icon + ' ' : '') + t.name;
+    elPicks.appendChild(b);
+  });
+  Array.prototype.forEach.call(elPicks.children, function (b) {
+    b.addEventListener('click', function () {
+      Array.prototype.forEach.call(elPicks.children, function (x) { x.classList.remove('on'); });
+      b.classList.add('on');
+    });
+  });
+}
+function currentPick() {
+  var b = elPicks.querySelector('button.on');
+  return b ? b.getAttribute('data-id') : 'all';
+}
+function poolOf(id) {
+  if (id === 'all') {
+    var out = [];
+    DATA.forEach(function (t) { t.items.forEach(function (it) { it._tp = t; out.push(it); }); });
+    return out;
+  }
+  var t = DATA.filter(function (x) { return x.id === id; })[0];
+  if (!t) return [];
+  t.items.forEach(function (it) { it._tp = t; });
+  return t.items;
+}
+function distractorPool(it, pool) {
+  var same = ((it._tp && it._tp.items) || []).filter(function (x) { return x !== it; });
+  if (same.length >= 3) return same;
+  return pool.filter(function (x) { return x !== it; });
+}
+function makeQuestion(it, pool, type) {
+  var others = shuffle(distractorPool(it, pool));
+  var opts = [], answer;
+  if (type === 0) {
+    opts.push(it.d);
+    others.forEach(function (o) { if (opts.length < 4 && opts.indexOf(o.d) < 0) opts.push(o.d); });
+    answer = it.d;
+  } else {
+    opts.push(it.t);
+    others.forEach(function (o) { if (opts.length < 4 && opts.indexOf(o.t) < 0) opts.push(o.t); });
+    answer = it.t;
+  }
+  opts = shuffle(opts);
+  return {
+    prompt: type === 0 ? '「' + it.t + '」是什么意思？' : '下面哪一句说的是「' + it.d + '」？',
+    opts: opts,
+    answer: answer,
+    it: it,
+    type: type,
+    missed: false,
+    done: false
+  };
+}
+function startQuiz() {
+  var id = currentPick();
+  var pool = poolOf(id);
+  if (pool.length < 4) {
+    elPrompt.textContent = '这个专题太小啦，换一个试试吧';
+    return;
+  }
+  var n = Math.min(10, pool.length);
+  var chosen = shuffle(pool.filter(function (it) {
+    return typeof it.d === 'string' && it.d.length > 1 && typeof it.t === 'string' && it.t.length > 0;
+  })).slice(0, n);
+  if (chosen.length < 4) { elPrompt.textContent = '这个专题太小啦，换一个试试吧'; return; }
+
+  var qs = chosen.map(function (it, i) { return makeQuestion(it, pool, i % 2); });
+
+  state.quiz = qs;
+  state.qIndex = 0;
+  state.score = 0;
+  state.answered = 0;
+  state.streak = 0;
+  state.best = 0;
+  updateStats();
+  var tp = DATA.filter(function (x) { return x.id === id; })[0];
+  elQtopic.textContent = tp ? tp.name : '混合';
+  btnNext.disabled = true;
+  btnStart.textContent = '🔄 重新开始';
+  renderQuestion();
+}
+function renderQuestion() {
+  var q = state.quiz && state.quiz[state.qIndex];
+  if (!q) return;
+  var n = state.quiz.length;
+  elQno.textContent = '第 ' + (state.qIndex + 1) + '/' + n + ' 题';
+  elQbar.style.width = Math.round(state.qIndex / n * 100) + '%';
+  elPrompt.textContent = q.prompt;
+  elQfb.textContent = '';
+  elQfb.className = 'qfb';
+  btnNext.disabled = true;
+  elOpts.innerHTML = '';
+  q.opts.forEach(function (text) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = text;
+    b.addEventListener('click', function () { answerQ(b, text); });
+    elOpts.appendChild(b);
+  });
+  say(q.prompt.replace(/「/g, '').replace(/」/g, ''));
+}
+function answerQ(btn, text) {
+  var q = state.quiz[state.qIndex];
+  if (!q || q.done || btn.disabled) return;
+  if (text === q.answer) {
+    q.done = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { b.disabled = true; });
+    state.answered++;
+    state.score++;
+    if (!q.missed) state.streak++;
+    if (state.streak > state.best) state.best = state.streak;
+    updateStats();
+    elQfb.className = 'qfb ok';
+    elQfb.innerHTML = '✅ 答对啦！<span class="ex">' + esc(q.it.t + '：' + q.it.d) + '</span>';
+    btn.classList.add('good');
+    say('答对啦，' + q.it.t + '，' + q.it.d);
+    btnNext.disabled = false;
+    if (state.qIndex >= state.quiz.length - 1) btnNext.textContent = '看结果 🏁';
+  } else {
+    if (!q.missed) { q.missed = true; state.streak = 0; updateStats(); }
+    btn.classList.add('wrongFlash');
+    setTimeout(function () { btn.classList.remove('wrongFlash'); btn.disabled = true; }, 1350);
+    elQfb.className = 'qfb bad';
+    elQfb.innerHTML = '❌ 选错啦，请仔细看题目，再想一想～';
+    say('选错啦，再想一想');
+  }
+}
+function nextQuestion() {
+  if (!state.quiz) return;
+  if (state.qIndex >= state.quiz.length - 1) {
+    showResult();
+    return;
+  }
+  state.qIndex++;
+  renderQuestion();
+}
+function showResult() {
+  var n = state.quiz.length;
+  elQbar.style.width = '100%';
+  elQno.textContent = '完成 ' + n + ' 题';
+  elOpts.innerHTML = '';
+  elPrompt.innerHTML = '🏁 这一轮答对 ' + state.score + ' / ' + n + ' 题<br>' +
+    '<span style="font-size:.8rem;color:#7b8ea8">连对最多 ' + state.best + ' 次，再试一轮吧！</span>';
+  elQfb.className = 'qfb ok';
+  elQfb.textContent = '';
+  btnNext.disabled = true;
+  btnNext.textContent = '下一题 →';
+  say('这一轮答对' + state.score + '题，真棒');
+}
+btnStart.addEventListener('click', startQuiz);
+btnNext.addEventListener('click', nextQuestion);
+
+/* ===== 模式切换 ===== */
+document.getElementById('tabBrowse').addEventListener('click', function () {
+  this.classList.add('on');
+  document.getElementById('tabQuiz').classList.remove('on');
+  document.getElementById('paneBrowse').style.display = 'flex';
+  document.getElementById('paneQuiz').classList.remove('on');
+});
+document.getElementById('tabQuiz').addEventListener('click', function () {
+  this.classList.add('on');
+  document.getElementById('tabBrowse').classList.remove('on');
+  document.getElementById('paneBrowse').style.display = 'none';
+  document.getElementById('paneQuiz').classList.add('on');
+});
+
+/* ===== 启动 ===== */
+(function init() {
+  if (!DATA.length) {
+    elTopics.innerHTML = '<div class="empty">百科数据没有加载成功。<br>请确认同目录下的 yuwen-data.js 存在。</div>';
+    return;
+  }
+  buildCats();
+  buildPicks();
+  updateStats();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

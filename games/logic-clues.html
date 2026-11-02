@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -41,7 +41,10 @@ h1{font-size:1.15rem;}
 .clues li{display:flex;gap:6px;align-items:flex-start;font-size:.95rem;font-weight:700;line-height:1.35;}
 .clue-num{flex:none;font-size:.75rem;font-weight:900;background:#f0edff;color:var(--accent);
   border-radius:8px;padding:1px 6px;margin-top:2px;}
+.clues li.locked span:last-child{color:#9aa8ba;font-weight:700;}
+.clues li.pop span:last-child{animation:pop .45s ease;}
 .question{font-size:1.2rem;font-weight:900;text-align:center;}
+.hint-btn{margin-top:2px;}
 .options{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:min(540px,100%);}
 .opt{min-height:50px;border:none;border-radius:16px;background:#fff;font-weight:900;font-size:1rem;
   color:var(--ink);box-shadow:0 5px 14px rgba(36,59,83,.12);cursor:pointer;padding:8px 6px;
@@ -77,7 +80,14 @@ h1{font-size:1.15rem;}
   .stage-inner{gap:6px;}
 }
 </style>
-</head>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
 <body>
 <header>
   <h1>🧠 逻辑推理 · 线索破案</h1>
@@ -96,16 +106,110 @@ h1{font-size:1.15rem;}
     </div>
     <div class="question" id="question">--</div>
     <div class="options" id="options"></div>
-    <button class="hint-btn hide" id="hintBtn" type="button">💡 提示</button>
+    <button class="hint-btn" id="hintBtn" type="button">💡 提示</button>
     <div class="solution hide" id="solution"></div>
     <div class="feedback" id="feedback"></div>
   </div>
 </div>
 <div id="confetti"></div>
 <script>
-var PUZZLES = [{"people":["小红","小明","小刚","小丽"],"theme":"楼层","items":["1楼","2楼","3楼","4楼"],"clues":["小红住在3楼，小刚住在2楼","小明住的楼层比小红高"],"q":"小丽住在几楼？","options":["4楼","2楼","3楼","1楼"],"answer":"1楼","solution":{"小红":"3楼","小明":"4楼","小刚":"2楼","小丽":"1楼"}},{"people":["小红","小明","小刚","小丽"],"theme":"楼层","items":["1楼","2楼","3楼","4楼"],"clues":["小红和小明住在相邻的楼层","小丽住在4楼","小红住在1楼"],"q":"小明住在几楼？","options":["3楼","2楼","4楼","1楼"],"answer":"2楼","solution":{"小红":"1楼","小明":"2楼","小刚":"3楼","小丽":"4楼"}},{"people":["小红","小明","小刚","小丽"],"theme":"楼层","items":["1楼","2楼","3楼","4楼"],"clues":["小丽和小明住在相邻的楼层","小明和小红住在相邻的楼层","小丽住在最高的楼层"],"q":"谁住在1楼？","options":["小丽","小刚","小明","小红"],"answer":"小刚","solution":{"小红":"2楼","小明":"3楼","小刚":"1楼","小丽":"4楼"}},{"people":["小红","小明","小刚","小丽"],"theme":"楼层","items":["1楼","2楼","3楼","4楼"],"clues":["小红不住在1楼","小明不住在2楼","小明住的楼层比小红高","小丽住的楼层比小明高"],"q":"小刚住在几楼？","options":["3楼","4楼","2楼","1楼"],"answer":"1楼","solution":{"小红":"2楼","小明":"3楼","小刚":"1楼","小丽":"4楼"}},{"people":["丁丁","冬冬","乐乐","安安"],"theme":"座位（从左到右）","items":["1号座位","2号座位","3号座位","4号座位"],"clues":["安安和丁丁坐在相邻的座位","乐乐坐在3号座位，安安坐在2号座位"],"q":"谁坐在4号座位？","options":["安安","冬冬","乐乐","丁丁"],"answer":"冬冬","solution":{"丁丁":"1号座位","冬冬":"4号座位","乐乐":"3号座位","安安":"2号座位"}},{"people":["丁丁","冬冬","乐乐","安安"],"theme":"座位（从左到右）","items":["1号座位","2号座位","3号座位","4号座位"],"clues":["冬冬和乐乐坐在相邻的座位","安安不坐在2号座位","乐乐坐在4号座位"],"q":"安安坐在几号座位？","options":["4号座位","1号座位","3号座位","2号座位"],"answer":"1号座位","solution":{"丁丁":"2号座位","冬冬":"3号座位","乐乐":"4号座位","安安":"1号座位"}},{"people":["丁丁","冬冬","乐乐","安安"],"theme":"座位（从左到右）","items":["1号座位","2号座位","3号座位","4号座位"],"clues":["冬冬不坐在4号座位","安安坐在2号座位","丁丁坐在3号座位"],"q":"乐乐坐在几号座位？","options":["2号座位","1号座位","3号座位","4号座位"],"answer":"4号座位","solution":{"丁丁":"3号座位","冬冬":"1号座位","乐乐":"4号座位","安安":"2号座位"}},{"people":["丁丁","冬冬","乐乐","安安"],"theme":"座位（从左到右）","items":["1号座位","2号座位","3号座位","4号座位"],"clues":["乐乐不坐在3号座位","丁丁不坐在4号座位","丁丁坐在1号座位","冬冬坐在4号座位"],"q":"谁坐在3号座位？","options":["安安","冬冬","丁丁","乐乐"],"answer":"安安","solution":{"丁丁":"1号座位","冬冬":"4号座位","乐乐":"2号座位","安安":"3号座位"}},{"people":["小雨","小风","小雷","小云"],"theme":"比赛名次","items":["第1名","第2名","第3名","第4名"],"clues":["小雷得了第3名，小云得了第4名","小风没有得第2名"],"q":"小风得了第几名？","options":["第2名","第4名","第1名","第3名"],"answer":"第1名","solution":{"小雨":"第2名","小风":"第1名","小雷":"第3名","小云":"第4名"}},{"people":["小雨","小风","小雷","小云"],"theme":"比赛名次","items":["第1名","第2名","第3名","第4名"],"clues":["小云没有得第4名","小雷得了第1名","小风和小雷的名次相邻"],"q":"小风得了第几名？","options":["第3名","第2名","第4名","第1名"],"answer":"第2名","solution":{"小雨":"第4名","小风":"第2名","小雷":"第1名","小云":"第3名"}},{"people":["小雨","小风","小雷","小云"],"theme":"比赛名次","items":["第1名","第2名","第3名","第4名"],"clues":["小云是最后一名","小雷和小雨的名次相邻","小雨得了第3名"],"q":"谁得了第2名？","options":["小云","小雨","小雷","小风"],"answer":"小雷","solution":{"小雨":"第3名","小风":"第1名","小雷":"第2名","小云":"第4名"}},{"people":["小雨","小风","小雷","小云"],"theme":"比赛名次","items":["第1名","第2名","第3名","第4名"],"clues":["小雨是最后一名","小风没有得第4名","小云没有得第1名","小雨和小风的名次相邻"],"q":"谁得了第1名？","options":["小雨","小雷","小风","小云"],"answer":"小雷","solution":{"小雨":"第4名","小风":"第3名","小雷":"第1名","小云":"第2名"}},{"people":["小星","小月","小阳","小秋"],"theme":"年龄","items":["6岁","7岁","8岁","9岁"],"clues":["小星今年不是8岁","小月今年7岁，小秋今年6岁"],"q":"谁今年8岁？","options":["小星","小月","小阳","小秋"],"answer":"小阳","solution":{"小星":"9岁","小月":"7岁","小阳":"8岁","小秋":"6岁"}},{"people":["小星","小月","小阳","小秋"],"theme":"年龄","items":["6岁","7岁","8岁","9岁"],"clues":["小月和小阳的年龄相差1岁","小秋今年不是8岁","小阳年龄最小"],"q":"小秋今年几岁？","options":["7岁","8岁","6岁","9岁"],"answer":"9岁","solution":{"小星":"8岁","小月":"7岁","小阳":"6岁","小秋":"9岁"}},{"people":["小星","小月","小阳","小秋"],"theme":"年龄","items":["6岁","7岁","8岁","9岁"],"clues":["小阳今年不是7岁","小秋年龄最大","小月年龄最小"],"q":"小星今年几岁？","options":["8岁","7岁","6岁","9岁"],"answer":"7岁","solution":{"小星":"7岁","小月":"6岁","小阳":"8岁","小秋":"9岁"}},{"people":["小星","小月","小阳","小秋"],"theme":"年龄","items":["6岁","7岁","8岁","9岁"],"clues":["小月今年不是7岁","小阳今年不是9岁","小月今年8岁","小秋今年7岁"],"q":"谁今年9岁？","options":["小星","小月","小阳","小秋"],"answer":"小星","solution":{"小星":"9岁","小月":"8岁","小阳":"6岁","小秋":"7岁"}},{"people":["可可","豆豆","糖糖","果果"],"theme":"喜欢的颜色","items":["红色","蓝色","绿色","黄色"],"clues":["可可喜欢黄色","糖糖喜欢绿色，果果喜欢红色"],"q":"谁喜欢蓝色？","options":["糖糖","果果","可可","豆豆"],"answer":"豆豆","solution":{"可可":"黄色","豆豆":"蓝色","糖糖":"绿色","果果":"红色"}},{"people":["可可","豆豆","糖糖","果果"],"theme":"喜欢的颜色","items":["红色","蓝色","绿色","黄色"],"clues":["果果不喜欢黄色","可可喜欢蓝色","豆豆喜欢红色"],"q":"果果喜欢什么颜色？","options":["绿色","红色","黄色","蓝色"],"answer":"绿色","solution":{"可可":"蓝色","豆豆":"红色","糖糖":"黄色","果果":"绿色"}},{"people":["可可","豆豆","糖糖","果果"],"theme":"喜欢的颜色","items":["红色","蓝色","绿色","黄色"],"clues":["果果喜欢黄色","可可不喜欢绿色","糖糖喜欢蓝色"],"q":"可可喜欢什么颜色？","options":["红色","黄色","绿色","蓝色"],"answer":"红色","solution":{"可可":"红色","豆豆":"绿色","糖糖":"蓝色","果果":"黄色"}},{"people":["可可","豆豆","糖糖","果果"],"theme":"喜欢的颜色","items":["红色","蓝色","绿色","黄色"],"clues":["豆豆喜欢蓝色","糖糖喜欢黄色","可可不喜欢黄色","可可喜欢红色"],"q":"果果喜欢什么颜色？","options":["红色","绿色","黄色","蓝色"],"answer":"绿色","solution":{"可可":"红色","豆豆":"蓝色","糖糖":"黄色","果果":"绿色"}},{"people":["阿宝","阿福","阿吉","阿乐"],"theme":"养的宠物","items":["小猫","小狗","小兔","小鱼"],"clues":["阿宝养了小猫，阿吉养了小狗","阿福养了小鱼"],"q":"谁养了小兔？","options":["阿吉","阿福","阿乐","阿宝"],"answer":"阿乐","solution":{"阿宝":"小猫","阿福":"小鱼","阿吉":"小狗","阿乐":"小兔"}},{"people":["阿宝","阿福","阿吉","阿乐"],"theme":"养的宠物","items":["小猫","小狗","小兔","小鱼"],"clues":["阿吉养了小狗","阿福养了小鱼","阿宝养了小兔"],"q":"阿乐养了什么宠物？","options":["小兔","小鱼","小狗","小猫"],"answer":"小猫","solution":{"阿宝":"小兔","阿福":"小鱼","阿吉":"小狗","阿乐":"小猫"}},{"people":["阿宝","阿福","阿吉","阿乐"],"theme":"养的宠物","items":["小猫","小狗","小兔","小鱼"],"clues":["阿吉养了小狗","阿宝养的不是小兔","阿乐养了小猫"],"q":"阿宝养了什么宠物？","options":["小鱼","小狗","小兔","小猫"],"answer":"小鱼","solution":{"阿宝":"小鱼","阿福":"小兔","阿吉":"小狗","阿乐":"小猫"}},{"people":["阿宝","阿福","阿吉","阿乐"],"theme":"养的宠物","items":["小猫","小狗","小兔","小鱼"],"clues":["阿宝养的不是小兔","阿乐养的不是小猫","阿吉养了小狗","阿福养了小鱼"],"q":"谁养了小兔？","options":["阿宝","阿乐","阿吉","阿福"],"answer":"阿乐","solution":{"阿宝":"小猫","阿福":"小鱼","阿吉":"小狗","阿乐":"小兔"}},{"people":["小米","小豆","小果","小桃"],"theme":"喜欢的水果","items":["苹果","香蕉","葡萄","西瓜"],"clues":["小豆最喜欢的水果不是葡萄","小米最喜欢苹果，小果最喜欢香蕉"],"q":"小桃最喜欢什么水果？","options":["葡萄","苹果","香蕉","西瓜"],"answer":"葡萄","solution":{"小米":"苹果","小豆":"西瓜","小果":"香蕉","小桃":"葡萄"}},{"people":["小米","小豆","小果","小桃"],"theme":"喜欢的水果","items":["苹果","香蕉","葡萄","西瓜"],"clues":["小桃最喜欢葡萄","小豆最喜欢香蕉","小米最喜欢的水果不是西瓜"],"q":"谁最喜欢苹果？","options":["小桃","小果","小豆","小米"],"answer":"小米","solution":{"小米":"苹果","小豆":"香蕉","小果":"西瓜","小桃":"葡萄"}},{"people":["小米","小豆","小果","小桃"],"theme":"喜欢的水果","items":["苹果","香蕉","葡萄","西瓜"],"clues":["小桃最喜欢的水果不是葡萄","小豆最喜欢苹果","小果最喜欢香蕉"],"q":"谁最喜欢葡萄？","options":["小豆","小桃","小果","小米"],"answer":"小米","solution":{"小米":"葡萄","小豆":"苹果","小果":"香蕉","小桃":"西瓜"}},{"people":["小米","小豆","小果","小桃"],"theme":"喜欢的水果","items":["苹果","香蕉","葡萄","西瓜"],"clues":["小豆最喜欢西瓜","小豆最喜欢的水果不是葡萄","小桃最喜欢的水果不是葡萄","小果最喜欢苹果"],"q":"小桃最喜欢什么水果？","options":["苹果","西瓜","香蕉","葡萄"],"answer":"香蕉","solution":{"小米":"葡萄","小豆":"西瓜","小果":"苹果","小桃":"香蕉"}},{"people":["大力","小飞","小龙","小虎"],"theme":"喜欢的运动","items":["足球","篮球","游泳","跑步"],"clues":["大力喜欢跑步","小龙喜欢游泳，小虎喜欢篮球"],"q":"谁喜欢足球？","options":["小龙","小虎","小飞","大力"],"answer":"小飞","solution":{"大力":"跑步","小飞":"足球","小龙":"游泳","小虎":"篮球"}},{"people":["大力","小飞","小龙","小虎"],"theme":"喜欢的运动","items":["足球","篮球","游泳","跑步"],"clues":["小虎不喜欢篮球","大力喜欢游泳","小飞喜欢跑步"],"q":"小虎喜欢什么运动？","options":["篮球","游泳","跑步","足球"],"answer":"足球","solution":{"大力":"游泳","小飞":"跑步","小龙":"篮球","小虎":"足球"}},{"people":["大力","小飞","小龙","小虎"],"theme":"喜欢的运动","items":["足球","篮球","游泳","跑步"],"clues":["小龙喜欢跑步","大力不喜欢足球","小虎喜欢游泳"],"q":"大力喜欢什么运动？","options":["篮球","足球","游泳","跑步"],"answer":"篮球","solution":{"大力":"篮球","小飞":"足球","小龙":"跑步","小虎":"游泳"}},{"people":["大力","小飞","小龙","小虎"],"theme":"喜欢的运动","items":["足球","篮球","游泳","跑步"],"clues":["大力不喜欢足球","小虎喜欢跑步","小龙不喜欢跑步","小龙喜欢篮球"],"q":"小飞喜欢什么运动？","options":["篮球","游泳","跑步","足球"],"answer":"足球","solution":{"大力":"游泳","小飞":"足球","小龙":"篮球","小虎":"跑步"}}];
+var PUZZLES = [
+/* ---- 楼层 ---- */
+{"people":["小红","小明","小刚","小丽"],"theme":"楼层","items":["1楼","2楼","3楼","4楼"],
+ "clues":["小明住在4楼","小刚不住在2楼，也不住在3楼","小红住在小刚的楼上","小丽住在小红的楼下"],
+ "q":"小红住在几楼？","options":["3楼","2楼","4楼","1楼"],"answer":"3楼",
+ "solution":{"小红":"3楼","小明":"4楼","小刚":"1楼","小丽":"2楼"}},
+{"people":["小红","小明","小刚","小丽"],"theme":"楼层","items":["1楼","2楼","3楼","4楼"],
+ "clues":["小刚住在3楼","小明住的楼层比小红高","小丽不住在2楼","小红不住在1楼"],
+ "q":"小明住在几楼？","options":["4楼","3楼","2楼","1楼"],"answer":"4楼",
+ "solution":{"小红":"2楼","小明":"4楼","小刚":"3楼","小丽":"1楼"}},
+{"people":["小兰","小竹","小梅","小林","小枫"],"theme":"楼层","items":["1楼","2楼","3楼","4楼","5楼"],
+ "clues":["小梅住在最高的5楼","小竹住在3楼","小枫住在小林的楼上","小枫不住在2楼","小竹住在小兰的楼上"],
+ "q":"小林住在几楼？","options":["2楼","1楼","3楼","4楼","5楼"],"answer":"2楼",
+ "solution":{"小兰":"1楼","小竹":"3楼","小梅":"5楼","小林":"2楼","小枫":"4楼"}},
+/* ---- 座位（从左到右） ---- */
+{"people":["丁丁","冬冬","乐乐","安安","南南"],"theme":"座位（从左到右）","items":["1号座位","2号座位","3号座位","4号座位","5号座位"],
+ "clues":["南南坐在正中间的3号座位","乐乐和丁丁坐在相邻的座位，乐乐在丁丁左边","安安不坐在1号座位，也不坐在2号座位","冬冬坐在安安的右边"],
+ "q":"乐乐坐在几号座位？","options":["1号座位","2号座位","4号座位","5号座位"],"answer":"1号座位",
+ "solution":{"丁丁":"2号座位","冬冬":"5号座位","乐乐":"1号座位","安安":"4号座位","南南":"3号座位"}},
+{"people":["丁丁","冬冬","乐乐","安安","南南"],"theme":"座位（从左到右）","items":["1号座位","2号座位","3号座位","4号座位","5号座位"],
+ "clues":["乐乐坐在最右边的5号座位","安安和丁丁坐在相邻的座位，丁丁在安安左边","南南和冬冬坐在相邻的座位，南南在冬冬左边","南南不坐在1号座位"],
+ "q":"冬冬坐在几号座位？","options":["4号座位","2号座位","3号座位","1号座位"],"answer":"4号座位",
+ "solution":{"丁丁":"1号座位","冬冬":"4号座位","乐乐":"5号座位","安安":"2号座位","南南":"3号座位"}},
+/* ---- 比赛名次 ---- */
+{"people":["小雨","小风","小雷","小云","小雪"],"theme":"比赛名次","items":["第1名","第2名","第3名","第4名","第5名"],
+ "clues":["小雨得了第3名","小雪不是第1名，也不是第2名","小雷的名次刚好在小云前面一名","小风是最后一名"],
+ "q":"谁得了第2名？","options":["小云","小雨","小雷","小风","小雪"],"answer":"小云",
+ "solution":{"小雨":"第3名","小风":"第5名","小雷":"第1名","小云":"第2名","小雪":"第4名"}},
+{"people":["小雨","小风","小雷","小云"],"theme":"比赛名次","items":["第1名","第2名","第3名","第4名"],
+ "clues":["小雷比小风快，但比小雨慢","小云是最后一名","小风没有得第1名","小雨和小雷的名次相邻"],
+ "q":"小风得了第几名？","options":["第3名","第1名","第2名","第4名"],"answer":"第3名",
+ "solution":{"小雨":"第1名","小风":"第3名","小雷":"第2名","小云":"第4名"}},
+/* ---- 年龄 ---- */
+{"people":["小星","小月","小阳","小秋"],"theme":"年龄","items":["6岁","7岁","8岁","9岁"],
+ "clues":["小阳年龄最小","小月比小秋大","小星比小秋大","小月比小星大"],
+ "q":"小星今年几岁？","options":["8岁","7岁","6岁","9岁"],"answer":"8岁",
+ "solution":{"小星":"8岁","小月":"9岁","小阳":"6岁","小秋":"7岁"}},
+{"people":["小星","小月","小阳","小秋","小云"],"theme":"年龄","items":["6岁","7岁","8岁","9岁","10岁"],
+ "clues":["小阳年龄最小","小月是哥哥，比其他人都大","小星比小云小1岁","小秋比小云大"],
+ "q":"小云今年几岁？","options":["8岁","7岁","9岁","6岁","10岁"],"answer":"8岁",
+ "solution":{"小星":"7岁","小月":"10岁","小阳":"6岁","小秋":"9岁","小云":"8岁"}},
+/* ---- 喜欢的颜色 ---- */
+{"people":["可可","豆豆","糖糖","果果"],"theme":"喜欢的颜色","items":["红色","蓝色","绿色","黄色"],
+ "clues":["豆豆喜欢黄色","糖糖不喜欢黄色，也不喜欢绿色","可可不喜欢红色和黄色","果果不喜欢红色","可可喜欢蓝色"],
+ "q":"糖糖喜欢什么颜色？","options":["红色","绿色","黄色","蓝色"],"answer":"红色",
+ "solution":{"可可":"蓝色","豆豆":"黄色","糖糖":"红色","果果":"绿色"}},
+{"people":["可可","豆豆","糖糖","果果","朵朵"],"theme":"喜欢的颜色","items":["红色","蓝色","绿色","黄色","粉色"],
+ "clues":["朵朵喜欢的颜色像桃花","豆豆喜欢的颜色像天空","糖糖喜欢的颜色像香蕉","果果不喜欢红色","可可不喜欢绿色"],
+ "q":"果果喜欢什么颜色？","options":["绿色","红色","粉色","蓝色","黄色"],"answer":"绿色",
+ "solution":{"可可":"红色","豆豆":"蓝色","糖糖":"黄色","果果":"绿色","朵朵":"粉色"}},
+/* ---- 养的宠物 ---- */
+{"people":["阿宝","阿福","阿吉","阿乐","阿平"],"theme":"养的宠物","items":["小猫","小狗","小兔","小鸟","小鱼"],
+ "clues":["阿吉养了小狗","阿乐养了小鸟","阿福养的动物生活在水里","阿宝养的不是小兔，也不是小鸟"],
+ "q":"阿宝养了什么宠物？","options":["小猫","小兔","小狗","小鱼","小鸟"],"answer":"小猫",
+ "solution":{"阿宝":"小猫","阿福":"小鱼","阿吉":"小狗","阿乐":"小鸟","阿平":"小兔"}},
+{"people":["阿宝","阿福","阿吉","阿乐"],"theme":"养的宠物","items":["小猫","小狗","小兔","小鱼"],
+ "clues":["阿宝养的动物会看家","阿乐养的动物生活在水里","阿福养的动物会抓老鼠","阿吉养的动物有长耳朵"],
+ "q":"阿吉养了什么宠物？","options":["小兔","小猫","小狗","小鱼"],"answer":"小兔",
+ "solution":{"阿宝":"小狗","阿福":"小猫","阿吉":"小兔","阿乐":"小鱼"}},
+/* ---- 喜欢的水果 ---- */
+{"people":["小米","小豆","小果","小桃"],"theme":"喜欢的水果","items":["苹果","香蕉","葡萄","西瓜"],
+ "clues":["小桃喜欢香蕉","小豆不喜欢香蕉，也不喜欢葡萄","小果不喜欢苹果，也不喜欢葡萄","小米不喜欢西瓜"],
+ "q":"小米喜欢什么水果？","options":["葡萄","苹果","香蕉","西瓜"],"answer":"葡萄",
+ "solution":{"小米":"葡萄","小豆":"苹果","小果":"西瓜","小桃":"香蕉"}},
+/* ---- 喜欢的运动 ---- */
+{"people":["大力","小飞","小龙","小虎","小天"],"theme":"喜欢的运动","items":["足球","篮球","游泳","跑步","跳绳"],
+ "clues":["小龙喜欢篮球","小飞喜欢足球","小虎喜欢跑步","小天不会游泳，也不喜欢球类运动","大力不喜欢球类运动"],
+ "q":"大力喜欢什么运动？","options":["游泳","跳绳","跑步","足球","篮球"],"answer":"游泳",
+ "solution":{"大力":"游泳","小飞":"足球","小龙":"篮球","小虎":"跑步","小天":"跳绳"}},
+/* ---- 喜欢的季节 ---- */
+{"people":["小樱","小荷","小枫","小雪"],"theme":"喜欢的季节","items":["春天","夏天","秋天","冬天"],
+ "clues":["小荷最喜欢能游泳的夏天","小枫喜欢的季节在夏天的后面","小雪喜欢最冷的季节","小樱不喜欢秋天"],
+ "q":"小樱喜欢什么季节？","options":["春天","夏天","秋天","冬天"],"answer":"春天",
+ "solution":{"小樱":"春天","小荷":"夏天","小枫":"秋天","小雪":"冬天"}},
+/* ---- 生日月份 ---- */
+{"people":["小蓝","小橙","小青","小紫"],"theme":"生日月份","items":["3月","5月","7月","9月"],
+ "clues":["小蓝的生日最早","小橙的生日比小蓝晚","小青的生日比小橙晚","小紫的生日比小青晚"],
+ "q":"小紫的生日是几月？","options":["9月","7月","5月","3月"],"answer":"9月",
+ "solution":{"小蓝":"3月","小橙":"5月","小青":"7月","小紫":"9月"}},
+/* ---- 做家务 ---- */
+{"people":["大宝","二宝","三宝","小宝"],"theme":"做家务","items":["扫地","擦桌子","浇花","倒垃圾"],
+ "clues":["大宝的任务和花草有关","小宝的任务最轻，拎着东西出门就行","二宝和三宝的任务，一个要用扫把，一个要用抹布","三宝负责让桌子变干净"],
+ "q":"二宝负责什么家务？","options":["扫地","擦桌子","浇花","倒垃圾"],"answer":"扫地",
+ "solution":{"大宝":"浇花","二宝":"扫地","三宝":"擦桌子","小宝":"倒垃圾"}},
+/* ---- 餐厅点餐 ---- */
+{"people":["爸爸","妈妈","哥哥","姐姐","弟弟"],"theme":"餐厅点餐","items":["米饭","面条","饺子","汉堡","沙拉"],
+ "clues":["妈妈在减肥，只吃了蔬菜做的沙拉","弟弟吃的是带馅的","哥哥吃的是西式快餐，不是米饭也不是面条","姐姐吃的是长长的、一根一根的"],
+ "q":"爸爸吃的是什么？","options":["米饭","面条","饺子","汉堡","沙拉"],"answer":"米饭",
+ "solution":{"爸爸":"米饭","妈妈":"沙拉","哥哥":"汉堡","姐姐":"面条","弟弟":"饺子"}},
+/* ---- 怎么上学 ---- */
+{"people":["明明","亮亮","星星","月月"],"theme":"怎么上学","items":["走路上学","坐公交车","骑自行车","坐地铁"],
+ "clues":["星星的车只有两个轮子，要自己蹬","月月坐的车在地底下跑","亮亮坐的车站很多，路上会堵车","明明家离学校很近，不用坐车"],
+ "q":"月月是怎么上学的？","options":["坐地铁","坐公交车","骑自行车","走路上学"],"answer":"坐地铁",
+ "solution":{"明明":"走路上学","亮亮":"坐公交车","星星":"骑自行车","月月":"坐地铁"}}
+];
 var KEY_BEST='pclue.best';
-var state={correct:0,streak:0,best:0,wrong:0,locked:false,current:null,hintUsed:false,timer:null,lastIdx:-1};
+var state={correct:0,streak:0,best:0,wrong:0,locked:false,current:null,clueShown:0,timer:null,lastIdx:-1};
 var feedbackEl=document.getElementById('feedback');
 var optionsEl=document.getElementById('options');
 var hintBtn=document.getElementById('hintBtn');
@@ -119,6 +223,15 @@ function feedback(text,good){
   feedbackEl.textContent=text;
 }
 function clearFeedback(){feedbackEl.className='feedback';feedbackEl.textContent='';}
+function speak(t){
+  try{
+    if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return;
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(String(t));
+    u.lang='zh-CN';u.rate=0.95;u.pitch=1.1;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
 function renderStats(){
   document.getElementById('correctCount').textContent=state.correct;
   document.getElementById('streakCount').textContent=state.streak;
@@ -147,16 +260,16 @@ function showSolution(p){
 }
 function renderPuzzle(){
   var p=state.current;
-  document.getElementById('theme').textContent='🧩 主题：'+p.theme;
+  document.getElementById('theme').textContent='🧩 主题：'+p.theme+' · 线索 '+p.clues.length+' 条';
   document.getElementById('clues').innerHTML=p.clues.map(function(c,i){
-    return '<li><span class="clue-num">'+(i+1)+'</span><span>💡 '+esc(c)+'</span></li>';
+    return '<li class="locked" data-i="'+i+'"><span class="clue-num">'+(i+1)+'</span><span>❓ 线索 '+(i+1)+' · 点「提示」查看</span></li>';
   }).join('');
   document.getElementById('question').textContent=p.q;
   optionsEl.innerHTML=p.options.map(function(o){
     return '<button class="opt" type="button" data-val="'+esc(o)+'">'+esc(o)+'</button>';
   }).join('');
-  hintBtn.classList.add('hide');
-  hintBtn.disabled=false;
+  state.clueShown=0;
+  updateHintBtn();
   solutionEl.classList.add('hide');
   clearFeedback();
 }
@@ -167,7 +280,6 @@ function nextPuzzle(){
   state.current=PUZZLES[idx];
   state.wrong=0;
   state.locked=false;
-  state.hintUsed=false;
   renderPuzzle();
 }
 function resetClues(){
@@ -207,30 +319,48 @@ function onOptionClick(e){
     void btn.offsetWidth;
     btn.classList.add('wrong','shake');
     btn.disabled=true;
-    feedback('❌ 再仔细看看线索',false);
+    feedback('❌ 不对哦，点「提示」看更多线索再试试',false);
     state.wrong++;
     state.streak=0;
     renderStats();
-    if(state.wrong>=2&&!state.hintUsed)hintBtn.classList.remove('hide');
+  }
+}
+function updateHintBtn(){
+  var total=state.current?state.current.clues.length:0;
+  var left=total-state.clueShown;
+  if(left<=0){
+    hintBtn.disabled=true;
+    hintBtn.textContent='🔍 线索都找齐啦，开始推理吧';
+  }else{
+    hintBtn.disabled=false;
+    hintBtn.textContent='💡 提示 · 看下一条线索（还剩 '+left+' 条）';
   }
 }
 function useHint(){
-  if(state.locked||state.hintUsed)return;
+  if(state.locked)return;
   var p=state.current;
-  var wrongs=Array.prototype.slice.call(optionsEl.querySelectorAll('.opt')).filter(function(b){
-    return !b.disabled&&b.dataset.val!==p.answer;
-  });
-  if(!wrongs.length)return;
-  var b=wrongs[Math.floor(Math.random()*wrongs.length)];
-  b.disabled=true;
-  b.classList.add('eliminated');
-  state.hintUsed=true;
-  hintBtn.disabled=true;
-  hintBtn.classList.add('hide');
-  feedback('💡 已排除一个错误选项',true);
+  if(state.clueShown>=p.clues.length)return;
+  var li=document.querySelector('#clues li[data-i="'+state.clueShown+'"]');
+  if(li){
+    li.classList.remove('locked','pop');
+    void li.offsetWidth;
+    li.classList.add('pop');
+    li.querySelector('span:last-child').innerHTML='💡 '+esc(p.clues[state.clueShown]);
+  }
+  state.clueShown++;
+  speak(p.clues[state.clueShown-1]);
+  if(state.clueShown>=p.clues.length){
+    feedback('线索全出来啦，想一想答案是什么？',true);
+  }
+  updateHintBtn();
 }
 
 initClues();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
 </script>
 </body>
 </html>

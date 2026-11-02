@@ -1,0 +1,395 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🃏 21 点 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--accent:#1f8a5f;
+  --cw:clamp(46px,9vw,92px);--ch:calc(var(--cw)*1.42);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+[hidden]{display:none!important;}
+html,body{height:100%;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,-apple-system,sans-serif;color:var(--ink);
+  height:100dvh;display:flex;flex-direction:column;gap:8px;padding:10px 12px 12px;overflow:hidden;user-select:none;
+  background:radial-gradient(900px 520px at 0% 0%,#e9fff4,transparent 62%),
+             radial-gradient(900px 520px at 100% 0%,#fff4e4,transparent 58%),
+             linear-gradient(160deg,#f7fffb,#fffaf3);}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.12rem;white-space:nowrap;}
+.back{display:inline-flex;align-items:center;min-height:38px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.1);color:var(--accent);font-weight:800;font-size:.78rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+.spacer{flex:1;}
+.chip{font-size:.72rem;font-weight:800;color:var(--muted);background:#fff;border:1px solid rgba(36,59,83,.08);
+  border-radius:999px;padding:5px 9px;box-shadow:0 3px 9px rgba(36,59,83,.06);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.8rem;}
+.iconbtn{min-height:38px;padding:0 14px;border-radius:999px;border:1px solid rgba(36,59,83,.1);background:#fff;
+  color:var(--ink);font-family:inherit;font-weight:800;font-size:.78rem;cursor:pointer;white-space:nowrap;
+  box-shadow:0 4px 12px rgba(36,59,83,.08);}
+.iconbtn:active{transform:scale(.96);}
+
+.table{flex:1;min-height:0;position:relative;border-radius:26px;padding:12px 16px 10px;
+  display:flex;flex-direction:column;justify-content:space-between;gap:4px;color:#fff;
+  background:radial-gradient(120% 80% at 50% 0%,rgba(255,255,255,.12),transparent 60%),
+             radial-gradient(90% 70% at 50% 110%,rgba(0,0,0,.20),transparent 62%),
+             linear-gradient(160deg,#2f8f63,#17604a 72%);
+  box-shadow:inset 0 0 0 2px rgba(255,255,255,.14),0 14px 30px rgba(18,50,38,.28);}
+.side{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;}
+.handLabel{display:flex;align-items:center;gap:8px;font-size:.8rem;font-weight:800;color:rgba(255,255,255,.88);}
+.handLabel .tag{background:rgba(0,0,0,.24);border-radius:999px;padding:2px 10px;font-size:.74rem;
+  border:1px solid rgba(255,255,255,.16);}
+.cards{display:flex;gap:6px;align-items:center;justify-content:center;flex-wrap:wrap;max-width:100%;
+  min-height:calc(var(--ch) + 6px);padding:2px 0;}
+.card{position:relative;width:var(--cw);height:var(--ch);border-radius:calc(var(--cw)*.13);
+  background:linear-gradient(160deg,#fff,#f7f9fc);color:#243b53;flex:none;
+  box-shadow:0 5px 12px rgba(0,0,0,.3),inset 0 0 0 1px rgba(0,0,0,.05);
+  animation:deal .3s cubic-bezier(.2,.8,.3,1.2) both;}
+.card.red{color:#cf2b2b;}
+.card .corner{position:absolute;top:3px;left:4px;display:flex;flex-direction:column;line-height:1;font-weight:900;
+  font-size:calc(var(--cw)*.25);}
+.card .corner i{font-style:normal;font-size:calc(var(--cw)*.21);margin-top:1px;}
+
+.card .mid{position:absolute;left:50%;top:41%;transform:translate(-50%,-50%);font-weight:900;line-height:1;
+  font-size:calc(var(--cw)*.58);}
+.card .suitMid{position:absolute;left:50%;top:66%;transform:translate(-50%,-50%);line-height:1;
+  font-size:calc(var(--cw)*.32);opacity:.86;}
+.card.down{background:linear-gradient(135deg,#3b5f9e,#16263f);}
+.card.down::before{content:'';position:absolute;inset:5px;border-radius:calc(var(--cw)*.08);
+  border:1px dashed rgba(255,255,255,.4);
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.10) 0 4px,transparent 4px 8px);}
+.card.down .backMark{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);
+  color:rgba(255,255,255,.7);font-size:calc(var(--cw)*.34);}
+@keyframes deal{from{opacity:0;transform:translateY(-10px) scale(.92);}to{opacity:1;transform:none;}}
+
+.center{flex:0 0 auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:5px;padding:2px 0;}
+.bigMsg{font-size:clamp(.95rem,2.6vh,1.22rem);font-weight:900;min-height:1.35em;letter-spacing:.4px;}
+.subMsg{font-size:.75rem;color:rgba(255,255,255,.78);min-height:1.2em;}
+.advice{font-size:.74rem;font-weight:900;border-radius:999px;padding:4px 12px;
+  background:#ffe9a8;color:#7a5300;box-shadow:0 3px 10px rgba(0,0,0,.18);}
+.advice.hit{background:#ffe2c2;color:#8a4400;}
+.advice.stand{background:#d9f6e6;color:#10633c;}
+
+.controls{display:flex;gap:10px;justify-content:center;padding:2px 2px 0;}
+.btn{flex:1;max-width:230px;min-height:52px;border:0;border-radius:16px;font-family:inherit;
+  font-weight:900;font-size:.95rem;cursor:pointer;box-shadow:0 8px 18px rgba(36,59,83,.16);}
+.btn:active{transform:scale(.97);}
+.btn.hit{background:linear-gradient(135deg,#ffc266,#f08a1e);color:#4c2a00;}
+.btn.stand{background:linear-gradient(135deg,#7f9dff,#3b5bdb);color:#fff;}
+.btn.next{background:linear-gradient(135deg,#7ef0b0,#1f9e63);color:#05331f;max-width:none;}
+.rules{text-align:center;font-size:.7rem;color:#8d9cb0;flex:none;}
+
+@media (max-height:600px){
+  body{padding:6px 9px 8px;gap:5px;}
+  h1{font-size:.95rem;}
+  .back,.iconbtn{min-height:32px;font-size:.72rem;}
+  .chip{font-size:.66rem;padding:3px 7px;}
+  .table{padding:8px 10px 6px;border-radius:18px;}
+  .cards{min-height:calc(var(--ch) + 2px);}
+  .btn{min-height:44px;font-size:.86rem;}
+  .rules{font-size:.62rem;}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🃏 21 点</h1>
+  <div class="spacer"></div>
+  <span class="chip">局 <b id="roundChip">0</b></span>
+  <span class="chip">胜 <b id="winChip">0</b></span>
+  <span class="chip">和 <b id="pushChip">0</b></span>
+  <span class="chip">负 <b id="loseChip">0</b></span>
+</header>
+
+<div class="table">
+  <div class="side">
+    <div class="handLabel"><span class="tag" id="dealerLabel">庄家 · ?</span></div>
+    <div class="cards" id="dealerCards"></div>
+  </div>
+
+  <div class="center">
+    <div class="bigMsg" id="bigMsg">你的点数：0</div>
+    <div class="subMsg" id="subMsg">庄家 17 点以上停牌</div>
+    <div class="advice" id="advice" hidden></div>
+  </div>
+
+  <div class="side">
+    <div class="cards" id="playerCards"></div>
+    <div class="handLabel"><span class="tag" id="playerLabel">你 · 0 点</span></div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn hit" id="hitBtn" type="button">➕ 要牌</button>
+  <button class="btn stand" id="standBtn" type="button">✋ 停牌</button>
+  <button class="btn next" id="nextBtn" type="button" hidden>🔄 下一局</button>
+</div>
+<div class="rules">A 记 1 或 11 · J Q K 记 10 · 超过 21 点爆牌 · 庄家 17 点以上停牌</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var SUITS = ['♠', '♥', '♦', '♣'];
+  var RANKS = ['', 'A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+  var RED = [false, true, true, false];
+  var RESULT_TITLE = {
+    win: '🎉 你赢了！',
+    blackjack: '💫 21 点！',
+    bust: '💥 爆牌了',
+    lose: '😅 庄家赢了',
+    push: '🤝 平局'
+  };
+
+  var deck = [];
+  var player = [];
+  var dealer = [];
+  var reveal = false;
+  var phase = 'player';
+  var result = null;
+  var forcedDeck = null;
+  var stats = { rounds: 0, wins: 0, pushes: 0, losses: 0 };
+
+  var elDealerCards = document.getElementById('dealerCards');
+  var elPlayerCards = document.getElementById('playerCards');
+  var elDealerLabel = document.getElementById('dealerLabel');
+  var elPlayerLabel = document.getElementById('playerLabel');
+  var elBigMsg = document.getElementById('bigMsg');
+  var elSubMsg = document.getElementById('subMsg');
+  var elAdvice = document.getElementById('advice');
+  var elRoundChip = document.getElementById('roundChip');
+  var elWinChip = document.getElementById('winChip');
+  var elPushChip = document.getElementById('pushChip');
+  var elLoseChip = document.getElementById('loseChip');
+  var hitBtn = document.getElementById('hitBtn');
+  var standBtn = document.getElementById('standBtn');
+  var nextBtn = document.getElementById('nextBtn');
+
+  function makeDeck() {
+    var out = [];
+    for (var s = 0; s < 4; s++) {
+      for (var r = 1; r <= 13; r++) out.push({ r: r, s: s });
+    }
+    return out;
+  }
+
+  function shuffle(arr) {
+    for (var i = arr.length - 1; i > 0; i--) {
+      var j = Math.floor(Math.random() * (i + 1));
+      var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+    }
+    return arr;
+  }
+
+  function draw() {
+    if (!deck.length) deck = shuffle(makeDeck());
+    return deck.shift();
+  }
+
+  function handVal(cards) {
+    var total = 0, aces = 0;
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i];
+      if (c.r === 1) { total += 11; aces++; }
+      else total += Math.min(c.r, 10);
+    }
+    while (total > 21 && aces > 0) { total -= 10; aces--; }
+    return total;
+  }
+
+  function isSoft(cards) {
+    var total = 0, aces = 0;
+    for (var i = 0; i < cards.length; i++) {
+      var c = cards[i];
+      if (c.r === 1) { total += 11; aces++; }
+      else total += Math.min(c.r, 10);
+    }
+    while (total > 21 && aces > 0) { total -= 10; aces--; }
+    return aces > 0 && total <= 21;
+  }
+
+  function advice() {
+    if (phase !== 'player' || player.length < 2) return '';
+    var p = handVal(player);
+    var up = dealer[0].r === 1 ? 11 : Math.min(dealer[0].r, 10);
+    if (p <= 11) return '要牌';
+    if (isSoft(player)) {
+      if (p <= 17) return '要牌';
+      if (p === 18) return up >= 9 ? '要牌' : '停牌';
+      return '停牌';
+    }
+    if (p >= 17) return '停牌';
+    if (p === 12 && up <= 3) return '要牌';
+    if (p >= 12 && p <= 16) return up >= 7 ? '要牌' : '停牌';
+    return '要牌';
+  }
+
+  function newRound() {
+    deck = forcedDeck ? forcedDeck.slice() : shuffle(makeDeck());
+    forcedDeck = null;
+    player = [];
+    dealer = [];
+    reveal = false;
+    phase = 'player';
+    result = null;
+    stats.rounds++;
+
+    player.push(draw());
+    dealer.push(draw());
+    player.push(draw());
+    dealer.push(draw());
+
+    var p = handVal(player), d = handVal(dealer);
+    if (p === 21 || d === 21) {
+      if (p === 21 && d === 21) finish('push');
+      else if (p === 21) finish('blackjack');
+      else finish('lose');
+      return;
+    }
+    render();
+  }
+
+  function finish(kind) {
+    phase = 'over';
+    result = kind;
+    reveal = true;
+    if (kind === 'win' || kind === 'blackjack') stats.wins++;
+    else if (kind === 'push') stats.pushes++;
+    else stats.losses++;
+    render();
+  }
+
+  function doHit() {
+    if (phase !== 'player') return;
+    player.push(draw());
+    var p = handVal(player);
+    if (p > 21) { finish('bust'); return; }
+    if (p === 21) { doStand(); return; }
+    render();
+  }
+
+  function doStand() {
+    if (phase !== 'player') return;
+    reveal = true;
+    while (handVal(dealer) < 17) dealer.push(draw());
+    var p = handVal(player), d = handVal(dealer);
+    if (d > 21) finish('win');
+    else if (p > d) finish('win');
+    else if (p < d) finish('lose');
+    else finish('push');
+  }
+
+  function cardEl(card, faceDown) {
+    var d = document.createElement('div');
+    if (faceDown) {
+      d.className = 'card down';
+      d.innerHTML = '<span class="backMark">✦</span>';
+    } else {
+      d.className = 'card ' + (RED[card.s] ? 'red' : 'black');
+      d.innerHTML =
+        '<span class="corner">' + RANKS[card.r] + '<i>' + SUITS[card.s] + '</i></span>' +
+        '<span class="mid">' + RANKS[card.r] + '</span>' +
+        '<span class="suitMid">' + SUITS[card.s] + '</span>';
+    }
+    return d;
+  }
+
+  function renderHand(container, cards, hideFrom) {
+    container.innerHTML = '';
+    for (var i = 0; i < cards.length; i++) {
+      var hidden = hideFrom !== undefined && i >= hideFrom;
+      var d = cardEl(cards[i], hidden);
+      d.style.animationDelay = (i * 0.05) + 's';
+      container.appendChild(d);
+    }
+  }
+
+  function render() {
+    var p = handVal(player), d = handVal(dealer);
+
+    renderHand(elDealerCards, dealer, reveal ? undefined : 1);
+    renderHand(elPlayerCards, player, undefined);
+
+    elDealerLabel.textContent = reveal ? ('庄家 · ' + d + ' 点' + (d > 21 ? '（爆牌）' : '')) : '庄家 · ?';
+    elPlayerLabel.textContent = '你 · ' + p + ' 点' + (p > 21 ? '（爆牌）' : '');
+
+    if (phase === 'over' && result) {
+      elBigMsg.textContent = RESULT_TITLE[result];
+      elSubMsg.textContent = '你 ' + p + ' 点 · 庄家 ' + d + ' 点' + (d > 21 ? '（庄家爆牌）' : '');
+    } else {
+      elBigMsg.textContent = '你的点数：' + p;
+      var up = dealer[0];
+      elSubMsg.textContent = '庄家明牌 ' + SUITS[up.s] + RANKS[up.r] + ' · 超过 21 点爆牌，庄家 17 点以上停牌';
+    }
+
+    var tip = advice();
+    if (tip) {
+      elAdvice.hidden = false;
+      elAdvice.textContent = '教练建议：' + tip;
+      elAdvice.className = 'advice ' + (tip === '要牌' ? 'hit' : 'stand');
+    } else {
+      elAdvice.hidden = true;
+    }
+
+    elRoundChip.textContent = stats.rounds;
+    elWinChip.textContent = stats.wins;
+    elPushChip.textContent = stats.pushes;
+    elLoseChip.textContent = stats.losses;
+
+    var over = phase === 'over';
+    hitBtn.hidden = over;
+    standBtn.hidden = over;
+    nextBtn.hidden = !over;
+  }
+
+  hitBtn.addEventListener('click', doHit);
+  standBtn.addEventListener('click', doStand);
+  nextBtn.addEventListener('click', newRound);
+  document.addEventListener('keydown', function (e) {
+    if (phase !== 'player') return;
+    if (e.key === 'h' || e.key === 'H') doHit();
+    if (e.key === 's' || e.key === 'S') doStand();
+  });
+
+  window.__bj = {
+    newRound: newRound,
+    hit: doHit,
+    stand: doStand,
+    advice: advice,
+    setDeck: function (cards) {
+      forcedDeck = cards.map(function (c) { return { r: c.r, s: c.s }; });
+    },
+    getState: function () {
+      return {
+        phase: phase,
+        result: result,
+        reveal: reveal,
+        player: player.map(function (c) { return [c.r, c.s]; }),
+        dealer: dealer.map(function (c) { return [c.r, c.s]; }),
+        playerTotal: handVal(player),
+        dealerTotal: handVal(dealer),
+        remaining: deck.length,
+        stats: { rounds: stats.rounds, wins: stats.wins, pushes: stats.pushes, losses: stats.losses }
+      };
+    }
+  };
+
+  newRound();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

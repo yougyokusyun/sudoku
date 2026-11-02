@@ -1,0 +1,461 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🧩 形状嵌入 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#f1edff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eafaff,transparent 55%),
+             linear-gradient(160deg,#fbfaff,#f2f8ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  background:rgba(255,255,255,.78);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:10px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:.96rem;font-weight:800;text-align:center;color:#4a5f78;}
+.prompt b{color:var(--accent);}
+
+.boardWrap{position:relative;width:min(94vw,470px);border-radius:18px;background:#fff;
+  border:2px solid rgba(124,92,255,.18);box-shadow:0 8px 18px rgba(124,92,255,.10);overflow:hidden;}
+.boardWrap svg.model{display:block;width:100%;height:auto;}
+.tray{position:relative;border-top:2px dashed rgba(124,92,255,.25);
+  background:linear-gradient(180deg,#fdfcff,#f4f0ff);}
+
+/* 可拖拽的形状块 */
+.piece{position:absolute;left:0;top:0;touch-action:none;cursor:grab;
+  filter:drop-shadow(0 5px 8px rgba(36,59,83,.20));
+  transition:left .25s ease,top .25s ease,transform .25s ease;}
+.piece.drag{transition:none;cursor:grabbing;}
+.piece.done{cursor:default;filter:none;}
+.piece.badd{animation:shake .45s ease;}
+.piece svg{display:block;width:100%;height:100%;pointer-events:none;}
+
+.feedback{min-height:28px;font-size:1rem;font-weight:900;text-align:center;color:var(--muted);}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.88rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(124,92,255,.5);color:#fff;background:linear-gradient(135deg,#a78bfa,#7c5cff);}
+
+/* 成功时的小星星 */
+.spark{position:absolute;z-index:60;pointer-events:none;font-size:1.3rem;animation:sparkUp 1s ease-out forwards;}
+@keyframes sparkUp{
+  0%{opacity:0;transform:translateY(6px) scale(.5) rotate(0deg);}
+  25%{opacity:1;}
+  100%{opacity:0;transform:translateY(-70px) scale(1.2) rotate(40deg);}
+}
+@keyframes shake{0%,100%{margin-left:0}20%{margin-left:-9px}40%{margin-left:9px}60%{margin-left:-6px}80%{margin-left:6px}}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+/* 平板：加大棋盘与提示 */
+@media (min-width:600px) and (min-height:600px){
+  .boardWrap{width:min(94vw,560px);}
+  .prompt{font-size:1.1rem;}
+  .feedback{font-size:1.1rem;}
+}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:5px;padding:7px;border-radius:16px;}
+  .prompt{font-size:.8rem;}
+  .boardWrap{width:auto;height:100%;flex:1 1 auto;display:flex;flex-direction:column;justify-content:center;}
+  .btn{min-height:32px;font-size:.76rem;padding:0 12px;}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🧩 形状嵌入</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">把形状<b>拖进虚线框</b>，不用对得很准，放到大概位置就成功；三角形先<b>点一下转一转</b>👇</div>
+  <div class="boardWrap" id="boardWrap">
+    <svg class="model" id="model" viewBox="0 0 400 300"></svg>
+    <div class="tray" id="tray"></div>
+    <div id="pieces" style="position:absolute;inset:0;"></div>
+  </div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn primary" id="next" type="button">🔄 换一个</button>
+  </div>
+</div>
+
+<script>
+/* ===== 形状库：都画在以中心为原点的 100×100 框里 ===== */
+function shapeSVG(s, c, ring) {
+  var st = ' stroke="' + (ring || 'rgba(36,59,83,.28)') + '" stroke-width="3"';
+  if (s === 'circle') return '<circle cx="0" cy="0" r="46" fill="' + c + '"' + st + '/>';
+  if (s === 'square') return '<rect x="-42" y="-42" width="84" height="84" rx="12" fill="' + c + '"' + st + '/>';
+  if (s === 'rect')   return '<rect x="-40" y="-23" width="80" height="46" rx="10" fill="' + c + '"' + st + '/>';
+  return '<polygon points="0,-46 40,23 -40,23" fill="' + c + '"' + st + ' stroke-linejoin="round"/>';
+}
+var SHAPE_NAME = { circle: '圆形', square: '方形', triangle: '三角形', rect: '长方形' };
+
+/* ===== 关卡：hole = 缺口（需放回的形状/位置/方向/颜色），fixed = 模型其余部分 ===== */
+var LEVELS = [
+  { name: '小房子',
+    hole: { s: 'triangle', x: 200, y: 118, r: 0, c: '#f59e0b', k: 1 },
+    fixed: [ { s: 'square', x: 200, y: 188, r: 0, c: '#4f9cf9', k: 1 },
+             { s: 'circle', x: 200, y: 192, r: 0, c: '#ffffff', k: .42, ring: '#bfd8ff' } ] },
+  { name: '雪人',
+    hole: { s: 'rect', x: 200, y: 76, r: 0, c: '#e0555b', k: 1 },
+    fixed: [ { s: 'circle', x: 200, y: 138, r: 0, c: '#dff0ff', k: .62, ring: '#9cc8ee' },
+             { s: 'circle', x: 200, y: 212, r: 0, c: '#dff0ff', k: .95, ring: '#9cc8ee' } ] },
+  { name: '小汽车',
+    hole: { s: 'circle', x: 160, y: 238, r: 0, c: '#334155', k: .6 },
+    fixed: [ { s: 'rect', x: 202, y: 186, r: 0, c: '#2fb344', k: 1.35 },
+             { s: 'square', x: 230, y: 178, r: 0, c: '#dff0ff', k: .42, ring: '#bfe8cc' },
+             { s: 'circle', x: 250, y: 238, r: 0, c: '#334155', k: .6 } ] },
+  { name: '冰淇淋',
+    hole: { s: 'triangle', x: 200, y: 186, r: 180, c: '#f0a11a', k: 1.05 },
+    fixed: [ { s: 'circle', x: 200, y: 120, r: 0, c: '#f472b6', k: .8 } ] },
+  { name: '小火箭',
+    hole: { s: 'triangle', x: 200, y: 74, r: 0, c: '#7c5cff', k: 1 },
+    fixed: [ { s: 'rect', x: 200, y: 152, r: 0, c: '#e2e8f0', k: 1.2, ring: '#c3cee0' },
+             { s: 'circle', x: 200, y: 146, r: 0, c: '#7cc4ff', k: .42, ring: '#5aa7e8' } ] }
+];
+
+/* 干扰块的颜色（与各缺口颜色都不同） */
+var DECOY_COLORS = ['#2fb344', '#e0559b', '#38bdf8', '#facc15', '#f97316'];
+
+var levelOrder = [], levelIdx = 0, cur = null, holeEl = null;
+var pieces = [];               // {s,x,y,r,c,k,el,done}
+var scale = 1;
+var streak = 0, best = readNum('pinsert.best');
+var locked = false, timer = null;
+
+var elModel = document.getElementById('model');
+var elTray = document.getElementById('tray');
+var elPieces = document.getElementById('pieces');
+var elBoardWrap = document.getElementById('boardWrap');
+var elFb = document.getElementById('feedback');
+var elPrompt = document.getElementById('prompt');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+function angDiff(a, b) {
+  var d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+var canSpeak = typeof window.speechSynthesis !== 'undefined';
+function say(text) {
+  if (!canSpeak) return;
+  try {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN'; u.rate = 0.94; u.pitch = 1.1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+/* ===== 缺口：虚线框画得比形状略大，孩子不用对得很准 ===== */
+var HOLE_PAD = 1.28;      // 虚线框放大倍数
+var SNAP_DIST = 105;      // 逻辑坐标容差：约一个形状宽度，放到大概位置就成功
+var SNAP_ANGLE = 30;      // 三角形方向容差
+
+function holeSVG(s, c) {
+  var st = ' fill="rgba(255,255,255,.62)" stroke="' + c +
+           '" stroke-width="3.5" stroke-dasharray="8 6" stroke-linejoin="round"';
+  if (s === 'circle') return '<circle cx="0" cy="0" r="46"' + st + '/>';
+  if (s === 'square') return '<rect x="-42" y="-42" width="84" height="84" rx="12"' + st + '/>';
+  if (s === 'rect')   return '<rect x="-40" y="-23" width="80" height="46" rx="10"' + st + '/>';
+  return '<polygon points="0,-46 40,23 -40,23"' + st + '/>';
+}
+
+/* ===== 渲染模型（固定件 + 虚线缺口） ===== */
+function renderModel() {
+  var g = '';
+  cur.fixed.forEach(function (f) {
+    g += '<g transform="translate(' + f.x + ',' + f.y + ') rotate(' + f.r + ') scale(' + f.k + ')">' +
+         shapeSVG(f.s, f.c, f.ring) + '</g>';
+  });
+  var h = cur.hole;
+  g += '<g id="holeG" transform="translate(' + h.x + ',' + h.y + ') rotate(' + h.r + ') scale(' + (h.k * HOLE_PAD) + ')">' +
+       holeSVG(h.s, '#a78bfa') + '</g>';
+  elModel.innerHTML = g;
+  holeEl = document.getElementById('holeG');
+}
+
+/* ===== 布局：棋盘宽度 → 逻辑坐标缩放 ===== */
+function layout() {
+  scale = elBoardWrap.clientWidth / 400;
+  elTray.style.height = Math.round(124 * scale) + 'px';
+  pieces.forEach(function (p) { placePiece(p); });
+}
+function placePiece(p) {
+  var sz = 100 * p.k * scale;
+  p.el.style.width = sz + 'px';
+  p.el.style.height = sz + 'px';
+  p.el.style.left = (p.x * scale - sz / 2) + 'px';
+  p.el.style.top = (p.y * scale - sz / 2) + 'px';
+  p.el.style.transform = 'rotate(' + p.r + 'deg)';
+}
+
+/* ===== 出题 ===== */
+function newRound() {
+  clearTimeout(timer);
+  locked = false;
+  feedback('');
+  if (levelIdx >= levelOrder.length) { levelOrder = shuffle(LEVELS.map(function (l, i) { return i; })); levelIdx = 0; }
+  cur = LEVELS[levelOrder[levelIdx++]];
+  renderModel();
+  var needTurn = cur.hole.s === 'triangle';
+  elPrompt.innerHTML = needTurn
+    ? '先点一下托盘里的<b>三角形</b>「转一转」，方向和虚线框一样了，再<b>拖进虚线框</b>👇'
+    : '把<b>' + SHAPE_NAME[cur.hole.s] + '</b>拖进「' + cur.name + '」的虚线框里，放到大概位置就成功👇';
+
+  /* 托盘：1 个正确形状（颜色与缺口一致）+ 2 个干扰形状 */
+  var decoys = [];
+  var pool = shuffle(['circle', 'square', 'triangle', 'rect'].filter(function (s) { return s !== cur.hole.s; })).slice(0, 2);
+  var cols = shuffle(DECOY_COLORS);
+  pool.forEach(function (s, i) { decoys.push({ s: s, c: cols[i], k: .92 }); });
+  var trayList = [{ s: cur.hole.s, c: cur.hole.c, k: cur.hole.k, right: true }].concat(decoys);
+  var slots = shuffle([72, 200, 328]);
+  var turnAway = [315, 270, 225];   // 正确三角形只差 1~3 次点按就能转正
+
+  elPieces.innerHTML = '';
+  pieces = trayList.map(function (o, i) {
+    var r0;
+    if (!o.right) {
+      r0 = rand(8) * 45;                                        // 干扰块随便朝向
+    } else if (needTurn) {
+      r0 = (cur.hole.r + turnAway[rand(turnAway.length)]) % 360;
+    } else {
+      r0 = cur.hole.r;                                          // 圆/方/长方形不用转
+    }
+    var p = {
+      s: o.s, c: o.c, k: o.k,
+      x: slots[i], y: 368,
+      homeX: slots[i], homeY: 368,
+      r: r0,
+      el: null, done: false
+    };
+    var d = document.createElement('div');
+    d.className = 'piece';
+    d.innerHTML = '<svg viewBox="-50 -50 100 100">' + shapeSVG(p.s, p.c) + '</svg>';
+    p.el = d;
+    bindDrag(p);
+    elPieces.appendChild(d);
+    return p;
+  });
+  layout();
+
+  window.__answer = cur.hole.s;
+  voiceSpeak(needTurn
+    ? '先点一下三角形，转一转方向，再拖进虚线框里，放到大概位置就成功'
+    : '把' + SHAPE_NAME[cur.hole.s] + '拖进虚线框里，放到大概位置就成功');
+}
+
+/* ===== 拖拽 + 点按旋转 ===== */
+function bindDrag(p) {
+  var dragging = false, moved = 0, sx = 0, sy = 0, ox = 0, oy = 0;
+  p.el.addEventListener('pointerdown', function (e) {
+    if (locked || p.done) return;
+    dragging = true; moved = 0;
+    sx = e.clientX; sy = e.clientY; ox = p.x; oy = p.y;
+    p.el.classList.add('drag');
+    p.el.setPointerCapture(e.pointerId);
+    e.preventDefault();
+  });
+  p.el.addEventListener('pointermove', function (e) {
+    if (!dragging) return;
+    var dx = (e.clientX - sx) / scale, dy = (e.clientY - sy) / scale;
+    moved = Math.max(moved, Math.abs(e.clientX - sx) + Math.abs(e.clientY - sy));
+    p.x = Math.min(392, Math.max(8, ox + dx));
+    p.y = Math.min(408, Math.max(8, oy + dy));
+    placePiece(p);
+  });
+  p.el.addEventListener('pointerup', function (e) {
+    if (!dragging) return;
+    dragging = false;
+    p.el.classList.remove('drag');
+    if (locked || p.done) return;
+    if (moved < 8) {                     // 没怎么动 → 当作点按，转 45°
+      p.r = (p.r + 45) % 360;
+      placePiece(p);
+      return;
+    }
+    trySnap(p);
+  });
+  p.el.addEventListener('pointercancel', function () {
+    dragging = false;
+    p.el.classList.remove('drag');
+  });
+}
+
+/* 判定：形状对 + 大概位置 + （三角形）方向对 → 直接塞进去 */
+function trySnap(p) {
+  var h = cur.hole;
+  var dist = Math.hypot(p.x - h.x, p.y - h.y);
+  if (dist > SNAP_DIST) {
+    feedback('再往虚线框靠近一点，放到大概位置就行');
+    sendHome(p);
+    return;
+  }
+  if (p.s !== h.s) {                    // 形状不对
+    p.el.classList.add('badd');
+    setTimeout(function () { p.el.classList.remove('badd'); }, 500);
+    feedback('❌ 这个形状和虚线框不一样哦', 'bad');
+    say('形状不一样，再看看');
+    sendHome(p);
+    return;
+  }
+  /* 只有三角形需要方向一致；圆、方形、长方形怎么转都能放 */
+  if (h.s === 'triangle' && angDiff(p.r, h.r) > SNAP_ANGLE) {
+    p.el.classList.add('badd');
+    setTimeout(function () { p.el.classList.remove('badd'); }, 500);
+    feedback('🔄 方向还差一点点，点一下形状转一转再拖进来', 'bad');
+    say('点一下形状，转一转方向');
+    sendHome(p);
+    return;
+  }
+  /* 成功：吸附到缺口 */
+  p.done = true;
+  p.el.classList.add('done');
+  p.x = h.x; p.y = h.y; p.r = h.r;
+  p.el.style.transition = 'left .25s ease,top .25s ease,transform .25s ease';
+  placePiece(p);
+  if (holeEl) holeEl.remove();
+  sparks(h.x * scale, h.y * scale);
+  streak++;
+  if (streak > best) { best = streak; writeNum('pinsert.best', best); }
+  updateStats();
+  feedback('🎉 太棒了，「' + cur.name + '」拼好啦！', 'ok');
+  elPrompt.innerHTML = '🎉 拼好啦！';
+  say('真棒，' + SHAPE_NAME[h.s] + '放对啦！');
+  locked = true;
+  timer = setTimeout(newRound, 1500);
+}
+
+/* 没放对就轻轻退回托盘原位 */
+function sendHome(p) {
+  setTimeout(function () {
+    if (p.done) return;
+    p.x = p.homeX;
+    p.y = p.homeY;
+    placePiece(p);
+  }, 430);
+}
+
+/* 缺口处冒小星星 */
+function sparks(cx, cy) {
+  var icons = ['⭐', '✨', '🌟', '💛'];
+  for (var i = 0; i < 5; i++) {
+    (function (i) {
+      var s = document.createElement('span');
+      s.className = 'spark';
+      s.textContent = icons[rand(icons.length)];
+      s.style.left = (cx + (rand(60) - 30)) + 'px';
+      s.style.top = (cy + (rand(30) - 15)) + 'px';
+      elBoardWrap.appendChild(s);
+      setTimeout(function () { s.remove(); }, 1000);
+    })(i);
+  }
+}
+
+document.getElementById('next').addEventListener('click', function () {
+  streak = 0;
+  updateStats();
+  newRound();
+});
+window.addEventListener('resize', layout);
+
+function initGame() {
+  best = readNum('pinsert.best');
+  updateStats();
+  newRound();
+}
+initGame();
+
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
+var VOICE_TEXT = '形状嵌入。把形状拖进虚线框里，放到大概位置就算成功。三角形先点一下转一转，方向对了再拖进去。';
+var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function voiceSpeak(text) {
+  if (!CAN_VOICE || !text) return;
+  try {
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(text));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function voiceEntry() {
+  if (!CAN_VOICE) return;
+  try {
+    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+  setTimeout(function () {
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
+    var once = function () {
+      document.removeEventListener('pointerdown', once);
+      voiceSpeak(VOICE_TEXT);
+    };
+    document.addEventListener('pointerdown', once);
+  }, 900);
+}
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+})();
+voiceEntry();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

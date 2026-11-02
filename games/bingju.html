@@ -1,0 +1,366 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🩺 病句门诊 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#2a9d8f;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#eafaf6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef2ff,transparent 55%),
+             linear-gradient(160deg,#f6fffb,#f4f6ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:rgba(255,255,255,.8);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:10px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);overflow:hidden;}
+.prompt{font-size:.95rem;font-weight:800;text-align:center;color:#4a5f78;flex:none;}
+
+/* 病句展示卡 */
+.sickCard{width:min(96vw,620px);background:#fff;border:2px solid rgba(255,92,92,.25);border-radius:16px;
+  padding:10px 16px;box-shadow:0 6px 14px rgba(36,59,83,.08);text-align:center;flex:none;}
+.sickCard .txt{font-size:clamp(1.05rem,3.6vh,1.4rem);font-weight:800;line-height:1.6;color:var(--ink);}
+.sickCard .emo{font-size:1.3rem;margin-right:4px;}
+
+/* 选项 */
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(94vw,560px);flex:none;}
+.opt{min-height:clamp(52px,10vh,68px);border-radius:16px;border:2px solid rgba(36,59,83,.12);background:#fff;
+  font-size:clamp(1rem,3.2vh,1.3rem);font-weight:900;color:var(--ink);cursor:pointer;font-family:inherit;
+  box-shadow:0 5px 12px rgba(36,59,83,.08);transition:transform .12s ease,border-color .15s ease,background .15s ease;}
+.opt:active{transform:scale(.95);}
+.opt.good{border-color:var(--ok);background:#e9fbee;animation:pop .5s ease;}
+.opt.bad{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+.opt.faded{opacity:.4;pointer-events:none;}
+.opt.reveal{border-color:#f0a11a;background:#fff7e0;animation:pulse .9s ease infinite alternate;}
+
+/* 处方单 */
+.rx{width:min(94vw,560px);background:#fffbe8;border:2px dashed #e0b23e;border-radius:16px;
+  padding:10px 14px;animation:pop .5s ease;flex:none;}
+.rx .tag{display:inline-block;background:#f0a11a;color:#fff;font-size:.66rem;font-weight:900;
+  border-radius:999px;padding:2px 10px;margin-bottom:6px;}
+.rx .txt{font-size:clamp(.86rem,2.6vh,1rem);font-weight:800;line-height:1.55;color:#6e5410;}
+
+.feedback{min-height:24px;font-size:.92rem;font-weight:900;text-align:center;color:var(--muted);flex:none;}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .45s ease;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;flex:none;}
+.btn{min-height:42px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.86rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(42,157,143,.5);color:#fff;background:linear-gradient(135deg,#4fc3ae,#2a9d8f);}
+.btn.warn{border-color:rgba(240,161,26,.5);color:#a06a00;background:#fff7e0;}
+
+.heart{position:absolute;z-index:98;pointer-events:none;font-size:1.5rem;animation:heartUp 1.1s ease-out forwards;}
+@keyframes heartUp{0%{opacity:0;transform:translateY(10px) scale(.4);}25%{opacity:1;}
+  100%{opacity:0;transform:translateY(-90px) scale(1.25) rotate(12deg);}}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes pulse{from{box-shadow:0 0 0 0 rgba(240,161,26,0)}to{box-shadow:0 0 0 6px rgba(240,161,26,.35)}}
+
+@media (max-height:430px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .chip{padding:2px 8px;font-size:.68rem;}
+  .stage{gap:6px;padding:7px;border-radius:16px;flex-direction:row;flex-wrap:wrap;}
+  .prompt{flex:1 0 100%;font-size:.78rem;}
+  .sickCard{flex:1 0 100%;padding:6px 10px;}
+  .sickCard .txt{font-size:.95rem;}
+  .opts{flex:1 0 100%;gap:6px;}
+  .opt{min-height:42px;font-size:.95rem;border-radius:12px;}
+  .feedback{flex:1 0 100%;min-height:16px;font-size:.8rem;}
+  .controls{flex:1 0 100%;}
+  .btn{min-height:32px;font-size:.76rem;padding:0 12px;}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🩺 病句门诊</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage" id="stage">
+  <div class="prompt" id="prompt">这个句子生病了，哪个词是病根？👇</div>
+  <div class="sickCard"><div class="txt" id="sickTxt"></div></div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn warn" id="hint" type="button">💡 提示 · 听一听</button>
+    <button class="btn primary" id="next" type="button">🔄 换一个</button>
+  </div>
+</div>
+
+<script>
+/* 病句：s=词块（标点粘在词尾），e=病根下标，t=病因类型，fix=处方 */
+var ITEMS = [
+  { s: ['我', '断定', '这次', '拔河比赛', '我们班', '大概', '会赢。'],
+    e: 5, t: '前后矛盾', fix: '「大概」和「断定」矛盾——把「大概」去掉，或把「断定」改成「我猜」。' },
+  { s: ['公园里种了', '许多', '五颜六色的', '红', '花。'],
+    e: 3, t: '前后矛盾', fix: '又是五颜六色，又是红色，矛盾啦——把「红」字去掉。' },
+  { s: ['我们要', '爱惜', '时间，', '好好', '学习。'],
+    e: 1, t: '用词不当', fix: '时间要「珍惜」，「爱惜」一般用在东西上，比如爱惜粮食。' },
+  { s: ['春天来了，', '天气', '渐渐', '变得', '炎热', '起来。'],
+    e: 4, t: '用词不当', fix: '春天的天气是「温暖」的，把「炎热」改成「温暖」。' },
+  { s: ['妈妈买了', '很多', '水果，', '有', '苹果、', '香蕉', '和', '青菜。'],
+    e: 7, t: '归类不当', fix: '青菜不是水果——把「青菜」换成「西瓜」或「葡萄」。' },
+  { s: ['我', '大概', '用了', '三个小时', '左右', '才', '写完', '作业。'],
+    e: 4, t: '重复啰嗦', fix: '「大概」和「左右」意思重复了，去掉其中一个。' },
+  { s: ['他的', '写作', '水平', '明显', '改进', '了。'],
+    e: 4, t: '用词不当', fix: '水平要用「提高」——「改进」一般用在方法、技术上。' },
+  { s: ['老师', '布置的', '所有', '作业，', '我', '基本上', '都', '做完了。'],
+    e: 5, t: '前后矛盾', fix: '「所有」就是全部，「基本上」又不是全部，去掉「基本上」。' },
+  { s: ['这个地方', '风景优美，', '可是', '游客', '很多。'],
+    e: 2, t: '关联词不当', fix: '风景优美和游客多是递进关系，把「可是」改成「而且」。' },
+  { s: ['昨天', '傍晚，', '下了', '一夜', '大雨。'],
+    e: 3, t: '前后矛盾', fix: '傍晚只有一会儿，不可能下「一夜」，把「一夜」改成「一场」。' },
+  { s: ['听到', '这个', '好消息，', '我', '不禁', '忍不住', '笑了。'],
+    e: 4, t: '重复啰嗦', fix: '「不禁」就是「忍不住」，两个留一个就行。' },
+  { s: ['他', '穿着', '一件', '白上衣', '和', '一顶', '帽子。'],
+    e: 5, t: '搭配不当', fix: '帽子是「戴」的，不是「穿」的——改成「戴着一顶帽子」。' },
+  /* ---- 新增 12 题 ---- */
+  { s: ['今天', '的', '天气', '十分', '热烈。'],
+    e: 4, t: '用词不当', fix: '天气是「晴朗」的，「热烈」用在气氛上，比如掌声很热烈。' },
+  { s: ['小明', '兴奋', '的', '跳', '起来。'],
+    e: 2, t: '的得地不分', fix: '修饰动作要用「地」——兴奋地跳起来。' },
+  { s: ['他', '跑', '的', '很快。'],
+    e: 2, t: '的得地不分', fix: '动作做得怎么样要用「得」——跑得很快。' },
+  { s: ['桌子', '上', '放着', '一台', '手机。'],
+    e: 3, t: '量词不当', fix: '手机要用「一部」，「一台」一般用在电视、电脑上。' },
+  { s: ['他', '吃', '了', '一个', '饭，', '又', '喝', '了', '一碗', '汤。'],
+    e: 3, t: '量词不当', fix: '饭要用「一顿」，改成「吃了一顿饭」。' },
+  { s: ['因为', '天下雨了，', '所以', '我们', '的', '运动会', '照常', '举行。'],
+    e: 6, t: '因果不当', fix: '下雨和照常举行矛盾——把「照常」改成「延期」，或把「所以」改成「但是」。' },
+  { s: ['我们', '要', '改掉', '不好的', '坏习惯。'],
+    e: 3, t: '重复啰嗦', fix: '「坏习惯」本身就是不好的，把「不好的」去掉。' },
+  { s: ['他的', '第一篇', '处女作', '终于', '发表', '了。'],
+    e: 1, t: '重复啰嗦', fix: '「处女作」就是第一篇作品，把「第一篇」去掉。' },
+  { s: ['叔叔', '的', '身材', '十分', '强壮。'],
+    e: 4, t: '用词不当', fix: '身材要说「高大」或「魁梧」，「强壮」一般形容身体结实。' },
+  { s: ['我', '估计', '他', '今天', '肯定', '不会', '来了。'],
+    e: 4, t: '前后矛盾', fix: '「估计」就是不确定，「肯定」又很确定，去掉一个。' },
+  { s: ['这道', '数学题', '我', '差不多', '花了', '一个', '小时', '左右。'],
+    e: 7, t: '重复啰嗦', fix: '「差不多」和「左右」意思重复，去掉其中一个。' },
+  { s: ['博物馆', '里', '陈列着', '两千年前', '新出土的', '文物。'],
+    e: 3, t: '语序不当', fix: '文物是新出土的，两千年前说的是年代——改成「新出土的两千年前的文物」。' },
+  { s: ['通过', '这次', '运动会，', '使', '我', '明白了', '团结', '的', '力量。'],
+    e: 3, t: '成分残缺', fix: '「通过…使…」把主语吞掉了——去掉「使」，或去掉「通过」。' },
+  { s: ['能不能', '取得', '好成绩，', '关键', '是', '要', '有', '刻苦', '努力', '的', '精神。'],
+    e: 0, t: '一面对两面', fix: '「能不能」有两面，后面只有一面——把「能不能」改成「要想」。' },
+  { s: ['谁', '也', '不', '会', '否认，', '地球', '不是', '绕着', '太阳', '转的。'],
+    e: 6, t: '否定不当', fix: '「不会否认」就是承认，再说「不是」意思就反了——把「不是」改成「是」。' },
+  { s: ['为了避免', '今后', '不再', '发生', '类似', '的', '事故，', '我们', '要', '吸取', '教训。'],
+    e: 2, t: '否定不当', fix: '「避免」就是不让它发生，再加「不再」意思反了——把「不再」去掉。' },
+  { s: ['他', '不但', '学习', '好，', '而是', '很', '爱', '帮助', '同学。'],
+    e: 4, t: '关联词搭配不当', fix: '「不但」要和「而且」搭配——把「而是」改成「而且」。' },
+  { s: ['小明', '和', '小刚', '约好', '去', '他家', '写作业。'],
+    e: 5, t: '指代不明', fix: '「他家」不知道是谁的家——把「他家」改成「小明家」。' },
+  { s: ['自从', '用了', '新方法，', '工作量', '减少', '了', '一倍。'],
+    e: 6, t: '不合逻辑', fix: '减少不能说「一倍」——可以说减少了一半。' },
+  { s: ['我们', '讨论', '并', '听取', '了', '校长', '的', '报告。'],
+    e: 1, t: '语序不当', fix: '应该先「听取」再「讨论」——把这两个词换一下位置。' },
+  { s: ['我们', '要', '继承', '和', '发扬', '老一辈', '的', '成绩。'],
+    e: 7, t: '搭配不当', fix: '「成绩」不能「发扬」——把「成绩」改成「传统」或「精神」。' },
+  { s: ['弟弟', '的', '字', '写得', '歪歪扭扭，', '像', '印刷', '的', '一样。'],
+    e: 6, t: '比喻不当', fix: '印刷体是整齐的，和歪歪扭扭正好相反——比喻用反了。' },
+  { s: ['全班', '同学', '都', '到了，', '只有', '李明', '没有', '来。'],
+    e: 2, t: '前后矛盾', fix: '「都到了」和「李明没有来」矛盾——把「都」改成「大部分」。' },
+  { s: ['警察', '叔叔', '处心积虑', '地', '保护', '着', '我们。'],
+    e: 2, t: '感情色彩不当', fix: '「处心积虑」是贬义词，形容坏人算计——改成「尽心尽力」。' }
+];
+
+var cur = null, options = [], answer = '', misses = 0, locked = false, timer = null;
+var streak = 0, best = readNum('pbingju.best');
+var order = [], pick = 0;
+
+var elStage = document.getElementById('stage');
+var elSick = document.getElementById('sickTxt');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+
+function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
+function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function updateStats() { elStreak.textContent = streak; elBest.textContent = best; }
+function feedback(t, cls) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.textContent = t || '';
+}
+var canSpeak = typeof window.speechSynthesis !== 'undefined';
+function say(text) {
+  if (!canSpeak) return;
+  try {
+    var u = new SpeechSynthesisUtterance(text);
+    u.lang = 'zh-CN'; u.rate = 0.9; u.pitch = 1.1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function hearts() {
+  for (var i = 0; i < 6; i++) {
+    var h = document.createElement('span');
+    h.className = 'heart';
+    h.textContent = '✨';
+    h.style.left = (15 + Math.random() * 70) + '%';
+    h.style.top = (30 + Math.random() * 30) + '%';
+    h.style.animationDelay = (Math.random() * .3) + 's';
+    elStage.appendChild(h);
+    setTimeout(function (el) { return function () { el.remove(); }; }(h), 1500);
+  }
+}
+
+/* 从句子里挑病根候选：病根 + 3 个其他词块（优先长词块） */
+function buildOptions() {
+  var strip = function (w) { return w.replace(/[，。、！？]/g, ''); };
+  answer = strip(cur.s[cur.e]);
+  var others = [];
+  cur.s.forEach(function (w, i) {
+    if (i === cur.e) return;
+    var t = strip(w);
+    if (!t) return;
+    others.push({ t: t, len: t.length });
+  });
+  others.sort(function (a, b) { return b.len - a.len; });
+  var opts = [answer];
+  for (var i = 0; i < others.length && opts.length < 4; i++) {
+    if (opts.indexOf(others[i].t) === -1) opts.push(others[i].t);
+  }
+  var pad = ['非常', '我们', '大家', '很多'];
+  for (var j = 0; j < pad.length && opts.length < 4; j++) {
+    if (opts.indexOf(pad[j]) === -1) opts.push(pad[j]);
+  }
+  return shuffle(opts);
+}
+
+function newRound() {
+  clearTimeout(timer);
+  locked = false;
+  misses = 0;
+  Array.prototype.forEach.call(elStage.querySelectorAll('.heart'), function (h) { h.remove(); });
+  var oldRx = elStage.querySelector('.rx');
+  if (oldRx) oldRx.remove();
+
+  if (!order.length) { order = shuffle(ITEMS.map(function (_, i) { return i; })); pick = 0; }
+  cur = ITEMS[order[pick]];
+  pick++;
+  if (pick >= order.length) { order = []; }
+
+  options = buildOptions();
+  elSick.textContent = cur.s.join('');
+  elOpts.innerHTML = '';
+  options.forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = o;
+    b.addEventListener('click', function () { tap(b, o); });
+    elOpts.appendChild(b);
+  });
+
+  feedback('');
+  document.getElementById('prompt').textContent = '🩺 这个句子生病了，哪个词是病根？👇';
+  say(cur.s.join('') + ' 。这个句子里，哪个词生病了？');
+  window.__answer = answer;
+  window.__options = options;
+}
+
+function tap(btn, val) {
+  if (locked) return;
+  if (val === answer) {
+    locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) {
+      if (b !== btn) b.classList.add('faded');
+    });
+    streak++;
+    if (streak > best) { best = streak; writeNum('pbingju.best', best); }
+    updateStats();
+    feedback('✅ 找到病根啦', 'ok');
+    say('找到病根啦。处方：' + cur.fix);
+    var rx = document.createElement('div');
+    rx.className = 'rx';
+    rx.innerHTML = '<span class="tag">🩹 病因：' + cur.t + '</span><div class="txt">' + cur.fix + '</div>';
+    elStage.insertBefore(rx, elFb);
+    hearts();
+    timer = setTimeout(newRound, 3800);
+  } else {
+    btn.classList.add('bad', 'faded');
+    misses++;
+    if (misses >= 2) {
+      /* 错 2 次：自动排除一个错误选项 */
+      var rest = Array.prototype.filter.call(elOpts.children, function (b) {
+        return !b.classList.contains('faded') && b.textContent !== answer;
+      });
+      if (rest.length > 1) {
+        var b = rest[rand(rest.length)];
+        b.classList.add('faded');
+      }
+      var left = Array.prototype.filter.call(elOpts.children, function (b) {
+        return !b.classList.contains('faded');
+      }).length;
+      if (left === 2) {
+        Array.prototype.forEach.call(elOpts.children, function (b) {
+          if (!b.classList.contains('faded') && b.textContent !== answer) b.classList.add('reveal');
+        });
+        feedback('💡 提示：闪黄边的是病根，再试试', 'bad');
+        say('闪黄色边框的，就是生病的地方');
+      } else {
+        feedback('💡 已帮你排除一个，再想想', 'bad');
+        say('不对哦，再想一想');
+      }
+    } else {
+      feedback('❌ 这个词没生病，再读一读句子', 'bad');
+      say('不对哦，再读一读句子');
+    }
+  }
+}
+
+document.getElementById('hint').addEventListener('click', function () {
+  if (locked) return;
+  say(cur.s.join(''));
+  feedback('💡 病因是「' + cur.t + '」，再仔细听听', '');
+});
+document.getElementById('next').addEventListener('click', function () {
+  streak = 0; updateStats(); newRound();
+});
+
+updateStats();
+newRound();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

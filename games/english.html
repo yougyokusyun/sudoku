@@ -1,0 +1,562 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🔤 英语简单句型 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#0288d1;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#e0f2ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff4e3,transparent 55%),
+             linear-gradient(160deg,#f3faff,#fffaf3);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+.chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:#0288d1;font-size:.86rem;}
+.chip.ttype{background:#fff3e6;border-color:rgba(240,138,60,.3);color:#c26a00;}
+
+.stage{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;
+  background:rgba(255,255,255,.76);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:10px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);overflow:hidden;}
+
+.picks{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;flex:none;}
+.picks button{min-height:32px;padding:0 14px;border-radius:999px;border:1px solid rgba(36,59,83,.12);background:#fff;
+  font-weight:700;font-size:.78rem;color:#4a6076;font-family:inherit;cursor:pointer;}
+.picks button.on{background:#e3f2fd;border-color:rgba(2,136,209,.55);color:#0288d1;}
+
+.bar{height:6px;border-radius:4px;background:rgba(36,59,83,.08);overflow:hidden;flex:none;}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#0288d1,#7c5cff);border-radius:4px;transition:width .3s;}
+
+.qprompt{flex:none;font-size:.95rem;color:#4a5f78;text-align:center;font-weight:800;}
+
+/* 喇叭按钮 */
+.speakbtn{align-self:center;min-width:64px;min-height:44px;border-radius:50%;border:3px solid rgba(2,136,209,.4);
+  background:linear-gradient(160deg,#e3f2fd,#bbdefb);color:#0288d1;font-size:1.5rem;cursor:pointer;
+  box-shadow:0 4px 14px rgba(2,136,209,.25);transition:transform .15s;}
+.speakbtn:active{transform:scale(.92);}
+.speakbtn.ring{animation:ring .8s ease;}
+@keyframes ring{0%,100%{transform:scale(1)}50%{transform:scale(1.15);background:#90caf9;}}
+
+/* ===== 题型 1：听音选图 ===== */
+.pickarea{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;flex:1 1 auto;min-height:0;}
+.pickitem{min-height:clamp(70px,15vh,110px);border-radius:18px;border:2px solid rgba(36,59,83,.10);background:#fff;
+  display:flex;align-items:center;justify-content:center;font-size:clamp(2.2rem,8vh,4rem);cursor:pointer;
+  box-shadow:0 5px 12px rgba(36,59,83,.07);transition:transform .12s,border-color .18s,background .18s;}
+.pickitem:active{transform:scale(.97);}
+.pickitem.good{border-color:var(--ok);background:#e9fbee;animation:pop .35s;}
+.pickitem.bad{border-color:var(--bad);background:#ffeded;animation:shake .35s;}
+
+/* ===== 题型 2/3：排序（听音排序 + 看图说话） ===== */
+.cnrow{flex:none;display:flex;align-items:center;justify-content:center;gap:6px;font-size:1.15rem;font-weight:900;color:#31465c;}
+.cnrow .cnemoji{font-size:2rem;line-height:1;}
+
+.sentbox{flex:none;min-height:clamp(52px,12vh,80px);border-radius:18px;border:3px dashed rgba(2,136,209,.4);background:#f3faff;
+  padding:8px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;}
+.sentbox .wchip{min-height:40px;padding:6px 14px;border-radius:12px;background:#0288d1;color:#fff;
+  font-weight:900;font-size:clamp(.86rem,2.2vh,1.05rem);display:flex;align-items:center;gap:4px;
+  box-shadow:0 3px 8px rgba(2,136,209,.35);cursor:pointer;}
+.sentbox .wchip small{font-size:.6rem;opacity:.75;}
+.sentbox .blank{min-width:50px;border:2px dashed #90caf9;border-radius:12px;}
+.sentbox.ok{border-color:var(--ok);background:#e9fbee;}
+
+.poolbox{flex:1 1 auto;min-height:0;overflow-y:auto;border-radius:18px;border:2px solid rgba(36,59,83,.08);background:#fff;
+  padding:8px;display:flex;flex-wrap:wrap;gap:6px;align-content:flex-start;}
+.poolbox .wchip{min-height:40px;padding:6px 14px;border-radius:12px;background:#fff8f0;color:#c26a00;
+  border:2px solid rgba(240,138,60,.3);font-weight:900;font-size:clamp(.86rem,2.2vh,1.05rem);cursor:pointer;
+  box-shadow:0 2px 6px rgba(0,0,0,.04);transition:transform .12s;}
+.poolbox .wchip:active{transform:scale(.95);}
+.poolbox .wchip.hidden{visibility:hidden;pointer-events:none;}
+
+/* 已达最大句子长度，隐藏提示 */
+.hintline{flex:none;font-size:.76rem;color:#9fb1c6;text-align:center;font-weight:700;}
+
+/* 通用反馈 */
+.qfb{min-height:22px;font-size:.95rem;font-weight:900;text-align:center;color:var(--muted);flex:none;}
+.qfb.ok{color:var(--ok);} .qfb.bad{color:var(--bad);animation:shake .35s;}
+.controls{display:flex;justify-content:center;gap:8px;flex:none;flex-wrap:wrap;}
+.btn{min-height:40px;padding:0 18px;border-radius:999px;border:2px solid rgba(36,59,83,.12);background:#fff;
+  font-weight:800;font-size:.86rem;color:var(--ink);cursor:pointer;font-family:inherit;}
+.btn.on{background:var(--accent);color:#fff;border-color:transparent;}
+.btn[disabled]{opacity:.5;cursor:default;}
+
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+
+@media (max-height:480px){
+  .pickitem{min-height:54px;font-size:1.8rem}
+  .wchip{min-height:34px;padding:4px 10px;font-size:.78rem}
+  .sentbox{min-height:42px;padding:4px}
+  .cnrow{font-size:.95rem}.cnrow .cnemoji{font-size:1.4rem}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🔤 英语简单句型</h1>
+  <div class="chips">
+    <span class="chip ttype" id="ttype">🚀 选个年级开始</span>
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="picks" id="picks"></div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="speakbtn" id="speakBtn" style="display:none;" title="点我听句子">🔊</div>
+  <div class="qprompt" id="qprompt">选一个单元，点 🔊 听句子～</div>
+  <!-- 题型 1 容器 -->
+  <div class="pickarea" id="pickarea" style="display:none;"></div>
+  <!-- 题型 2/3 容器 -->
+  <div class="cnrow" id="cnrow" style="display:none;"></div>
+  <div class="sentbox" id="sentbox" style="display:none;"></div>
+  <div class="hintline" id="hintline" style="display:none;">↑ 按正确顺序点单词拼句子 ↑</div>
+  <div class="poolbox" id="poolbox" style="display:none;"></div>
+  <!-- 反馈 & 按钮 -->
+  <div class="qfb" id="qfb"></div>
+  <div class="controls">
+    <button class="btn" id="btnStart">🚀 开始</button>
+    <button class="btn" id="btnNext" disabled>下一题 →</button>
+  </div>
+</div>
+
+<script>
+/* ============= 数据：4 年级 · 160 题 ============= */
+var GRADES = [
+  /* ===== 三年级（入门 · 40 题）：问候 / 数字颜色 / 家庭 / 日常 ===== */
+  {n:'🎓 三年级 · 入门', qs:[
+    {emoji:'👋',cn:'你好，我叫小明',ans:'Hello, I\'m Xiaoming'},
+    {emoji:'👋',cn:'你好，很高兴认识你',ans:'Nice to meet you'},
+    {emoji:'🌅',cn:'早上好，Miss White',ans:'Good morning, Miss White'},
+    {emoji:'🙋',cn:'你好吗？我很好，谢谢',ans:'How are you? I\'m fine, thank you.'},
+    {emoji:'🧑',cn:'这是我的朋友 Amy',ans:'This is my friend Amy'},
+    {emoji:'🤚',cn:'再见，明天见',ans:'Goodbye, see you tomorrow'},
+    {emoji:'❓',cn:'你叫什么名字？我叫 Tom',ans:'What\'s your name? My name is Tom.'},
+    {emoji:'🙋‍♂️',cn:'我是一个女孩',ans:'I am a girl'},
+    {emoji:'🍎🍎🍎',cn:'三个苹果',ans:'Three apples'},
+    {emoji:'🔴',cn:'红色的球',ans:'A red ball'},
+    {emoji:'🐕',cn:'这是一只狗，它是白色的',ans:'This is a dog. It is white.'},
+    {emoji:'📚📚',cn:'我有两本书',ans:'I have two books'},
+    {emoji:'✏️🖊️',cn:'一支蓝色的铅笔',ans:'A blue pencil'},
+    {emoji:'❓',cn:'多少个风筝？十个',ans:'How many kites? Ten.'},
+    {emoji:'🎨',cn:'你喜欢什么颜色？我喜欢蓝色',ans:'What color do you like? I like blue.'},
+    {emoji:'🔵🟢',cn:'蓝色和绿色',ans:'Blue and green'},
+    {emoji:'👨‍👩‍👧',cn:'这是我的家',ans:'This is my family'},
+    {emoji:'👨',cn:'他是我的爸爸',ans:'He is my father'},
+    {emoji:'👩',cn:'她是我的妈妈',ans:'She is my mother'},
+    {emoji:'👶',cn:'这是我的小妹妹',ans:'This is my little sister'},
+    {emoji:'👴👵',cn:'我爱我的爷爷奶奶',ans:'I love my grandparents'},
+    {emoji:'❓',cn:'那个女人是谁？她是我的妈妈',ans:'Who\'s that woman? She\'s my mother.'},
+    {emoji:'👦',cn:'他是我的弟弟',ans:'He is my brother'},
+    {emoji:'🧑‍🦰',cn:'我的阿姨很漂亮',ans:'My aunt is beautiful'},
+    /* --- 新增 16 题：日常表达 --- */
+    {emoji:'🦶🦶',cn:'我有两只脚',ans:'I have two feet'},
+    {emoji:'👃👁️👁️',cn:'我有一个鼻子和两只眼睛',ans:'I have one nose and two eyes'},
+    {emoji:'🏠',cn:'这是我的房子',ans:'This is my house'},
+    {emoji:'❓',cn:'你几岁了？我九岁了',ans:'How old are you? I am nine.'},
+    {emoji:'🎂',cn:'我今天十岁了',ans:'I am ten years old today.'},
+    {emoji:'🖐️',cn:'给我五',ans:'Give me five.'},
+    {emoji:'🤝',cn:'谢谢你，不客气',ans:'Thank you. You\'re welcome.'},
+    {emoji:'🥺',cn:'对不起，没关系',ans:'Sorry. That\'s okay.'},
+    {emoji:'🤲',cn:'请帮我一下好吗？',ans:'Can you help me please?'},
+    {emoji:'👍',cn:'干得好！',ans:'Well done!'},
+    {emoji:'🙌',cn:'欢迎来到我们的学校',ans:'Welcome to our school.'},
+    {emoji:'🧑‍🏫',cn:'她是我们的英语老师',ans:'She is our English teacher.'},
+    {emoji:'🐈',cn:'我有一只猫，它是黑色的',ans:'I have a cat. It is black.'},
+    {emoji:'🐰',cn:'兔子有长耳朵和短尾巴',ans:'Rabbits have long ears and short tails.'},
+    {emoji:'🚲',cn:'我会骑自行车',ans:'I can ride a bike.'},
+    {emoji:'🎤',cn:'我喜欢唱歌，你喜欢跳舞',ans:'I like singing. You like dancing.'}
+  ]},
+  /* ===== 四年级（基础 · 40 题）：饮食 / 课堂 / 学校物品 ===== */
+  {n:'🎓 四年级 · 基础', qs:[
+    {emoji:'🍎',cn:'我喜欢吃苹果',ans:'I like apples'},
+    {emoji:'🥛',cn:'我每天喝牛奶',ans:'I drink milk every day'},
+    {emoji:'🥚',cn:'我喜欢吃鸡蛋和面包',ans:'I like eggs and bread'},
+    {emoji:'🌅',cn:'早上好，我吃早餐',ans:'Good morning. I have breakfast.'},
+    {emoji:'🥗',cn:'我不喜欢吃蔬菜',ans:'I don\'t like vegetables'},
+    {emoji:'❓',cn:'你想吃点什么？我想要汉堡',ans:'What would you like? I\'d like a hamburger.'},
+    {emoji:'🍕',cn:'我最喜欢的食物是披萨',ans:'My favorite food is pizza'},
+    {emoji:'🍽️',cn:'我午餐吃米饭和菜',ans:'I have rice and vegetables for lunch.'},
+    {emoji:'🙋',cn:'我可以问一个问题吗？',ans:'May I ask a question?'},
+    {emoji:'👍',cn:'我明白了',ans:'I understand'},
+    {emoji:'🖐️',cn:'请再说一遍',ans:'Please say it again'},
+    {emoji:'📝',cn:'我在写作业',ans:'I am doing my homework'},
+    {emoji:'🤝',cn:'谢谢你的帮忙',ans:'Thank you for your help'},
+    {emoji:'🚪',cn:'我可以进来吗？请进',ans:'May I come in? Come in, please.'},
+    {emoji:'❓',cn:'这是什么？是一只钢笔',ans:'What\'s this? It\'s a pen.'},
+    {emoji:'📖',cn:'我有一本新书，你有吗？',ans:'I have a new book. Do you have one?'},
+    {emoji:'🎒',cn:'我的书包在书桌里',ans:'My bag is in the desk'},
+    {emoji:'📐',cn:'这是你的尺子吗？是的',ans:'Is this your ruler? Yes, it is.'},
+    {emoji:'❓',cn:'我的钥匙在哪里？在椅子下面',ans:'Where are my keys? They\'re under the chair.'},
+    {emoji:'📚',cn:'我有多少本书？我有五本',ans:'How many books do I have? I have five.'},
+    {emoji:'✏️',cn:'我需要一支铅笔',ans:'I need a pencil'},
+    {emoji:'🏫',cn:'我们的教室很大很漂亮',ans:'Our classroom is big and nice'},
+    {emoji:'🗺️',cn:'地图在墙上',ans:'The map is on the wall'},
+    {emoji:'❓',cn:'有多少把椅子？二十把',ans:'How many chairs are there? Twenty.'},
+    /* --- 新增 16 题：学习用品与校园活动 --- */
+    {emoji:'📏',cn:'我的尺子是三十厘米长',ans:'My ruler is thirty centimeters long.'},
+    {emoji:'✂️',cn:'剪刀在哪里？它在桌子上',ans:'Where is the scissors? It is on the table.'},
+    {emoji:'🧽',cn:'黑板脏了，我来擦一擦',ans:'The blackboard is dirty. Let me clean it.'},
+    {emoji:'📅',cn:'这是一个星期一的早上',ans:'It is a Monday morning.'},
+    {emoji:'🎓',cn:'我的学校有三个年级',ans:'My school has three grades.'},
+    {emoji:'🍜',cn:'我午餐吃面条，很好吃',ans:'I have noodles for lunch. They are yummy.'},
+    {emoji:'🍊',cn:'这个橙子比那个苹果小',ans:'This orange is smaller than that apple.'},
+    {emoji:'🍋🍋',cn:'柠檬是黄色的，酸的',ans:'Lemons are yellow and sour.'},
+    {emoji:'🥐',cn:'我早餐吃面包和牛奶',ans:'I have bread and milk for breakfast.'},
+    {emoji:'🍗',cn:'鸡肉很好吃，我非常喜欢',ans:'Chicken is delicious. I like it very much.'},
+    {emoji:'🙋‍♀️',cn:'老师，我做完了',ans:'Teacher, I have finished.'},
+    {emoji:'📋',cn:'请把作业放在桌子上',ans:'Please put your homework on the desk.'},
+    {emoji:'🧑‍🎓',cn:'我是一名四年级的学生',ans:'I am a Grade Four student.'},
+    {emoji:'🏃',cn:'下课后我们去操场跑步',ans:'After class we run on the playground.'},
+    {emoji:'🎵',cn:'音乐课上我们唱了一首英文歌',ans:'We sang an English song in music class.'},
+    {emoji:'🏀',cn:'体育课上我踢足球，你打篮球',ans:'In PE class I play football. You play basketball.'}
+  ]},
+  /* ===== 五年级（进阶 · 40 题）：身体 / 动物 / 天气季节 / 活动 ===== */
+  {n:'🎓 五年级 · 进阶', qs:[
+    {emoji:'👃',cn:'我有一个大鼻子',ans:'I have a big nose'},
+    {emoji:'👀',cn:'她有大眼睛和长头发',ans:'She has big eyes and long hair'},
+    {emoji:'🧍',cn:'我个子高，但是他个子矮',ans:'I am tall, but he is short.'},
+    {emoji:'❓',cn:'她长什么样子？她圆脸大眼睛',ans:'What does she look like? She has a round face and big eyes.'},
+    {emoji:'💪',cn:'我的弟弟很强壮',ans:'My brother is strong'},
+    {emoji:'👧',cn:'我妹妹很瘦，很文静',ans:'My sister is thin and quiet'},
+    {emoji:'🦰',cn:'他有棕色的头发',ans:'He has brown hair'},
+    {emoji:'🎭',cn:'这个演员很滑稽',ans:'The actor is funny'},
+    {emoji:'🐼',cn:'我喜欢熊猫，因为它很可爱',ans:'I like pandas because they are cute.'},
+    {emoji:'🦁',cn:'狮子很强壮，老虎也很强壮',ans:'Lions are strong. Tigers are strong, too.'},
+    {emoji:'❓',cn:'你喜欢什么动物？我喜欢大象',ans:'What animals do you like? I like elephants.'},
+    {emoji:'🦒',cn:'看那只长颈鹿，它好高啊！',ans:'Look at that giraffe! It\'s so tall!'},
+    {emoji:'🐸',cn:'青蛙会跳，但不会飞',ans:'Frogs can jump, but they can\'t fly.'},
+    {emoji:'🐦',cn:'鸟在树上唱歌',ans:'The birds are singing in the tree.'},
+    {emoji:'🐳',cn:'海里最大的动物是鲸鱼',ans:'The biggest animal in the sea is the whale.'},
+    {emoji:'🦋',cn:'蝴蝶很美，蜜蜂会采蜜',ans:'Butterflies are beautiful and bees can make honey.'},
+    {emoji:'☀️',cn:'今天天气怎么样？很晴朗',ans:'What\'s the weather like today? It\'s sunny.'},
+    {emoji:'🌤️',cn:'天气温暖，我不穿外套',ans:'It\'s warm. I don\'t wear my coat.'},
+    {emoji:'🍃',cn:'我喜欢秋天，因为可以摘苹果',ans:'I like autumn because I can pick apples.'},
+    {emoji:'❄️',cn:'冬天很冷，我可以堆雪人',ans:'Winter is cold. I can make a snowman.'},
+    {emoji:'❓',cn:'你最喜欢哪个季节？我最喜欢春天',ans:'Which season do you like best? I like spring best.'},
+    {emoji:'🌧️',cn:'现在在下雨，我带了伞',ans:'It\'s raining now. I take my umbrella.'},
+    {emoji:'🌬️',cn:'风好大啊！',ans:'What a strong wind!'},
+    {emoji:'☀️🌻',cn:'夏天我可以去游泳',ans:'I can go swimming in summer.'},
+    /* --- 新增 16 题：活动 / 节日 / 户外 --- */
+    {emoji:'🎿',cn:'冬天我们可以去滑雪',ans:'We can go skiing in winter.'},
+    {emoji:'🌷',cn:'春天到处都是花，真漂亮',ans:'In spring flowers are everywhere. They are beautiful.'},
+    {emoji:'🍂',cn:'秋天树叶变成黄色和红色',ans:'In autumn leaves turn yellow and red.'},
+    {emoji:'🌙',cn:'夜晚的月亮又圆又亮',ans:'The moon is round and bright at night.'},
+    {emoji:'🌈',cn:'雨后天空出现了一道彩虹',ans:'After the rain a rainbow appears in the sky.'},
+    {emoji:'🎁',cn:'儿童节我收到了三份礼物',ans:'I got three gifts on Children\'s Day.'},
+    {emoji:'🎊',cn:'春节的时候大家都很开心',ans:'Everyone is happy during the Spring Festival.'},
+    {emoji:'🏖️',cn:'夏天我们一家人去海边',ans:'In summer my family goes to the beach.'},
+    {emoji:'⛰️',cn:'上周六我们去爬山了',ans:'We climbed the mountains last Saturday.'},
+    {emoji:'🎣',cn:'爸爸周末喜欢去钓鱼',ans:'Dad likes to go fishing on weekends.'},
+    {emoji:'🚣',cn:'夏天我和朋友去划船',ans:'In summer I go boating with friends.'},
+    {emoji:'🐝',cn:'蜜蜂在花丛里飞来飞去采蜜',ans:'Bees fly from flower to flower to make honey.'},
+    {emoji:'🐕',cn:'小狗在草地上跑，追着一只球',ans:'The dog runs on the grass, chasing a ball.'},
+    {emoji:'🦜',cn:'鹦鹉会学人说话，特别有趣',ans:'The parrot can mimic people. It\'s very funny.'},
+    {emoji:'🐢',cn:'乌龟走得很慢，它活了一百年',ans:'The turtle walks very slowly. It has lived for a hundred years.'},
+    {emoji:'🏔️',cn:'珠穆朗玛峰是世界上最高的山',ans:'Mount Everest is the highest mountain in the world.'}
+  ]},
+  /* ===== 六年级（高阶 · 40 题）：时间 / 地点交通 / 过去时态 / 职业 ===== */
+  {n:'🎓 六年级 · 高阶', qs:[
+    {emoji:'⏰',cn:'几点了？八点半',ans:'What time is it? It\'s eight thirty.'},
+    {emoji:'🌅',cn:'我早上六点起床',ans:'I get up at six in the morning.'},
+    {emoji:'🏫',cn:'我七点去上学',ans:'I go to school at seven.'},
+    {emoji:'🍜',cn:'我十二点吃午饭',ans:'I have lunch at twelve.'},
+    {emoji:'📖',cn:'晚上七点我看电视',ans:'I watch TV at seven in the evening.'},
+    {emoji:'😴',cn:'我九点上床睡觉',ans:'I go to bed at nine.'},
+    {emoji:'❓',cn:'你什么时候做家庭作业？晚上',ans:'When do you do your homework? In the evening.'},
+    {emoji:'📅',cn:'今天是星期几？星期三',ans:'What day is it today? It\'s Wednesday.'},
+    {emoji:'🏠',cn:'我骑自行车去上学',ans:'I go to school by bike.'},
+    {emoji:'🚌',cn:'我妈妈坐公交车上班',ans:'My mother goes to work by bus.'},
+    {emoji:'✈️',cn:'北京离这里远吗？坐飞机要两个小时',ans:'Is Beijing far from here? It takes two hours by plane.'},
+    {emoji:'🏥',cn:'医院在邮局旁边',ans:'The hospital is next to the post office.'},
+    {emoji:'❓',cn:'请问去书店怎么走？直走然后左转',ans:'How can I get to the bookstore? Go straight and turn left.'},
+    {emoji:'🚕',cn:'我坐出租车去火车站',ans:'I go to the train station by taxi.'},
+    {emoji:'🏙️',cn:'我们城市有很多高楼',ans:'There are many tall buildings in our city.'},
+    {emoji:'🗺️',cn:'动物园在学校的东边',ans:'The zoo is east of the school.'},
+    {emoji:'🏞️',cn:'上周末你做了什么？我去钓鱼了',ans:'What did you do last weekend? I went fishing.'},
+    {emoji:'⚽',cn:'昨天你踢足球了吗？是的',ans:'Did you play football yesterday? Yes, I did.'},
+    {emoji:'🎂',cn:'我妈妈昨晚做了一个蛋糕',ans:'My mother made a cake last night.'},
+    {emoji:'📚',cn:'你在哪里买的这本书？我在书店买的',ans:'Where did you buy this book? I bought it at the bookstore.'},
+    {emoji:'🎨',cn:'他上周画了一幅画，画得很好',ans:'He drew a picture last week. It was great.'},
+    {emoji:'🏃',cn:'昨天我没有跑步，因为下雨了',ans:'I didn\'t run yesterday because it rained.'},
+    {emoji:'🚗',cn:'三年前我家有一辆小汽车',ans:'There was a car in my family three years ago.'},
+    {emoji:'📝',cn:'你昨天的作业写完了吗？还没',ans:'Did you finish your homework yesterday? Not yet.'},
+    /* --- 新增 16 题：职业 / 更复杂时态 / 场景 --- */
+    {emoji:'👨‍⚕️',cn:'我爸爸是一个医生，他在医院工作',ans:'My father is a doctor. He works in a hospital.'},
+    {emoji:'👩‍🏫',cn:'我妈妈是一位老师，她教英语',ans:'My mother is a teacher. She teaches English.'},
+    {emoji:'👨‍🔧',cn:'叔叔是一名工程师，他设计房子',ans:'My uncle is an engineer. He designs buildings.'},
+    {emoji:'🧑‍🍳',cn:'阿姨在餐厅当厨师，她做的菜很好吃',ans:'My aunt is a cook in a restaurant. Her food is delicious.'},
+    {emoji:'👮',cn:'警察保护我们的安全，他们很勇敢',ans:'Policemen protect us. They are very brave.'},
+    {emoji:'👷',cn:'建筑工人正在盖一座新房子',ans:'The construction workers are building a new house.'},
+    {emoji:'🚒',cn:'消防员很快就扑灭了大火',ans:'The firemen put out the fire quickly.'},
+    {emoji:'✏️',cn:'你明天有考试，所以今天要好好复习',ans:'You have a test tomorrow, so study hard today.'},
+    {emoji:'🏥',cn:'我昨天生病了，妈妈带我去看医生',ans:'I was sick yesterday. Mom took me to the doctor.'},
+    {emoji:'🎬',cn:'我上周五去电影院看了一部电影',ans:'I went to the cinema last Friday to watch a movie.'},
+    {emoji:'🛒',cn:'我们星期六去超市买了很多东西',ans:'We went to the supermarket on Saturday and bought many things.'},
+    {emoji:'🏦',cn:'银行在超市的对面，很容易找到',ans:'The bank is opposite the supermarket. It\'s easy to find.'},
+    {emoji:'⏰',cn:'火车八点就要开了，我们快一点',ans:'The train leaves at eight. Let\'s hurry.'},
+    {emoji:'📱',cn:'你现在在玩手机吗？不，我在听音乐',ans:'Are you playing with your phone now? No, I\'m listening to music.'},
+    {emoji:'🌐',cn:'未来我们可以在网上上英文课',ans:'In the future we can have English classes online.'},
+    {emoji:'💼',cn:'我爸爸每天坐地铁去上班',ans:'My father goes to work by subway every day.'}
+  ]}
+];
+
+/* 干扰 emoji 池（给听音选图用） */
+var EMOJI_POOL = ['😀','😂','🥰','😎','🤓','🥳','😴','🤔','😱','🥺','🤗','😈','🦊','🐸','🐰','🐻','🐨','🦄','🐝','🦋','🐞','🦕','🌳','🌵','🌴','🍀','🌸','🌺','🍎','🍌','🍇','🥕','🌽','🍕','🍔','🍟','🥪','🌮','🍣','🍤','🍰','🧁','🍩','🍭','🎁','🎈','🎂','🏆','🎯','🎸','🎹','🎺','🏀','⚽','🏈','⚾','🎾','🏓','🎮','🎲','🚗','🚕','🚌','🚲','🚓','🚑','🚒','✈️','🚀','🚢','🏠','🏢','🏥','🏦','🏰','⛺','⛲','⛪','🌈','⭐','☁️','🔥','💧','❄️','⚡','💡','🔑','🔒','📱','💻','⌚','📷','🎥','📺','🔊','🎵','📚','✏️','🖊️','📐','📏','✂️','🧽','🧻','🧼','🧴','🧷','🧺','🧸','🪀','🪁','🎀','🎊','🎉'];
+
+/* ============= DOM 引用 ============= */
+var elPicks=document.getElementById('picks'), elBar=document.getElementById('bar'), elTtype=document.getElementById('ttype');
+var elPrompt=document.getElementById('qprompt'), elSpeakBtn=document.getElementById('speakBtn');
+var elPickarea=document.getElementById('pickarea'), elCnrow=document.getElementById('cnrow');
+var elSentbox=document.getElementById('sentbox'), elHint=document.getElementById('hintline'), elPool=document.getElementById('poolbox');
+var elFb=document.getElementById('qfb');
+var btnStart=document.getElementById('btnStart'), btnNext=document.getElementById('btnNext');
+var elStreak=document.getElementById('streak'), elBest=document.getElementById('best');
+
+/* ============= 状态 ============= */
+var state = {grade:0, quiz:[], idx:0, score:0, streak:0, best:+localStorage.getItem('en2.best')||0};
+elBest.textContent = state.best;
+
+/* ============= 工具函数 ============= */
+function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+function speak(txt){ try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(txt); u.lang='en-US'; u.rate=.9; speechSynthesis.speak(u); }catch(e){} }
+/* 把句子拆成单词："Hello, I'm fine." → ["Hello","I'm","fine"] */
+function sentenceToWords(s){
+  return s.replace(/['"]/g,' ').replace(/[.,!?;:]/g,'').split(/\s+/).filter(function(w){return w.length;});
+}
+
+/* ============= 年级选择 ============= */
+function buildPicks(){
+  var groups=[{n:'🎲 混合全部',qs:[]}];
+  GRADES.forEach(function(u){ groups[0].qs=groups[0].qs.concat(u.qs); groups.push(u); });
+  groups.forEach(function(g,idx){
+    var b=document.createElement('button');b.type='button';b.textContent=g.n;
+    if(idx===0) b.classList.add('on');
+    b.addEventListener('click',function(){ elPicks.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); state.grade=idx;});
+    elPicks.appendChild(b);
+  });
+  return groups;
+}
+var GROUPS = buildPicks();
+
+/* ============= 三种题型生成 ============= */
+function mkListenPick(q){
+  var distract = shuffle(EMOJI_POOL.filter(function(x){return x!==q.emoji;})).slice(0,3);
+  var opts = shuffle([q.emoji].concat(distract));
+  return {type:'pick', q:q, opts:opts, ans:q.emoji};
+}
+function mkListenOrder(q){
+  var words = sentenceToWords(q.ans);
+  var distract = shuffle(['the','a','I','you','and','or','to','is','are','my','your','of','in','on','at','it','we','they']).slice(0, Math.min(3, words.length));
+  var pool = shuffle(words.concat(distract));
+  return {type:'order', q:q, words:words, pool:pool, chosen:[]};
+}
+function mkLookSay(q){
+  var words = sentenceToWords(q.ans);
+  var distract = shuffle(['the','a','I','you','and','or','to','is','are','my','your','of','in','on','at','it','we','they','can','not','very','with','for']).slice(0, Math.min(3, words.length));
+  var pool = shuffle(words.concat(distract));
+  return {type:'look', q:q, words:words, pool:pool, chosen:[]};
+}
+
+/* ============= 构建一轮 ============= */
+function buildQuiz(){
+  var pool = shuffle(GROUPS[state.grade].qs.slice());
+  state.quiz = pool.map(function(q,idx){
+    var t = idx % 3;
+    if(t===0) return mkListenPick(q);
+    if(t===1) return mkListenOrder(q);
+    return mkLookSay(q);
+  });
+  state.idx=0; state.score=0; state.streak=0;
+  updateStats(); btnStart.textContent='🔄 再来一轮'; btnNext.disabled=true;
+  renderQ();
+}
+function updateStats(){ elStreak.textContent=state.streak; elBest.textContent=state.best; }
+
+/* ============= 题型标签 ============= */
+var TTYPE_LABEL = {pick:'🎧 听音选图', order:'🎧 听音排序', look:'👀 看图说话'};
+
+/* ============= 渲染 ============= */
+function hideAll(){
+  elPickarea.style.display='none'; elPickarea.innerHTML='';
+  elCnrow.style.display='none'; elCnrow.innerHTML='';
+  elSentbox.style.display='none'; elSentbox.innerHTML='';
+  elPool.style.display='none'; elPool.innerHTML='';
+  elHint.style.display='none';
+}
+
+function renderQ(){
+  hideAll();
+  if(state.idx>=state.quiz.length){
+    elPrompt.textContent='🎉 完成！答对 '+state.score+' / '+state.quiz.length+' 题';
+    elTtype.textContent='🏆 闯关结束'; elSpeakBtn.style.display='none';
+    btnNext.disabled=true; btnNext.textContent='🎊 看结果'; return;
+  }
+  var item = state.quiz[state.idx];
+  var n = state.quiz.length;
+  elBar.style.width = Math.round(state.idx/n*100)+'%';
+  elFb.textContent=''; elFb.className='qfb';
+  elTtype.textContent = TTYPE_LABEL[item.type];
+  btnNext.disabled = true;
+  btnNext.textContent = (state.idx+1)>=n ? '🎊 看结果' : '下一题 →';
+
+  if(item.type==='pick') return renderPick(item);
+  if(item.type==='order') return renderOrder(item);
+  renderLook(item);
+}
+
+/* ---------- 听音选图 ---------- */
+function renderPick(item){
+  elSpeakBtn.style.display='inline-flex'; elSpeakBtn.onclick=function(){ speak(item.q.ans); elSpeakBtn.classList.remove('ring'); void elSpeakBtn.offsetWidth; elSpeakBtn.classList.add('ring'); };
+  elPrompt.textContent = '点 🔊 听句子 → 选一个符合的表情';
+  elPickarea.style.display='grid';
+  elPickarea.innerHTML='';
+  item.opts.forEach(function(e){
+    var d = document.createElement('div'); d.className='pickitem'; d.textContent=e;
+    d.addEventListener('click',function(){ clickPick(d, item, e); });
+    elPickarea.appendChild(d);
+  });
+  // 自动播放一次
+  setTimeout(function(){ speak(item.q.ans); elSpeakBtn.classList.add('ring'); }, 300);
+}
+function clickPick(btn, item, e){
+  if(btn.classList.contains('good')||btn.classList.contains('bad')) return;
+  if(e===item.ans){
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elPickarea.children,function(b){ b.classList.add('good'); if(b.textContent!==item.ans){b.style.opacity='.3';}});
+    elFb.textContent='✅ 对啦！这句是 "'+item.q.ans+'"'; elFb.className='qfb ok';
+    state.score++; state.streak++;
+    if(state.streak>state.best){state.best=state.streak;localStorage.setItem('en2.best',state.best);}
+    btnNext.disabled=false; updateStats();
+    setTimeout(function(){ if(!btnNext.disabled){state.idx++; renderQ();}}, 5000);
+  } else {
+    btn.classList.add('bad'); elFb.textContent='❌ 再听一次试试'; elFb.className='qfb bad';
+    setTimeout(function(){ speak(item.q.ans); }, 380);
+  }
+}
+
+/* ---------- 听音排序 ---------- */
+function renderOrder(item){
+  elSpeakBtn.style.display='inline-flex'; elSpeakBtn.onclick=function(){ speak(item.q.ans); elSpeakBtn.classList.remove('ring'); void elSpeakBtn.offsetWidth; elSpeakBtn.classList.add('ring'); };
+  elPrompt.textContent = '点 🔊 听句子 → 按顺序点单词卡拼成句子';
+  elSentbox.style.display='flex'; elPool.style.display='flex'; elHint.style.display='block';
+  elSentbox.innerHTML='';
+  renderPool(item);
+  item.chosen.forEach(function(w,i){
+    var c=document.createElement('span'); c.className='wchip'; c.textContent=w; c.dataset.idx=i;
+    c.addEventListener('click',function(){ putBack(item, i); });
+    elSentbox.appendChild(c);
+  });
+  setTimeout(function(){ speak(item.q.ans); elSpeakBtn.classList.add('ring'); }, 300);
+}
+
+/* ---------- 看图说话 ---------- */
+function renderLook(item){
+  elSpeakBtn.style.display='inline-flex'; elSpeakBtn.onclick=function(){ speak(item.q.ans); elSpeakBtn.classList.remove('ring'); void elSpeakBtn.offsetWidth; elSpeakBtn.classList.add('ring'); };
+  elSpeakBtn.style.display='inline-flex'; /* 也可以听，但主要看图 */
+  elPrompt.textContent = '看图 / 看中文 → 按顺序点单词卡拼成英文句子';
+  elCnrow.style.display='flex';
+  elCnrow.innerHTML = '<span class="cnemoji">'+item.q.emoji+'</span><span>'+item.q.cn+'</span>';
+  elSentbox.style.display='flex'; elPool.style.display='flex'; elHint.style.display='block';
+  elSentbox.innerHTML='';
+  renderPool(item);
+  item.chosen.forEach(function(w,i){
+    var c=document.createElement('span'); c.className='wchip'; c.textContent=w; c.dataset.idx=i;
+    c.addEventListener('click',function(){ putBack(item, i); });
+    elSentbox.appendChild(c);
+  });
+}
+
+/* ---------- 排序/看图通用：渲染单词池 ---------- */
+function renderPool(item){
+  elPool.innerHTML='';
+  item.pool.forEach(function(w,i){
+    var c=document.createElement('span'); c.className='wchip'; c.textContent=w; c.dataset.pool=i;
+    if(item.chosen.indexOf(w)>=0) c.classList.add('hidden');
+    c.addEventListener('click',function(){ pickWord(item, w, i, c); });
+    elPool.appendChild(c);
+  });
+}
+function pickWord(item, w, poolIdx, poolChip){
+  if(poolChip.classList.contains('hidden')) return;
+  item.chosen.push(w);
+  poolChip.classList.add('hidden');
+  var c=document.createElement('span'); c.className='wchip'; c.textContent=w;
+  c.addEventListener('click',function(){ putBack(item, item.chosen.length-1); });
+  elSentbox.appendChild(c);
+  tryValidateOrder(item);
+}
+function putBack(item, chosenIdx){
+  if(state.quiz[state.idx].done) return;
+  var w = item.chosen[chosenIdx];
+  item.chosen.splice(chosenIdx,1);
+  // 从 sentbox 移除最后一个 chip 并重建（保持顺序）
+  elSentbox.innerHTML='';
+  renderPool(item);
+  item.chosen.forEach(function(x){
+    var c=document.createElement('span'); c.className='wchip'; c.textContent=x;
+    c.addEventListener('click',function(){ var idx=item.chosen.indexOf(x); if(idx>=0) putBack(item, idx); });
+    elSentbox.appendChild(c);
+  });
+  // 恢复 pool 中所有 hidden（重新渲染时会正确）
+  renderPool(item);
+  elSentbox.classList.remove('ok');
+  elFb.textContent=''; elFb.className='qfb';
+}
+function tryValidateOrder(item){
+  var chosen = item.chosen;
+  var ans = item.words;
+  if(chosen.length<ans.length) return; /* 还没选完 */
+  if(chosen.length>ans.length){ /* 多了干扰词 */
+    elFb.textContent='❌ 多了单词，点一下句子里的词可以移回去'; elFb.className='qfb bad';
+    return;
+  }
+  var match = chosen.every(function(w,i){return w===ans[i];});
+  if(match){
+    state.quiz[state.idx].done = true;
+    elSentbox.classList.add('ok');
+    elFb.textContent='✅ 完美！"'+item.q.ans+'"'; elFb.className='qfb ok';
+    item.pool.forEach(function(){ /* 禁用全部 pool chip */});
+    Array.prototype.forEach.call(elPool.children,function(c){c.style.pointerEvents='none';c.style.opacity='.4';});
+    state.score++; state.streak++;
+    if(state.streak>state.best){state.best=state.streak;localStorage.setItem('en2.best',state.best);}
+    btnNext.disabled=false; updateStats();
+    speak(item.q.ans);
+    setTimeout(function(){ if(!btnNext.disabled){state.idx++; renderQ();}}, 5000);
+  } else {
+    elFb.textContent='❌ 顺序不对，继续调整～'; elFb.className='qfb bad';
+  }
+}
+
+/* ============= 绑定 ============= */
+btnStart.addEventListener('click', buildQuiz);
+btnNext.addEventListener('click', function(){
+  if(btnNext.disabled) return;
+  state.idx++;
+  renderQ();
+});
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

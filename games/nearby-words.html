@@ -1,0 +1,228 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🏠 形近字找家 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#f08a3c;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff4e3,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e4f2ff,transparent 55%),
+             linear-gradient(160deg,#fffaf3,#f3f8ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+
+.stage{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;
+  background:rgba(255,255,255,.76);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:10px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);}
+.prompt{font-size:.96rem;font-weight:800;text-align:center;color:#4a5f78;flex:none;}
+
+/* 家 */
+.homes{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;flex:none;}
+.home{min-height:64px;border-radius:16px;border:3px dashed rgba(36,59,83,.20);background:#fffaf2;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 4px;
+  transition:border-color .18s;background .18s;}
+.home .r{font-size:1.6rem;font-weight:900;color:var(--accent);}
+.home .hname{font-size:.66rem;color:#7a6a4f;font-weight:700;}
+.home.good{border-color:var(--ok);background:#e9fbee;}
+.home.bad{border-color:var(--bad);background:#ffeded;}
+.home .slot{font-size:.7rem;color:#b7c3d2;margin-top:3px;}
+
+/* 选字区 */
+.wordarea{flex:1 1 auto;min-height:0;display:grid;gap:6px;align-content:start;
+  grid-template-columns:repeat(4,minmax(0,1fr));overflow-y:auto;padding:4px 2px;}
+.word{min-height:52px;border-radius:14px;border:2px solid rgba(36,59,83,.10);background:#fff;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+  font-size:1.5rem;font-weight:900;color:#31465c;cursor:pointer;
+  box-shadow:0 4px 10px rgba(36,59,83,.07);transition:transform .12s,border-color .18s;}
+.word:active{transform:scale(.95);}
+.word small{font-size:.64rem;color:#8aa0b8;font-weight:600;}
+.word.good{border-color:var(--ok);background:#e9fbee;color:var(--ok);animation:pop .35s;}
+.word.hide{display:none;}
+.word.bad{animation:shake .35s;border-color:var(--bad);}
+
+.feedback{min-height:22px;font-size:.96rem;font-weight:800;text-align:center;color:var(--muted);flex:none;}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);animation:shake .35s;}
+.btn{min-height:40px;padding:0 18px;border-radius:999px;border:2px solid rgba(36,59,83,.12);background:#fff;
+  font-weight:800;font-size:.86rem;color:var(--ink);cursor:pointer;font-family:inherit;}
+.btn.on{background:var(--accent);color:#fff;border-color:transparent;}
+.controls{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;flex:none;}
+
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+
+@media (max-height:480px){
+  .home{min-height:52px}.home .r{font-size:1.3rem}.home .hname{font-size:.58rem}
+  .word{min-height:42px;font-size:1.2rem}.word small{font-size:.55rem}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🏠 形近字找家</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="prompt" id="prompt">把下面的字点一下，送到有相同偏旁的「家」里～</div>
+  <div class="homes" id="homes"></div>
+  <div class="wordarea" id="wordarea"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="controls">
+    <button class="btn" id="btnNext">🔄 下一组</button>
+  </div>
+</div>
+
+<script>
+/* 每一题：4 个家 + 12 个字（每个家 3 个） */
+var ROUNDS = [
+  {
+    homes:[{r:'氵',n:'三点水'},{r:'目',n:'目字旁'},{r:'讠',n:'言字旁'},{r:'忄',n:'竖心旁'}],
+    words:[
+      {t:'清',h:0},{t:'河',h:0},{t:'海',h:0},
+      {t:'睛',h:1},{t:'眼',h:1},{t:'睡',h:1},
+      {t:'说',h:2},{t:'话',h:2},{t:'请',h:2},
+      {t:'情',h:3},{t:'快',h:3},{t:'忙',h:3}
+    ]
+  },
+  {
+    homes:[{r:'木',n:'木字旁'},{r:'扌',n:'提手旁'},{r:'口',n:'口字旁'},{r:'亻',n:'单人旁'}],
+    words:[
+      {t:'树',h:0},{t:'林',h:0},{t:'枝',h:0},
+      {t:'打',h:1},{t:'拉',h:1},{t:'推',h:1},
+      {t:'吃',h:2},{t:'叫',h:2},{t:'听',h:2},
+      {t:'你',h:3},{t:'他',h:3},{t:'们',h:3}
+    ]
+  },
+  {
+    homes:[{r:'日',n:'日字旁'},{r:'月',n:'月字旁'},{r:'虫',n:'虫字旁'},{r:'艹',n:'草字头'}],
+    words:[
+      {t:'晴',h:0},{t:'明',h:0},{t:'昨',h:0},
+      {t:'胖',h:1},{t:'腿',h:1},{t:'肚',h:1},
+      {t:'蜻',h:2},{t:'蛙',h:2},{t:'蜂',h:2},
+      {t:'花',h:3},{t:'草',h:3},{t:'苗',h:3}
+    ]
+  },
+  {
+    homes:[{r:'女',n:'女字旁'},{r:'火',n:'火字旁'},{r:'土',n:'提土旁'},{r:'钅',n:'金字旁'}],
+    words:[
+      {t:'妈',h:0},{t:'姐',h:0},{t:'妹',h:0},
+      {t:'烧',h:1},{t:'灯',h:1},{t:'炒',h:1},
+      {t:'地',h:2},{t:'堆',h:2},{t:'城',h:2},
+      {t:'铁',h:3},{t:'铜',h:3},{t:'锅',h:3}
+    ]
+  },
+  {
+    homes:[{r:'宀',n:'宝盖头'},{r:'走',n:'走字底'},{r:'足',n:'足字旁'},{r:'心',n:'心字底'}],
+    words:[
+      {t:'家',h:0},{t:'宝',h:0},{t:'字',h:0},
+      {t:'远',h:1},{t:'近',h:1},{t:'赶',h:1},
+      {t:'跑',h:2},{t:'跳',h:2},{t:'路',h:2},
+      {t:'想',h:3},{t:'思',h:3},{t:'念',h:3}
+    ]
+  },
+  {
+    homes:[{r:'禾',n:'禾木旁'},{r:'纟',n:'绞丝旁'},{r:'饣',n:'食字旁'},{r:'疒',n:'病字旁'}],
+    words:[
+      {t:'种',h:0},{t:'秋',h:0},{t:'稻',h:0},
+      {t:'红',h:1},{t:'线',h:1},{t:'纸',h:1},
+      {t:'饭',h:2},{t:'饿',h:2},{t:'饱',h:2},
+      {t:'病',h:3},{t:'疼',h:3},{t:'痛',h:3}
+    ]
+  }
+];
+
+var ri = 0, state = {streak:0, best:+localStorage.getItem('wnh.best')||0, picked:[]};
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+var elPrompt = document.getElementById('prompt');
+var elHomes = document.getElementById('homes');
+var elWords = document.getElementById('wordarea');
+var elFb = document.getElementById('feedback');
+var btnNext = document.getElementById('btnNext');
+
+elBest.textContent = state.best;
+
+function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+
+function build(){
+  elStreak.textContent = state.streak;
+  elFb.textContent = ''; elFb.className = 'feedback';
+  elPrompt.textContent = '第 '+(ri+1)+'/'+ROUNDS.length+' 组 · 把下面的字点一下，送到有相同偏旁的「家」里～';
+  elHomes.innerHTML = '';
+  var r = ROUNDS[ri];
+  state.picked = new Array(r.homes.length).fill(0);
+  r.homes.forEach(function(h, idx){
+    var d = document.createElement('div'); d.className = 'home'; d.dataset.idx = idx;
+    d.innerHTML = '<div class="r">'+h.r+'</div><div class="hname">'+h.n+'</div><div class="slot" id="slot'+idx+'">0 / 3</div>';
+    elHomes.appendChild(d);
+  });
+  elWords.innerHTML = '';
+  var ws = shuffle(r.words.slice());
+  ws.forEach(function(w){
+    var b = document.createElement('button');
+    b.type='button'; b.className='word'; b.dataset.home = w.h;
+    b.innerHTML = w.t + '<small>偏旁 ?</small>';
+    b.addEventListener('click', function(){ clickWord(b, w); });
+    elWords.appendChild(b);
+  });
+}
+
+function clickWord(btn, w){
+  if(btn.classList.contains('good')||btn.classList.contains('bad')) return;
+  var h = ROUNDS[ri].homes[w.h];
+  var fb = document.createElement('div');
+  elFb.textContent = '"'+w.t+'" 这个字的偏旁是「'+h.r+'」('+h.n+')，对吗？';
+  btn.classList.add('bad');
+  setTimeout(function(){ btn.classList.remove('bad'); btn.classList.add('good'); btn.querySelector('small').textContent = '偏旁「'+h.r+'」'; }, 360);
+  // 该家计数
+  state.picked[w.h]++;
+  document.getElementById('slot'+w.h).textContent = state.picked[w.h]+' / 3';
+  if(state.picked[w.h]===3){
+    document.querySelector('.home[data-idx="'+w.h+'"]').classList.add('good');
+    speak(h.n+'家的字都齐啦');
+  }
+  if(state.picked.every(function(n){return n===3})){
+    state.streak++;
+    if(state.streak>state.best){state.best=state.streak;localStorage.setItem('wnh.best',state.best);elBest.textContent=state.best;}
+    elStreak.textContent=state.streak;
+    elFb.textContent = '🎉 太棒啦，这一组全送对啦！'; elFb.className='feedback ok';
+    setTimeout(function(){ nextRound(); }, 1000);
+  }
+}
+function nextRound(){ ri=(ri+1)%ROUNDS.length; build(); }
+
+btnNext.addEventListener('click', nextRound);
+build();
+function speak(t){ try{ if(window.speechSynthesis){var u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';u.rate=.92;speechSynthesis.cancel();speechSynthesis.speak(u);}}catch(e){}}
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

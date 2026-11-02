@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -74,7 +74,14 @@ h1{font-size:1.15rem;}
   .btn{min-height:34px;font-size:.76rem;padding:0 12px;}
 }
 </style>
-</head>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
 <body>
 <header>
   <a class="back" href="../index.html">🏠 首页</a>
@@ -280,6 +287,11 @@ function voiceEntry() {
   if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
 })();
 voiceEntry();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
 </script>
 </body>
 </html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
@@ -98,6 +98,20 @@ h1{font-size:1.15rem}
 
 @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
 @keyframes chew{0%,100%{transform:scale(1)}50%{transform:scale(1.14)}}
+
+/* 平板：放大照片，方便孩子观察 */
+@media (min-width:600px) and (min-height:600px){
+  .animalCard{min-height:150px;padding:12px 30px;gap:16px;}
+  .animalCard .ph{width:118px;height:118px;border-radius:20px;}
+  .animalCard .t{font-size:1.28rem;}
+  .animalCard .mouth{font-size:1.6rem;}
+  .animalCard .mouth .ph{width:34px;height:34px;}
+  .food{gap:8px;}
+  .food .ph{width:64%;height:100px;border-radius:16px;}
+  .food .t{font-size:1.05rem;}
+  .tip{font-size:1rem;}
+  .fly img{width:48px;height:48px;}
+}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 
 @media (max-height:430px){
@@ -123,7 +137,14 @@ h1{font-size:1.15rem}
   .foot button{min-height:34px;font-size:.78rem}
 }
 </style>
-</head>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
 <body>
 <header>
   <a class="back" href="../index.html">🏠 首页</a>
@@ -407,6 +428,11 @@ var VOICE_TEXT = '动物喂食游戏。看看上面是什么小动物，从下�
     document.addEventListener('pointerdown', once);
   }, 900);
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
 </script>
 </body>
 </html>

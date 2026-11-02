@@ -1,0 +1,252 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>📖 古诗闯关 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#f4f0ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff4e3,transparent 55%),
+             linear-gradient(160deg,#fbfaff,#fffaf3);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+.chips{margin-left:auto;display:flex;gap:6px;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:#c26a00;font-size:.86rem;}
+
+.stage{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;gap:8px;
+  background:rgba(255,255,255,.76);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:10px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);overflow:hidden;}
+
+/* 年级选择 */
+.picks{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;flex:none;}
+.picks button{min-height:32px;padding:0 14px;border-radius:999px;border:1px solid rgba(36,59,83,.12);background:#fff;
+  font-weight:700;font-size:.78rem;color:#4a6076;font-family:inherit;cursor:pointer;}
+.picks button.on{background:#fff3e6;border-color:rgba(240,138,60,.55);color:#c26a00;}
+
+/* 进度 */
+.bar{height:6px;border-radius:4px;background:rgba(36,59,83,.08);overflow:hidden;flex:none;}
+.bar>i{display:block;height:100%;background:linear-gradient(90deg,#f08a3c,#7c5cff);border-radius:4px;transition:width .3s;}
+
+.qprompt{flex:none;font-size:1.05rem;font-weight:900;text-align:center;color:#31465c;}
+.verse{flex:none;font-size:clamp(1.3rem,4.5vh,2rem);font-weight:800;color:#5b3fd6;text-align:center;
+  line-height:1.6;padding:8px 0;}
+.verse .blk{display:inline-block;min-width:1.6em;padding:0 .1em;margin:0 .04em;border-bottom:3px solid #c3b5ff;color:#aaa;}
+.qmeta{flex:none;font-size:.78rem;color:#8aa0b8;text-align:center;}
+
+.opts{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(2,1fr);gap:8px;}
+.opt{min-height:56px;border-radius:16px;border:2px solid rgba(36,59,83,.10);background:#fff;
+  font-family:inherit;font-weight:900;color:#31465c;cursor:pointer;padding:6px 8px;
+  font-size:clamp(.92rem,2.4vh,1.2rem);display:flex;align-items:center;justify-content:center;text-align:center;
+  box-shadow:0 5px 12px rgba(36,59,83,.07);transition:transform .12s,border-color .18s,background .18s;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;animation:shake .4s ease;}
+
+.qfb{min-height:22px;font-size:.92rem;font-weight:900;text-align:center;color:var(--muted);flex:none;}
+.qfb.ok{color:var(--ok);} .qfb.bad{color:var(--bad);animation:shake .4s;}
+.controls{display:flex;justify-content:center;gap:8px;flex:none;}
+.btn{min-height:40px;padding:0 18px;border-radius:999px;border:2px solid rgba(36,59,83,.12);background:#fff;
+  font-weight:800;font-size:.86rem;color:var(--ink);cursor:pointer;font-family:inherit;}
+.btn.on{background:var(--accent);color:#fff;border-color:transparent;}
+.btn[disabled]{opacity:.5;cursor:default;}
+
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-6px)}50%{transform:translateX(6px)}75%{transform:translateX(-4px)}}
+
+@media (max-height:480px){
+  .opts .opt{min-height:46px;font-size:.8rem}
+  .verse{font-size:1.1rem;padding:4px 0}
+  .qprompt{font-size:.9rem}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>📖 古诗闯关</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="picks" id="picks"></div>
+  <div class="bar"><i id="bar"></i></div>
+  <div class="qprompt" id="qprompt">选一个年级，开始闯关！</div>
+  <div class="verse" id="verse"></div>
+  <div class="qmeta" id="qmeta"></div>
+  <div class="opts" id="opts"></div>
+  <div class="qfb" id="qfb"></div>
+  <div class="controls">
+    <button class="btn" id="btnStart">🚀 开始</button>
+    <button class="btn" id="btnNext" disabled>下一题 →</button>
+  </div>
+</div>
+
+<script>
+/* 古诗库：g = 年级（1..5），每首四句，共约 35 首 */
+var POEMS = [
+  // 一年级
+  {g:1,t:'咏鹅',a:'骆宾王',lines:['鹅鹅鹅','曲项向天歌','白毛浮绿水','红掌拨清波']},
+  {g:1,t:'悯农（其二）',a:'李绅',lines:['锄禾日当午','汗滴禾下土','谁知盘中餐','粒粒皆辛苦']},
+  {g:1,t:'古朗月行（节选）',a:'李白',lines:['小时不识月','呼作白玉盘','又疑瑶台镜','飞在青云端']},
+  {g:1,t:'风',a:'李峤',lines:['解落三秋叶','能开二月花','过江千尺浪','入竹万竿斜']},
+  {g:1,t:'画',a:'王维',lines:['远看山有色','近听水无声','春去花还在','人来鸟不惊']},
+  {g:1,t:'静夜思',a:'李白',lines:['床前明月光','疑是地上霜','举头望明月','低头思故乡']},
+  // 二年级
+  {g:2,t:'春晓',a:'孟浩然',lines:['春眠不觉晓','处处闻啼鸟','夜来风雨声','花落知多少']},
+  {g:2,t:'赠汪伦',a:'李白',lines:['李白乘舟将欲行','忽闻岸上踏歌声','桃花潭水深千尺','不及汪伦送我情']},
+  {g:2,t:'登鹳雀楼',a:'王之涣',lines:['白日依山尽','黄河入海流','欲穷千里目','更上一层楼']},
+  {g:2,t:'望庐山瀑布',a:'李白',lines:['日照香炉生紫烟','遥看瀑布挂前川','飞流直下三千尺','疑是银河落九天']},
+  {g:2,t:'夜宿山寺',a:'李白',lines:['危楼高百尺','手可摘星辰','不敢高声语','恐惊天上人']},
+  {g:2,t:'绝句',a:'杜甫',lines:['两个黄鹂鸣翠柳','一行白鹭上青天','窗含西岭千秋雪','门泊东吴万里船']},
+  {g:2,t:'敕勒歌',a:'北朝民歌',lines:['敕勒川阴山下','天似穹庐笼盖四野','天苍苍野茫茫','风吹草低见牛羊']},
+  // 三年级
+  {g:3,t:'山行',a:'杜牧',lines:['远上寒山石径斜','白云生处有人家','停车坐爱枫林晚','霜叶红于二月花']},
+  {g:3,t:'赠刘景文',a:'苏轼',lines:['荷尽已无擎雨盖','菊残犹有傲霜枝','一年好景君须记','最是橙黄橘绿时']},
+  {g:3,t:'夜书所见',a:'叶绍翁',lines:['萧萧梧叶送寒声','江上秋风动客情','知有儿童挑促织','夜深篱落一灯明']},
+  {g:3,t:'望天门山',a:'李白',lines:['天门中断楚江开','碧水东流至此回','两岸青山相对出','孤帆一片日边来']},
+  {g:3,t:'饮湖上初晴后雨',a:'苏轼',lines:['水光潋滟晴方好','山色空蒙雨亦奇','欲把西湖比西子','淡妆浓抹总相宜']},
+  {g:3,t:'望洞庭',a:'刘禹锡',lines:['湖光秋月两相和','潭面无风镜未磨','遥望洞庭山水翠','白银盘里一青螺']},
+  {g:3,t:'早发白帝城',a:'李白',lines:['朝辞白帝彩云间','千里江陵一日还','两岸猿声啼不住','轻舟已过万重山']},
+  // 四年级
+  {g:4,t:'题西林壁',a:'苏轼',lines:['横看成岭侧成峰','远近高低各不同','不识庐山真面目','只缘身在此山中']},
+  {g:4,t:'游山西村',a:'陆游',lines:['莫笑农家腊酒浑','丰年留客足鸡豚','山重水复疑无路','柳暗花明又一村']},
+  {g:4,t:'黄鹤楼送孟浩然之广陵',a:'李白',lines:['故人西辞黄鹤楼','烟花三月下扬州','孤帆远影碧空尽','唯见长江天际流']},
+  {g:4,t:'送元二使安西',a:'王维',lines:['渭城朝雨浥轻尘','客舍青青柳色新','劝君更尽一杯酒','西出阳关无故人']},
+  {g:4,t:'夏日绝句',a:'李清照',lines:['生当作人杰','死亦为鬼雄','至今思项羽','不肯过江东']},
+  {g:4,t:'出塞',a:'王昌龄',lines:['秦时明月汉时关','万里长征人未还','但使龙城飞将在','不教胡马度阴山']},
+  {g:4,t:'凉州词',a:'王翰',lines:['葡萄美酒夜光杯','欲饮琵琶马上催','醉卧沙场君莫笑','古来征战几人回']},
+  // 五年级
+  {g:5,t:'示儿',a:'陆游',lines:['死去元知万事空','但悲不见九州同','王师北定中原日','家祭无忘告乃翁']},
+  {g:5,t:'题临安邸',a:'林升',lines:['山外青山楼外楼','西湖歌舞几时休','暖风熏得游人醉','直把杭州作汴州']},
+  {g:5,t:'己亥杂诗',a:'龚自珍',lines:['九州生气恃风雷','万马齐喑究可哀','我劝天公重抖擞','不拘一格降人才']},
+  {g:5,t:'山居秋暝',a:'王维',lines:['空山新雨后','天气晚来秋','明月松间照','清泉石上流']},
+  {g:5,t:'枫桥夜泊',a:'张继',lines:['月落乌啼霜满天','江枫渔火对愁眠','姑苏城外寒山寺','夜半钟声到客船']},
+  {g:5,t:'长相思',a:'纳兰性德',lines:['山一程水一程','身向榆关那畔行','夜深千帐灯','风一更雪一更','聒碎乡心梦不成','故园无此声']}
+];
+
+var elPicks=document.getElementById('picks'),elBar=document.getElementById('bar');
+var elQp=document.getElementById('qprompt'),elV=document.getElementById('verse'),elMeta=document.getElementById('qmeta'),elOpts=document.getElementById('opts'),elFb=document.getElementById('qfb');
+var btnStart=document.getElementById('btnStart'),btnNext=document.getElementById('btnNext');
+var elStreak=document.getElementById('streak'),elBest=document.getElementById('best');
+
+var grades=[{g:0,n:'🎲 全部'},{g:1,n:'一年级'},{g:2,n:'二年级'},{g:3,n:'三年级'},{g:4,n:'四年级'},{g:5,n:'五年级'}];
+var state = {grade:0, quiz:[], idx:0, score:0, streak:0, best:+localStorage.getItem('gs.best')||0, done:false};
+elBest.textContent = state.best;
+
+grades.forEach(function(g,idx){
+  var b=document.createElement('button');b.type='button';b.textContent=g.n;if(idx===0)b.classList.add('on');
+  b.addEventListener('click',function(){elPicks.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');state.grade=g.g;});
+  elPicks.appendChild(b);
+});
+
+function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
+function pickPoems(g){var ps=POEMS.filter(function(p){return g===0||p.g===g;});return shuffle(ps);}
+
+function buildQuiz(){
+  var ps = pickPoems(state.grade);
+  var qs = [];
+  ps.forEach(function(p){
+    // 从诗里抽一行挖空（选中间两句）
+    var li = 1 + Math.floor(Math.random()*2); // 第 2 或 3 句挖空
+    var blank = p.lines[li];
+    // 生成 3 个干扰：同年级其他诗的不同行
+    var pool = POEMS.filter(function(x){return x!==p;}).map(function(x){return x.lines;}).flat();
+    var opts = [blank];
+    while(opts.length<4){ var o = pool[Math.floor(Math.random()*pool.length)]; if(opts.indexOf(o)<0) opts.push(o); }
+    opts = shuffle(opts);
+    var type = Math.floor(Math.random()*3);
+    var prompt, verse;
+    if(type===0){
+      // 挖空：前句给出，挖空后句
+      var prev = p.lines[li-1];
+      prompt = '「'+prev+'」的下一句是？';
+      verse = '<span class="blk">？</span>';
+    } else if(type===1){
+      // 挖空中间
+      verse = p.lines.slice(); verse[li] = '<span class="blk">？</span>';
+      verse = verse.join('　');
+      prompt = '哪一句能补全这首诗？';
+    } else {
+      // 作者
+      prompt = '《'+p.t+'》是谁写的？';
+      verse = p.lines.join('　');
+      opts = [p.a];
+      var ap = POEMS.map(function(x){return x.a;});
+      while(opts.length<4){ var o = ap[Math.floor(Math.random()*ap.length)]; if(opts.indexOf(o)<0) opts.push(o); }
+      opts = shuffle(opts); blank = p.a;
+    }
+    qs.push({p:p,type:type,prompt:prompt,verse:verse,opts:opts,ans:blank,done:false});
+  });
+  state.quiz = qs; state.idx = 0; state.score = 0; state.streak = 0; state.done = false;
+  updateStats(); btnNext.disabled = true; btnStart.textContent = '🔄 重新开始';
+  renderQ();
+}
+
+function updateStats(){ elStreak.textContent=state.streak; elBest.textContent=state.best; }
+
+function renderQ(){
+  if(state.done||state.idx>=state.quiz.length){
+    elQp.textContent = '🎉 闯关结束！';
+    elV.textContent = ''; elMeta.textContent = ''; elOpts.innerHTML = '';
+    elFb.textContent = '答对 '+state.score+' / '+state.quiz.length+' 题，连对最多 '+state.streak+' 次';
+    elFb.className='feedback ok';
+    btnNext.disabled = true;
+    btnStart.textContent = '🔄 再闯一轮'; btnStart.disabled=false;
+    return;
+  }
+  var q = state.quiz[state.idx];
+  var n = state.quiz.length;
+  elBar.style.width = Math.round(state.idx/n*100)+'%';
+  elQp.textContent = '第 '+(state.idx+1)+'/'+n+' 题 · '+q.prompt;
+  elV.innerHTML = q.verse;
+  elMeta.textContent = q.p.t+' · '+q.p.a+'（'+['','一','二','三','四','五'][q.p.g]+'年级）';
+  elOpts.innerHTML = ''; elFb.textContent = ''; elFb.className = 'qfb';
+  btnNext.disabled = true;
+  q.opts.forEach(function(t){
+    var b = document.createElement('button'); b.type='button'; b.className='opt'; b.textContent = t;
+    b.addEventListener('click', function(){ ansQ(b,t); });
+    elOpts.appendChild(b);
+  });
+}
+function ansQ(btn,t){
+  var q=state.quiz[state.idx]; if(q.done) return;
+  if(t===q.ans){
+    q.done=true; state.score++; state.streak++;
+    if(state.streak>state.best){state.best=state.streak;localStorage.setItem('gs.best',state.best);}
+    Array.prototype.forEach.call(elOpts.children,function(b){b.disabled=true;if(b.textContent===q.ans)b.classList.add('good');});
+    elFb.textContent = '✅ 答对啦！《'+q.p.t+'》'; elFb.className='qfb ok';
+    btnNext.disabled=false; updateStats();
+    try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(q.p.lines.join('，')+'。'); u.lang='zh-CN'; u.rate=.9; speechSynthesis.speak(u);}catch(e){}
+  } else {
+    btn.classList.add('bad'); btn.disabled=true; elFb.textContent = '❌ 再想想～'; elFb.className='qfb bad';
+  }
+}
+btnStart.addEventListener('click', function(){ buildQuiz(); });
+btnNext.addEventListener('click', function(){ state.idx++; if(state.idx>=state.quiz.length){ state.done=true;} renderQ(); });
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>
