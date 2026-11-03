@@ -185,11 +185,19 @@ function buildBoxQ() {
 }
 
 function buildQuestions() {
-  var qs = [];
-  var i;
-  for (i = 0; i < 12; i++) qs.push(buildGridQ());
-  for (i = 0; i < 8; i++) qs.push(buildLineQ());
-  for (i = 0; i < 10; i++) qs.push(buildBoxQ());
+  var qs = [], used = {};
+  /* 同一套题内不重复题面：生成撞车就重抽 */
+  function add(fn, count) {
+    var guard = 0, max = count * 40;
+    while (count > 0 && guard++ < max) {
+      var q = fn();
+      if (used[q.q]) continue;
+      used[q.q] = 1; qs.push(q); count--;
+    }
+  }
+  add(buildGridQ, 12);
+  add(buildLineQ, 8);
+  add(buildBoxQ, 10);
   return qs;
 }
 

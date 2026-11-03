@@ -134,7 +134,6 @@ h1{font-size:1.15rem;}
   <!-- 反馈 & 按钮 -->
   <div class="qfb" id="qfb"></div>
   <div class="controls">
-    <button class="btn" id="btnStart">🚀 开始</button>
     <button class="btn" id="btnNext" disabled>下一题 →</button>
   </div>
 </div>
@@ -329,7 +328,7 @@ var elPrompt=document.getElementById('qprompt'), elSpeakBtn=document.getElementB
 var elPickarea=document.getElementById('pickarea'), elCnrow=document.getElementById('cnrow');
 var elSentbox=document.getElementById('sentbox'), elHint=document.getElementById('hintline'), elPool=document.getElementById('poolbox');
 var elFb=document.getElementById('qfb');
-var btnStart=document.getElementById('btnStart'), btnNext=document.getElementById('btnNext');
+var btnNext=document.getElementById('btnNext');
 var elStreak=document.getElementById('streak'), elBest=document.getElementById('best');
 
 /* ============= 状态 ============= */
@@ -351,7 +350,7 @@ function buildPicks(){
   groups.forEach(function(g,idx){
     var b=document.createElement('button');b.type='button';b.textContent=g.n;
     if(idx===0) b.classList.add('on');
-    b.addEventListener('click',function(){ elPicks.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); state.grade=idx;});
+    b.addEventListener('click',function(){ elPicks.querySelectorAll('button').forEach(function(x){x.classList.remove('on');}); b.classList.add('on'); state.grade=idx; buildQuiz();});
     elPicks.appendChild(b);
   });
   return groups;
@@ -387,7 +386,7 @@ function buildQuiz(){
     return mkLookSay(q);
   });
   state.idx=0; state.score=0; state.streak=0;
-  updateStats(); btnStart.textContent='🔄 再来一轮'; btnNext.disabled=true;
+  updateStats(); btnNext.disabled=true; btnNext.textContent='下一题 →';
   renderQ();
 }
 function updateStats(){ elStreak.textContent=state.streak; elBest.textContent=state.best; }
@@ -409,7 +408,7 @@ function renderQ(){
   if(state.idx>=state.quiz.length){
     elPrompt.textContent='🎉 完成！答对 '+state.score+' / '+state.quiz.length+' 题';
     elTtype.textContent='🏆 闯关结束'; elSpeakBtn.style.display='none';
-    btnNext.disabled=true; btnNext.textContent='🎊 看结果'; return;
+    btnNext.disabled=false; btnNext.textContent='🔄 再来一轮'; return;
   }
   var item = state.quiz[state.idx];
   var n = state.quiz.length;
@@ -548,12 +547,24 @@ function tryValidateOrder(item){
 }
 
 /* ============= 绑定 ============= */
-btnStart.addEventListener('click', buildQuiz);
 btnNext.addEventListener('click', function(){
   if(btnNext.disabled) return;
+  if(state.idx>=state.quiz.length){ buildQuiz(); return; }
   state.idx++;
   renderQ();
 });
+
+/* 首题直接可见：进入即生成一轮 */
+buildQuiz();
+
+/* iOS/平板音频解锁：首次任意点击补读当前题 */
+var firstTapDone=false;
+document.addEventListener('pointerdown', function(){
+  if(firstTapDone) return;
+  firstTapDone=true;
+  if(window.XNLY&&XNLY.voice&&XNLY.voice.unlock){try{XNLY.voice.unlock();}catch(e){}}
+  if(elSpeakBtn.style.display!=='none'&&elSpeakBtn.onclick){ try{ elSpeakBtn.onclick(); }catch(e){} }
+}, {passive:true});
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

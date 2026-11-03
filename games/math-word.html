@@ -249,7 +249,15 @@ function newRound() {
   clearTimeout(state.timer);
   state.locked = false;
   var L = LEVELS[state.tier];
-  var item = L.items[Math.floor(Math.random() * L.items.length)]();
+  /* 本轮内不重复：每档一副牌，抽完一轮才重洗 */
+  if (!state.decks) state.decks = { 1: [], 2: [], 3: [] };
+  var d = state.decks[state.tier];
+  if (!d.length) {
+    for (var i = 0; i < L.items.length; i++) d.push(i);
+    for (var j = d.length - 1; j > 0; j--) { var k = Math.floor(Math.random() * (j + 1)); var t = d[j]; d[j] = d[k]; d[k] = t; }
+  }
+  var idx = d.pop();
+  var item = L.items[idx]();
   state.cur = item;
   state.qno++;
   elQno.textContent = state.qno;

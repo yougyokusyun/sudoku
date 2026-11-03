@@ -18,8 +18,9 @@
  * v20 变化：新增幼儿园 5 个页面（安全 / 情绪 / 方位 / 关联配对 / 作息顺序），形状扩到 8 种。
  * v21 变化：新增现代语文基础、单词消消乐；补入阅读理解 / 近反义词 / 单词图配 / 钟表与人民币；移除调试页。
  * v22 变化：新增外链书架（只放站内链接与说明，不内嵌外部资源）。
+ * v23 变化：移除成语分类页；去掉英语/古诗/语文百科的开始按钮（进入即出题）。
  */
-var CACHE = 'xnly-v22';
+var CACHE = 'xnly-v23';
 
 var PRECACHE = [
   './',
@@ -42,7 +43,6 @@ var PRECACHE = [
   'games/gomoku.html',
   'games/guess-number.html',
   'games/gushi.html',
-  'games/idiom-cat.html',
   'games/idioms.html',
   'games/img/icon-180.png',
   'games/img/icon-192.png',

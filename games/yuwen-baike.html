@@ -177,6 +177,7 @@ h1{font-size:1.15rem;}
       <span id="qno">第 0/0 题</span>
       <div class="bar"><i id="qbar"></i></div>
       <span id="qtopic"></span>
+      <button class="btn" id="btnSpeak" type="button" style="padding:3px 10px;font-size:.76rem;">🔊 重听</button>
     </div>
     <div class="qbox" id="qbox">
       <div class="qprompt" id="qprompt">选一个专题，点「开始问答」👇</div>
@@ -184,7 +185,6 @@ h1{font-size:1.15rem;}
     </div>
     <div class="qfb" id="qfb"></div>
     <div class="foot">
-      <button class="btn primary" id="btnStart" type="button">▶️ 开始问答</button>
       <button class="btn" id="btnNext" type="button" disabled>下一题 →</button>
     </div>
   </div>
@@ -211,7 +211,7 @@ var elQtopic = document.getElementById('qtopic');
 var elScore = document.getElementById('score');
 var elTotal = document.getElementById('total');
 var elStreak = document.getElementById('streak');
-var btnStart = document.getElementById('btnStart');
+var btnSpeak = document.getElementById('btnSpeak');
 var btnNext = document.getElementById('btnNext');
 
 function rand(n) { return Math.floor(Math.random() * n); }
@@ -331,6 +331,7 @@ function buildPicks() {
     b.addEventListener('click', function () {
       Array.prototype.forEach.call(elPicks.children, function (x) { x.classList.remove('on'); });
       b.classList.add('on');
+      startQuiz();
     });
   });
 }
@@ -377,7 +378,7 @@ function makeQuestion(it, pool, type) {
     done: false
   };
 }
-function startQuiz() {
+function startQuiz(silent) {
   var id = currentPick();
   var pool = poolOf(id);
   if (pool.length < 4) {
@@ -402,10 +403,11 @@ function startQuiz() {
   var tp = DATA.filter(function (x) { return x.id === id; })[0];
   elQtopic.textContent = tp ? tp.name : '混合';
   btnNext.disabled = true;
-  btnStart.textContent = '🔄 重新开始';
-  renderQuestion();
+  btnNext.textContent = '下一题 →';
+  state.finished = false;
+  renderQuestion(silent);
 }
-function renderQuestion() {
+function renderQuestion(silent) {
   var q = state.quiz && state.quiz[state.qIndex];
   if (!q) return;
   var n = state.quiz.length;
@@ -424,7 +426,7 @@ function renderQuestion() {
     b.addEventListener('click', function () { answerQ(b, text); });
     elOpts.appendChild(b);
   });
-  say(q.prompt.replace(/「/g, '').replace(/」/g, ''));
+  if (!silent) say(q.prompt.replace(/「/g, '').replace(/」/g, ''));
 }
 function answerQ(btn, text) {
   var q = state.quiz[state.qIndex];
@@ -471,12 +473,30 @@ function showResult() {
     '<span style="font-size:.8rem;color:#7b8ea8">连对最多 ' + state.best + ' 次，再试一轮吧！</span>';
   elQfb.className = 'qfb ok';
   elQfb.textContent = '';
-  btnNext.disabled = true;
-  btnNext.textContent = '下一题 →';
+  state.finished = true;
+  btnNext.disabled = false;
+  btnNext.textContent = '🔄 再来一轮';
   say('这一轮答对' + state.score + '题，真棒');
 }
-btnStart.addEventListener('click', startQuiz);
-btnNext.addEventListener('click', nextQuestion);
+btnNext.addEventListener('click', function () {
+  if (state.finished) { startQuiz(); return; }
+  nextQuestion();
+});
+btnSpeak.addEventListener('click', function () {
+  var q = state.quiz && state.quiz[state.qIndex];
+  if (q) say(q.prompt.replace(/「/g, '').replace(/」/g, ''));
+});
+/* iOS/平板音频解锁：首次任意点击补读当前题干 */
+var firstTapDone = false;
+document.addEventListener('pointerdown', function () {
+  if (firstTapDone) return;
+  firstTapDone = true;
+  if (window.XNLY && XNLY.voice && XNLY.voice.unlock) { try { XNLY.voice.unlock(); } catch (e) { } }
+  if (document.getElementById('paneQuiz').classList.contains('on')) {
+    var q = state.quiz && state.quiz[state.qIndex];
+    if (q) say(q.prompt.replace(/「/g, '').replace(/」/g, ''));
+  }
+}, { passive: true });
 
 /* ===== 模式切换 ===== */
 document.getElementById('tabBrowse').addEventListener('click', function () {
@@ -490,6 +510,7 @@ document.getElementById('tabQuiz').addEventListener('click', function () {
   document.getElementById('tabBrowse').classList.remove('on');
   document.getElementById('paneBrowse').style.display = 'none';
   document.getElementById('paneQuiz').classList.add('on');
+  if (!state.quiz || state.finished) startQuiz();
 });
 
 /* ===== 启动 ===== */
@@ -501,6 +522,7 @@ document.getElementById('tabQuiz').addEventListener('click', function () {
   buildCats();
   buildPicks();
   updateStats();
+  startQuiz(true);   /* 首题预先渲染，切到「专题问答」即可作答 */
 })();
 </script>
 <script>

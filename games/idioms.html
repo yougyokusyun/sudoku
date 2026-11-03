@@ -851,11 +851,24 @@ function guessImgCard(q) {
   return wrap;
 }
 
+/* 出题轮换：每个玩法一副牌，抽完一轮才重洗，同一轮内不会重复同一成语 */
+var decks = { guess: [], fill: [], pairs: [], scene: [] };
+function deckTake(key, list, n) {
+  var d = decks[key], out = [];
+  if (!d.length) d.push.apply(d, shuffle(list.slice()));
+  if (d.length < n) {
+    out = d.splice(0, d.length);
+    d.push.apply(d, shuffle(list.slice()));
+    out = out.concat(d.splice(d.length - (n - out.length), n - out.length));
+  } else {
+    out = d.splice(d.length - n, n);
+  }
+  return out;
+}
+
 function newGuess() {
   clearTimer(); lockInput();
-  var prev = cur && cur.a;
-  var q;
-  do { q = GUESSES[rand(GUESSES.length)]; } while (GUESSES.length > 1 && q.a === prev);
+  var q = deckTake('guess', GUESSES, 1)[0];
   var opts = shuffle([q.a].concat(pickWrong(GUESSES.map(function (g) { return g.a; }), q.a, 3)));
   cur = { a: q.a, sc: q.sc, img: q.img, r: q.r, o: opts };
 
@@ -936,9 +949,7 @@ function fillImgCard(src) {
 
 function newFill() {
   clearTimer(); lockInput();
-  var prev = cur && cur.a;
-  var q;
-  do { q = FILLS[rand(FILLS.length)]; } while (FILLS.length > 1 && q.a === prev);
+  var q = deckTake('fill', FILLS, 1)[0];
   cur = { a: q.a, i: q.i, img: q.img, o: shuffle(q.o.slice()) };
 
   elHint.textContent = '看图，把成语缺的字选出来';
@@ -990,7 +1001,7 @@ function answerFill(ch, btn) {
 function newMatch() {
   clearTimer();
   lockMatch = false;
-  var picks = shuffle(PAIRS).slice(0, 4);
+  var picks = deckTake('pairs', PAIRS, 4);
   var cards = [];
   picks.forEach(function (idm) {
     cards.push({ kind: 'idiom', key: idm, text: idm });
@@ -1064,9 +1075,7 @@ function flipCard(i, btn) {
 /* ===== 四、演一演 ===== */
 function newScene() {
   clearTimer(); lockInput();
-  var prev = cur && cur.s;
-  var q;
-  do { q = SCENES[rand(SCENES.length)]; } while (SCENES.length > 1 && q.s === prev);
+  var q = deckTake('scene', SCENES, 1)[0];
   cur = { s: q.s, a: q.a, o: shuffle(q.o.slice()) };
 
   elHint.textContent = '听一听小故事，选出最合适的成语';

@@ -97,7 +97,7 @@ h1{font-size:1.15rem;}
   <div class="opts" id="opts"></div>
   <div class="qfb" id="qfb"></div>
   <div class="controls">
-    <button class="btn" id="btnStart">🚀 开始</button>
+    <button class="btn" id="btnSpeak" type="button" title="重听题目">🔊 重听</button>
     <button class="btn" id="btnNext" disabled>下一题 →</button>
   </div>
 </div>
@@ -160,7 +160,7 @@ var POEMS = [
 
 var elPicks=document.getElementById('picks'),elBar=document.getElementById('bar');
 var elQp=document.getElementById('qprompt'),elV=document.getElementById('verse'),elMeta=document.getElementById('qmeta'),elOpts=document.getElementById('opts'),elFb=document.getElementById('qfb');
-var btnStart=document.getElementById('btnStart'),btnNext=document.getElementById('btnNext');
+var btnSpeak=document.getElementById('btnSpeak'),btnNext=document.getElementById('btnNext');
 var elStreak=document.getElementById('streak'),elBest=document.getElementById('best');
 
 var grades=[{g:0,n:'🎲 全部'},{g:1,n:'一年级'},{g:2,n:'二年级'},{g:3,n:'三年级'},{g:4,n:'四年级'},{g:5,n:'五年级'},{g:6,n:'六年级'}];
@@ -169,12 +169,28 @@ elBest.textContent = state.best;
 
 grades.forEach(function(g,idx){
   var b=document.createElement('button');b.type='button';b.textContent=g.n;if(idx===0)b.classList.add('on');
-  b.addEventListener('click',function(){elPicks.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');state.grade=g.g;});
+  b.addEventListener('click',function(){elPicks.querySelectorAll('button').forEach(function(x){x.classList.remove('on')});b.classList.add('on');state.grade=g.g;buildQuiz();});
   elPicks.appendChild(b);
 });
 
 function shuffle(a){var b=a.slice();for(var i=b.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=b[i];b[i]=b[j];b[j]=t;}return b;}
 function pickPoems(g){var ps=POEMS.filter(function(p){return g===0||p.g===g;});return shuffle(ps);}
+
+/* 语音：首次手势后可用；每题的 🔊 按钮随时重听 */
+function say(t){
+  if(!t) return;
+  if(window.XNLY&&XNLY.voice&&XNLY.voice.speak){XNLY.voice.speak(String(t),{lang:'zh-CN',rate:.9});return;}
+  if(typeof speechSynthesis==='undefined') return;
+  try{var u=new SpeechSynthesisUtterance(String(t));u.lang='zh-CN';u.rate=.9;speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}
+}
+function replayQ(){
+  var q=state.quiz&&state.quiz[state.idx];
+  if(!q||state.done) return;
+  say(q.prompt.replace(/「|」/g,'')+'。'+q.p.lines.join('，'));
+}
+function unlockAudio(){
+  if(window.XNLY&&XNLY.voice&&XNLY.voice.unlock){try{XNLY.voice.unlock();}catch(e){}}
+}
 
 function buildQuiz(){
   var ps = pickPoems(state.grade);
@@ -212,7 +228,7 @@ function buildQuiz(){
     qs.push({p:p,type:type,prompt:prompt,verse:verse,opts:opts,ans:blank,done:false});
   });
   state.quiz = qs; state.idx = 0; state.score = 0; state.streak = 0; state.done = false;
-  updateStats(); btnNext.disabled = true; btnStart.textContent = '🔄 重新开始';
+  updateStats(); btnNext.disabled = true; btnNext.textContent = '下一题 →';
   renderQ();
 }
 
@@ -224,8 +240,8 @@ function renderQ(){
     elV.textContent = ''; elMeta.textContent = ''; elOpts.innerHTML = '';
     elFb.textContent = '答对 '+state.score+' / '+state.quiz.length+' 题，连对最多 '+state.streak+' 次';
     elFb.className='feedback ok';
-    btnNext.disabled = true;
-    btnStart.textContent = '🔄 再闯一轮'; btnStart.disabled=false;
+    btnNext.disabled = false;
+    btnNext.textContent = '🔄 再来一轮';
     return;
   }
   var q = state.quiz[state.idx];
@@ -249,14 +265,29 @@ function ansQ(btn,t){
     if(state.streak>state.best){state.best=state.streak;localStorage.setItem('gs.best',state.best);}
     Array.prototype.forEach.call(elOpts.children,function(b){b.disabled=true;if(b.textContent===q.ans)b.classList.add('good');});
     elFb.textContent = '✅ 答对啦！《'+q.p.t+'》'; elFb.className='qfb ok';
-    btnNext.disabled=false; updateStats();
-    try{ speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(q.p.lines.join('，')+'。'); u.lang='zh-CN'; u.rate=.9; speechSynthesis.speak(u);}catch(e){}
+    btnNext.disabled=false; btnNext.textContent = (state.idx+1>=state.quiz.length ? '🏁 看结果' : '下一题 →'); updateStats();
+    say(q.p.lines.join('，')+'。');
   } else {
     btn.classList.add('bad'); btn.disabled=true; elFb.textContent = '❌ 再想想～'; elFb.className='qfb bad';
   }
 }
-btnStart.addEventListener('click', function(){ buildQuiz(); });
-btnNext.addEventListener('click', function(){ state.idx++; if(state.idx>=state.quiz.length){ state.done=true;} renderQ(); });
+btnSpeak.addEventListener('click', function(){ unlockAudio(); replayQ(); });
+btnNext.addEventListener('click', function(){
+  if(state.done){ buildQuiz(); return; }
+  state.idx++; if(state.idx>=state.quiz.length){ state.done=true;} renderQ();
+});
+
+/* 首题直接可见：进入即生成一轮 */
+buildQuiz();
+
+/* iOS/平板音频解锁：首次任意点击补读当前题干 */
+var firstTapDone=false;
+document.addEventListener('pointerdown', function(){
+  if(firstTapDone) return;
+  firstTapDone=true;
+  unlockAudio();
+  replayQ();
+}, {passive:true});
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
