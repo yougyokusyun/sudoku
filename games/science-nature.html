@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>自然科学小百科 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#2a9d8f;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#eafaf6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef4ff,transparent 55%),
+             linear-gradient(160deg,#f5fffb,#f3f7ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:rgba(255,255,255,.82);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:12px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);overflow:hidden;}
+.cats{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;flex:none;}
+.cbtn{min-height:38px;padding:4px 14px;border-radius:999px;border:2px solid rgba(36,59,83,.10);background:#fff;
+  font-family:inherit;font-weight:800;font-size:.8rem;color:#3b5370;cursor:pointer;}
+.cbtn.on{border-color:var(--accent);background:#e8fbf5;color:#1c7a6f;}
+
+.qcard{width:min(96vw,680px);background:#fff;border:2px solid rgba(42,157,143,.2);border-radius:18px;
+  padding:14px 18px;box-shadow:0 8px 18px rgba(36,59,83,.08);flex:none;}
+.qcard .tag{display:inline-block;background:#e8fbf5;color:#1c7a6f;border-radius:999px;font-size:.7rem;
+  font-weight:800;padding:2px 10px;margin-bottom:8px;}
+.qcard .txt{font-size:clamp(1.02rem,2.6vh,1.32rem);font-weight:800;line-height:1.7;}
+
+.opts{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:9px;width:min(94vw,600px);flex:none;}
+.opt{min-height:clamp(48px,9vh,62px);border-radius:16px;border:2px solid rgba(36,59,83,.12);background:#fff;
+  font-family:inherit;font-size:clamp(.98rem,3vh,1.25rem);font-weight:900;color:var(--ink);cursor:pointer;
+  box-shadow:0 5px 12px rgba(36,59,83,.08);text-align:left;padding:0 16px;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#e9fbee;}
+.opt.bad{border-color:var(--bad);background:#ffeded;}
+.opt.faded{opacity:.38;pointer-events:none;}
+
+.feedback{min-height:24px;font-size:.92rem;font-weight:900;text-align:center;color:var(--muted);flex:none;}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);}
+.exp{width:min(94vw,600px);background:#fffbe8;border:2px dashed #e0b23e;border-radius:16px;padding:10px 14px;
+  font-size:clamp(.84rem,2.4vh,1rem);font-weight:800;line-height:1.65;color:#6e5410;flex:none;display:none;}
+.exp.show{display:block;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;flex:none;}
+.btn{min-height:42px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  color:var(--ink);font-family:inherit;font-weight:800;font-size:.86rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(42,157,143,.5);color:#fff;background:linear-gradient(135deg,#4fc3ae,#2a9d8f);}
+.btn.warn{border-color:rgba(240,161,26,.5);color:#a06a00;background:#fff7e0;}
+
+@media (max-height:560px){
+  body{padding:6px 10px;gap:5px;}
+  .stage{gap:6px;padding:8px;}
+  .qcard{padding:8px 12px;}
+  .qcard .txt{font-size:.98rem;}
+  .opt{min-height:42px;font-size:.95rem;}
+  .feedback{min-height:16px;font-size:.8rem;}
+  .btn{min-height:34px;font-size:.78rem;padding:0 14px;}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🌱 自然科学小百科</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">📚 第 <b id="qno">1</b> 题</span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="cats" id="cats">
+    <button class="cbtn on" type="button" data-c="0">🌿 植物</button>
+    <button class="cbtn" type="button" data-c="1">❤️ 人体健康</button>
+    <button class="cbtn" type="button" data-c="2">🌍 天文地理</button>
+    <button class="cbtn" type="button" data-c="3">🛡️ 安全常识</button>
+  </div>
+  <div class="qcard">
+    <span class="tag" id="tag">植物 · 第 1 题</span>
+    <div class="txt" id="qtext">正在出题…</div>
+  </div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="exp" id="exp"></div>
+  <div class="controls">
+    <button class="btn warn" id="hear" type="button">🔊 再听一遍</button>
+    <button class="btn primary" id="next" type="button">➡️ 下一题</button>
+  </div>
+</div>
+
+<script>
+var V = (window.XNLY && window.XNLY.voice) || null;
+function speak(t) {
+  if (V && V.speak) { V.speak(t, { rate: 0.92 }); return; }
+  if (!window.speechSynthesis) return;
+  try {
+    var u = new SpeechSynthesisUtterance(t);
+    u.lang = 'zh-CN'; u.rate = 0.9; u.pitch = 1.1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function mark(kind) {
+  if (window.XNLY && window.XNLY.mark) window.XNLY.mark(kind);
+}
+
+/* 每条：[题干, 正确, 干扰一, 干扰二, 讲解] */
+var CATS = [
+  { name: '植物', emo: '🌿', items: [
+    ['植物自己制造养分，主要靠哪种作用？', '光合作用', '呼吸作用', '蒸腾作用', '叶子利用阳光，把水和二氧化碳变成养分，这就是光合作用。'],
+    ['光合作用最需要什么？', '阳光', '月光', '灯光', '阳光是光合作用的能量来源，所以植物要放在有光的地方。'],
+    ['植物的根主要有什么用？', '吸收水分和养料', '开花', '结果', '根扎在土里，像吸管一样把水和养料送到全身。'],
+    ['叶子上的气孔主要用来做什么？', '呼吸和散失水分', '吸收阳光', '抓虫子', '气孔很小，负责换气和蒸腾水分。'],
+    ['向日葵的花盘会朝着哪里转？', '太阳', '月亮', '地面', '向日葵会跟着太阳转动，所以叫"向日"。'],
+    ['含羞草被碰到会怎样？', '叶片合拢', '马上落叶', '开出大花', '它的叶枕受刺激后失去水分，叶子就合起来，过一会儿又张开。'],
+    ['蒲公英的种子主要靠什么传播？', '风', '海水', '蚂蚁', '种子带小降落伞，被风吹到很远的地方。'],
+    ['椰子主要靠什么传播种子？', '海水漂流', '风吹', '小鸟叼', '椰子壳防水，能随着海水漂到别的海岸。'],
+    ['莲藕长在什么地方？', '水下的泥土里', '树上', '沙子里', '莲藕是莲的地下茎，横着长在池塘底的泥里。'],
+    ['竹子属于哪一类植物？', '草', '树', '灌木', '竹子有节、茎是草质的，植物学上把它算作禾本科的"草"。'],
+    ['仙人掌的刺是什么变来的？', '叶子', '花', '根', '为了少失水，叶子退化成了刺。'],
+    ['树木的年轮能告诉我们什么？', '树的年龄', '树的高度', '树的颜色', '每长一年就多一圈，数年轮就能知道树几岁。'],
+    ['香蕉的种子在哪里？', '果肉里的小黑点', '果皮上', '香蕉没有种子', '栽培香蕉的种子退化了，果肉里的小黑点就是它的痕迹。'],
+    ['草莓表面的小黑点是什么？', '种子', '花纹', '小虫子', '草莓的种子长在果实表面，所以草莓是"假果"。'],
+    ['松树的果实叫什么？', '松果', '橡果', '核桃', '松果里藏着松树的种子。'],
+    ['银杏树的叶子秋天会变成什么颜色？', '黄色', '紫色', '蓝色', '银杏是落叶乔木，秋天叶子会变成金黄色。'],
+    ['常绿树的叶子会怎样？', '四季常绿', '每年掉光', '冬天变红', '常绿树也会换叶，但不会一次掉光。'],
+    ['落叶树秋天落叶主要是为了？', '减少水分蒸发', '更好看', '长得更高', '天冷根吸水慢，落叶能减少水分流失。'],
+    ['植物开花以后一般会怎样？', '结果', '长根', '马上落叶', '花授粉后，子房慢慢长成果实。'],
+    ['蜜蜂采蜜时顺便帮植物做什么？', '传粉', '浇水', '松土', '蜜蜂把花粉从一朵花带到另一朵花，帮植物结果。'],
+    ['我们吃的土豆是植物的哪个部分？', '地下茎', '根', '果实', '土豆是块茎，上面有芽眼，所以能发芽。'],
+    ['我们吃的红薯是植物的哪个部分？', '根', '叶', '花', '红薯是块根，长在土里贮存养分。'],
+    ['我们吃的甘蔗是植物的哪个部分？', '茎', '根', '叶', '甘蔗吃的是它的茎，里面储存着糖分。'],
+    ['我们吃的西兰花是植物的哪个部分？', '花', '果实', '根', '西兰花是还没开放的花蕾，所以是花。'],
+    ['我们吃的菠菜是植物的哪个部分？', '叶', '根', '果实', '菠菜吃的是它的叶子。'],
+    ['玉米棒上的玉米粒属于？', '果实', '花', '根', '玉米粒是颖果，植物学上属于果实。'],
+    ['一朵花最重要的部分是？', '花蕊', '花瓣', '花萼', '花蕊负责产生花粉和接受花粉，是繁殖的关键。'],
+    ['种子发芽最需要的是？', '水分', '蜂蜜', '白糖', '种子先吸水膨胀，才能启动发芽。'],
+    ['种子发芽一般不需要？', '阳光', '水分', '空气', '很多种子在土里没光也能发芽，长出叶子后才需要阳光。'],
+    ['移栽树苗时要带一团土，是为了？', '保护根', '好看', '增加重量', '带土能保护细根，移栽后更容易活。'],
+    ['植物缺水时通常会怎样？', '叶子蔫了', '开出大花', '结出更多果', '缺水时叶子失去支撑就会垂下来。'],
+    ['花盆底部的小孔有什么用？', '排水', '装土', '装饰', '浇水多了，多余的水从小孔流走，根才不会泡烂。'],
+    ['苔藓一般长在哪里？', '阴湿的地方', '沙漠里', '山顶岩石上', '苔藓喜欢潮湿，常长在阴面、溪边。'],
+    ['水生植物的茎通常是什么样？', '柔软有孔', '又硬又粗', '长满刺', '茎里有通气孔，能把空气送到水下部分。'],
+    ['森林里大树倒下后，小树通常？', '长得更快', '停止生长', '马上枯死', '大树倒下后阳光变多，小树就长得更快。'],
+    ['落叶腐烂后会变成什么？', '肥料', '石头', '塑料', '落叶被分解后变成腐殖质，是很好的天然肥料。'],
+    ['下面哪项不是大树的作用？', '制造雾霾', '制造氧气', '保持水土', '雾霾是污染物造成的，大树反而能吸附一部分尘埃。'],
+    ['下面哪种做法是保护植物？', '给树浇水', '剥树皮', '折断树枝', '浇水能帮植物生长，剥皮折枝会让它受伤。'],
+    ['植物的"呼吸"什么时候进行？', '白天黑夜都进行', '只在白天', '只在晚上', '呼吸作用一直在进行；光合作用才需要光。'],
+    ['种子长成小苗的过程叫什么？', '发芽', '开花', '结果', '种子吸水后胚根伸出，就是发芽。']
+  ] },
+  { name: '人体健康', emo: '❤️', items: [
+    ['人体最大的器官是？', '皮肤', '心脏', '肺', '皮肤铺满全身，是人体最大的器官。'],
+    ['心脏的主要作用是？', '把血液泵到全身', '消化食物', '过滤空气', '心脏像水泵，不停地把血液送出去。'],
+    ['我们呼吸时吸入的主要是？', '氧气', '二氧化碳', '氮气', '空气中氧气约占 21%，是我们最需要的部分。'],
+    ['人体主要用什么器官呼吸？', '肺', '肝', '胃', '肺里有大量肺泡，负责和空气交换气体。'],
+    ['胃的主要作用是？', '消化食物', '泵血', '产生尿', '胃把食物搅碎，并用胃液帮助消化。'],
+    ['小肠的主要作用是？', '吸收营养', '储存尿', '呼吸', '小肠很长，大部分营养在这里被吸收。'],
+    ['下面哪项不是骨头的作用？', '储存尿液', '支撑身体', '保护内脏', '尿液由肾脏产生、膀胱储存，和骨头无关。'],
+    ['小学生每天大约要睡多久？', '10 小时左右', '4 小时', '3 小时', '小学生正在长身体，一般建议 9~11 小时。'],
+    ['刷牙最好一天几次？', '2 次', '一周 1 次', '不用刷', '早晚各一次，饭后可以漱口。'],
+    ['什么时候最应该洗手？', '饭前便后', '只在学校', '想起来才洗', '饭前便后洗手能减少病菌进入身体。'],
+    ['发烧时应该怎么做？', '多喝水、多休息', '剧烈运动', '一口水都不喝', '发烧会流失水分，补水和休息很重要。'],
+    ['保护眼睛的做法是？', '看书画画定时休息', '躺着看书', '长时间看手机', '每用眼半小时左右就远眺休息一会儿。'],
+    ['看电视时应该？', '保持适当距离并定时休息', '越近越好', '关灯看', '距离太近、时间太长都容易让眼睛疲劳。'],
+    ['挑食最可能造成？', '营养不均衡', '长得更高', '更聪明', '只吃几样东西，身体会缺少某些营养。'],
+    ['多喝水的主要好处是？', '帮助身体代谢', '让人变胖', '可以代替吃饭', '水帮助运输营养、调节体温，但不能代替吃饭。'],
+    ['人体正常体温大约是多少？', '37℃ 左右', '20℃', '50℃', '正常腋下体温大约 36~37℃。'],
+    ['流鼻血时应该怎么做？', '低头捏住鼻翼', '把头仰起来', '用力擤鼻涕', '身体前倾、捏住鼻翼几分钟能帮助止血，仰头会让血流到喉咙。'],
+    ['被开水烫伤后应该？', '用凉水冲', '抹牙膏', '用力搓', '先用凉水冲降温，严重时要及时就医。'],
+    ['成人一共有多少块骨头？', '206 块', '100 块', '500 块', '成人骨骼大约 206 块，小孩更多，长大后有些会合在一起。'],
+    ['血液里的红细胞主要负责？', '运输氧气', '消化食物', '过滤水', '红细胞里的血红蛋白能携带氧气。'],
+    ['大脑的主要作用是？', '思考和控制身体', '泵血', '消化食物', '大脑是"总指挥"，控制感觉、思考和动作。'],
+    ['指甲的主要作用是？', '保护指尖', '帮助呼吸', '消化食物', '指甲能保护手指末端，也方便做精细动作。'],
+    ['运动前应该先做什么？', '热身', '马上猛跑', '大量吃冰', '热身能让关节和肌肉进入状态，减少受伤。'],
+    ['运动后应该？', '慢慢放松并补水', '立刻坐下不动', '马上洗冷水澡', '运动后缓慢放松、少量多次喝水更安全。'],
+    ['吃太多甜食容易？', '蛀牙', '长高', '视力变好', '糖分留在牙齿上会被细菌利用，产生酸性物质腐蚀牙齿。'],
+    ['维生素主要来自哪里？', '蔬菜水果', '糖果', '肥肉', '新鲜蔬菜水果富含多种维生素。'],
+    ['缺钙最可能影响？', '骨骼发育', '头发颜色', '听力', '钙是骨骼和牙齿的重要成分。'],
+    ['打喷嚏时应该？', '用手肘挡住', '对着别人', '完全不管', '用手肘挡住能减少飞沫传播。'],
+    ['肺里交换气体主要发生在？', '肺泡', '心脏', '胃', '肺泡壁很薄，氧气和二氧化碳在这里交换。'],
+    ['食物消化的第一站是？', '口腔', '胃', '小肠', '牙齿咀嚼、唾液开始分解淀粉，消化从口腔开始。'],
+    ['食道的主要作用是？', '把食物送到胃', '储存食物', '吸收水分', '食道像一条管道，把食物往下送到胃。'],
+    ['肝脏的作用之一是？', '帮助消化和解毒', '泵血', '呼吸', '肝脏分泌胆汁帮助消化，还负责处理一些有害物质。'],
+    ['肾脏的主要作用是？', '过滤血液、产生尿', '消化食物', '思考', '肾脏像过滤器，把废物随尿液排出。'],
+    ['保护脊柱应该怎么做？', '坐直不驼背', '趴着写字', '单肩背很重的包', '坐姿端正、书包双肩背，能减轻脊柱负担。'],
+    ['每天户外活动建议多久？', '1 小时以上', '5 分钟', '不用活动', '户外活动能强健身体，也有助于保护视力。'],
+    ['营养不良常常是因为？', '吃得太单一', '睡太多', '运动太多', '食物种类太少，容易缺少某些营养素。'],
+    ['感冒打喷嚏、流鼻涕，多是什么引起？', '病毒感染', '缺钙', '缺铁', '大多数普通感冒由病毒引起，多休息多喝水。'],
+    ['耳朵的主要作用是？', '听声音和保持平衡', '呼吸', '消化', '耳朵负责听觉，内耳还帮助身体保持平衡。'],
+    ['皮肤被划破后会自动？', '结痂愈合', '变蓝', '消失', '血小板帮助止血，伤口慢慢结痂愈合。'],
+    ['心情不好时合适的做法是？', '和家人聊一聊', '乱发脾气', '不吃饭', '把感受说出来，比憋着或伤害自己更好。']
+  ] },
+  { name: '天文地理', emo: '🌍', items: [
+    ['地球绕着什么转动？', '太阳', '月亮', '火星', '地球绕太阳公转，一圈大约一年。'],
+    ['月亮绕着谁转？', '地球', '太阳', '金星', '月亮是地球的卫星，绕着地球转。'],
+    ['地球自转一圈大约需要？', '24 小时', '1 年', '1 个月', '自转一圈就是一天，约 24 小时。'],
+    ['地球公转一圈大约需要？', '1 年', '1 天', '1 小时', '绕太阳一圈就是一年。'],
+    ['白天和黑夜交替是因为？', '地球自转', '地球公转', '月亮移动', '地球自转时，面向太阳的一面是白天，背对的一面是黑夜。'],
+    ['四季变化主要因为？', '地球公转和地轴倾斜', '地球自转', '月亮绕地球转', '地轴倾斜使阳光照射角度随季节变化，形成四季。'],
+    ['离地球最近的恒星是？', '太阳', '北极星', '天狼星', '太阳是离我们最近的恒星。'],
+    ['太阳属于哪一类天体？', '恒星', '行星', '卫星', '太阳自己会发光发热，是恒星。'],
+    ['月亮属于哪一类天体？', '卫星', '恒星', '行星', '月亮绕着行星地球转，是卫星。'],
+    ['太阳系现在有几颗行星？', '8 颗', '9 颗', '5 颗', '从水星到海王星，一共 8 颗行星。'],
+    ['地球上最大的海洋是？', '太平洋', '大西洋', '印度洋', '太平洋面积最大，也最深。'],
+    ['世界上最高的山峰是？', '珠穆朗玛峰', '泰山', '富士山', '珠穆朗玛峰海拔约 8848 米。'],
+    ['中国最长的河流是？', '长江', '黄河', '珠江', '长江全长约 6300 千米，是中国第一长河。'],
+    ['沙漠里最缺少的是？', '水', '沙子', '阳光', '沙漠降水很少，水是最缺的。'],
+    ['彩虹一般出现在什么时候？', '雨后', '夜里', '冬天', '雨后空气中有很多小水滴，阳光一照就出现彩虹。'],
+    ['云是由什么组成的？', '小水滴或小冰晶', '灰尘', '棉花', '云是水汽凝结成的小水滴或小冰晶。'],
+    ['雨是怎么来的？', '云中的水滴变大后落下', '河水直接飞到天上落下', '从地下涌出', '云里的小水滴不断合并变大，重到空气托不住就落下来。'],
+    ['雪是水的哪种形态？', '固态', '液态', '气态', '雪是水蒸气直接凝华成的固态冰晶。'],
+    ['水蒸气是水的哪种形态？', '气态', '固态', '液态', '水蒸气是看不见的气体状态的水。'],
+    ['水结冰的温度大约是？', '0℃', '100℃', '37℃', '标准情况下水在 0℃ 结冰。'],
+    ['水烧开时的温度大约是？', '100℃', '0℃', '50℃', '标准气压下水的沸点约 100℃。'],
+    ['风是怎么形成的？', '空气流动', '地球转动', '水流', '空气从高压区流向低压区，就形成了风。'],
+    ['一天中太阳最高的时候大约在？', '中午', '清晨', '半夜', '中午太阳接近头顶，影子最短。'],
+    ['地球的"被子"是指？', '大气层', '海洋', '森林', '大气层像被子一样包裹地球，调节温度、挡住部分紫外线。'],
+    ['化石一般保存在哪里？', '岩石里', '水里', '云里', '化石是古代生物遗骸在岩石中留下的痕迹。'],
+    ['火山喷发喷出的是什么？', '岩浆', '雨水', '沙子', '火山喷出高温岩浆、火山灰和气体。'],
+    ['地震发生时应该？', '就近躲到坚固桌子下', '坐电梯', '站在窗边', '先就近躲避、保护头部，震后再有序撤离。'],
+    ['指南针主要指向？', '南北方向', '东西方向', '上下方向', '指南针利用地磁，指针大致指向南北。'],
+    ['地图上一般"上北下南"，右边是？', '东', '西', '北', '地图右边是东，左边是西。'],
+    ['我国的首都是？', '北京', '上海', '广州', '北京是中华人民共和国的首都。'],
+    ['一年有几个季节？', '4 个', '2 个', '12 个', '春、夏、秋、冬四个季节。'],
+    ['一年有多少个月？', '12 个', '10 个', '24 个', '一年 12 个月，共 365 天或 366 天。'],
+    ['闰年的二月有多少天？', '29 天', '28 天', '30 天', '闰年二月 29 天，全年 366 天。'],
+    ['地球表面大部分被什么覆盖？', '海洋', '陆地', '冰川', '地球表面约七成是海洋。'],
+    ['赤道附近的气候一般？', '炎热', '寒冷', '干旱', '赤道地区全年太阳高度大，气候炎热。'],
+    ['北极地区能看到哪种自然现象？', '极光', '龙卷风', '沙尘暴', '极光是太阳风与大气相互作用产生的发光现象。'],
+    ['潮汐主要由什么引起？', '月亮和太阳的引力', '风', '地震', '月亮和太阳对海水的引力造成潮涨潮落。'],
+    ['沙尘暴多发生在？', '干旱多风的地区', '热带雨林', '海边', '干旱、植被少、风大的地方容易起沙尘暴。'],
+    ['山顶比山脚冷，主要是因为？', '海拔越高气温越低', '山顶风小', '山顶没有太阳', '海拔每升高一定高度，气温就会下降。'],
+    ['保护地球环境应该怎么做？', '垃圾分类', '乱扔垃圾', '浪费水', '垃圾分类能减少污染，让资源被再利用。']
+  ] },
+  { name: '安全常识', emo: '🛡️', items: [
+    ['过马路应该怎么做？', '走斑马线并看红绿灯', '随意跑过马路', '边走边看手机', '斑马线和信号灯能保护行人安全。'],
+    ['遇到火灾应该？', '弯腰捂鼻快速撤离', '坐电梯下楼', '躲进衣柜', '火灾时电梯可能断电，应走安全通道并低姿撤离。'],
+    ['火警电话是？', '119', '110', '120', '119 是火警电话。'],
+    ['急救电话是？', '120', '119', '114', '120 是医疗急救电话。'],
+    ['报警电话是？', '110', '120', '119', '110 是报警电话。'],
+    ['陌生人给的糖能要吗？', '不能要', '可以要', '看心情', '不吃陌生人给的食物，是保护自己的基本做法。'],
+    ['独自在家有人敲门，应该？', '不开门并告诉家长', '马上开门', '让他进来等', '不管对方说什么，都不要给陌生人开门。'],
+    ['电器着火能直接用水浇吗？', '不能', '能', '多浇一点', '水会导电，应先断电再用灭火器或请大人处理。'],
+    ['插头不能怎么拔？', '用湿手拔', '用干手拔', '请大人拔', '湿手拔插头容易触电。'],
+    ['过马路时黄灯亮表示？', '准备停、等待', '赶快跑过去', '可以随便走', '黄灯是提醒：还没过的就停下等。'],
+    ['小学生骑自行车上路的规定是？', '未满 12 岁不能上路', '随时都可以', '有车就行', '法律规定未满 12 周岁不能在道路上骑自行车。'],
+    ['溺水自救最重要的是？', '保持冷静、仰漂呼救', '拼命挣扎', '潜到水底', '仰漂能省力，保持呼吸并大声呼救。'],
+    ['发现有人溺水应该？', '大声呼救并找大人', '自己马上下水救', '走开不管', '未成年人不熟悉水性，应先呼救、递漂浮物。'],
+    ['夏天中暑应该？', '到阴凉处补水', '继续晒太阳', '剧烈运动', '中暑要尽快降温、补水，严重时送医。'],
+    ['被狗咬伤后应该？', '立刻冲洗并打疫苗', '不用管', '用嘴吸伤口', '用流动水冲洗伤口，并尽快就医打狂犬疫苗。'],
+    ['高处的东西不要怎么做？', '探身去够', '请大人帮忙拿', '用稳当的凳子', '探身容易失去平衡摔下来。'],
+    ['电梯困人时应该？', '按警铃等待救援', '强行扒门', '自己爬出去', '待在电梯里按警铃最安全。'],
+    ['玩滑梯应该？', '排队从上往下滑', '从下往上爬', '头朝下滑', '排队、脚朝下坐稳才安全。'],
+    ['剪刀等工具用完应该？', '收好放回原处', '随手乱放', '拿着跑', '尖锐工具要收好，不能拿着跑。'],
+    ['药品应该怎么吃？', '在大人的指导下吃', '自己随便吃', '当糖吃', '药不能乱吃，必须由大人按剂量给。'],
+    ['用完燃气灶后要？', '确认火已关好', '直接出门', '不用管', '用完要检查开关，防止燃气泄漏。'],
+    ['闻到燃气味应该？', '开窗通风并告诉大人', '开灯检查', '用打火机照一下', '不能开关电器或点火，先通风、关阀门、找大人。'],
+    ['雷雨天气不要？', '在大树下躲雨', '待在室内', '关好窗户', '大树容易引雷，雷雨天要远离。'],
+    ['打雷时最好？', '关掉不必要的电器', '继续给手机充电', '站在阳台上', '雷电可能沿电线进入，拔掉不用的插头更安全。'],
+    ['地震时在室外应该？', '远离建筑物到空旷处', '贴着墙站', '躲进车里', '空旷处没有掉落物，比较安全。'],
+    ['发现电线掉在地上应该？', '远离并报警', '用手捡起来', '上去看看', '掉落的电线可能带电，要远离并通知大人。'],
+    ['坐车时应该？', '系好安全带', '把头伸出窗外', '站着玩', '安全带能在急刹车时保护身体。'],
+    ['未满多少岁不建议坐副驾驶？', '12 岁', '6 岁', '18 岁', '儿童身材小，安全气囊反而可能造成伤害。'],
+    ['走失时应该？', '找警察或工作人员', '跟陌生人走', '自己乱跑', '找穿制服的工作人员或警察最可靠。'],
+    ['遇到坏人跟踪应该？', '往人多的地方走并求助', '躲进小巷', '跑回偏僻的家', '人多的地方更容易获得帮助。'],
+    ['火灾逃生时能坐电梯吗？', '不能', '能', '人少时可以', '火灾时电梯可能停在半路，必须走楼梯。'],
+    ['用湿手碰开关会？', '触电', '更亮', '更省电', '水导电，湿手碰电器非常危险。'],
+    ['吃东西时不要？', '边吃边跑跳', '细嚼慢咽', '坐好再吃', '边吃边跑容易噎住或摔倒。'],
+    ['鱼刺卡喉应该？', '及时就医', '大口吞饭', '用手抠', '吞饭可能把刺扎得更深，应去医院处理。'],
+    ['小伤口应该怎么处理？', '清洗后贴创可贴', '用嘴舔', '完全不管', '先冲洗干净，再消毒包扎。'],
+    ['独自在家想用微波炉？', '要大人同意并指导', '随便用', '用来加热金属', '微波炉不能加热金属，孩子使用要有大人指导。'],
+    ['楼道里不能做什么？', '堆放杂物堵住通道', '保持通畅', '装应急灯', '堵塞通道会影响火灾时逃生。'],
+    ['游泳应该去哪里？', '有救生员的正规泳池', '野外河塘', '水库', '正规泳池有救生员和安全设施。'],
+    ['陌生人说"你妈妈让我来接你"，应该？', '先向家长核实', '直接跟他走', '上车再说', '先打电话确认，绝不能跟陌生人走。'],
+    ['下面哪种做法是安全用电？', '不用手触摸插座孔', '用铁丝捅插座', '湿手按开关', '插座孔带电，任何东西都不能伸进去。']
+  ] }
+];
+
+var state = { c: 0, streak: 0, qno: 0, order: [], pos: 0, cur: null, locked: false, timer: null, wrong: 0 };
+var elQ = document.getElementById('qtext');
+var elTag = document.getElementById('tag');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elExp = document.getElementById('exp');
+var elStreak = document.getElementById('streak');
+var elQno = document.getElementById('qno');
+
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function setCat(c) {
+  state.c = c;
+  state.qno = 0;
+  state.order = [];
+  state.pos = 0;
+  Array.prototype.forEach.call(document.querySelectorAll('.cbtn'), function (b) {
+    b.classList.toggle('on', Number(b.dataset.c) === c);
+  });
+  newRound();
+}
+function newRound() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  var cat = CATS[state.c];
+  if (!state.order.length) state.order = shuffle(cat.items.map(function (_, i) { return i; }));
+  if (state.pos >= state.order.length) { state.order = []; state.pos = 0; }
+  var idx = state.order[state.pos++];
+  state.cur = cat.items[idx];
+  state.qno++;
+  elQno.textContent = state.qno;
+  elTag.textContent = cat.emo + ' ' + cat.name + ' · 第 ' + state.qno + ' 题';
+  elQ.textContent = state.cur[0];
+  elExp.className = 'exp';
+  elExp.textContent = '';
+  elFb.className = 'feedback';
+  elFb.textContent = '';
+  var opts = shuffle([state.cur[1], state.cur[2], state.cur[3]]);
+  elOpts.innerHTML = '';
+  opts.forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = o;
+    b.addEventListener('click', function () { tap(b, o); });
+    elOpts.appendChild(b);
+  });
+  speak(state.cur[0]);
+}
+function tap(btn, v) {
+  if (state.locked) return;
+  var cur = state.cur;
+  if (v === cur[1]) {
+    state.locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { if (b !== btn) b.classList.add('faded'); });
+    state.streak++;
+    elStreak.textContent = state.streak;
+    mark('right');
+    elFb.className = 'feedback ok';
+    elFb.textContent = '✅ 答对啦！';
+    elExp.textContent = '💡 ' + cur[4];
+    elExp.className = 'exp show';
+    speak('答对啦。' + cur[4]);
+    state.timer = setTimeout(newRound, 3000);
+  } else {
+    btn.classList.add('bad', 'faded');
+    state.streak = 0;
+    elStreak.textContent = '0';
+    mark('wrong');
+    state.wrong++;
+    elFb.className = 'feedback bad';
+    elFb.textContent = '❌ 不对哦，正确答案是「' + cur[1] + '」';
+    elExp.textContent = '💡 ' + cur[4];
+    elExp.className = 'exp show';
+    speak('不对哦。' + cur[4]);
+    state.timer = setTimeout(newRound, 3200);
+  }
+}
+document.getElementById('hear').addEventListener('click', function () {
+  if (state.cur) speak(state.cur[0]);
+});
+document.getElementById('next').addEventListener('click', newRound);
+Array.prototype.forEach.call(document.querySelectorAll('.cbtn'), function (b) {
+  b.addEventListener('click', function () { setCat(Number(b.dataset.c)); });
+});
+
+setCat(0);
+window.__science = CATS;
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

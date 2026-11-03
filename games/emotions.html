@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>情绪与社交 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff0f6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef5ff,transparent 55%),
+             linear-gradient(160deg,#fff8fb,#f4f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;
+  font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.pill{background:#fff;border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);white-space:nowrap;}
+.pill b{color:var(--accent);}
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;width:100%;}
+.scene{width:100%;max-width:760px;background:#fff;border-radius:24px;padding:14px 16px;
+  box-shadow:0 10px 26px rgba(36,59,83,.12);text-align:center;}
+.scene .emo{font-size:clamp(2.6rem,10vw,4rem);line-height:1.2;}
+.qtext{font-size:clamp(1rem,2.6vw,1.25rem);font-weight:900;margin-top:4px;line-height:1.45;}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;width:100%;max-width:760px;}
+.opt{min-height:70px;border:2px solid rgba(36,59,83,.10);border-radius:18px;background:#fff;
+  font-family:inherit;font-weight:900;font-size:clamp(.9rem,2.4vw,1.05rem);color:var(--ink);
+  cursor:pointer;padding:8px 10px;box-shadow:0 5px 14px rgba(36,59,83,.10);line-height:1.35;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#eaf8ee;color:#1b7c33;animation:pop .45s ease;}
+.opt.bad{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+.opt.faded{opacity:.45;}
+.feedback{min-height:30px;font-size:1.05rem;font-weight:900;text-align:center;}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);}
+.exp{display:none;width:100%;max-width:760px;background:#fffdf3;border:2px solid #ffe4a3;border-radius:16px;
+  padding:10px 14px;font-size:clamp(.88rem,2.2vw,1rem);font-weight:700;line-height:1.5;color:#7a5a00;}
+.exp.show{display:block;}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  font-family:inherit;font-weight:800;font-size:.9rem;color:var(--ink);cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:rgba(124,92,255,.5);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@media (min-width:700px){
+  body{padding:18px 26px;gap:14px;}
+  h1{font-size:1.4rem;}
+  .qtext{font-size:1.4rem;}
+  .opt{min-height:84px;font-size:1.15rem;}
+  .scene .emo{font-size:4.4rem;}
+}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .opt{min-height:56px;} }
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <h1>😊 情绪与社交</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stats">
+  <span class="pill">📖 第 <b id="qno">1</b> / 28 题</span>
+  <span class="pill">✅ 答对 <b id="right">0</b></span>
+</div>
+<div class="stage">
+  <div class="scene">
+    <div class="emo" id="emo">😀</div>
+    <div class="qtext" id="qtext"></div>
+  </div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="exp" id="exp"></div>
+</div>
+<div class="controls">
+  <button class="btn" id="hear" type="button">🔊 再读一遍</button>
+  <button class="btn primary" id="next" type="button">➡️ 下一题</button>
+</div>
+<script>
+var CAN = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function say(t) {
+  if (!t) return;
+  try {
+    if (window.XNLY && XNLY.voice && XNLY.voice.speak) { XNLY.voice.speak(String(t)); return; }
+    if (!CAN) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function mark(k) { try { if (window.XNLY && XNLY.mark) XNLY.mark(k); } catch (e) { } }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+/* 28 题：[类型, 表情, 题干, 三个选项, 正确答案, 讲解] */
+var Q = [
+  ['face','😀','这个表情是什么感觉？',['开心','难过','生气'],'开心','笑眯眯的样子就是开心。'],
+  ['face','😢','这个表情是什么感觉？',['难过','开心','惊讶'],'难过','流眼泪、嘴巴向下，是难过。'],
+  ['face','😠','这个表情是什么感觉？',['生气','害怕','平静'],'生气','皱眉、瞪眼、脸红，是生气。'],
+  ['face','😨','这个表情是什么感觉？',['害怕','开心','生气'],'害怕','眼睛睁大、往后退，是害怕。'],
+  ['face','😲','这个表情是什么感觉？',['惊讶','难过','害怕'],'惊讶','嘴巴张成大圆形，是惊讶。'],
+  ['face','😐','这个表情是什么感觉？',['平静','开心','生气'],'平静','没有表情、很安静，是平静。'],
+  ['face','🥳','这个表情是什么感觉？',['开心','难过','害怕'],'开心','戴帽子撒彩纸，是特别开心。'],
+  ['face','😭','这个表情是什么感觉？',['难过','惊讶','开心'],'难过','大哭起来，是难过。'],
+  ['face','😡','这个表情是什么感觉？',['生气','平静','害怕'],'生气','脸涨红、气鼓鼓，是生气。'],
+  ['face','😱','这个表情是什么感觉？',['害怕','开心','平静'],'害怕','捂脸尖叫，是害怕。'],
+  ['face','🤔','这个表情是什么感觉？',['在想事情','生气','难过'],'在想事情','托着下巴，是在思考。'],
+  ['face','😴','这个表情是什么感觉？',['困了','开心','生气'],'困了','闭眼打呼，是困了想睡觉。'],
+  ['social','🧸','想玩小朋友手里的玩具，应该说什么？',['可以借我玩一下吗？','直接抢过来','躺地上哭'],'可以借我玩一下吗？','先问一问，别人同意才能玩。'],
+  ['social','🍪','小朋友想吃你的饼干，你会？',['分给他一块','藏起来不让他看见','全部吃掉'],'分给他一块','分享会让大家都开心。'],
+  ['social','💧','你不小心撞倒了小朋友，应该说？',['对不起，我扶你起来','赶快跑开','笑他摔倒了'],'对不起，我扶你起来','做错事要道歉，还要帮助别人。'],
+  ['social','🏃','小朋友在玩游戏，你想加入，应该？',['我可以和你们一起玩吗？','直接挤进去','把别人推开'],'我可以和你们一起玩吗？','先问一句，大家更愿意带你玩。'],
+  ['social','🎁','别人送你礼物，你要说？',['谢谢你','我不要','抢过来就跑'],'谢谢你','收到礼物要说谢谢。'],
+  ['social','🤝','小朋友帮你捡起玩具，你要说？',['谢谢你','不理他','你怎么这么慢'],'谢谢你','别人帮忙时要道谢。'],
+  ['social','🚶','你想从别人前面走过去，应该说？',['请让一下，谢谢','用手推开他','大声吼他'],'请让一下，谢谢','用礼貌的话请别人让一让。'],
+  ['social','🧹','玩完玩具以后，应该？',['把玩具收进盒子','扔在地上','留给别人收'],'把玩具收进盒子','自己玩的玩具自己收好。'],
+  ['social','🍽️','吃饭的时候，应该？',['等大家一起吃','把菜都拉到自己面前','大声嚷嚷'],'等大家一起吃','和家人一起吃饭要有礼貌。'],
+  ['social','🤕','小朋友摔倒了，你会？',['扶他起来，问他疼不疼','哈哈大笑','假装没看见'],'扶他起来，问他疼不疼','关心别人，别人会更信任你。'],
+  ['social','🗣️','别人正在说话，你应该？',['认真听，等他说完','大声打断','扭头走开'],'认真听，等他说完','别人说话时不插嘴，是尊重。'],
+  ['social','🛌','晚上大家都睡了，你应该？',['安安静静','大声唱歌','在床上跳'],'安安静静','安静才不会吵到别人。'],
+  ['social','🎨','只有一盒蜡笔，两个人都想用，应该？',['轮流用','抢过来自己画','藏起来'],'轮流用','轮流玩，大家都能玩到。'],
+  ['social','🚻','很多人在排队，你应该？',['站到队尾排队','插到最前面','往前挤'],'站到队尾排队','排队要守秩序。'],
+  ['social','🐶','看到别人家的小狗，想摸一摸，应该？',['先问主人可不可以','直接伸手摸','拽小狗尾巴'],'先问主人可不可以','摸别人的宠物要先征得同意。'],
+  ['social','😔','小朋友很难过，你会？',['安慰他，陪陪他','笑他','走开不管'],'安慰他，陪陪他','一句安慰的话能让别人好受一些。']
+];
+
+var state = { no: 0, right: 0, locked: false, idx: [] };
+var elQno = document.getElementById('qno');
+var elRight = document.getElementById('right');
+var elEmo = document.getElementById('emo');
+var elQ = document.getElementById('qtext');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elExp = document.getElementById('exp');
+
+function current() { return Q[state.idx[state.no]]; }
+
+function render() {
+  var it = current();
+  state.locked = false;
+  elQno.textContent = state.no + 1;
+  elRight.textContent = state.right;
+  elEmo.textContent = it[1];
+  elQ.textContent = it[2];
+  elFb.className = 'feedback'; elFb.textContent = '';
+  elExp.className = 'exp'; elExp.textContent = '';
+  elOpts.innerHTML = '';
+  shuffle(it[3]).forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt'; b.textContent = o;
+    b.addEventListener('click', function () { choose(b, o, it); });
+    elOpts.appendChild(b);
+  });
+  say(it[2]);
+}
+
+function choose(btn, o, it) {
+  if (state.locked) return;
+  if (o === it[4]) {
+    state.locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { if (b !== btn) b.classList.add('faded'); });
+    state.right++; elRight.textContent = state.right;
+    mark('right');
+    elFb.className = 'feedback ok'; elFb.textContent = '✅ 答对啦！';
+    elExp.textContent = '💡 ' + it[5]; elExp.className = 'exp show';
+    say('答对啦。' + it[5]);
+  } else {
+    btn.classList.add('bad');
+    setTimeout(function () { btn.classList.remove('bad'); }, 500);
+    mark('wrong');
+    elFb.className = 'feedback bad'; elFb.textContent = '❌ 再想一想～';
+    elExp.textContent = '💡 ' + it[5]; elExp.className = 'exp show';
+    say('再想一想。' + it[5]);
+  }
+}
+
+function nextQ() {
+  state.no = (state.no + 1) % Q.length;
+  if (state.no === 0) { state.idx = shuffle(Q.map(function (_, i) { return i; })); }
+  render();
+}
+
+document.getElementById('hear').addEventListener('click', function () { say(current()[2]); });
+document.getElementById('next').addEventListener('click', nextQ);
+
+state.idx = shuffle(Q.map(function (_, i) { return i; }));
+render();
+window.__emotions = { list: Q, state: state };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

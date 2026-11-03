@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>关联配对 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#eef8f3,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff4ec,transparent 55%),
+             linear-gradient(160deg,#f8fffb,#fffaf5);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;
+  font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.pill{background:#fff;border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);white-space:nowrap;}
+.pill b{color:var(--accent);}
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;width:100%;}
+.prompt{font-size:1.05rem;font-weight:900;text-align:center;}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;width:min(92vw,600px);
+  aspect-ratio:4/3;flex:none;}
+.mcard{position:relative;display:block;width:100%;height:100%;padding:0;border:none;background:none;
+  cursor:pointer;perspective:700px;font-family:inherit;}
+.mi{position:relative;display:block;width:100%;height:100%;transform-style:preserve-3d;
+  transition:transform .45s cubic-bezier(.4,.1,.3,1.3);}
+.mcard.flipped .mi{transform:rotateY(180deg);}
+.mf,.mb{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  border-radius:14px;backface-visibility:hidden;-webkit-backface-visibility:hidden;padding:4px;text-align:center;}
+.mb{background:linear-gradient(140deg,#7c5cff,#4f8df7 70%,#7cc4ff);color:#fff;font-size:1.6rem;
+  box-shadow:0 5px 14px rgba(36,59,83,.16);}
+.mf{background:#fff;color:var(--ink);font-weight:900;box-shadow:0 5px 14px rgba(36,59,83,.14);
+  transform:rotateY(180deg);font-size:clamp(.8rem,2.4vw,1rem);line-height:1.2;}
+.mf .e{font-size:clamp(1.4rem,5vw,2rem);line-height:1.1;}
+.mcard.matched .mf{background:#eaf8ee;color:var(--ok);box-shadow:inset 0 0 0 2px var(--ok),0 5px 14px rgba(47,179,68,.18);}
+.mcard.matched{cursor:default;}
+.feedback{min-height:30px;font-size:1.05rem;font-weight:900;text-align:center;}
+.feedback.ok{color:var(--ok);} .feedback.bad{color:var(--bad);}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  font-family:inherit;font-weight:800;font-size:.9rem;color:var(--ink);cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:rgba(124,92,255,.5);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (min-width:700px){
+  body{padding:18px 26px;gap:14px;}
+  h1{font-size:1.4rem;}
+  .grid{width:min(82vw,760px);gap:12px;}
+  .mb{font-size:2rem;}
+}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .grid{gap:6px;} }
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <h1>🔗 关联配对</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stats">
+  <span class="pill">📚 第 <b id="round">1</b> / 5 组</span>
+  <span class="pill">✅ 已配对 <b id="done">0</b> / 6</span>
+</div>
+<div class="stage">
+  <div class="prompt" id="prompt">点两张牌，找出一对好朋友</div>
+  <div class="grid" id="grid"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+<div class="controls">
+  <button class="btn" id="hear" type="button">🔊 读一读</button>
+  <button class="btn primary" id="again" type="button">🔁 重来一组</button>
+</div>
+<script>
+var CAN = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function say(t) {
+  if (!t) return;
+  try {
+    if (window.XNLY && XNLY.voice && XNLY.voice.speak) { XNLY.voice.speak(String(t)); return; }
+    if (!CAN) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function fx(kind) { try { if (window.XNLY && XNLY.sound) { if (kind === 'ok' && XNLY.sound.tap) XNLY.sound.tap(); } } catch (e) { } }
+function mark(k) { try { if (window.XNLY && XNLY.mark) XNLY.mark(k); } catch (e) { } }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+/* 30 组：[图案A, 文字A, 图案B, 文字B, 说明] */
+var PAIRS = [
+  ['🐦','小鸟','🪹','鸟巢','小鸟住在鸟巢里。'],
+  ['🐝','蜜蜂','🍯','蜂巢','蜜蜂住在蜂巢里。'],
+  ['🐘','大象','🌾','草原','大象住在草原上。'],
+  ['🐟','小鱼','🌊','水里','小鱼生活在水里。'],
+  ['🐼','熊猫','🎋','竹林','熊猫爱吃竹子，住在竹林。'],
+  ['🐜','蚂蚁','🕳️','蚁穴','蚂蚁住在蚁穴里。'],
+  ['🐢','乌龟','🏞️','池塘','乌龟住在池塘里。'],
+  ['🐒','猴子','🌳','树林','猴子住在树林里。'],
+  ['🐧','企鹅','❄️','冰天雪地','企鹅住在很冷的地方。'],
+  ['🦊','狐狸','🕋','山洞','狐狸住在山洞里。'],
+  ['✏️','铅笔','📄','纸','铅笔在纸上写字。'],
+  ['🥣','碗','🥄','勺子','碗和勺子一起吃饭。'],
+  ['🧦','袜子','👟','鞋子','袜子穿在鞋子里面。'],
+  ['🔑','钥匙','🔒','锁','钥匙开锁。'],
+  ['🌧️','下雨','☂️','雨伞','下雨要打伞。'],
+  ['🎣','鱼竿','🐟','鱼','鱼竿用来钓鱼。'],
+  ['🧵','线','🪡','针','针和线一起缝衣服。'],
+  ['🧹','扫帚','🧺','垃圾','扫帚把垃圾扫干净。'],
+  ['🪣','水桶','💧','水','水桶可以装水。'],
+  ['✂️','剪刀','📃','纸片','剪刀可以剪纸。'],
+  ['🥢','筷子','🍚','米饭','筷子用来夹米饭。'],
+  ['📏','尺子','📐','直线','尺子可以画直线。'],
+  ['🕯️','蜡烛','💡','灯光','蜡烛可以照明。'],
+  ['🛏️','床','😴','睡觉','床是用来睡觉的。'],
+  ['🚿','淋浴','🧼','肥皂','淋浴时用肥皂洗香香。'],
+  ['🔦','手电筒','🌑','黑夜','手电筒在黑夜里照亮。'],
+  ['🪥','牙刷','🦷','牙齿','牙刷用来刷牙。'],
+  ['🎨','画笔','🖼️','画','画笔用来画画。'],
+  ['🍳','锅','🥚','鸡蛋','锅可以煎鸡蛋。'],
+  ['☎️','电话','🗣️','说话','电话可以和人说话。']
+];
+
+var PER_ROUND = 6;
+var state = { round: 0, done: 0, first: null, locked: false, cards: [] };
+var elGrid = document.getElementById('grid');
+var elFb = document.getElementById('feedback');
+var elRound = document.getElementById('round');
+var elDone = document.getElementById('done');
+var elPrompt = document.getElementById('prompt');
+
+function buildCards() {
+  var start = state.round * PER_ROUND;
+  var slice = PAIRS.slice(start, start + PER_ROUND);
+  var cards = [];
+  slice.forEach(function (p, i) {
+    cards.push({ id: i, side: 0, e: p[0], t: p[1] });
+    cards.push({ id: i, side: 1, e: p[2], t: p[3] });
+  });
+  state.cards = shuffle(cards);
+  state.first = null; state.locked = false; state.done = 0;
+  elRound.textContent = state.round + 1;
+  elDone.textContent = 0;
+  elFb.className = 'feedback'; elFb.textContent = '';
+  elGrid.innerHTML = '';
+  state.cards.forEach(function (c, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'mcard'; b.dataset.i = i;
+    b.innerHTML = '<span class="mi"><span class="mb">🎴</span><span class="mf"><span class="e">' + c.e + '</span><span>' + c.t + '</span></span></span>';
+    b.addEventListener('click', function () { flip(b, i); });
+    elGrid.appendChild(b);
+  });
+  say('点两张牌，找出一对好朋友。');
+  window.__pairs = { state: state, pairs: PAIRS, flip: flip };
+}
+
+function flip(btn, i) {
+  if (state.locked) return;
+  if (btn.classList.contains('flipped')) return;
+  btn.classList.add('flipped');
+  var c = state.cards[i];
+  if (!state.first) { state.first = { btn: btn, i: i }; say(c.t); return; }
+  if (state.first.i === i) return;
+  var f = state.first;
+  var fc = state.cards[f.i];
+  if (fc.id === c.id && fc.side !== c.side) {
+    state.first = null;
+    state.locked = true;
+    setTimeout(function () {
+      f.btn.classList.add('matched'); btn.classList.add('matched');
+      f.btn.classList.add('pop'); btn.classList.add('pop');
+      state.done++; elDone.textContent = state.done;
+      elFb.className = 'feedback ok';
+      elFb.textContent = '✅ ' + fc.t + ' 和 ' + c.t + ' 是一对！';
+      mark('right');
+      fx('ok');
+      say(fc.t + ' 和 ' + c.t + ' 是一对。');
+      state.locked = false;
+      if (state.done >= PER_ROUND) finishRound();
+    }, 380);
+  } else {
+    state.first = null;
+    state.locked = true;
+    btn.classList.add('shake'); f.btn.classList.add('shake');
+    elFb.className = 'feedback bad';
+    elFb.textContent = '❌ 不是一对，再试试';
+    mark('wrong');
+    say('不是一对，再试试。');
+    setTimeout(function () {
+      btn.classList.remove('flipped', 'shake');
+      f.btn.classList.remove('flipped', 'shake');
+      state.locked = false;
+    }, 900);
+  }
+}
+
+function finishRound() {
+  setTimeout(function () {
+    if (state.round >= 4) {
+      elPrompt.textContent = '🎉 全部配对完成！真棒！';
+      elFb.className = 'feedback ok';
+      elFb.textContent = '🎉 30 组全部配对完成！';
+      say('太棒了，全部配对完成！');
+    } else {
+      state.round++;
+      buildCards();
+      elPrompt.textContent = '点两张牌，找出一对好朋友';
+    }
+  }, 900);
+}
+
+document.getElementById('hear').addEventListener('click', function () {
+  say('点两张牌，找出一对好朋友。配对成功会有声音，还会读出名字。');
+});
+document.getElementById('again').addEventListener('click', function () { buildCards(); });
+
+elPrompt.textContent = '点两张牌，找出一对好朋友';
+buildCards();
+window.__pairsRestart = function () { state.round = 0; buildCards(); };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

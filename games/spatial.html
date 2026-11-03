@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>空间方位 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#e9f7ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#f2f0ff,transparent 55%),
+             linear-gradient(160deg,#f7fcff,#f7f5ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;
+  font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.pill{background:#fff;border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);white-space:nowrap;}
+.pill b{color:var(--accent);}
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;width:100%;}
+.qtext{font-size:clamp(1rem,2.6vw,1.3rem);font-weight:900;text-align:center;line-height:1.45;}
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:min(88vw,380px);
+  aspect-ratio:1/1;background:#fff;border-radius:22px;padding:10px;box-shadow:0 10px 26px rgba(36,59,83,.12);}
+.cell{display:flex;align-items:center;justify-content:center;border-radius:14px;background:#f4f8fc;
+  font-size:clamp(1.5rem,6vw,2.4rem);}
+.cell.has{background:#eaf3ff;}
+.line{display:flex;gap:8px;align-items:center;justify-content:center;background:#fff;border-radius:22px;
+  padding:14px 16px;box-shadow:0 10px 26px rgba(36,59,83,.12);}
+.line .who{width:clamp(52px,14vw,78px);height:clamp(52px,14vw,78px);display:flex;align-items:center;
+  justify-content:center;border-radius:16px;background:#f4f8fc;font-size:clamp(1.6rem,7vw,2.6rem);}
+.sceneBox{position:relative;width:min(70vw,300px);aspect-ratio:4/3;background:#fff;border-radius:22px;
+  display:flex;align-items:center;justify-content:center;box-shadow:0 10px 26px rgba(36,59,83,.12);
+  font-size:clamp(3rem,14vw,5rem);}
+.sceneBox .inside{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);font-size:.45em;}
+.sceneBox .beside{position:absolute;right:6%;bottom:12%;font-size:.45em;}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;width:100%;max-width:700px;}
+.opt{min-height:68px;border:2px solid rgba(36,59,83,.10);border-radius:18px;background:#fff;
+  font-family:inherit;font-weight:900;font-size:clamp(.9rem,2.4vw,1.05rem);color:var(--ink);
+  cursor:pointer;padding:8px 10px;box-shadow:0 5px 14px rgba(36,59,83,.10);}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#eaf8ee;color:#1b7c33;animation:pop .45s ease;}
+.opt.bad{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+.opt.faded{opacity:.45;}
+.feedback{min-height:30px;font-size:1.05rem;font-weight:900;text-align:center;}
+.feedback.ok{color:var(--ok);} .feedback.bad{color:var(--bad);}
+.exp{display:none;width:100%;max-width:700px;background:#fffdf3;border:2px solid #ffe4a3;border-radius:16px;
+  padding:10px 14px;font-size:clamp(.88rem,2.2vw,1rem);font-weight:700;line-height:1.5;color:#7a5a00;}
+.exp.show{display:block;}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  font-family:inherit;font-weight:800;font-size:.9rem;color:var(--ink);cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:rgba(124,92,255,.5);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@media (min-width:700px){
+  body{padding:18px 26px;gap:14px;}
+  h1{font-size:1.4rem;}
+  .qtext{font-size:1.5rem;}
+  .board{width:min(70vw,460px);}
+  .opt{min-height:84px;font-size:1.15rem;}
+}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .opt{min-height:54px;} }
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <h1>🧭 空间方位</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stats">
+  <span class="pill">📖 第 <b id="qno">1</b> / 30 题</span>
+  <span class="pill">✅ 答对 <b id="right">0</b></span>
+</div>
+<div class="stage">
+  <div class="qtext" id="qtext"></div>
+  <div id="scene"></div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="exp" id="exp"></div>
+</div>
+<div class="controls">
+  <button class="btn" id="hear" type="button">🔊 再读一遍</button>
+  <button class="btn primary" id="next" type="button">➡️ 下一题</button>
+</div>
+<script>
+var CAN = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function say(t) {
+  if (!t) return;
+  try {
+    if (window.XNLY && XNLY.voice && XNLY.voice.speak) { XNLY.voice.speak(String(t)); return; }
+    if (!CAN) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function mark(k) { try { if (window.XNLY && XNLY.mark) XNLY.mark(k); } catch (e) { } }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+function rand(n) { return Math.floor(Math.random() * n); }
+
+var ANIMALS = ['🐰','🐻','🐱','🐶','🐸','🐼','🦊','🐷','🐵','🐯'];
+var DIRS = [
+  {k:'up', dr:-1, dc:0, label:'上面', q:'上面'},
+  {k:'down', dr:1, dc:0, label:'下面', q:'下面'},
+  {k:'left', dr:0, dc:-1, label:'左边', q:'左边'},
+  {k:'right', dr:0, dc:1, label:'右边', q:'右边'}
+];
+var DIR_LABELS = ['上面','下面','左边','右边'];
+
+/* 生成 30 题：12 网格方位 + 8 排队前后 + 10 箱子里外/旁边 */
+function buildGridQ() {
+  var ref = { r: rand(3), c: rand(3) };
+  var d = pick(DIRS);
+  var tr = ref.r + d.dr, tc = ref.c + d.dc, guard = 0;
+  while (tr < 0 || tr > 2 || tc < 0 || tc > 2) { d = pick(DIRS); tr = ref.r + d.dr; tc = ref.c + d.dc; if (++guard > 30) break; }
+  if (tr < 0 || tr > 2 || tc < 0 || tc > 2) { ref = { r: 1, c: 1 }; d = pick(DIRS); tr = ref.r + d.dr; tc = ref.c + d.dc; }
+  var a = pick(ANIMALS), b = pick(ANIMALS.filter(function (x) { return x !== a; }));
+  var cells = [];
+  for (var i = 0; i < 9; i++) cells.push(null);
+  cells[ref.r * 3 + ref.c] = b;
+  cells[tr * 3 + tc] = a;
+  return {
+    type: 'grid', cells: cells,
+    q: a + ' 在 ' + b + ' 的哪一边？',
+    opts: DIR_LABELS.slice(),
+    a: d.label,
+    exp: a + ' 在 ' + b + ' 的' + d.label + '，看格子就能找到。'
+  };
+}
+
+function buildLineQ() {
+  var who = shuffle(ANIMALS).slice(0, 4);
+  var idx = rand(4);
+  var target = who[idx];
+  var front = idx > 0;
+  var other = front ? who[idx - 1] : who[idx + 1];
+  var opts = shuffle(who.filter(function (x) { return x !== target && x !== other; }).concat([other])).slice(0, 3);
+  if (opts.indexOf(other) < 0) { opts[2] = other; }
+  return {
+    type: 'line', line: who,
+    q: target + (front ? ' 的前面是谁？' : ' 的后面是谁？'),
+    opts: opts,
+    a: other,
+    exp: '队伍朝前走，左边是前面。' + target + (front ? ' 的前面是 ' : ' 的后面是 ') + other + '。'
+  };
+}
+
+function buildBoxQ() {
+  var item = pick(['🍎','🍌','🧸','⚽','📚','🍬']);
+  var where = pick(['inside', 'beside', 'inside', 'beside']);
+  if (where === 'inside') {
+    return {
+      type: 'box', item: item, where: 'inside',
+      q: item + ' 在箱子的里面还是外面？',
+      opts: ['里面', '外面', '旁边'],
+      a: '里面',
+      exp: item + ' 被箱子装起来了，所以在里面。'
+    };
+  }
+  return {
+    type: 'box', item: item, where: 'beside',
+    q: item + ' 在箱子的哪一边？',
+    opts: ['旁边', '里面', '上面'],
+    a: '旁边',
+    exp: item + ' 在箱子的旁边，没有装进箱子里。'
+  };
+}
+
+function buildQuestions() {
+  var qs = [];
+  var i;
+  for (i = 0; i < 12; i++) qs.push(buildGridQ());
+  for (i = 0; i < 8; i++) qs.push(buildLineQ());
+  for (i = 0; i < 10; i++) qs.push(buildBoxQ());
+  return qs;
+}
+
+var QS = buildQuestions();
+var state = { no: 0, right: 0, locked: false };
+var elQno = document.getElementById('qno');
+var elRight = document.getElementById('right');
+var elQ = document.getElementById('qtext');
+var elScene = document.getElementById('scene');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elExp = document.getElementById('exp');
+
+function renderScene(it) {
+  if (it.type === 'grid') {
+    var h = '<div class="board">';
+    it.cells.forEach(function (c) {
+      h += '<div class="cell' + (c ? ' has' : '') + '">' + (c || '') + '</div>';
+    });
+    h += '</div>';
+    elScene.innerHTML = h;
+  } else if (it.type === 'line') {
+    var s = '<div class="line">';
+    it.line.forEach(function (c) { s += '<div class="who">' + c + '</div>'; });
+    s += '</div>';
+    elScene.innerHTML = s;
+  } else {
+    var inner = it.where === 'inside'
+      ? '<span class="inside">' + it.item + '</span>'
+      : '<span class="beside">' + it.item + '</span>';
+    elScene.innerHTML = '<div class="sceneBox">🎁' + inner + '</div>';
+  }
+}
+
+function render() {
+  var it = QS[state.no];
+  state.locked = false;
+  elQno.textContent = state.no + 1;
+  elRight.textContent = state.right;
+  elQ.textContent = it.q;
+  elFb.className = 'feedback'; elFb.textContent = '';
+  elExp.className = 'exp'; elExp.textContent = '';
+  renderScene(it);
+  elOpts.innerHTML = '';
+  shuffle(it.opts).forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt'; b.textContent = o;
+    b.addEventListener('click', function () { choose(b, o, it); });
+    elOpts.appendChild(b);
+  });
+  say(it.q);
+}
+
+function choose(btn, o, it) {
+  if (state.locked) return;
+  if (o === it.a) {
+    state.locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { if (b !== btn) b.classList.add('faded'); });
+    state.right++; elRight.textContent = state.right;
+    mark('right');
+    elFb.className = 'feedback ok'; elFb.textContent = '✅ 答对啦！';
+    elExp.textContent = '💡 ' + it.exp; elExp.className = 'exp show';
+    say('答对啦。' + it.exp);
+  } else {
+    btn.classList.add('bad');
+    setTimeout(function () { btn.classList.remove('bad'); }, 500);
+    mark('wrong');
+    elFb.className = 'feedback bad'; elFb.textContent = '❌ 再想想～';
+    elExp.textContent = '💡 ' + it.exp; elExp.className = 'exp show';
+    say('再想想。' + it.exp);
+  }
+}
+
+function nextQ() {
+  state.no++;
+  if (state.no >= QS.length) { QS = buildQuestions(); state.no = 0; }
+  render();
+}
+document.getElementById('hear').addEventListener('click', function () { say(QS[state.no].q); });
+document.getElementById('next').addEventListener('click', nextQ);
+
+render();
+window.__spatial = { list: QS, state: state, rebuild: function () { QS = buildQuestions(); state.no = 0; render(); } };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

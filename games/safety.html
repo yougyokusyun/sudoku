@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>生活安全常识 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff1e6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e8f7ff,transparent 55%),
+             linear-gradient(160deg,#fffaf5,#f2fbff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;
+  font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.pill{background:#fff;border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);white-space:nowrap;}
+.pill b{color:var(--accent);}
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;width:100%;}
+.scene{width:100%;max-width:760px;background:#fff;border-radius:24px;padding:14px 16px;
+  box-shadow:0 10px 26px rgba(36,59,83,.12);text-align:center;}
+.scene .emo{font-size:clamp(2.4rem,9vw,3.4rem);line-height:1.2;}
+.qtext{font-size:clamp(1rem,2.6vw,1.25rem);font-weight:900;margin-top:4px;line-height:1.45;}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;width:100%;max-width:760px;}
+.opt{min-height:70px;border:2px solid rgba(36,59,83,.10);border-radius:18px;background:#fff;
+  font-family:inherit;font-weight:900;font-size:clamp(.9rem,2.4vw,1.05rem);color:var(--ink);
+  cursor:pointer;padding:8px 10px;box-shadow:0 5px 14px rgba(36,59,83,.10);line-height:1.35;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#eaf8ee;color:#1b7c33;animation:pop .45s ease;}
+.opt.bad{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+.opt.faded{opacity:.45;}
+.feedback{min-height:30px;font-size:1.05rem;font-weight:900;text-align:center;}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);}
+.exp{display:none;width:100%;max-width:760px;background:#fffdf3;border:2px solid #ffe4a3;border-radius:16px;
+  padding:10px 14px;font-size:clamp(.88rem,2.2vw,1rem);font-weight:700;line-height:1.5;color:#7a5a00;}
+.exp.show{display:block;}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  font-family:inherit;font-weight:800;font-size:.9rem;color:var(--ink);cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:rgba(124,92,255,.5);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@media (min-width:700px){
+  body{padding:18px 26px;gap:14px;}
+  h1{font-size:1.4rem;}
+  .qtext{font-size:1.4rem;}
+  .opt{min-height:84px;font-size:1.15rem;}
+  .scene .emo{font-size:4rem;}
+}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .opt{min-height:56px;} }
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <h1>🛡️ 生活安全常识</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stats">
+  <span class="pill">📖 第 <b id="qno">1</b> / 40 题</span>
+  <span class="pill">✅ 答对 <b id="right">0</b></span>
+</div>
+<div class="stage">
+  <div class="scene">
+    <div class="emo" id="emo">🚦</div>
+    <div class="qtext" id="qtext"></div>
+  </div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="exp" id="exp"></div>
+</div>
+<div class="controls">
+  <button class="btn" id="hear" type="button">🔊 再读一遍</button>
+  <button class="btn primary" id="next" type="button">➡️ 下一题</button>
+</div>
+<script>
+var CAN = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function say(t) {
+  if (!t) return;
+  try {
+    if (window.XNLY && XNLY.voice && XNLY.voice.speak) { XNLY.voice.speak(String(t)); return; }
+    if (!CAN) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function mark(k) { try { if (window.XNLY && XNLY.mark) XNLY.mark(k); } catch (e) { } }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+/* 40 题：场景表情 / 题干 / 三个选项 / 正确答案 / 讲解 */
+var Q = [
+  ['🚦','过马路时，应该走哪里？',['斑马线','马路中间','汽车旁边'],'斑马线','过马路要走斑马线，还要看红绿灯。'],
+  ['🚥','红灯亮了，我们要怎么做？',['停下来等','快跑过去','慢慢走过去'],'停下来等','红灯停，绿灯行，黄灯要等一等。'],
+  ['🟢','绿灯亮了，过马路还要先做什么？',['左右看看','闭着眼睛跑','低头看手机'],'左右看看','绿灯也要先看看左右有没有车。'],
+  ['⚽','可以在马路上拍球玩吗？',['不可以','可以','车少的时候可以'],'不可以','马路上有车很危险，玩球要去空地或操场。'],
+  ['🍬','陌生人给你糖果，你应该？',['不要，拒绝他','马上吃掉','跟他走'],'不要，拒绝他','陌生人给的食物不能要，也不能跟他走。'],
+  ['🚗','陌生人说带你去找妈妈，怎么办？',['不跟他走，找警察','马上上车','跟他走'],'不跟他走，找警察','大人不会让陌生人来接你，要找警察或店员帮忙。'],
+  ['🚪','一个人在家，陌生人敲门怎么办？',['不开门，给爸妈打电话','开门看看','告诉他家里没人'],'不开门，给爸妈打电话','一个人在家不要给陌生人开门。'],
+  ['🔌','能用手指去戳插座孔吗？',['不可以，会触电','可以','用铁钉戳'],'不可以，会触电','插座里有电，手指和金属都不能碰。'],
+  ['💧','手湿湿的可以按电开关吗？',['擦干再按','直接按','用舌头舔'],'擦干再按','水会导电，手要擦干才能碰电器。'],
+  ['♨️','热水壶冒着热气，可以摸吗？',['不能摸，会烫伤','可以摸','用脸贴上去'],'不能摸，会烫伤','开水和水壶都很烫，要请大人帮忙。'],
+  ['💊','桌上的药片像糖果，能吃吗？',['不能，要先问大人','可以吃','吃一颗试试'],'不能，要先问大人','药不是糖果，乱吃会生病。'],
+  ['🧴','洗洁精、消毒水可以喝吗？',['不能喝，有毒','可以喝','喝一点点'],'不能喝，有毒','清洁用品有毒，只能用来打扫。'],
+  ['🔥','可以玩打火机吗？',['不可以，会着火','可以','点纸玩'],'不可以，会着火','火很危险，小朋友不能玩火。'],
+  ['🕯️','看到蜡烛和火柴，应该？',['不碰，叫大人来','自己点上','拿去床上玩'],'不碰，叫大人来','点火的东西都要交给大人。'],
+  ['🛒','在超市和妈妈走散了，怎么办？',['找收银台的工作人员','自己跑出超市','躲起来哭'],'找收银台的工作人员','走丢了要留在原地或找穿工作服的人。'],
+  ['🌳','在公园走丢了，应该找谁？',['穿制服的保安或警察','随便一个陌生人','自己走回家'],'穿制服的保安或警察','找穿制服的工作人员最安全。'],
+  ['📞','走丢时最有用的是记住什么？',['爸爸妈妈的电话','动画片的名字','零食的名字'],'爸爸妈妈的电话','记住家人的电话号码，就能请人帮忙打电话。'],
+  ['👮','在街上遇到危险，可以找谁？',['穿制服的警察','发传单的人','陌生叔叔'],'穿制服的警察','警察、保安、店员都可以求助。'],
+  ['🛗','被困在电梯里怎么办？',['按紧急按钮呼救','用手扒门','跳一跳'],'按紧急按钮呼救','按紧急按钮或打电话，不要扒门。'],
+  ['🏠','发现家里着火了，先做什么？',['大声呼救并离开','躲进衣柜','先找玩具'],'大声呼救并离开','先离开火场，再喊大人打 119。'],
+  ['🚭','楼道里有很多烟，怎么走？',['弯腰捂鼻快走','坐电梯','站着看'],'弯腰捂鼻快走','烟会往上升，弯腰捂鼻走楼梯更安全。'],
+  ['☎️','火警电话是多少？',['119','110','120'],'119','着火打 119，找警察打 110，急救打 120。'],
+  ['🚓','遇到坏人、需要警察帮忙，打？',['110','119','120'],'110','110 是报警电话。'],
+  ['🚑','有人受伤很严重，打哪个电话？',['120','110','119'],'120','120 是急救电话。'],
+  ['🏊','看到有人落水，小朋友应该？',['大声呼救找大人','自己跳下去救','装没看见'],'大声呼救找大人','小朋友不能下水救人，要马上喊大人。'],
+  ['🏞️','没有大人陪，能去河边玩吗？',['不能去','可以去','水浅就可以'],'不能去','水边很滑，必须有大人陪着。'],
+  ['🩱','游泳时应该？',['跟着大人，在浅水区','自己跑到深水区','在泳池边追跑'],'跟着大人，在浅水区','游泳要有大人看护，不在水边追逐。'],
+  ['🔌','拔插头应该怎么做？',['捏住插头拔','拉电线','用剪刀剪'],'捏住插头拔','拉电线会断，还可能触电。'],
+  ['✂️','把剪刀递给别人，怎么递？',['握住剪刀尖，把柄朝对方','剪刀尖朝对方','直接扔过去'],'握住剪刀尖，把柄朝对方','尖利的东西要保护好自己和别人。'],
+  ['🧱','小珠子、纽扣可以放进嘴里吗？',['不可以，会噎住','可以','含一会儿再吐'],'不可以，会噎住','小东西放进嘴里很危险。'],
+  ['🍇','吃东西噎住了怎么办？',['举手示意大人帮忙','继续大口吃','边跑边吃'],'举手示意大人帮忙','噎住要马上让大人知道。'],
+  ['🎢','在电梯扶梯上可以反着跑吗？',['不可以，要站稳扶好','可以','倒着走更好玩'],'不可以，要站稳扶好','扶梯上要站好扶稳，不能跑。'],
+  ['🏠','可以爬到阳台栏杆上吗？',['不可以，会摔下去','可以','站上去看风景'],'不可以，会摔下去','阳台、窗户都很危险，不能攀爬。'],
+  ['🪟','可以趴在窗户上往外探身吗？',['不可以，很危险','可以','有纱窗就可以'],'不可以，很危险','探出窗户容易掉下去。'],
+  ['📷','陌生人要给你拍照，怎么办？',['拒绝，并告诉家长','摆好姿势','跟他去别处拍'],'拒绝，并告诉家长','不要随便让陌生人拍照，也不要跟他走。'],
+  ['🗺️','陌生人请你带路，怎么办？',['拒绝，去找大人','带他走','上他的车'],'拒绝，去找大人','大人不需要小朋友带路，要赶紧找大人。'],
+  ['🚗','坐汽车时小朋友应该？',['坐安全座椅系好安全带','站在座位上','坐副驾驶'],'坐安全座椅系好安全带','安全座椅能在刹车时保护你。'],
+  ['🚲','骑平衡车、自行车要戴什么？',['头盔','大帽子','什么都不戴'],'头盔','戴头盔可以保护头不受伤。'],
+  ['🚪','商场着火，要跟着什么标志走？',['绿色安全出口标志','电梯标志','厕所标志'],'绿色安全出口标志','跟着安全出口标志走楼梯。'],
+  ['🙋','遇到危险，最该做的是什么？',['大声呼救找大人','自己躲起来','谁也不告诉'],'大声呼救找大人','大声呼救，让大人来帮忙。']
+];
+
+var state = { no: 0, right: 0, locked: false, idx: [] };
+var elQno = document.getElementById('qno');
+var elRight = document.getElementById('right');
+var elEmo = document.getElementById('emo');
+var elQ = document.getElementById('qtext');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elExp = document.getElementById('exp');
+
+function current() { return Q[state.idx[state.no]]; }
+
+function render() {
+  var it = current();
+  state.locked = false;
+  elQno.textContent = state.no + 1;
+  elRight.textContent = state.right;
+  elEmo.textContent = it[0];
+  elQ.textContent = it[1];
+  elFb.className = 'feedback'; elFb.textContent = '';
+  elExp.className = 'exp'; elExp.textContent = '';
+  elOpts.innerHTML = '';
+  shuffle(it[2]).forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt'; b.textContent = o;
+    b.addEventListener('click', function () { choose(b, o, it); });
+    elOpts.appendChild(b);
+  });
+  say(it[1]);
+}
+
+function choose(btn, o, it) {
+  if (state.locked) return;
+  if (o === it[3]) {
+    state.locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { if (b !== btn) b.classList.add('faded'); });
+    state.right++; elRight.textContent = state.right;
+    mark('right');
+    elFb.className = 'feedback ok'; elFb.textContent = '✅ 答对啦！';
+    elExp.textContent = '💡 ' + it[4]; elExp.className = 'exp show';
+    say('答对啦。' + it[4]);
+  } else {
+    btn.classList.add('bad');
+    setTimeout(function () { btn.classList.remove('bad'); }, 500);
+    mark('wrong');
+    elFb.className = 'feedback bad'; elFb.textContent = '❌ 再想一想～';
+    say('再想一想。' + it[4]);
+    elExp.textContent = '💡 ' + it[4]; elExp.className = 'exp show';
+  }
+}
+
+function nextQ() {
+  state.no = (state.no + 1) % Q.length;
+  if (state.no === 0) { state.idx = shuffle(Q.map(function (_, i) { return i; })); }
+  render();
+}
+
+document.getElementById('hear').addEventListener('click', function () { say(current()[1]); });
+document.getElementById('next').addEventListener('click', nextQ);
+
+state.idx = shuffle(Q.map(function (_, i) { return i; }));
+render();
+window.__safety = { list: Q, state: state };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

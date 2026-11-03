@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>外链书架 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--line:#e6edf5;--accent:#7c5cff;--ok:#2fb344;--bad:#ff5c5c;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#f0f4ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff6ec,transparent 55%),
+             linear-gradient(160deg,#fafbff,#fffaf5);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:9px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.12rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;
+  font-size:.82rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.notice{background:#fffdf3;border:2px solid #ffe4a3;border-radius:14px;padding:8px 12px;
+  font-size:.8rem;font-weight:800;color:#7a5a00;line-height:1.5;}
+.netbar{display:flex;align-items:center;gap:8px;justify-content:center;flex-wrap:wrap;}
+.net{background:#eaf8ee;color:#1b7c33;border-radius:999px;padding:5px 12px;font-size:.8rem;font-weight:900;}
+.net.off{background:#ffeded;color:#b3261e;}
+.chips{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.tchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;
+  font-family:inherit;font-size:.78rem;font-weight:800;color:#4a6076;cursor:pointer;
+  box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.tchip.on{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:transparent;}
+.list{flex:1;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;
+  align-content:start;width:100%;max-width:1100px;margin:0 auto;padding-bottom:8px;}
+.card{display:flex;flex-direction:column;gap:6px;background:#fff;border-radius:18px;padding:12px 14px;
+  text-decoration:none;color:var(--ink);border:2px solid transparent;
+  box-shadow:0 6px 18px rgba(36,59,83,.10);transition:transform .15s,box-shadow .15s,opacity .2s;}
+.card:active{transform:scale(.985);}
+.card .top{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.card .plat{font-size:.76rem;font-weight:900;color:var(--accent);background:#f3efff;border-radius:999px;padding:3px 9px;}
+.card .tag{font-size:.7rem;font-weight:900;color:#b3261e;background:#ffeceb;border-radius:999px;padding:3px 8px;}
+.card .tag.low{color:#0b6b3a;background:#eaf8ee;}
+.card .title{font-size:.98rem;font-weight:900;line-height:1.4;}
+.card .meta{display:flex;gap:6px;flex-wrap:wrap;}
+.card .meta span{font-size:.7rem;font-weight:800;color:#5b7189;background:#f4f7fb;border-radius:999px;padding:3px 8px;}
+.card .note{font-size:.76rem;line-height:1.5;color:var(--muted);}
+.card .go{font-size:.76rem;font-weight:900;color:#2563eb;}
+.card.off{opacity:.5;filter:grayscale(.3);}
+.card.off .go{color:#b3261e;}
+.card.off:hover{transform:none;}
+.card.custom{border-color:#d7c7ff;background:#fdfbff;}
+.card .del{align-self:flex-start;margin-top:2px;background:#ffeceb;color:#b3261e;border:none;
+  border-radius:999px;padding:4px 10px;font-family:inherit;font-size:.72rem;font-weight:900;cursor:pointer;}
+.panel{width:100%;max-width:1100px;margin:0 auto;background:#fff;border-radius:18px;padding:12px 14px;
+  box-shadow:0 6px 18px rgba(36,59,83,.10);display:flex;flex-direction:column;gap:8px;}
+.panel summary{font-weight:900;font-size:.9rem;cursor:pointer;color:#4a6076;}
+.form{display:grid;grid-template-columns:1fr;gap:8px;}
+.form input,.form select{min-height:42px;border:1px solid var(--line);border-radius:12px;padding:0 12px;
+  font-family:inherit;font-size:.86rem;color:var(--ink);background:#fbfdff;}
+.row{display:flex;gap:8px;flex-wrap:wrap;}
+.btn{min-height:40px;padding:0 16px;border:2px solid var(--line);border-radius:999px;background:#fff;
+  font-family:inherit;font-weight:800;font-size:.84rem;color:var(--ink);cursor:pointer;}
+.btn.primary{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:transparent;}
+.feedback{min-height:22px;font-size:.84rem;font-weight:800;color:var(--ok);}
+.feedback.bad{color:var(--bad);}
+footer{font-size:.76rem;color:var(--muted);text-align:center;padding:4px 0 10px;}
+@media (min-width:700px){
+  body{padding:16px 24px;gap:12px;}
+  h1{font-size:1.35rem;}
+  .list{grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;}
+  .card .title{font-size:1.08rem;}
+  .form{grid-template-columns:2fr 1.4fr 1fr auto;}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <h1>🔖 外链书架</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="notice">
+  👨‍👩‍👧 建议家长陪同使用。本站只提供链接与说明，不内嵌任何外部内容。<br>
+  📱 从主屏图标打开时会跳出到 Safari，返回后需再点图标。
+</div>
+<div class="netbar">
+  <span class="net" id="net">🌐 联网中，可以打开外链</span>
+</div>
+<div class="chips" id="catBar"></div>
+<div class="list" id="list"></div>
+<details class="panel">
+  <summary>➕ 家长添加收藏 / 备份</summary>
+  <div class="form">
+    <input id="fUrl" type="url" placeholder="粘贴链接，例如 https://…（含抖音分享链接）" autocomplete="off">
+    <input id="fTitle" type="text" placeholder="标题，例如「凯叔讲故事」" autocomplete="off">
+    <select id="fCat">
+      <option>英文听读</option><option>中文故事</option><option>科普</option><option>国学</option>
+    </select>
+    <button class="btn primary" id="addBtn" type="button">添加</button>
+  </div>
+  <div class="row">
+    <button class="btn" id="expBtn" type="button">⬇️ 导出 JSON</button>
+    <button class="btn" id="impBtn" type="button">⬆️ 导入 JSON</button>
+    <input id="fFile" type="file" accept="application/json,.json" hidden>
+  </div>
+  <div class="feedback" id="fb"></div>
+</details>
+<footer>外链内容由各平台提供，以官方站点为准 · 本站不抓取、不播放、不记录外链内容</footer>
+<script>
+var CAN = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function say(t) {
+  if (!t) return;
+  try {
+    if (window.XNLY && XNLY.voice && XNLY.voice.speak) { XNLY.voice.speak(String(t), { rate: 0.95 }); return; }
+    if (!CAN) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.1;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function mark(k) { try { if (window.XNLY && XNLY.mark) XNLY.mark(k); } catch (e) { } }
+function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+
+var CATS = ['英文听读', '中文故事', '科普', '国学'];
+var ITEMS = [
+  /* 英文听读 */
+  { cat: '英文听读', plat: '国家中小学智慧教育平台', title: '英语课程与绘本资源', age: '6~12 岁', dur: '按课程', login: '部分需登录', ads: '无广告',
+    url: 'https://basic.smartedu.cn/', note: '官方课程资源，按年级和学科自行挑选。以官方站点为准。' },
+  { cat: '英文听读', plat: 'Storynory', title: '免费英文故事音频', age: '4~10 岁', dur: '5~15 分钟', login: '不需要', ads: '以官方站点为准',
+    url: 'https://www.storynory.com/', note: '英文故事朗读，适合睡前听。这是平台首页，家长需自行挑选。' },
+  { cat: '英文听读', plat: 'VOA Learning English', title: '慢速英语新闻与故事', age: '9 岁以上', dur: '5~15 分钟', login: '不需要', ads: '以官方站点为准',
+    url: 'https://learningenglish.voanews.com/', note: '语速较慢，适合大孩子。这是平台首页，家长需自行挑选。' },
+  { cat: '英文听读', plat: 'BBC Learning English', title: '英语学习节目与音频', age: '9 岁以上', dur: '5~10 分钟', login: '不需要', ads: '无广告',
+    url: 'https://www.bbc.co.uk/learningenglish', note: '英式发音学习节目。这是平台首页，家长需自行挑选。' },
+  { cat: '英文听读', plat: 'Oxford Owl', title: '分级读物与绘本', age: '4~8 岁', dur: '5~10 分钟', login: '部分需注册', ads: '无广告',
+    url: 'https://www.oxfordowl.co.uk/', note: '牛津分级阅读资源。这是平台首页，家长需自行挑选。' },
+  { cat: '英文听读', plat: 'Starfall', title: '英语启蒙互动活动', age: '3~6 岁', dur: '5~10 分钟', login: '部分需付费', ads: '以官方站点为准',
+    url: 'https://www.starfall.com/', note: '低龄英语启蒙互动，含字母类内容，家长按需选择。这是平台首页。' },
+  /* 中文故事 */
+  { cat: '中文故事', plat: '国家中小学智慧教育平台', title: '语文课程与课外阅读', age: '6~12 岁', dur: '按课程', login: '部分需登录', ads: '无广告',
+    url: 'https://basic.smartedu.cn/', note: '官方语文课程与阅读资源。以官方站点为准。' },
+  { cat: '中文故事', plat: '央视网', title: '少儿与故事类节目', age: '3~12 岁', dur: '5~30 分钟', login: '不需要', ads: '以官方站点为准',
+    url: 'https://www.cctv.com/', note: '这是平台首页，家长需自行进入少儿频道挑选节目。' },
+  { cat: '中文故事', plat: '央视频', title: '少儿频道节目', age: '3~12 岁', dur: '5~30 分钟', login: '部分需登录', ads: '以官方站点为准',
+    url: 'https://www.yangshipin.cn/', note: '这是平台首页，家长需自行挑选少儿内容。' },
+  { cat: '中文故事', plat: '喜马拉雅', title: '儿童故事音频', age: '3~12 岁', dur: '5~20 分钟', login: '部分需登录', ads: '可能有广告',
+    url: 'https://www.ximalaya.com/', note: '音频平台首页，按关键词自行挑选儿童故事。' },
+  { cat: '中文故事', plat: '哔哩哔哩', title: '按关键词自行挑选', age: '6 岁以上', dur: '不定', login: '部分需登录', ads: '可能有广告',
+    url: 'https://www.bilibili.com/', note: '平台首页，家长按关键词（如「睡前故事」）自行挑选，站点不提供固定视频。' },
+  /* 科普 */
+  { cat: '科普', plat: '国家中小学智慧教育平台', title: '科学课程与科普资源', age: '6~12 岁', dur: '按课程', login: '部分需登录', ads: '无广告',
+    url: 'https://basic.smartedu.cn/', note: '官方科学课程资源。以官方站点为准。' },
+  { cat: '科普', plat: '央视网', title: '科普与纪录节目', age: '6 岁以上', dur: '10~30 分钟', login: '不需要', ads: '以官方站点为准',
+    url: 'https://www.cctv.com/', note: '这是平台首页，家长需自行进入纪录 / 科教栏目挑选。' },
+  { cat: '科普', plat: '央视频', title: '科教与自然节目', age: '6 岁以上', dur: '10~30 分钟', login: '部分需登录', ads: '以官方站点为准',
+    url: 'https://www.yangshipin.cn/', note: '这是平台首页，家长需自行挑选科普内容。' },
+  { cat: '科普', plat: '哔哩哔哩', title: '按关键词自行挑选', age: '6 岁以上', dur: '不定', login: '部分需登录', ads: '可能有广告',
+    url: 'https://www.bilibili.com/', note: '平台首页，家长按关键词（如「儿童科普」）自行挑选。' },
+  /* 国学 */
+  { cat: '国学', plat: '国家中小学智慧教育平台', title: '中华优秀传统文化', age: '6~12 岁', dur: '按课程', login: '部分需登录', ads: '无广告',
+    url: 'https://basic.smartedu.cn/', note: '官方传统文化课程资源。以官方站点为准。' },
+  { cat: '国学', plat: '央视网', title: '诗词与传统文化节目', age: '6 岁以上', dur: '10~30 分钟', login: '不需要', ads: '以官方站点为准',
+    url: 'https://www.cctv.com/', note: '这是平台首页，家长需自行进入文化栏目挑选。' },
+  { cat: '国学', plat: '喜马拉雅', title: '国学与诗词音频', age: '6 岁以上', dur: '5~20 分钟', login: '部分需登录', ads: '可能有广告',
+    url: 'https://www.ximalaya.com/', note: '音频平台首页，按关键词（如「唐诗」）自行挑选。' },
+  { cat: '国学', plat: '哔哩哔哩', title: '按关键词自行挑选', age: '8 岁以上', dur: '不定', login: '部分需登录', ads: '可能有广告',
+    url: 'https://www.bilibili.com/', note: '平台首页，家长按关键词（如「小古文」）自行挑选。' }
+];
+
+var KEY_CUSTOM = 'lk.custom';
+var state = { cat: '全部', online: true, custom: [] };
+
+var elList = document.getElementById('list');
+var elCat = document.getElementById('catBar');
+var elNet = document.getElementById('net');
+var elFb = document.getElementById('fb');
+
+function loadCustom() {
+  var raw = safeGet(KEY_CUSTOM);
+  if (!raw) return [];
+  try {
+    var a = JSON.parse(raw);
+    if (!Array.isArray(a)) return [];
+    return a.filter(function (x) { return x && typeof x.url === 'string' && /^https?:\/\//i.test(x.url); });
+  } catch (e) { return []; }
+}
+function saveCustom() { safeSet(KEY_CUSTOM, JSON.stringify(state.custom)); }
+
+function allItems() {
+  return ITEMS.concat(state.custom.map(function (c) {
+    return { cat: c.cat, plat: '家长添加', title: c.title, age: '家长自定', dur: '家长自定',
+      login: '以平台为准', ads: '以平台为准', url: c.url, note: '由家长自己添加，内容与适龄请家长把关。',
+      custom: true, id: c.id };
+  }));
+}
+
+function safeUrl(u) { return /^https?:\/\//i.test(u) ? u : null; }
+
+function buildCatBar() {
+  elCat.innerHTML = '';
+  ['全部'].concat(CATS).forEach(function (c) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tchip' + (state.cat === c ? ' on' : '');
+    var n = c === '全部' ? allItems().length : allItems().filter(function (i) { return i.cat === c; }).length;
+    b.textContent = c + ' ' + n;
+    b.addEventListener('click', function () { state.cat = c; render(); });
+    elCat.appendChild(b);
+  });
+}
+
+function render() {
+  buildCatBar();
+  var list = allItems().filter(function (i) { return state.cat === '全部' || i.cat === state.cat; });
+  elList.innerHTML = '';
+  list.forEach(function (it) {
+    var a = document.createElement('a');
+    a.className = 'card' + (it.custom ? ' custom' : '');
+    a.href = safeUrl(it.url) || '#';
+    a.target = '_blank';
+    a.rel = 'noopener noreferrer';
+    if (!state.online) { a.classList.add('off'); }
+    a.innerHTML =
+      '<span class="top"><span class="plat">' + it.plat + '</span>' +
+      (it.custom ? '<span class="tag low">家长添加</span>' : '') +
+      (!it.custom && /首页/.test(it.note) ? '<span class="tag">平台首页</span>' : '') + '</span>' +
+      '<span class="title">' + it.title + '</span>' +
+      '<span class="meta"><span>👶 ' + it.age + '</span><span>⏱ ' + it.dur + '</span>' +
+      '<span>🔑 ' + it.login + '</span><span>📣 ' + it.ads + '</span></span>' +
+      '<span class="note">' + it.note + '</span>' +
+      '<span class="go">' + (state.online ? '🌐 打开（新窗口）' : '🚫 需联网才能看') + '</span>';
+    if (it.custom) {
+      var del = document.createElement('button');
+      del.type = 'button'; del.className = 'del'; del.textContent = '🗑 删除';
+      del.addEventListener('click', function (ev) {
+        ev.preventDefault(); ev.stopPropagation();
+        state.custom = state.custom.filter(function (c) { return c.id !== it.id; });
+        saveCustom(); render(); flash('已删除「' + it.title + '」', false);
+      });
+      a.appendChild(del);
+    }
+    a.addEventListener('click', function (ev) {
+      if (!state.online) {
+        ev.preventDefault();
+        flash('现在没有网络，连上网再点吧', true);
+        say('现在没有网络，连上网再点吧。');
+        return;
+      }
+      mark('right');
+    });
+    elList.appendChild(a);
+  });
+}
+
+function flash(msg, bad) {
+  elFb.textContent = msg;
+  elFb.className = 'feedback' + (bad ? ' bad' : '');
+  setTimeout(function () { elFb.textContent = ''; }, 2600);
+}
+
+function updateNet() {
+  state.online = navigator.onLine !== false;
+  elNet.className = 'net' + (state.online ? '' : ' off');
+  elNet.textContent = state.online ? '🌐 联网中，可以打开外链' : '📴 已断网 · 外链卡片暂时不可点';
+  render();
+}
+window.addEventListener('online', updateNet);
+window.addEventListener('offline', updateNet);
+
+function addCustom(url, title, cat) {
+  url = (url || '').trim();
+  title = (title || '').trim();
+  if (!/^https?:\/\//i.test(url)) { flash('请粘贴以 http:// 或 https:// 开头的链接', true); return false; }
+  if (!title) { flash('请填一个标题，方便以后找', true); return false; }
+  if (!cat || CATS.indexOf(cat) < 0) cat = '中文故事';
+  state.custom.push({ id: 'c' + Date.now() + Math.floor(Math.random() * 1000), cat: cat, title: title, url: url });
+  saveCustom(); render();
+  flash('已添加「' + title + '」', false);
+  say('已添加。');
+  return true;
+}
+
+function delCustom(id) {
+  state.custom = state.custom.filter(function (c) { return c.id !== id; });
+  saveCustom(); render();
+}
+
+function exportJSON() {
+  return JSON.stringify({ v: 1, items: state.custom }, null, 2);
+}
+
+function importJSON(text) {
+  try {
+    var obj = JSON.parse(text);
+    var arr = Array.isArray(obj) ? obj : obj.items;
+    if (!Array.isArray(arr)) { flash('JSON 格式不对，需要 items 数组', true); return 0; }
+    var n = 0;
+    arr.forEach(function (x) {
+      if (!x || !/^https?:\/\//i.test(String(x.url || ''))) return;
+      var t = String(x.title || '').slice(0, 60) || '未命名';
+      var cat = CATS.indexOf(x.cat) >= 0 ? x.cat : '中文故事';
+      state.custom.push({ id: 'c' + Date.now() + n + Math.floor(Math.random() * 500), cat: cat, title: t, url: String(x.url) });
+      n++;
+    });
+    saveCustom(); render();
+    flash('已导入 ' + n + ' 条', false);
+    return n;
+  } catch (e) { flash('导入失败：不是有效的 JSON', true); return 0; }
+}
+
+document.getElementById('addBtn').addEventListener('click', function () {
+  addCustom(document.getElementById('fUrl').value, document.getElementById('fTitle').value, document.getElementById('fCat').value);
+  document.getElementById('fUrl').value = '';
+  document.getElementById('fTitle').value = '';
+});
+document.getElementById('expBtn').addEventListener('click', function () {
+  var txt = exportJSON();
+  try {
+    var blob = new Blob([txt], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = '外链书架-备份.json';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+    flash('已导出 ' + state.custom.length + ' 条', false);
+  } catch (e) { flash('导出失败，可长按下方 JSON 复制', true); }
+});
+document.getElementById('impBtn').addEventListener('click', function () {
+  document.getElementById('fFile').click();
+});
+document.getElementById('fFile').addEventListener('change', function (e) {
+  var file = e.target.files && e.target.files[0];
+  if (!file) return;
+  var fr = new FileReader();
+  fr.onload = function () { importJSON(String(fr.result)); };
+  fr.readAsText(file);
+  e.target.value = '';
+});
+
+state.custom = loadCustom();
+updateNet();
+window.__links = { items: ITEMS, state: state, addCustom: addCustom, delCustom: delCustom,
+  exportJSON: exportJSON, importJSON: importJSON, updateNet: updateNet, render: render };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

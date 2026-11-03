@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>小古文 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#8a5a2b;--paper:#fffaf0;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fdf3e3,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#f0f6ff,transparent 55%),
+             linear-gradient(160deg,#fffaf2,#f4f8ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;
+  background:rgba(255,255,255,.84);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:12px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);overflow:hidden;}
+.txtcard{width:min(96vw,700px);background:var(--paper);border:2px solid rgba(138,90,43,.18);border-radius:18px;
+  padding:12px 18px;box-shadow:0 8px 18px rgba(36,59,83,.06);flex:none;}
+.txtcard .ttl{font-size:.78rem;font-weight:800;color:#9a7a55;margin-bottom:6px;}
+.txtcard .txt{font-size:clamp(1.02rem,2.7vh,1.35rem);font-weight:800;line-height:2;letter-spacing:1px;
+  font-family:'Kaiti SC','KaiTi','STKaiti','PingFang SC',serif;}
+.plain{display:none;margin-top:8px;padding-top:8px;border-top:1px dashed rgba(138,90,43,.25);
+  font-size:clamp(.86rem,2.3vh,1rem);line-height:1.8;color:#6b563c;font-weight:700;}
+.plain.show{display:block;}
+
+.qcard{width:min(96vw,700px);background:#fff;border:2px solid rgba(138,90,43,.16);border-radius:16px;
+  padding:10px 16px;flex:none;}
+.qcard .tag{display:inline-block;background:#f7ead7;color:#8a5a2b;border-radius:999px;font-size:.7rem;
+  font-weight:800;padding:2px 10px;margin-bottom:6px;}
+.qcard .txt{font-size:clamp(.98rem,2.5vh,1.18rem);font-weight:800;line-height:1.7;}
+
+.opts{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:8px;width:min(94vw,640px);flex:none;}
+.opt{min-height:clamp(44px,8vh,56px);border-radius:14px;border:2px solid rgba(36,59,83,.12);background:#fff;
+  font-family:inherit;font-size:clamp(.92rem,2.8vh,1.1rem);font-weight:900;color:var(--ink);cursor:pointer;
+  box-shadow:0 4px 10px rgba(36,59,83,.07);text-align:left;padding:0 14px;line-height:1.4;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#e9fbee;}
+.opt.bad{border-color:var(--bad);background:#ffeded;}
+.opt.faded{opacity:.38;pointer-events:none;}
+
+.feedback{min-height:22px;font-size:.9rem;font-weight:900;text-align:center;color:var(--muted);flex:none;}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);}
+.exp{width:min(94vw,640px);background:#fffbe8;border:2px dashed #e0b23e;border-radius:14px;padding:8px 12px;
+  font-size:clamp(.82rem,2.3vh,.98rem);font-weight:800;line-height:1.6;color:#6e5410;flex:none;display:none;}
+.exp.show{display:block;}
+
+.controls{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;flex:none;}
+.btn{min-height:40px;padding:0 16px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  color:var(--ink);font-family:inherit;font-weight:800;font-size:.84rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(138,90,43,.45);color:#fff;background:linear-gradient(135deg,#c99a63,#8a5a2b);}
+.btn.warn{border-color:rgba(240,161,26,.5);color:#a06a00;background:#fff7e0;}
+
+@media (max-height:560px){
+  body{padding:6px 10px;gap:5px;}
+  .stage{gap:6px;padding:8px;}
+  .txtcard{padding:8px 12px;}
+  .txtcard .txt{font-size:.98rem;line-height:1.7;}
+  .qcard{padding:7px 12px;}
+  .qcard .txt{font-size:.92rem;}
+  .opt{min-height:38px;font-size:.88rem;}
+  .feedback{min-height:16px;font-size:.8rem;}
+  .btn{min-height:32px;font-size:.76rem;padding:0 12px;}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>📜 小古文</h1>
+  <div class="chips">
+    <span class="chip">📖 第 <b id="pno">1</b> / 20 篇</span>
+    <span class="chip">❓ 第 <b id="qno">1</b> / 2 题</span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="txtcard">
+    <div class="ttl" id="src">《宋史·司马光传》</div>
+    <div class="txt" id="txt">正在加载…</div>
+    <div class="plain" id="plain"></div>
+  </div>
+  <div class="qcard">
+    <span class="tag" id="qtag">字义</span>
+    <div class="txt" id="question">…</div>
+  </div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="exp" id="exp"></div>
+  <div class="controls">
+    <button class="btn warn" id="read" type="button">🔊 朗读原文</button>
+    <button class="btn" id="white" type="button">💬 白话对照</button>
+    <button class="btn primary" id="next" type="button">➡️ 下一题</button>
+  </div>
+</div>
+
+<script>
+var V = (window.XNLY && window.XNLY.voice) || null;
+function speak(t) {
+  if (V && V.speak) { V.speak(t, { rate: 0.82 }); return; }
+  if (!window.speechSynthesis) return;
+  try {
+    var u = new SpeechSynthesisUtterance(t);
+    u.lang = 'zh-CN'; u.rate = 0.8; u.pitch = 1.05;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function mark(kind) {
+  if (window.XNLY && window.XNLY.mark) window.XNLY.mark(kind);
+}
+
+/* 20 篇小古文，每篇 2 题（字义 / 断句 / 句意） */
+var PIECES = [
+  { src: '《宋史·司马光传》', txt: '群儿戏于庭，一儿登瓮，足跌没水中。众皆弃去，光持石击瓮破之，水迸，儿得活。',
+    plain: '一群小孩在院子里玩，一个小孩爬上大水缸，脚一滑掉进水里。别的孩子都吓跑了，司马光拿起石头把缸砸破，水涌出来，小孩得救了。',
+    qs: [
+      { q: '"群儿戏于庭"中的"庭"是什么意思？', o: ['庭院', '大厅', '屋顶'], a: 0, e: '"庭"就是庭院、院子。' },
+      { q: '"众皆弃去"的意思最接近？', o: ['其他孩子都跑开了', '大家一起把缸推倒', '孩子们都跳进水里'], a: 0, e: '"皆"是都，"弃去"是丢下不管跑开。' }
+    ] },
+  { src: '《韩非子·五蠹》', txt: '宋人有耕者，田中有株，兔走触株，折颈而死。因释其耒而守株，冀复得兔。兔不可复得，而身为宋国笑。',
+    plain: '宋国有个农夫，田里有个树桩。一只兔子跑过来撞上树桩，脖子折断死了。农夫就放下农具守着树桩，希望再得到兔子。兔子再也没得到，他自己却被宋国人笑话。',
+    qs: [
+      { q: '"因释其耒而守株"中的"释"是什么意思？', o: ['放下', '解释', '修理'], a: 0, e: '"释"在这里是放下，农夫放下了农具。' },
+      { q: '这个故事告诉我们什么？', o: ['不能想着不劳而获', '兔子跑得很快', '种田要靠树桩'], a: 0, e: '偶然得到一次兔子，不能当成天天都有，不能靠运气过日子。' }
+    ] },
+  { src: '《山海经·北山经》', txt: '炎帝之少女，名曰女娃。女娃游于东海，溺而不返，故为精卫，常衔西山之木石，以堙于东海。',
+    plain: '炎帝的小女儿名叫女娃。她在东海游玩时淹死了，没能回去，后来变成精卫鸟，常常叼着西山的树枝和石子，填到东海里。',
+    qs: [
+      { q: '"炎帝之少女"中的"少女"是什么意思？', o: ['小女儿', '年轻的姑娘', '女仆'], a: 0, e: '古文里"少女"指小女儿，不是现代说的年轻女孩。' },
+      { q: '"以堙于东海"中的"堙"是什么意思？', o: ['填塞', '淹没', '游泳'], a: 0, e: '"堙"是填塞，精卫用木石填海。' }
+    ] },
+  { src: '《世说新语·雅量》', txt: '王戎七岁，尝与诸小儿游。看道边李树多子折枝，诸儿竞走取之，唯戎不动。人问之，答曰："树在道边而多子，此必苦李。"取之，信然。',
+    plain: '王戎七岁时，曾经和许多小孩一起玩。看见路边李树上果实很多，把树枝都压弯了，孩子们争着跑去摘，只有王戎不动。有人问他，他说："树在路边却还有这么多果子，一定是苦的。"摘来一尝，果然如此。',
+    qs: [
+      { q: '"尝与诸小儿游"中的"尝"是什么意思？', o: ['曾经', '品尝', '常常'], a: 0, e: '"尝"在这里是曾经的意思。' },
+      { q: '王戎为什么不去摘李子？', o: ['他判断李子一定是苦的', '他不喜欢吃李子', '他跑得最慢'], a: 0, e: '路边果子多却没人摘，说明不好吃，所以王戎判断是苦李。' }
+    ] },
+  { src: '《世说新语·言语》', txt: '梁国杨氏子九岁，甚聪惠。孔君平诣其父，父不在，乃呼儿出。为设果，果有杨梅。孔指以示儿曰："此是君家果。"儿应声答曰："未闻孔雀是夫子家禽。"',
+    plain: '梁国杨家有个九岁的孩子，非常聪明。孔君平去拜访他父亲，父亲不在，就把孩子叫出来。孩子摆上水果招待，果盘里有杨梅。孔君平指着杨梅对他说："这是你家的果子。"孩子马上回答："我可没听说孔雀是您家的鸟。"',
+    qs: [
+      { q: '"孔君平诣其父"中的"诣"是什么意思？', o: ['拜访', '寻找', '邀请'], a: 0, e: '"诣"是拜访，孔君平去拜访杨家父亲。' },
+      { q: '"未闻孔雀是夫子家禽"的正确断句是？', o: ['未闻／孔雀／是夫子家禽', '未闻孔雀／是夫子／家禽', '未／闻孔雀是／夫子家禽'], a: 0, e: '"未闻"后停顿，再说"孔雀是夫子家禽"。' }
+    ] },
+  { src: '《列子·汤问》', txt: '一儿曰："我以日始出时去人近，而日中时远也。"一儿曰："我以日初出远，而日中时近也。"',
+    plain: '一个小孩说："我认为太阳刚升起来时离人近，到中午时离人远。"另一个小孩说："我认为太阳刚出来时离人远，到中午时离人近。"',
+    qs: [
+      { q: '"我以日始出时去人近"中的"去"是什么意思？', o: ['距离', '离开', '前往'], a: 0, e: '"去"在这里是距离，"去人近"就是离人近。' },
+      { q: '"我以日始出时"中的"以"是什么意思？', o: ['认为', '因为', '用'], a: 0, e: '"以"在这里是认为。' }
+    ] },
+  { src: '《孟子·告子上》', txt: '弈秋，通国之善弈者也。使弈秋诲二人弈，其一人专心致志，惟弈秋之为听；一人虽听之，一心以为有鸿鹄将至，思援弓缴而射之。',
+    plain: '弈秋是全国最会下棋的人。让弈秋教两个人下棋，其中一个专心致志，只听弈秋讲；另一个虽然也在听，心里却想着有天鹅要飞来，想拉弓去射它。',
+    qs: [
+      { q: '"使弈秋诲二人弈"中的"诲"是什么意思？', o: ['教导', '后悔', '学习'], a: 0, e: '"诲"是教导，弈秋教两个人下棋。' },
+      { q: '两个人学下棋结果不同，主要因为？', o: ['一个专心，一个分心', '一个更聪明', '一个年纪大'], a: 0, e: '同样的老师，专心与否才是关键。' }
+    ] },
+  { src: '《韩非子·难一》', txt: '楚人有鬻盾与矛者，誉之曰："吾盾之坚，物莫能陷也。"又誉其矛曰："吾矛之利，于物无不陷也。"或曰："以子之矛陷子之盾，何如？"其人弗能应也。',
+    plain: '楚国有个卖盾和矛的人，夸他的盾说："我的盾很坚固，没有什么能刺穿它。"又夸他的矛说："我的矛很锋利，没有什么刺不穿。"有人问："用你的矛刺你的盾，怎么样？"那人回答不上来了。',
+    qs: [
+      { q: '"楚人有鬻盾与矛者"中的"鬻"是什么意思？', o: ['卖', '买', '做'], a: 0, e: '"鬻"是卖，这个人是卖盾和矛的。' },
+      { q: '"其人弗能应也"的意思是？', o: ['那个人回答不上来', '那个人不愿意回答', '那个人已经走了'], a: 0, e: '"弗"是不，"应"是回答，合起来是回答不上来。' }
+    ] },
+  { src: '《吕氏春秋·本味》', txt: '伯牙鼓琴，锺子期听之。方鼓琴而志在太山，锺子期曰："善哉乎鼓琴，巍巍乎若太山。"少选之间而志在流水，锺子期又曰："善哉乎鼓琴，汤汤乎若流水。"',
+    plain: '伯牙弹琴，锺子期在一旁听。伯牙心里想着高山，锺子期说："弹得真好啊，像巍峨的高山。"过了一会儿，伯牙心里想着流水，锺子期又说："弹得真好啊，像浩浩荡荡的流水。"',
+    qs: [
+      { q: '"善哉乎鼓琴"中的"善哉"是什么意思？', o: ['好啊', '善良', '擅长'], a: 0, e: '"善哉"是赞叹，意思是好啊、妙啊。' },
+      { q: '"少选之间"是什么意思？', o: ['一会儿', '很少的人', '挑选的时候'], a: 0, e: '"少选之间"表示过了不一会儿。' }
+    ] },
+  { src: '苏轼《书戴嵩画牛》', txt: '蜀中有杜处士，好书画，所宝以百数。有戴嵩《牛》一轴，尤所爱，锦囊玉轴，常以自随。一日曝书画，有一牧童见之，拊掌大笑，曰："此画斗牛也。牛斗，力在角，尾搐入两股间，今乃掉尾而斗，谬矣。"',
+    plain: '四川有个杜处士，喜欢书画，收藏的宝贝有上百件。他有一幅戴嵩画的《牛》，特别喜爱，用锦囊装着、玉轴卷着，经常带在身边。一天晒书画，一个牧童看见了，拍手大笑说："这画的是斗牛啊。牛打架时力气用在角上，尾巴夹在两腿之间，现在却翘着尾巴斗，画错了。"',
+    qs: [
+      { q: '"好书画"中的"好"是什么意思？', o: ['喜欢', '美好', '正好'], a: 0, e: '"好"在这里作动词，是喜欢。' },
+      { q: '牧童为什么笑这幅画？', o: ['他看出画中的牛画错了', '他觉得画得很好笑', '他想买这幅画'], a: 0, e: '斗牛时牛尾应夹在两腿间，画里却翘着尾巴，所以牧童说画错了。' }
+    ] },
+  { src: '《晋书·车胤传》', txt: '胤恭勤不倦，博学多通。家贫不常得油，夏月则练囊盛数十萤火以照书，以夜继日焉。',
+    plain: '车胤恭敬勤勉、从不疲倦，学问广博。家里穷，常常买不起灯油，夏天就用白绢袋装几十只萤火虫来照亮书本，夜以继日地读书。',
+    qs: [
+      { q: '"练囊盛数十萤火"中的"囊"是什么意思？', o: ['用袋子装', '口袋破了', '包裹起来'], a: 0, e: '"囊"在这里作动词，用袋子装。' },
+      { q: '车胤为什么要用萤火虫照明？', o: ['家里穷买不起灯油', '他喜欢萤火虫', '灯油太亮了'], a: 0, e: '文中说"家贫不常得油"，所以用萤火虫的光读书。' }
+    ] },
+  { src: '《方舆胜览·眉州》', txt: '磨针溪，在象耳山下。世传李太白读书山中，未成，弃去。过是溪，逢老媪方磨铁杵。问之，曰："欲作针。"太白感其意，还卒业。',
+    plain: '磨针溪在象耳山下。传说李白在山中读书，没有完成就丢下走了。经过这条溪时，遇到一位老妇人正在磨铁棒。李白问她，她说："想把它磨成针。"李白被她的心意感动，回去完成了学业。',
+    qs: [
+      { q: '"逢老媪方磨铁杵"中的"媪"是什么意思？', o: ['老妇人', '小女孩', '老师'], a: 0, e: '"媪"指年老的妇女。' },
+      { q: '"还卒业"是什么意思？', o: ['回去完成了学业', '回家种地', '退还了学费'], a: 0, e: '"卒"是完成，"还"是回去，指回去把学业读完。' }
+    ] },
+  { src: '《西京杂记·卷二》', txt: '匡衡字稚圭，勤学而无烛。邻舍有烛而不逮，衡乃穿壁引其光，以书映光而读之。',
+    plain: '匡衡，字稚圭，学习勤奋却没有蜡烛。邻居家有蜡烛，但光照不到他家。匡衡就在墙上凿了个洞，引来邻居的灯光，把书映在光下读。',
+    qs: [
+      { q: '"邻舍有烛而不逮"中的"不逮"是什么意思？', o: ['照不到', '来不及', '跑不快'], a: 0, e: '"逮"是及、到，"不逮"就是光照不到。' },
+      { q: '匡衡"穿壁"是为了做什么？', o: ['借邻居的灯光读书', '到邻居家作客', '修房子'], a: 0, e: '他在墙上凿洞，是为了把邻居的烛光引过来读书。' }
+    ] },
+  { src: '《世说新语·笺疏》', txt: '年四岁，与诸兄共食梨，融辄引小者。大人问其故，答曰："我小儿，法当取小者。"',
+    plain: '孔融四岁时，和哥哥们一起吃梨，他总是拿小的。大人问他为什么，他回答："我是小孩，按道理应该拿小的。"',
+    qs: [
+      { q: '"融辄引小者"中的"辄"是什么意思？', o: ['总是、就', '偶尔', '很快'], a: 0, e: '"辄"表示总是、就，说明他每次都拿小的。' },
+      { q: '"法当取小者"的意思是？', o: ['按道理应该拿小的', '法律规定拿小的', '办法是拿小的'], a: 0, e: '"法"在这里是道理、规矩，"当"是应该。' }
+    ] },
+  { src: '《三国志·魏书·武文世王公传》', txt: '冲少聪察岐嶷，生五六岁，智意所及，有若成人之智。时孙权曾致巨象，太祖欲知其斤重，访之群下，咸莫能出其理。冲曰："置象大船之上，而刻其水痕所至，称物以载之，则校可知矣。"',
+    plain: '曹冲从小聪明，五六岁时，智慧就像成年人。当时孙权送来一头大象，曹操想知道它有多重，问遍手下，都不能说出办法。曹冲说："把大象放到大船上，刻下水痕到达的位置，再称量别的东西装到同样水位，比较一下就知道了。"',
+    qs: [
+      { q: '"咸莫能出其理"中的"咸"是什么意思？', o: ['都', '咸味', '全部人都不'], a: 0, e: '"咸"是都，指手下的人都想不出办法。' },
+      { q: '曹冲称象的办法关键是什么？', o: ['用船和水痕来比较重量', '把大象切成块', '用秤直接称大象'], a: 0, e: '他利用船的吃水深浅，把大象的重量换成可以称的东西。' }
+    ] },
+  { src: '《世说新语·言语》', txt: '谢太傅寒雪日内集，与儿女讲论文义。俄而雪骤，公欣然曰："白雪纷纷何所似？"兄子胡儿曰："撒盐空中差可拟。"兄女曰："未若柳絮因风起。"',
+    plain: '谢太傅在一个下雪天把家人聚在一起，和子侄们讲论文章。不一会儿雪下得急了，他高兴地说："白雪纷纷像什么？"侄子胡儿说："跟把盐撒在空中差不多。"侄女说："不如比作柳絮乘风飞舞。"',
+    qs: [
+      { q: '"俄而雪骤"中的"俄而"是什么意思？', o: ['不久', '忽然变大', '很快地'], a: 0, e: '"俄而"表示不久、一会儿。' },
+      { q: '"未若柳絮因风起"中的"未若"是什么意思？', o: ['不如', '没有', '不像'], a: 0, e: '"未若"就是不如，侄女觉得柳絮比撒盐更贴切。' }
+    ] },
+  { src: '《世说新语·方正》', txt: '陈太丘与友期行，期日中。过中不至，太丘舍去，去后乃至。元方时年七岁，门外戏。客问元方："尊君在不？"答曰："待君久不至，已去。"',
+    plain: '陈太丘和朋友约定同行，约定在中午。过了中午朋友没来，陈太丘就离开了，他走后才到。元方当时七岁，在门外玩。客人问元方："你父亲在吗？"元方回答："等您很久您没来，已经走了。"',
+    qs: [
+      { q: '"陈太丘与友期行"中的"期"是什么意思？', o: ['约定', '期待', '时期'], a: 0, e: '"期"在这里是约定，"期行"是约定一起走。' },
+      { q: '"尊君在不"中的"尊君"是尊称谁？', o: ['对方的父亲', '对方的儿子', '自己的父亲'], a: 0, e: '"尊君"是尊称对方的父亲，这里指陈太丘。' }
+    ] },
+  { src: '《论语·学而》', txt: '学而时习之，不亦说乎？有朋自远方来，不亦乐乎？人不知而不愠，不亦君子乎？',
+    plain: '学了知识按时温习，不也很愉快吗？有志同道合的朋友从远方来，不也很快乐吗？别人不了解我，我却不生气，不也是君子吗？',
+    qs: [
+      { q: '"不亦说乎"中的"说"是什么意思？', o: ['同"悦"，高兴', '说话', '解释'], a: 0, e: '"说"在这里是通假字，同"悦"，高兴的意思。' },
+      { q: '"人不知而不愠"中的"愠"是什么意思？', o: ['生气', '明白', '温和'], a: 0, e: '"愠"是生气、恼怒。' }
+    ] },
+  { src: '《吕氏春秋·自知》', txt: '范氏之亡也，百姓有得钟者。欲负而走，则钟大不可负；以椎毁之，钟况然有音。恐人闻之而夺己也，遽掩其耳。',
+    plain: '范氏逃亡的时候，有个百姓得到一口钟。想背着跑，可钟太大背不动；用锤子砸碎它，钟发出很大的响声。他怕别人听见来抢，就急忙捂住自己的耳朵。',
+    qs: [
+      { q: '"遽掩其耳"中的"遽"是什么意思？', o: ['急忙', '于是', '竟然'], a: 0, e: '"遽"是急忙、赶快。' },
+      { q: '这个故事讽刺的是什么？', o: ['自欺欺人', '爱惜财物', '耳朵不好'], a: 0, e: '捂住自己的耳朵，别人照样听得见，这是自欺欺人。' }
+    ] },
+  { src: '《吕氏春秋·察今》', txt: '楚人有涉江者，其剑自舟中坠于水，遽契其舟曰："是吾剑之所从坠。"舟止，从其所契者入水求之。舟已行矣，而剑不行，求剑若此，不亦惑乎？',
+    plain: '楚国有人渡江，他的剑从船上掉进水里，他急忙在船边刻了个记号，说："这里是我的剑掉下去的地方。"船停下后，他从刻记号的地方下水找剑。船已经走了，剑却没动，这样找剑，不是很糊涂吗？',
+    qs: [
+      { q: '"遽契其舟"中的"契"是什么意思？', o: ['刻', '契约', '敲打'], a: 0, e: '"契"在这里是刻，他在船上刻记号。' },
+      { q: '这个故事说明的道理是？', o: ['情况变了，办法也要变', '剑掉水里就找不回来', '坐船要小心'], a: 0, e: '船在动、剑不动，用老记号找剑就行不通，做事要看情况变化。' }
+    ] }
+];
+
+var state = { p: 0, qi: 0, locked: false, timer: null, cur: null };
+var elPno = document.getElementById('pno');
+var elQno = document.getElementById('qno');
+var elSrc = document.getElementById('src');
+var elTxt = document.getElementById('txt');
+var elPlain = document.getElementById('plain');
+var elQtag = document.getElementById('qtag');
+var elQ = document.getElementById('question');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elExp = document.getElementById('exp');
+
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function typeTag(q) {
+  if (/断句/.test(q)) return '断句';
+  if (/意思|道理|为什么|因为|说明/.test(q)) return '句意';
+  return '字义';
+}
+function renderPiece() {
+  var p = PIECES[state.p];
+  elPno.textContent = state.p + 1;
+  elSrc.textContent = p.src;
+  elTxt.textContent = p.txt;
+  elPlain.textContent = '白话：' + p.plain;
+  elPlain.className = 'plain';
+  document.getElementById('white').textContent = '💬 白话对照';
+  speak(p.txt);
+}
+function renderQ() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  var p = PIECES[state.p];
+  var q = p.qs[state.qi];
+  state.cur = q;
+  elQno.textContent = state.qi + 1;
+  elQtag.textContent = typeTag(q.q);
+  elQ.textContent = q.q;
+  elFb.className = 'feedback';
+  elFb.textContent = '';
+  elExp.className = 'exp';
+  elExp.textContent = '';
+  var idx = q.o.map(function (_, i) { return i; });
+  idx = shuffle(idx);
+  elOpts.innerHTML = '';
+  idx.forEach(function (oi) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = q.o[oi];
+    b.dataset.oi = oi;
+    b.addEventListener('click', function () { tap(b, oi); });
+    elOpts.appendChild(b);
+  });
+  speak(q.q);
+}
+function tap(btn, oi) {
+  if (state.locked) return;
+  var q = state.cur;
+  if (oi === q.a) {
+    state.locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { if (b !== btn) b.classList.add('faded'); });
+    mark('right');
+    elFb.className = 'feedback ok';
+    elFb.textContent = '✅ 答对啦！';
+    elExp.textContent = '💡 ' + q.e;
+    elExp.className = 'exp show';
+    speak('答对啦。' + q.e);
+    state.timer = setTimeout(nextStep, 3200);
+  } else {
+    btn.classList.add('bad', 'faded');
+    mark('wrong');
+    elFb.className = 'feedback bad';
+    elFb.textContent = '❌ 再读一遍原文想一想';
+    elExp.textContent = '💡 ' + q.e;
+    elExp.className = 'exp show';
+    speak(q.e);
+  }
+}
+function nextStep() {
+  var p = PIECES[state.p];
+  if (state.qi < p.qs.length - 1) {
+    state.qi++;
+    renderQ();
+    return;
+  }
+  state.p = (state.p + 1) % PIECES.length;
+  state.qi = 0;
+  renderPiece();
+  renderQ();
+}
+document.getElementById('read').addEventListener('click', function () {
+  speak(PIECES[state.p].txt);
+});
+document.getElementById('white').addEventListener('click', function () {
+  var on = elPlain.classList.contains('show');
+  elPlain.className = on ? 'plain' : 'plain show';
+  document.getElementById('white').textContent = on ? '💬 白话对照' : '💬 收起白话';
+  if (!on) speak(PIECES[state.p].plain);
+});
+document.getElementById('next').addEventListener('click', nextStep);
+
+renderPiece();
+renderQ();
+window.__wenyan = PIECES;
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>单词消消乐 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#efeaff,transparent 60%),
+             radial-gradient(900px 500px at 100% 100%,#e6f7ff,transparent 55%),
+             linear-gradient(160deg,#fbf9ff,#f2fbff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:12px;gap:8px;user-select:none;overflow:hidden;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.1rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:38px;padding:6px 13px;font-weight:800;
+  font-size:.82rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;}
+.chip{background:#fff;border:2px solid rgba(36,59,83,.10);border-radius:999px;padding:5px 12px;
+  font-family:inherit;font-size:.8rem;font-weight:800;color:var(--ink);cursor:pointer;
+  box-shadow:0 3px 10px rgba(36,59,83,.07);}
+.chip.on{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:transparent;}
+.stage{position:relative;flex:1;min-height:0;width:100%;max-width:900px;margin:0 auto;
+  background:rgba(255,255,255,.55);border-radius:24px;overflow:hidden;
+  box-shadow:inset 0 0 0 2px rgba(36,59,83,.05);}
+.bubble{position:absolute;display:flex;align-items:center;justify-content:center;text-align:center;
+  width:clamp(74px,10vw,104px);height:clamp(74px,10vw,104px);border-radius:50%;
+  background:#fff;font-weight:900;cursor:pointer;padding:6px;
+  box-shadow:0 8px 20px rgba(36,59,83,.16);border:3px solid #fff;
+  font-size:clamp(.9rem,2.2vw,1.1rem);line-height:1.15;transition:box-shadow .2s,opacity .3s;
+  animation:float var(--d,20s) ease-in-out infinite alternate;}
+.bubble .em{font-size:clamp(1.6rem,5vw,2.3rem);}
+.bubble.en{background:linear-gradient(150deg,#dff0ff,#c9e3ff);color:#155a8a;}
+.bubble.cn{background:linear-gradient(150deg,#fff0d8,#ffe1b3);color:#8a5a00;}
+.bubble.pic{background:linear-gradient(150deg,#f0ffe6,#d8f7c4);}
+.bubble.sel{box-shadow:0 0 0 4px #7c5cff,0 8px 20px rgba(36,59,83,.16);}
+.bubble.wrong{animation:shake .45s ease;border-color:var(--bad);}
+.bubble.gone{opacity:0;transform:scale(.3);pointer-events:none;transition:all .45s ease;}
+@keyframes float{0%{transform:translate(0,0)}50%{transform:translate(6px,-10px)}100%{transform:translate(-8px,7px)}}
+@keyframes shake{0%,100%{transform:translate(0,0)}20%{transform:translate(-7px,0)}40%{transform:translate(7px,0)}60%{transform:translate(-4px,0)}80%{transform:translate(4px,0)}}
+.noanim .bubble{animation:none!important;}
+.feedback{min-height:26px;font-size:.95rem;font-weight:900;text-align:center;}
+.feedback.ok{color:var(--ok);} .feedback.bad{color:var(--bad);}
+.controls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.btn{min-height:40px;padding:0 16px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  font-family:inherit;font-weight:800;font-size:.86rem;color:var(--ink);cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:rgba(124,92,255,.5);}
+.overlay{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;
+  gap:12px;background:rgba(255,255,255,.88);backdrop-filter:blur(4px);border-radius:24px;z-index:9;padding:20px;text-align:center;}
+.overlay.show{display:flex;}
+.overlay .big{font-size:2rem;}
+.overlay .txt{font-weight:900;font-size:1.1rem;}
+@media (min-width:700px){
+  body{padding:16px 24px;}
+  h1{font-size:1.35rem;}
+  .bubble{width:clamp(96px,8.5vw,126px);height:clamp(96px,8.5vw,126px);font-size:1.18rem;}
+}
+@media (max-height:430px){ body{padding:6px;gap:4px;} h1{font-size:.95rem;} .bubble{width:64px;height:64px;} }
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <h1>🫧 单词消消乐</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="chips">
+  <span class="chip" id="lvChip">第 1 / 10 关</span>
+  <button class="chip on" id="modeBtn" type="button">🖼️ 图片模式</button>
+  <button class="chip on" id="animBtn" type="button">✨ 动效开</button>
+</div>
+<div class="stage" id="stage">
+  <div class="overlay" id="ovl">
+    <div class="big" id="ovlEmo">🎉</div>
+    <div class="txt" id="ovlTxt"></div>
+    <button class="btn primary" id="ovlBtn" type="button">继续</button>
+  </div>
+</div>
+<div class="feedback" id="feedback">先点英文气泡，再点对应的图片或中文</div>
+<div class="controls">
+  <button class="btn" id="hear" type="button">🔊 听一听</button>
+  <button class="btn" id="reset" type="button">🔁 重玩这一关</button>
+</div>
+<script>
+var CAN = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function say(t, opt) {
+  if (!t) return;
+  try {
+    if (window.XNLY && XNLY.voice && XNLY.voice.speak) { XNLY.voice.speak(String(t), opt || {}); return; }
+    if (!CAN) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = (opt && opt.lang) || 'zh-CN'; u.rate = 0.9; u.pitch = 1.1;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function sayEn(t) { say(t, { lang: 'en-US' }); }
+function mark(k) { try { if (window.XNLY && XNLY.mark) XNLY.mark(k); } catch (e) { } }
+function fx() { try { if (window.XNLY && XNLY.sound && XNLY.sound.tap) XNLY.sound.tap(); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+
+/* 10 关，每关 7 对；难度逐关上升 */
+var LEVELS = [
+  { name: '颜色 1', items: [
+    { en: 'red', cn: '红色', em: '🔴' }, { en: 'blue', cn: '蓝色', em: '🔵' },
+    { en: 'yellow', cn: '黄色', em: '🟡' }, { en: 'green', cn: '绿色', em: '🟢' },
+    { en: 'black', cn: '黑色', em: '⚫' }, { en: 'white', cn: '白色', em: '⚪' },
+    { en: 'pink', cn: '粉色', em: '🩷' }
+  ] },
+  { name: '颜色 2', items: [
+    { en: 'orange', cn: '橙色', em: '🟠' }, { en: 'purple', cn: '紫色', em: '🟣' },
+    { en: 'brown', cn: '棕色', em: '🟤' }, { en: 'gray', cn: '灰色', em: '🩶' },
+    { en: 'gold', cn: '金色', em: '🥇' }, { en: 'silver', cn: '银色', em: '🥈' },
+    { en: 'colorful', cn: '彩色', em: '🌈' }
+  ] },
+  { name: '动物', items: [
+    { en: 'dog', cn: '狗', em: '🐶' }, { en: 'cat', cn: '猫', em: '🐱' },
+    { en: 'rabbit', cn: '兔子', em: '🐰' }, { en: 'tiger', cn: '老虎', em: '🐯' },
+    { en: 'panda', cn: '熊猫', em: '🐼' }, { en: 'monkey', cn: '猴子', em: '🐒' },
+    { en: 'elephant', cn: '大象', em: '🐘' }
+  ] },
+  { name: '数字', items: [
+    { en: 'one', cn: '一', em: '1️⃣' }, { en: 'two', cn: '二', em: '2️⃣' },
+    { en: 'three', cn: '三', em: '3️⃣' }, { en: 'four', cn: '四', em: '4️⃣' },
+    { en: 'five', cn: '五', em: '5️⃣' }, { en: 'six', cn: '六', em: '6️⃣' },
+    { en: 'seven', cn: '七', em: '7️⃣' }
+  ] },
+  { name: '食物', items: [
+    { en: 'apple', cn: '苹果', em: '🍎' }, { en: 'banana', cn: '香蕉', em: '🍌' },
+    { en: 'milk', cn: '牛奶', em: '🥛' }, { en: 'bread', cn: '面包', em: '🍞' },
+    { en: 'egg', cn: '鸡蛋', em: '🥚' }, { en: 'rice', cn: '米饭', em: '🍚' },
+    { en: 'cake', cn: '蛋糕', em: '🍰' }
+  ] },
+  { name: '文具', items: [
+    { en: 'pen', cn: '钢笔', em: '🖊️' }, { en: 'pencil', cn: '铅笔', em: '✏️' },
+    { en: 'book', cn: '书', em: '📖' }, { en: 'ruler', cn: '尺子', em: '📏' },
+    { en: 'bag', cn: '书包', em: '🎒' }, { en: 'crayon', cn: '蜡笔', em: '🖍️' },
+    { en: 'scissors', cn: '剪刀', em: '✂️' }
+  ] },
+  { name: '身体部位', items: [
+    { en: 'eye', cn: '眼睛', em: '👁️' }, { en: 'ear', cn: '耳朵', em: '👂' },
+    { en: 'nose', cn: '鼻子', em: '👃' }, { en: 'mouth', cn: '嘴', em: '👄' },
+    { en: 'hand', cn: '手', em: '✋' }, { en: 'foot', cn: '脚', em: '🦶' },
+    { en: 'tooth', cn: '牙齿', em: '🦷' }
+  ] },
+  { name: '家庭与人物', items: [
+    { en: 'mother', cn: '妈妈', em: '👩' }, { en: 'father', cn: '爸爸', em: '👨' },
+    { en: 'sister', cn: '姐姐', em: '👧' }, { en: 'brother', cn: '哥哥', em: '👦' },
+    { en: 'baby', cn: '宝宝', em: '👶' }, { en: 'grandma', cn: '奶奶', em: '👵' },
+    { en: 'grandpa', cn: '爷爷', em: '👴' }
+  ] },
+  { name: '动作', items: [
+    { en: 'run', cn: '跑', em: '🏃' }, { en: 'jump', cn: '跳', em: '🤸' },
+    { en: 'swim', cn: '游泳', em: '🏊' }, { en: 'sing', cn: '唱歌', em: '🎤' },
+    { en: 'dance', cn: '跳舞', em: '💃' }, { en: 'draw', cn: '画画', em: '🎨' },
+    { en: 'sleep', cn: '睡觉', em: '😴' }
+  ] },
+  { name: '天气与自然', items: [
+    { en: 'sun', cn: '太阳', em: '☀️' }, { en: 'rain', cn: '雨', em: '🌧️' },
+    { en: 'snow', cn: '雪', em: '❄️' }, { en: 'wind', cn: '风', em: '🌬️' },
+    { en: 'cloud', cn: '云', em: '☁️' }, { en: 'star', cn: '星星', em: '⭐' },
+    { en: 'moon', cn: '月亮', em: '🌙' }
+  ] }
+];
+
+var KEY_LV = 'pwm.level', KEY_BEST = 'pwm.best';
+var state = { lv: 1, mode: 'pic', anim: true, sel: null, left: 0, best: 1 };
+var elStage = document.getElementById('stage');
+var elFb = document.getElementById('feedback');
+var elLv = document.getElementById('lvChip');
+var elMode = document.getElementById('modeBtn');
+var elAnim = document.getElementById('animBtn');
+var elOvl = document.getElementById('ovl');
+var elOvlEmo = document.getElementById('ovlEmo');
+var elOvlTxt = document.getElementById('ovlTxt');
+var elOvlBtn = document.getElementById('ovlBtn');
+
+function initPrefs() {
+  var lv = parseInt(safeGet(KEY_LV), 10);
+  state.lv = isNaN(lv) || lv < 1 || lv > 10 ? 1 : lv;
+  var b = parseInt(safeGet(KEY_BEST), 10);
+  state.best = isNaN(b) || b < 1 ? 1 : b;
+  var m = safeGet('pwm.mode');
+  state.mode = m === 'text' ? 'text' : 'pic';
+  var a = safeGet('pwm.anim');
+  state.anim = a === 'off' ? false : true;
+}
+
+function placeBubbles(n) {
+  var cols = n > 8 ? 4 : (n > 4 ? 3 : 2);
+  var rows = Math.ceil(n / cols);
+  var pos = [];
+  for (var r = 0; r < rows; r++) {
+    for (var c = 0; c < cols; c++) {
+      if (pos.length >= n) break;
+      pos.push({ x: (c + 0.5) * (100 / cols), y: (r + 0.55) * (100 / rows) });
+    }
+  }
+  return pos;
+}
+
+function renderLevel() {
+  var lv = LEVELS[state.lv - 1];
+  var pairs = lv.items;
+  var cards = [];
+  pairs.forEach(function (p, i) {
+    cards.push({ id: i, kind: 'en', p: p });
+    cards.push({ id: i, kind: state.mode === 'pic' ? 'pic' : 'cn', p: p });
+  });
+  cards = shuffle(cards);
+  var pos = placeBubbles(cards.length);
+  elStage.querySelectorAll('.bubble').forEach(function (b) { b.remove(); });
+  elOvl.classList.remove('show');
+  state.sel = null;
+  state.left = pairs.length;
+  elLv.textContent = '第 ' + state.lv + ' / 10 关 · ' + lv.name;
+  elFb.className = 'feedback';
+  elFb.textContent = state.mode === 'pic' ? '先点英文气泡，再点对应的图片' : '先点英文气泡，再点对应的中文';
+  elStage.classList.toggle('noanim', !state.anim);
+  cards.forEach(function (c, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'bubble ' + c.kind;
+    b.dataset.id = c.id;
+    b.dataset.kind = c.kind;
+    if (c.kind === 'en') b.textContent = c.p.en;
+    else if (c.kind === 'cn') b.textContent = c.p.cn;
+    else b.innerHTML = '<span class="em">' + c.p.em + '</span>';
+    var p = pos[i];
+    b.style.left = 'calc(' + p.x + '% - clamp(37px,5vw,52px))';
+    b.style.top = 'calc(' + p.y + '% - clamp(37px,5vw,52px))';
+    b.style.setProperty('--d', (16 + rand(12)) + 's');
+    b.style.animationDelay = '-' + rand(10) + 's';
+    b.addEventListener('click', function () { tap(b, c); });
+    elStage.appendChild(b);
+  });
+  say('第' + state.lv + '关，' + lv.name + '。点英文，再点配对的气泡。');
+}
+
+function tap(btn, c) {
+  if (btn.classList.contains('gone')) return;
+  if (btn.classList.contains('sel')) { btn.classList.remove('sel'); state.sel = null; return; }
+  if (!state.sel) {
+    state.sel = { btn: btn, c: c };
+    btn.classList.add('sel');
+    if (c.kind === 'en') sayEn(c.p.en); else say(c.p.cn);
+    return;
+  }
+  var s = state.sel;
+  if (s.btn === btn) { btn.classList.remove('sel'); state.sel = null; return; }
+  if (s.c.id === c.id && s.c.kind !== c.kind) {
+    state.sel = null;
+    s.btn.classList.remove('sel');
+    s.btn.classList.add('gone');
+    btn.classList.add('gone');
+    fx();
+    sayEn(c.p.en);
+    state.left--;
+    mark('right');
+    elFb.className = 'feedback ok';
+    elFb.textContent = '✅ ' + c.p.en + ' = ' + c.p.cn;
+    if (state.left <= 0) setTimeout(levelDone, 700);
+  } else {
+    state.sel = null;
+    s.btn.classList.remove('sel');
+    btn.classList.add('wrong');
+    s.btn.classList.add('wrong');
+    mark('wrong');
+    elFb.className = 'feedback bad';
+    elFb.textContent = '❌ 不是一对，再试试';
+    say('不是一对，再试试。');
+    setTimeout(function () {
+      btn.classList.remove('wrong');
+      s.btn.classList.remove('wrong');
+    }, 700);
+  }
+}
+
+function levelDone() {
+  state.best = Math.max(state.best, state.lv);
+  safeSet(KEY_BEST, state.best);
+  if (state.lv >= 10) {
+    elOvlEmo.textContent = '🏆';
+    elOvlTxt.textContent = '十关全部通过！你真棒！';
+    elOvlBtn.textContent = '从第一关重玩';
+    elOvl.classList.add('show');
+    safeSet(KEY_LV, 1);
+    state.lv = 1;
+    say('十关全部通过，你真棒！');
+    return;
+  }
+  elOvlEmo.textContent = '🎉';
+  elOvlTxt.textContent = '第 ' + state.lv + ' 关完成！';
+  elOvlBtn.textContent = '进入第 ' + (state.lv + 1) + ' 关';
+  elOvl.classList.add('show');
+  say('第' + state.lv + '关完成，真棒！');
+}
+
+function nextLevel() {
+  state.lv = state.lv >= 10 ? 1 : state.lv + 1;
+  safeSet(KEY_LV, state.lv);
+  renderLevel();
+}
+
+elOvlBtn.addEventListener('click', nextLevel);
+elMode.addEventListener('click', function () {
+  state.mode = state.mode === 'pic' ? 'text' : 'pic';
+  safeSet('pwm.mode', state.mode);
+  elMode.textContent = state.mode === 'pic' ? '🖼️ 图片模式' : '🔤 文字模式';
+  renderLevel();
+});
+elAnim.addEventListener('click', function () {
+  state.anim = !state.anim;
+  safeSet('pwm.anim', state.anim ? 'on' : 'off');
+  elAnim.textContent = state.anim ? '✨ 动效开' : '⏸️ 动效关';
+  elStage.classList.toggle('noanim', !state.anim);
+});
+document.getElementById('hear').addEventListener('click', function () {
+  var lv = LEVELS[state.lv - 1];
+  say('第' + state.lv + '关，' + lv.name + '。点英文，再点配对的气泡。');
+});
+document.getElementById('reset').addEventListener('click', function () { renderLevel(); });
+
+initPrefs();
+elMode.textContent = state.mode === 'pic' ? '🖼️ 图片模式' : '🔤 文字模式';
+elAnim.textContent = state.anim ? '✨ 动效开' : '⏸️ 动效关';
+renderLevel();
+window.__wordMatch = { levels: LEVELS, state: state, render: renderLevel, tap: tap, next: nextLevel,
+  setMode: function (m) { state.mode = m; renderLevel(); } };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

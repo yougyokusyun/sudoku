@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>近反义词 · 小脑袋乐园</title>
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<link rel="manifest" href="../manifest.json">
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#0d9488;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#e6fbf7,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef2ff,transparent 55%),
+             linear-gradient(160deg,#f7fffd,#f4f8ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;font-size:.85rem;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.tiers{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.tier{border:none;border-radius:999px;padding:7px 14px;min-height:40px;background:#fff;color:var(--ink);
+  font-family:inherit;font-size:.84rem;font-weight:900;box-shadow:0 3px 10px rgba(36,59,83,.10);cursor:pointer;}
+.tier.on{background:linear-gradient(135deg,#2dd4bf,#0d9488);color:#fff;box-shadow:0 6px 16px rgba(13,148,136,.32);}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  min-height:0;overflow-y:auto;width:100%;}
+.prompt{font-size:1.02rem;font-weight:800;text-align:center;color:#4a6076;}
+.word{display:block;font-size:clamp(1.7rem,8vw,2.4rem);font-weight:900;letter-spacing:2px;margin-top:4px;color:#0f766e;}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(520px,100%);}
+.opt{min-height:64px;border:2px solid var(--line);border-radius:16px;background:#fff;
+  font-family:inherit;font-size:1.16rem;font-weight:900;color:var(--ink);cursor:pointer;
+  box-shadow:0 5px 14px rgba(36,59,83,.08);transition:transform .14s,border-color .18s,background .18s;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;color:#b02a2a;}
+.opt[disabled]{opacity:.45;cursor:default;}
+.feedback{min-height:34px;font-size:1.02rem;font-weight:800;text-align:center;line-height:1.45;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+.feedback small{display:block;font-size:.76rem;font-weight:700;color:#7b8ea8;margin-top:2px;}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.14)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){
+  body{padding:8px;gap:6px;}
+  h1{font-size:1rem;}
+  .stage{gap:8px;}
+  .opt{min-height:48px;font-size:1rem;}
+  .prompt{font-size:.9rem;}
+  .word{font-size:1.5rem;}
+}
+</style>
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🔁 近反义词</h1>
+  <div class="chips">
+    <span class="chip">📚 第 <b id="lvNum">1</b> 档</span>
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="tiers" id="tiers"></div>
+
+<div class="stage">
+  <div class="prompt" id="prompt">「快乐」的近义词是哪一个？</div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<script>
+/* ============ 词库：近义词 60 对 + 反义词 60 对，共 120 对 ============ */
+var LEVELS = {
+  1: {
+    label: '1~2 年级',
+    syn: [
+      ['美丽','漂亮'],['寒冷','严寒'],['立刻','马上'],['突然','忽然'],
+      ['安静','宁静'],['明白','清楚'],['高兴','快乐'],['帮助','帮忙'],
+      ['仔细','细心'],['勇敢','英勇'],['保护','爱护'],['著名','有名'],
+      ['明亮','光亮'],['特别','格外'],['惊奇','惊讶'],['喜爱','喜欢'],
+      ['慢慢','渐渐'],['温暖','暖和'],['干净','洁净'],['使劲','用力']
+    ],
+    ant: [
+      ['大','小'],['上','下'],['前','后'],['左','右'],['冷','热'],
+      ['高','矮'],['快','慢'],['早','晚'],['多','少'],['来','去'],
+      ['黑','白'],['远','近'],['新','旧'],['轻','重'],['哭','笑'],
+      ['开','关'],['明','暗'],['进','退'],['甜','苦'],['干净','肮脏']
+    ]
+  },
+  2: {
+    label: '3~4 年级',
+    syn: [
+      ['观察','察看'],['珍贵','宝贵'],['鼓励','激励'],['沉思','深思'],
+      ['陡峭','险峻'],['温和','温柔'],['寂静','安静'],['顽强','坚强'],
+      ['精致','精美'],['惊讶','诧异'],['期望','盼望'],['果然','果真'],
+      ['简单','简易'],['爱惜','珍惜'],['疲倦','疲惫'],['灵活','灵敏'],
+      ['宽敞','宽阔'],['赞美','称赞'],['惭愧','羞愧'],['兴奋','激动']
+    ],
+    ant: [
+      ['冷静','慌张'],['诚实','虚假'],['浪费','节省'],['粗糙','光滑'],
+      ['潮湿','干燥'],['团结','分裂'],['危险','安全'],['明亮','昏暗'],
+      ['勤劳','懒惰'],['虚心','骄傲'],['温暖','凉爽'],['清楚','模糊'],
+      ['成功','失败'],['熟悉','陌生'],['积极','消极'],['集中','分散'],
+      ['柔软','坚硬'],['前进','后退'],['清醒','迷糊'],['遵守','违反']
+    ]
+  },
+  3: {
+    label: '5~6 年级',
+    syn: [
+      ['领略','领会'],['立即','立刻'],['端详','打量'],['富饶','富庶'],
+      ['谨慎','慎重'],['赞扬','颂扬'],['沉稳','稳重'],['分歧','异议'],
+      ['疲惫','劳累'],['奥秘','奥妙'],['沮丧','失落'],['抨击','批评'],
+      ['惦记','挂念'],['派遣','差遣'],['渴望','向往'],['抵御','抵抗'],
+      ['讥笑','嘲笑'],['严谨','严密'],['踌躇','迟疑'],['漫游','游历']
+    ],
+    ant: [
+      ['慷慨','吝啬'],['宽容','苛刻'],['虚伪','真诚'],['肤浅','深刻'],
+      ['繁重','轻松'],['压抑','舒畅'],['疏远','亲近'],['敏捷','迟钝'],
+      ['奢华','朴素'],['允许','禁止'],['分别','团聚'],['破坏','建设'],
+      ['主动','被动'],['复杂','单纯'],['果断','犹豫'],['偶尔','经常'],
+      ['辽阔','狭窄'],['黎明','黄昏'],['进攻','撤退'],['完整','残缺']
+    ]
+  }
+};
+
+var KEY_TIER = 'pns.tier', KEY_BEST = 'pns.best';
+var state = { tier: 1, streak: 0, wrongStreak: 0, best: 0, locked: false, cur: null, total: 0, right: 0, timer: null };
+
+var elTiers = document.getElementById('tiers');
+var elPrompt = document.getElementById('prompt');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+var elLv = document.getElementById('lvNum');
+
+function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function pick(a) { return a[rand(a.length)]; }
+function speak(t) { if (window.XNLY && XNLY.voice) XNLY.voice.speak(t); }
+
+/* 某一档里出现过的所有词，用来做干扰项 */
+var wordCache = {};
+function wordsOf(lv) {
+  if (wordCache[lv]) return wordCache[lv];
+  var out = [];
+  LEVELS[lv].syn.concat(LEVELS[lv].ant).forEach(function (p) {
+    if (out.indexOf(p[0]) < 0) out.push(p[0]);
+    if (out.indexOf(p[1]) < 0) out.push(p[1]);
+  });
+  wordCache[lv] = out;
+  return out;
+}
+
+function updateStats() {
+  elStreak.textContent = state.streak;
+  elBest.textContent = state.best;
+  elLv.textContent = state.tier;
+}
+
+function renderTiers() {
+  elTiers.innerHTML = '';
+  Object.keys(LEVELS).forEach(function (k) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tier' + (Number(k) === state.tier ? ' on' : '');
+    b.textContent = '第 ' + k + ' 档 · ' + LEVELS[k].label;
+    b.addEventListener('click', function () {
+      if (Number(k) === state.tier) return;
+      state.tier = Number(k); safeSet(KEY_TIER, state.tier);
+      state.streak = 0; state.wrongStreak = 0;
+      renderTiers(); updateStats(); nextQuestion();
+    });
+    elTiers.appendChild(b);
+  });
+}
+
+function makeQuestion() {
+  var lv = state.tier, L = LEVELS[lv];
+  var isSyn = Math.random() < 0.5;
+  var pair = pick(isSyn ? L.syn : L.ant);
+  var flip = Math.random() < 0.5;
+  var ask = flip ? pair[1] : pair[0];
+  var ans = flip ? pair[0] : pair[1];
+  var pool = wordsOf(lv).filter(function (w) { return w !== ask && w !== ans; });
+  var opts = shuffle(pool).slice(0, 3);
+  opts.push(ans);
+  return { ask: ask, ans: ans, isSyn: isSyn, opts: shuffle(opts) };
+}
+
+function setFb(text, good, sub) {
+  elFb.className = 'feedback ' + (good === true ? 'ok' : good === false ? 'bad' : '');
+  elFb.innerHTML = text + (sub ? '<small>' + sub + '</small>' : '');
+}
+
+function nextQuestion() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  state.cur = makeQuestion();
+  var q = state.cur;
+  elPrompt.innerHTML = '「<span class="word">' + q.ask + '</span>」的' +
+    (q.isSyn ? '近义词' : '反义词') + '是哪一个？';
+  elOpts.innerHTML = '';
+  q.opts.forEach(function (w) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = w;
+    b.addEventListener('click', function () { answer(w, b); });
+    elOpts.appendChild(b);
+  });
+  setFb('', null);
+  speak('「' + q.ask + '」的' + (q.isSyn ? '近义词' : '反义词') + '是哪一个？');
+}
+
+function answer(val, btn) {
+  if (state.locked || !state.cur) return;
+  var q = state.cur;
+  if (val === q.ans) {
+    state.locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { if (b !== btn) b.disabled = true; });
+    state.streak++; state.wrongStreak = 0; state.right++; state.total++;
+    if (state.streak > state.best) { state.best = state.streak; safeSet(KEY_BEST, state.best); }
+    if (window.XNLY && XNLY.mark) XNLY.mark('right');
+    setFb('✅ 对啦！' + q.ask + ' 和 ' + q.ans + ' 是' + (q.isSyn ? '近义词' : '反义词'),
+      true, '连对 ' + state.streak + ' 题');
+    speak(q.ask + '，' + q.ans + '，是一对' + (q.isSyn ? '近义词' : '反义词') + '。');
+    if (state.streak >= 3 && state.tier < 3) {
+      state.tier++; safeSet(KEY_TIER, state.tier);
+      state.streak = 0;
+      setFb('🎉 连对 3 题，升到第 ' + state.tier + ' 档！', true, LEVELS[state.tier].label);
+      speak('太棒了，升到第' + state.tier + '档。');
+      renderTiers();
+    }
+    updateStats();
+    state.timer = setTimeout(nextQuestion, 1900);
+  } else {
+    btn.classList.add('bad');
+    btn.classList.add('shake');
+    state.locked = true;
+    state.streak = 0;
+    state.wrongStreak--; state.total++;
+    Array.prototype.forEach.call(elOpts.children, function (b) {
+      if (b.textContent === q.ans) b.classList.add('good');
+      b.disabled = true;
+    });
+    if (window.XNLY && XNLY.mark) XNLY.mark('wrong');
+    setFb('❌ 不对哦，正确答案是「' + q.ans + '」', false);
+    speak('不对哦。' + q.ask + ' 和 ' + q.ans + ' 是一对' + (q.isSyn ? '近义词' : '反义词') + '。');
+    if (state.wrongStreak <= -2 && state.tier > 1) {
+      state.tier--; safeSet(KEY_TIER, state.tier);
+      state.wrongStreak = 0;
+      setFb('😊 连错 2 题，回到第 ' + state.tier + ' 档', false, LEVELS[state.tier].label);
+      speak('没关系，回到第' + state.tier + '档。');
+      renderTiers();
+    }
+    updateStats();
+    state.timer = setTimeout(nextQuestion, 2200);
+  }
+}
+
+(function init() {
+  var t = parseInt(safeGet(KEY_TIER), 10);
+  state.tier = (t >= 1 && t <= 3) ? t : 1;
+  var b = parseInt(safeGet(KEY_BEST), 10);
+  state.best = isNaN(b) || b < 0 ? 0 : b;
+  renderTiers();
+  updateStats();
+  nextQuestion();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

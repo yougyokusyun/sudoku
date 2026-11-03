@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>看图写话 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--accent:#e0559b;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#ffeef6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef3ff,transparent 55%),
+             linear-gradient(160deg,#fff8fc,#f5f8ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;
+  background:rgba(255,255,255,.82);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:10px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);overflow:hidden;}
+.pic{width:min(94vw,520px);aspect-ratio:4/3;border-radius:16px;overflow:hidden;background:#fff;
+  border:2px solid rgba(224,85,155,.18);flex:none;}
+.pic img{width:100%;height:100%;object-fit:cover;display:block;}
+.bank{width:min(94vw,660px);display:flex;flex-wrap:wrap;gap:6px;justify-content:center;flex:none;}
+.word{background:#fff;border:1px solid rgba(36,59,83,.12);border-radius:999px;padding:4px 10px;
+  font-size:.8rem;font-weight:800;color:#4a5f78;}
+.word.hi{background:#ffe9f3;border-color:rgba(224,85,155,.35);color:#b03a72;}
+
+.slots{width:min(94vw,660px);display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;flex:none;}
+.slot{background:#fff;border:2px solid rgba(36,59,83,.10);border-radius:14px;padding:8px 10px;text-align:left;}
+.slot .lb{font-size:.7rem;font-weight:800;color:#8aa0b8;letter-spacing:1px;}
+.slot .opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;}
+.slot .opts button{min-height:34px;padding:2px 12px;border-radius:999px;border:1px solid rgba(36,59,83,.12);
+  background:#f7fafd;font-family:inherit;font-weight:800;font-size:.82rem;color:#3b5370;cursor:pointer;}
+.slot .opts button.on{background:#ffe9f3;border-color:rgba(224,85,155,.5);color:#b03a72;}
+
+.sentence{width:min(94vw,660px);min-height:52px;background:#fff;border:2px dashed rgba(224,85,155,.35);
+  border-radius:14px;padding:8px 12px;font-size:clamp(.95rem,2.6vh,1.15rem);font-weight:800;line-height:1.6;
+  color:#7a3157;display:flex;align-items:center;justify-content:center;text-align:center;flex:none;}
+.sentence.empty{color:#a9b7c6;font-weight:700;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;flex:none;}
+.btn{min-height:44px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  color:var(--ink);font-family:inherit;font-weight:800;font-size:.86rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(224,85,155,.5);color:#fff;background:linear-gradient(135deg,#ff8fc0,#e0559b);}
+.btn.warn{border-color:rgba(240,161,26,.5);color:#a06a00;background:#fff7e0;}
+.btn.rec{color:#b03a72;border-color:rgba(224,85,155,.35);}
+.btn.rec.on{background:#ffe9f3;}
+.recbox{display:none;}
+.recbox.show{display:inline-flex;}
+
+@media (max-height:520px){
+  body{padding:6px 10px;gap:5px;}
+  .stage{gap:5px;padding:6px;}
+  .pic{width:min(46vw,300px);}
+  .bank .word{font-size:.72rem;padding:2px 8px;}
+  .slot{padding:5px 8px;}
+  .slot .opts button{min-height:30px;font-size:.74rem;}
+  .sentence{min-height:40px;font-size:.9rem;}
+  .btn{min-height:36px;font-size:.78rem;}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🖼️ 看图写话</h1>
+  <div class="chips">
+    <span class="chip">🎨 第 <b id="idx">1</b> 张</span>
+    <span class="chip">🧩 选词填空</span>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="pic"><img id="photo" alt="看图写话图片"></div>
+  <div class="bank" id="bank"></div>
+  <div class="slots" id="slots"></div>
+  <div class="sentence empty" id="sentence">按顺序选一选，就能连成一句话 ✨</div>
+  <div class="controls">
+    <button class="btn primary" id="read" type="button">🔊 读一读</button>
+    <button class="btn rec" id="rec" type="button">🎙️ 录一录</button>
+    <button class="btn warn" id="next" type="button">🔄 换一张</button>
+  </div>
+</div>
+
+<script>
+var V = (window.XNLY && window.XNLY.voice) || null;
+function speak(t) {
+  if (V && V.speak) { V.speak(t, { rate: 0.9 }); return; }
+  if (!window.speechSynthesis) return;
+  try {
+    var u = new SpeechSynthesisUtterance(t);
+    u.lang = 'zh-CN'; u.rate = 0.88; u.pitch = 1.12;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+/* 40 张图片：img 用站点已有照片，句子由「时间 + 谁 + 在哪里 + 做什么」四格拼成 */
+var SCENES = [
+  { img: 'img/rabbit.jpg', emo: '🐰', when: ['早上', '傍晚'], who: ['小白兔', '小松鼠'], where: ['草地上', '大树下'], what: ['吃萝卜', '晒太阳'], more: ['开心', '静静地'] },
+  { img: 'img/cat.jpg', emo: '🐱', when: ['中午', '晚上'], who: ['小花猫', '小姑娘'], where: ['沙发上', '窗台边'], what: ['睡午觉', '看小鸟'], more: ['软软的', '暖和'] },
+  { img: 'img/dog.jpg', emo: '🐶', when: ['下午', '早上'], who: ['小狗', '哥哥'], where: ['院子里', '草地上'], what: ['啃骨头', '玩皮球'], more: ['高兴', '摇尾巴'] },
+  { img: 'img/panda.jpg', emo: '🐼', when: ['上午', '中午'], who: ['大熊猫', '饲养员'], where: ['竹林里', '动物园'], what: ['吃竹子', '爬树'], more: ['胖乎乎', '慢悠悠'] },
+  { img: 'img/tiger.jpg', emo: '🐯', when: ['清晨', '夜晚'], who: ['老虎', '小鹿'], where: ['森林里', '小河边'], what: ['散步', '喝水'], more: ['威风', '悄悄'] },
+  { img: 'img/elephant.jpg', emo: '🐘', when: ['夏天', '中午'], who: ['大象', '小象'], where: ['河边', '水池里'], what: ['洗澡', '喷水'], more: ['长长的鼻子', '凉快'] },
+  { img: 'img/monkey.jpg', emo: '🐵', when: ['早上', '下午'], who: ['小猴子', '猴妈妈'], where: ['树上', '山坡上'], what: ['摘香蕉', '荡秋千'], more: ['机灵', '调皮'] },
+  { img: 'img/duck.jpg', emo: '🦆', when: ['春天', '清晨'], who: ['小鸭子', '鸭妈妈'], where: ['池塘里', '小河里'], what: ['游泳', '捉小鱼'], more: ['摇摇摆摆', '嘎嘎叫'] },
+  { img: 'img/chick.jpg', emo: '🐤', when: ['早上', '中午'], who: ['小鸡', '鸡妈妈'], where: ['院子里', '草地上'], what: ['吃米', '捉虫子'], more: ['黄黄的', '叽叽叫'] },
+  { img: 'img/fish.jpg', emo: '🐟', when: ['白天', '夏天'], who: ['小鱼', '小虾'], where: ['水里', '池塘里'], what: ['游来游去', '吐泡泡'], more: ['自由自在', '闪亮'] },
+  { img: 'img/turtle.jpg', emo: '🐢', when: ['早上', '下午'], who: ['小乌龟', '小朋友'], where: ['沙滩上', '草地上'], what: ['慢慢爬', '晒太阳'], more: ['慢吞吞', '硬硬的壳'] },
+  { img: 'img/bee.jpg', emo: '🐝', when: ['春天', '上午'], who: ['小蜜蜂', '蝴蝶'], where: ['花园里', '花丛中'], what: ['采花蜜', '跳舞'], more: ['嗡嗡', '忙碌'] },
+  { img: 'img/butterfly.jpg', emo: '🦋', when: ['春天', '午后'], who: ['蝴蝶', '小女孩'], where: ['花丛中', '草地上'], what: ['翩翩起舞', '追蝴蝶'], more: ['五颜六色', '轻轻'] },
+  { img: 'img/bird.jpg', emo: '🐦', when: ['清晨', '傍晚'], who: ['小鸟', '鸟妈妈'], where: ['树枝上', '屋檐下'], what: ['唱歌', '喂宝宝'], more: ['清脆', '快乐'] },
+  { img: 'img/frog.jpg', emo: '🐸', when: ['夏天', '雨后'], who: ['小青蛙', '青蛙妈妈'], where: ['荷叶上', '池塘边'], what: ['捉虫子', '呱呱叫'], more: ['碧绿', '蹦蹦跳跳'] },
+  { img: 'img/horse.jpg', emo: '🐴', when: ['早上', '下午'], who: ['小马', '牧羊人'], where: ['草原上', '山坡上'], what: ['奔跑', '吃草'], more: ['飞快', '自由'] },
+  { img: 'img/cow.jpg', emo: '🐮', when: ['清晨', '中午'], who: ['奶牛', '小牛'], where: ['草地上', '农场里'], what: ['吃草', '挤奶'], more: ['黑白花纹', '悠闲'] },
+  { img: 'img/pig.jpg', emo: '🐷', when: ['中午', '下午'], who: ['小猪', '农夫'], where: ['泥地里', '猪圈里'], what: ['打滚', '睡觉'], more: ['圆滚滚', '呼噜噜'] },
+  { img: 'img/sheep.jpg', emo: '🐑', when: ['上午', '傍晚'], who: ['小羊', '羊妈妈'], where: ['山坡上', '草地上'], what: ['吃青草', '晒太阳'], more: ['毛茸茸', '咩咩叫'] },
+  { img: 'img/mouse.jpg', emo: '🐭', when: ['夜里', '中午'], who: ['小老鼠', '猫'], where: ['厨房里', '洞口'], what: ['偷吃奶酪', '躲起来'], more: ['悄悄地', '小小的'] },
+  { img: 'img/lion.jpg', emo: '🦁', when: ['中午', '黄昏'], who: ['狮子', '小狮子'], where: ['树荫下', '草原上'], what: ['睡午觉', '练习吼叫'], more: ['金色的鬃毛', '懒洋洋'] },
+  { img: 'img/fox.jpg', emo: '🦊', when: ['傍晚', '清晨'], who: ['狐狸', '小兔子'], where: ['森林里', '雪地上'], what: ['找食物', '玩耍'], more: ['火红的尾巴', '机警'] },
+  { img: 'img/deer.jpg', emo: '🦌', when: ['清晨', '傍晚'], who: ['小鹿', '鹿妈妈'], where: ['小溪边', '树林里'], what: ['喝水', '吃嫩叶'], more: ['轻盈', '安静'] },
+  { img: 'img/koala.jpg', emo: '🐨', when: ['白天', '傍晚'], who: ['考拉', '小考拉'], where: ['树上', '桉树上'], what: ['睡觉', '抱树枝'], more: ['毛茸茸', '慢吞吞'] },
+  { img: 'img/penguin.jpg', emo: '🐧', when: ['冬天', '早上'], who: ['企鹅', '小企鹅'], where: ['冰面上', '海边'], what: ['走路', '排队'], more: ['摇摇摆摆', '黑白'] },
+  { img: 'img/owl.jpg', emo: '🦉', when: ['晚上', '深夜'], who: ['猫头鹰', '小老鼠'], where: ['树枝上', '树林里'], what: ['捉老鼠', '睁大眼睛'], more: ['圆眼睛', '安静'] },
+  { img: 'img/snail.jpg', emo: '🐌', when: ['雨后', '早上'], who: ['小蜗牛', '小蚂蚁'], where: ['叶子上', '石头上'], what: ['慢慢爬', '吃叶子'], more: ['背着壳', '慢吞吞'] },
+  { img: 'img/crab.jpg', emo: '🦀', when: ['夏天', '傍晚'], who: ['小螃蟹', '小朋友'], where: ['沙滩上', '海边'], what: ['横着走', '挖沙子'], more: ['大钳子', '活泼'] },
+  { img: 'img/squirrel.jpg', emo: '🐿️', when: ['秋天', '早上'], who: ['小松鼠', '松鼠妈妈'], where: ['树洞里', '树枝上'], what: ['藏松果', '吃坚果'], more: ['大尾巴', '忙碌'] },
+  { img: 'img/hedgehog.jpg', emo: '🦔', when: ['傍晚', '夜里'], who: ['小刺猬', '小兔'], where: ['草地上', '灌木丛里'], what: ['找果子', '缩成一团'], more: ['尖尖的刺', '轻轻'] },
+  { img: 'img/giraffe.jpg', emo: '🦒', when: ['早上', '中午'], who: ['长颈鹿', '小长颈鹿'], where: ['草原上', '树下'], what: ['吃树叶', '散步'], more: ['长长的脖子', '高高'] },
+  { img: 'img/bear.jpg', emo: '🐻', when: ['秋天', '下午'], who: ['小熊', '熊妈妈'], where: ['森林里', '蜂蜜旁'], what: ['采蜂蜜', '吃果子'], more: ['圆圆的', '馋嘴'] },
+  { img: 'img/apple.jpg', emo: '🍎', when: ['早上', '中午'], who: ['妹妹', '奶奶'], where: ['厨房里', '餐桌旁'], what: ['吃苹果', '洗水果'], more: ['红红的', '甜甜的'] },
+  { img: 'img/banana.jpg', emo: '🍌', when: ['下午', '早上'], who: ['弟弟', '妈妈'], where: ['客厅里', '餐桌旁'], what: ['吃香蕉', '剥香蕉'], more: ['弯弯的', '香香的'] },
+  { img: 'img/watermelon.jpg', emo: '🍉', when: ['夏天', '中午'], who: ['爷爷', '哥哥'], where: ['院子里', '餐桌旁'], what: ['切西瓜', '吃西瓜'], more: ['又甜又凉', '大大的'] },
+  { img: 'img/carrot.jpg', emo: '🥕', when: ['秋天', '早上'], who: ['小白兔', '爷爷'], where: ['菜地里', '院子里'], what: ['拔萝卜', '吃萝卜'], more: ['脆脆的', '橙红色'] },
+  { img: 'img/milk.jpg', emo: '🥛', when: ['早上', '睡前'], who: ['妹妹', '爸爸'], where: ['餐桌旁', '厨房里'], what: ['喝牛奶', '倒牛奶'], more: ['热热的', '白白的'] },
+  { img: 'img/bread.jpg', emo: '🍞', when: ['早上', '中午'], who: ['哥哥', '妈妈'], where: ['餐桌旁', '厨房里'], what: ['吃面包', '抹果酱'], more: ['香喷喷', '松松软软'] },
+  { img: 'img/bicycle.jpg', emo: '🚲', when: ['周末', '下午'], who: ['小明', '小红'], where: ['公园里', '小路上'], what: ['骑自行车', '按铃铛'], more: ['飞快', '开心'] },
+  { img: 'img/soccer.jpg', emo: '⚽', when: ['放学后', '周末'], who: ['小朋友们', '哥哥'], where: ['操场上', '草地上'], what: ['踢足球', '拍皮球'], more: ['热闹', '满头大汗'] }
+];
+
+var state = { i: 0, picks: [null, null, null, null] };
+var elPhoto = document.getElementById('photo');
+var elBank = document.getElementById('bank');
+var elSlots = document.getElementById('slots');
+var elSen = document.getElementById('sentence');
+var elIdx = document.getElementById('idx');
+
+var LABELS = ['⏰ 什么时候', '🧒 谁', '📍 在哪里', '🎈 做什么'];
+var KEYS = ['when', 'who', 'where', 'what'];
+
+function bankWords(s) {
+  var all = [];
+  KEYS.forEach(function (k) { s[k].forEach(function (w) { if (all.indexOf(w) < 0) all.push(w); }); });
+  (s.more || []).forEach(function (w) { if (all.indexOf(w) < 0) all.push(w); });
+  return all;
+}
+
+function render() {
+  var s = SCENES[state.i];
+  elIdx.textContent = state.i + 1;
+  elPhoto.src = s.img;
+  elPhoto.alt = '看图写话：' + s.emo;
+
+  elBank.innerHTML = '';
+  bankWords(s).forEach(function (w) {
+    var sp = document.createElement('span');
+    sp.className = 'word';
+    sp.textContent = w;
+    elBank.appendChild(sp);
+  });
+
+  elSlots.innerHTML = '';
+  KEYS.forEach(function (k, gi) {
+    var box = document.createElement('div');
+    box.className = 'slot';
+    var lb = document.createElement('div');
+    lb.className = 'lb';
+    lb.textContent = LABELS[gi];
+    box.appendChild(lb);
+    var row = document.createElement('div');
+    row.className = 'opts';
+    s[k].forEach(function (w) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = w;
+      if (state.picks[gi] === w) b.className = 'on';
+      b.addEventListener('click', function () {
+        state.picks[gi] = w;
+        Array.prototype.forEach.call(row.children, function (x) { x.className = ''; });
+        b.className = 'on';
+        updateSentence();
+        speak(w);
+      });
+      row.appendChild(b);
+    });
+    box.appendChild(row);
+    elSlots.appendChild(box);
+  });
+
+  state.picks = [null, null, null, null];
+  elSen.className = 'sentence empty';
+  elSen.textContent = '按顺序选一选，就能连成一句话 ✨';
+}
+
+function sentenceText() {
+  var s = SCENES[state.i];
+  var p = state.picks.slice();
+  if (!p[0] || !p[1] || !p[2] || !p[3]) return '';
+  var a = p[0], b = p[1], c = p[2], d = p[3];
+  return a + '，' + b + '在' + c + d + '。';
+}
+function updateSentence() {
+  var t = sentenceText();
+  if (!t) {
+    elSen.className = 'sentence empty';
+    elSen.textContent = '还差 ' + state.picks.filter(function (x) { return !x; }).length + ' 格，继续选 ✨';
+    return;
+  }
+  elSen.className = 'sentence';
+  elSen.textContent = '📝 ' + t;
+}
+
+document.getElementById('read').addEventListener('click', function () {
+  var t = sentenceText();
+  if (t) { speak(t); return; }
+  var s = SCENES[state.i];
+  speak('看看图，想一想：什么时候，谁，在哪里，做什么？');
+});
+document.getElementById('next').addEventListener('click', function () {
+  state.i = (state.i + 1) % SCENES.length;
+  render();
+});
+
+/* ---------- 录音：不支持就静默降级（按钮保持隐藏） ---------- */
+var elRec = document.getElementById('rec');
+var recorder = null, chunks = [], recUrl = null, recTimer = null;
+function recSupported() {
+  try {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+  } catch (e) { return false; }
+}
+function stopRec() {
+  try { if (recorder && recorder.state !== 'inactive') recorder.stop(); } catch (e) { }
+  clearTimeout(recTimer);
+  elRec.classList.remove('on');
+  elRec.textContent = '🎙️ 录一录';
+}
+function startRec() {
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(function (stream) {
+    try {
+      recorder = new MediaRecorder(stream);
+    } catch (e) {
+      stream.getTracks().forEach(function (t) { t.stop(); });
+      return;
+    }
+    chunks = [];
+    recorder.ondataavailable = function (ev) {
+      if (ev.data && ev.data.size) chunks.push(ev.data);
+    };
+    recorder.onstop = function () {
+      stream.getTracks().forEach(function (t) { t.stop(); });
+      try {
+        if (recUrl) URL.revokeObjectURL(recUrl);
+        var blob = new Blob(chunks, { type: recorder.mimeType || 'audio/webm' });
+        recUrl = URL.createObjectURL(blob);
+      } catch (e) { }
+    };
+    recorder.start();
+    elRec.classList.add('on');
+    elRec.textContent = '⏹️ 停止录音';
+    recTimer = setTimeout(stopRec, 15000);
+  }).catch(function () {
+    /* 没有麦克风权限 / 不支持：静默降级，不弹错误 */
+    elRec.classList.remove('show');
+    elRec.style.display = 'none';
+  });
+}
+if (recSupported()) {
+  elRec.classList.add('show');
+  elRec.addEventListener('click', function () {
+    if (recorder && recorder.state === 'recording') { stopRec(); return; }
+    startRec();
+  });
+} else {
+  elRec.style.display = 'none';
+}
+
+render();
+window.__picWrite = { SCENES: SCENES, bankWords: bankWords };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

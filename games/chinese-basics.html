@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>现代语文基础 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#eef4ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff2f7,transparent 55%),
+             linear-gradient(160deg,#f8fbff,#fff9fc);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:9px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;
+  font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;}
+.chip{background:#fff;border:2px solid rgba(36,59,83,.10);border-radius:999px;padding:6px 13px;
+  font-family:inherit;font-size:.82rem;font-weight:800;color:var(--ink);cursor:pointer;
+  box-shadow:0 3px 10px rgba(36,59,83,.07);}
+.chip.on{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:transparent;}
+.chip .n{opacity:.65;font-weight:700;}
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;width:100%;}
+.qcard{width:100%;max-width:760px;background:#fff;border-radius:22px;padding:14px 18px;
+  box-shadow:0 10px 26px rgba(36,59,83,.12);text-align:center;}
+.qtag{font-size:.78rem;font-weight:800;color:var(--muted,#6b7f95);letter-spacing:.04em;}
+.qtext{font-size:clamp(1.05rem,2.8vw,1.35rem);font-weight:900;line-height:1.6;margin-top:4px;}
+.qtext u{text-decoration:none;border-bottom:3px solid #ffd46b;padding:0 2px;}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;width:100%;max-width:760px;}
+.opt{min-height:66px;border:2px solid rgba(36,59,83,.10);border-radius:16px;background:#fff;
+  font-family:inherit;font-weight:900;font-size:clamp(.92rem,2.3vw,1.05rem);color:var(--ink);
+  cursor:pointer;padding:8px 10px;box-shadow:0 5px 14px rgba(36,59,83,.10);line-height:1.4;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#eaf8ee;color:#1b7c33;animation:pop .45s ease;}
+.opt.bad{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+.opt.faded{opacity:.45;}
+.feedback{min-height:28px;font-size:1.02rem;font-weight:900;text-align:center;}
+.feedback.ok{color:var(--ok);} .feedback.bad{color:var(--bad);}
+.exp{display:none;width:100%;max-width:760px;background:#fffdf3;border:2px solid #ffe4a3;border-radius:16px;
+  padding:10px 14px;font-size:clamp(.88rem,2.2vw,1rem);font-weight:700;line-height:1.55;color:#7a5a00;}
+.exp.show{display:block;}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  font-family:inherit;font-weight:800;font-size:.9rem;color:var(--ink);cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:rgba(124,92,255,.5);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.08)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-7px)}40%{transform:translateX(7px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+@media (min-width:700px){
+  body{padding:18px 26px;gap:13px;}
+  h1{font-size:1.4rem;}
+  .qtext{font-size:1.55rem;}
+  .opt{min-height:80px;font-size:1.12rem;}
+}
+@media (max-height:430px){ body{padding:8px;gap:5px;} h1{font-size:1rem;} .opt{min-height:52px;} }
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <h1>📚 现代语文基础</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="chips" id="catChips"></div>
+<div class="chips" id="tierChips"></div>
+<div class="stage">
+  <div class="qcard">
+    <div class="qtag" id="qtag"></div>
+    <div class="qtext" id="qtext"></div>
+  </div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="exp" id="exp"></div>
+</div>
+<div class="controls">
+  <button class="btn" id="hear" type="button">🔊 读一遍</button>
+  <button class="btn primary" id="next" type="button">➡️ 下一题</button>
+</div>
+<script>
+var CAN = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function say(t) {
+  if (!t) return;
+  try {
+    if (window.XNLY && XNLY.voice && XNLY.voice.speak) { XNLY.voice.speak(String(t)); return; }
+    if (!CAN) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = 'zh-CN'; u.rate = 0.92; u.pitch = 1.05;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function mark(k) { try { if (window.XNLY && XNLY.mark) XNLY.mark(k); } catch (e) { } }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+/* 100 题：四类各 25。结构 [类别, 档, 题干, 选项, 答案, 讲解]；题干中（ ）为待填内容 */
+var CATS = ['标点符号', '量词', '关联词', '多音字'];
+var Q = [
+  /* ---------- 标点符号 25 ---------- */
+  [0,1,'你今天开心吗（ ）',['？','。','！','，'],'？','疑问句的末尾要用问号。'],
+  [0,1,'春天来了（ ）',['。','，','？','、'],'。','一句完整的话说完，用句号。'],
+  [0,1,'多么美丽的花（ ）',['！','。','？','；'],'！','表示感叹、赞美，用感叹号。'],
+  [0,1,'我喜欢苹果（ ）香蕉和葡萄。',['、','，','。','；'],'、','并列的词语之间用顿号。'],
+  [0,1,'句子中间短暂的停顿用（ ）',['，','。','？','：'],'，','一句没说完，中间的停顿用逗号。'],
+  [0,1,'表示疑问的句子末尾用（ ）',['？','。','！','、'],'？','问号表示疑问。'],
+  [0,1,'表示强烈感情的句子末尾用（ ）',['！','。','，','？'],'！','感叹号表示强烈的感情。'],
+  [0,1,'引用别人说的话要用（ ）',['引号','顿号','句号','分号'],'引号','说的话要放在引号里。'],
+  [0,1,'书名、文章名要用（ ）',['书名号','引号','括号','破折号'],'书名号','书名号是《》。'],
+  [0,1,'一句话完整地结束，用（ ）',['。','，','、','：'],'。','句号表示一句话说完了。'],
+  [0,2,'妈妈说（ ）快点回家。',['：','，','。','、'],'：','冒号用来提示下面要说的话。'],
+  [0,2,'小明问（ ）这道题怎么做？',['：','；','。','、'],'：','冒号后引出问话。'],
+  [0,2,'他一边唱歌（ ）一边跳舞。',['，','、','：','；'],'，','两个动作之间用逗号连接。'],
+  [0,2,'分号主要用来（ ）',['分开并列的分句','分开词语','表示疑问','表示感叹'],'分开并列的分句','分号用来隔开并列的分句。'],
+  [0,2,'破折号可以表示（ ）',['解释说明','疑问','感叹','引用'],'解释说明','破折号后常是对前面的解释。'],
+  [0,2,'省略号表示（ ）',['话没说完','疑问','感叹','引用'],'话没说完','省略号表示还有内容没说完。'],
+  [0,2,'括号主要用来（ ）',['补充说明','引用','感叹','书名'],'补充说明','括号里是对前面的补充。'],
+  [0,2,'小华（ ）你几岁了（ ）',['，？','。！','、：','？。'],'，？','前面停顿用逗号，问句末尾用问号。'],
+  [0,2,'下课了（ ）同学们跑到操场上。',['，','。','！','：'],'，','句子还没说完，中间用逗号。'],
+  [0,2,'“（ ）你吃饭了吗（ ）”妈妈问。',['“ ”','《 》','（ ）','、 ；'],'“ ”','说的话要用引号。'],
+  [0,3,'他不但学习好（ ）而且乐于助人。',['，','。','；','、'],'，','两个分句之间用逗号。'],
+  [0,3,'失败并不可怕（ ）可怕的是不敢再试。',['，','。','！','？'],'，','两个分句之间用逗号。'],
+  [0,3,'冒号和引号一起，常用来（ ）',['引出人物说的话','表示疑问','表示感叹','列举词语'],'引出人物说的话','冒号加引号引出人物说的话。'],
+  [0,3,'《语文报》（ ）是一份很好的报纸。',['，','。','？','！'],'，','主语后面用逗号停顿。'],
+  [0,3,'“你真是个好孩子（ ）”老师说。',['！”','”？','！。','！，'],'！”','感叹句在引号内用感叹号，引号外不加句号。'],
+  /* ---------- 量词 25 ---------- */
+  [1,1,'一（ ）牛',['头','只','条','匹'],'头','牛用「头」。'],
+  [1,1,'一（ ）小鸟',['只','头','条','匹'],'只','小鸟用「只」。'],
+  [1,1,'一（ ）鱼',['条','只','头','匹'],'条','鱼用「条」。'],
+  [1,1,'一（ ）马',['匹','头','条','只'],'匹','马用「匹」。'],
+  [1,1,'一（ ）花',['朵','棵','片','只'],'朵','花用「朵」。'],
+  [1,1,'一（ ）树',['棵','朵','片','只'],'棵','树用「棵」。'],
+  [1,1,'一（ ）树叶',['片','朵','棵','只'],'片','树叶用「片」。'],
+  [1,1,'一（ ）书',['本','张','把','只'],'本','书用「本」。'],
+  [1,2,'一（ ）纸',['张','本','把','条'],'张','纸用「张」。'],
+  [1,2,'一（ ）伞',['把','张','本','条'],'把','伞用「把」。'],
+  [1,2,'一（ ）汽车',['辆','架','艘','只'],'辆','汽车用「辆」。'],
+  [1,2,'一（ ）飞机',['架','辆','艘','只'],'架','飞机用「架」。'],
+  [1,2,'一（ ）轮船',['艘','架','辆','只'],'艘','轮船用「艘」。'],
+  [1,2,'一（ ）衣服',['件','条','双','顶'],'件','衣服用「件」。'],
+  [1,2,'一（ ）裤子',['条','件','双','顶'],'条','裤子用「条」。'],
+  [1,2,'一（ ）鞋',['双','条','件','顶'],'双','鞋用「双」。'],
+  [1,2,'一（ ）帽子',['顶','件','双','条'],'顶','帽子用「顶」。'],
+  [1,2,'一（ ）苹果',['个','头','匹','艘'],'个','苹果用「个」。'],
+  [1,3,'一（ ）石头',['块','条','张','件'],'块','石头用「块」。'],
+  [1,3,'一（ ）山',['座','块','条','张'],'座','山用「座」。'],
+  [1,3,'一（ ）星星',['颗','座','块','条'],'颗','星星用「颗」。'],
+  [1,3,'一大（ ）羊在山坡上',['群','头','匹','只'],'群','很多只羊一起用「群」。'],
+  [1,3,'一（ ）老师',['位','头','匹','艘'],'位','老师用「位」。'],
+  [1,3,'一（ ）雨',['场','条','张','件'],'场','雨用「场」。'],
+  [1,3,'一（ ）信',['封','张','本','把'],'封','信用「封」。'],
+  /* ---------- 关联词 25 ---------- */
+  [2,1,'（ ）下雨了，（ ）我们没去公园。',['因为…所以','虽然…但是','不但…而且','只要…就'],'因为…所以','前后是原因和结果。'],
+  [2,1,'（ ）你努力，（ ）会有收获。',['只要…就','因为…所以','虽然…但是','不但…而且'],'只要…就','条件加结果。'],
+  [2,1,'（ ）明天下雨，我们（ ）不去春游。',['如果…就','因为…所以','不但…而且','虽然…但是'],'如果…就','假设的情况。'],
+  [2,1,'他（ ）会唱歌，（ ）会跳舞。',['不但…而且','虽然…但是','因为…所以','如果…就'],'不但…而且','两层意思递进。'],
+  [2,1,'（ ）天气很冷，（ ）他还是坚持跑步。',['虽然…但是','因为…所以','只要…就','不但…而且'],'虽然…但是','前后转折。'],
+  [2,1,'（ ）是谁，（ ）要遵守规则。',['不管…都','因为…所以','只要…就','虽然…但是'],'不管…都','任何情况都一样。'],
+  [2,2,'（ ）多读书，（ ）能写好作文。',['只有…才','只要…就','虽然…但是','因为…所以'],'只有…才','必要条件。'],
+  [2,2,'（ ）你答应了，（ ）要做到。',['既然…就','只有…才','无论…都','不但…而且'],'既然…就','已经这样，就接着做。'],
+  [2,2,'（ ）刮风（ ）下雨，他都准时到。',['无论…还是','只有…才','因为…所以','如果…就'],'无论…还是','两种情况都包括。'],
+  [2,2,'他（ ）认真听讲，（ ）成绩很好。',['因为…所以','虽然…但是','只要…就','不但…而且'],'因为…所以','原因和结果。'],
+  [2,2,'（ ）困难再大，我们（ ）不放弃。',['即使…也','因为…所以','只有…才','既然…就'],'即使…也','假设加转折。'],
+  [2,2,'（ ）看到别人有困难，你（ ）应该帮助他。',['只要…就','只有…才','虽然…但是','无论…都'],'只要…就','条件加结果。'],
+  [2,2,'（ ）不是妈妈提醒，我（ ）忘了带伞。',['要不是…就','虽然…但是','不但…而且','只有…才'],'要不是…就','假设没发生的事。'],
+  [2,2,'（ ）你付出努力，（ ）一定能成功。',['只要…就','只有…才','即使…也','虽然…但是'],'只要…就','条件加结果。'],
+  [2,2,'这本书（ ）有趣，（ ）很有用。',['不但…而且','因为…所以','虽然…但是','如果…就'],'不但…而且','两个优点递进。'],
+  [2,3,'（ ）掌握了方法，（ ）能事半功倍。',['只有…才','只要…就','即使…也','因为…所以'],'只有…才','必要条件。'],
+  [2,3,'（ ）天气多么恶劣，他们（ ）坚守岗位。',['无论…都','因为…所以','只有…才','虽然…但是'],'无论…都','任何情况都一样。'],
+  [2,3,'（ ）你已经知道错了，（ ）及时改正吧。',['既然…就','只要…就','即使…也','不但…而且'],'既然…就','已经这样，就接着做。'],
+  [2,3,'（ ）前进的路多么艰难，我们（ ）要勇敢走下去。',['不管…都','因为…所以','只有…才','如果…就'],'不管…都','任何情况都一样。'],
+  [2,3,'他（ ）自己节俭，（ ）常常帮助别人。',['不但…而且','虽然…但是','因为…所以','只有…才'],'不但…而且','意思递进。'],
+  [2,3,'（ ）他年纪小，（ ）很懂事。',['虽然…但是','因为…所以','只要…就','不但…而且'],'虽然…但是','前后转折。'],
+  [2,3,'（ ）多练习，成绩（ ）会提高。',['只有…才','如果…就','虽然…但是','无论…都'],'只有…才','必要条件。'],
+  [2,3,'（ ）明天下雨，运动会（ ）改期。',['如果…就','只有…才','不管…都','因为…所以'],'如果…就','假设的情况。'],
+  [2,3,'（ ）他努力学习，（ ）成绩一直很好。',['因为…所以','虽然…但是','只有…才','即使…也'],'因为…所以','原因和结果。'],
+  [2,3,'（ ）你同意（ ）不同意，我都要去。',['不管…都','只有…才','既然…就','如果…就'],'不管…都','两种情况都一样。'],
+  /* ---------- 多音字 25（按意思判断，不涉及拼音） ---------- */
+  [3,1,'「长」在「长大」里是什么意思？',['生长','长度','长久','擅长'],'生长','长大就是慢慢生长。'],
+  [3,1,'「长」在「长头发」里是什么意思？',['很长','生长','增长','年长'],'很长','这里的「长」指长度很长。'],
+  [3,1,'「好」在「爱好」里是什么意思？',['喜欢','美好','友好','好坏'],'喜欢','爱好就是喜欢做的事。'],
+  [3,1,'「好」在「好人」里是什么意思？',['善良','喜欢','常常','容易'],'善良','好人就是心地善良的人。'],
+  [3,1,'「发」在「发现」里是什么意思？',['发觉','头发','送出','发财'],'发觉','发现就是看到了、知道了。'],
+  [3,1,'「发」在「理发」里是什么意思？',['头发','发现','送出','发言'],'头发','理发就是整理头发。'],
+  [3,2,'「重」在「重新」里是什么意思？',['再一次','重量大','重视','沉重'],'再一次','重新就是再来一次。'],
+  [3,2,'「重」在「很重」里是什么意思？',['重量大','再一次','重复','重视'],'重量大','很重就是分量大。'],
+  [3,2,'「空」在「天空」里是什么意思？',['空中','空闲','空白','空气'],'空中','天空就是头顶上的空中。'],
+  [3,2,'「空」在「有空」里是什么意思？',['空闲','空中','天空','空气'],'空闲','有空就是有时间。'],
+  [3,2,'「干」在「干活」里是什么意思？',['做事','干燥','干净','树干'],'做事','干活就是做事。'],
+  [3,2,'「干」在「干净」里是什么意思？',['不脏','做事','晒干','才干'],'不脏','干净就是没有脏东西。'],
+  [3,2,'「种」在「种花」里是什么意思？',['栽种','种子','种类','品种'],'栽种','种花就是把花种下去。'],
+  [3,2,'「种」在「一种花」里是什么意思？',['种类','栽种','种子','种植'],'种类','一种就是其中的一个种类。'],
+  [3,2,'「数」在「数星星」里是什么意思？',['数一数','数目','数学','次数'],'数一数','数星星就是一颗颗地数。'],
+  [3,2,'「数」在「数目」里是什么意思？',['数量','数一数','数学','数落'],'数量','数目就是数量。'],
+  [3,2,'「乐」在「音乐」里是什么意思？',['乐曲','快乐','乐意','乐观'],'乐曲','音乐就是乐曲的声音。'],
+  [3,2,'「乐」在「快乐」里是什么意思？',['高兴','音乐','乐曲','乐器'],'高兴','快乐就是心里高兴。'],
+  [3,3,'「觉」在「睡觉」里是什么意思？',['睡','感觉','发觉','觉得'],'睡','睡觉就是睡。'],
+  [3,3,'「觉」在「觉得」里是什么意思？',['感觉','睡觉','午觉','觉醒'],'感觉','觉得就是感觉到。'],
+  [3,3,'「行」在「银行」里是什么意思？',['行业','行走','可以','行列'],'行业','银行是一种行业机构。'],
+  [3,3,'「行」在「行走」里是什么意思？',['走路','行业','银行','不行'],'走路','行走就是走路。'],
+  [3,3,'「只」在「一只鸟」里是什么意思？',['量词','只有','只是','只好'],'量词','一只的「只」是量词。'],
+  [3,3,'「只」在「只有」里是什么意思？',['仅仅','量词','一只','只好'],'仅仅','只有就是仅仅有。'],
+  [3,3,'「为」在「因为」里是什么意思？',['表示原因','为了','作为','成为'],'表示原因','因为用来引出原因。']
+];
+
+var state = { cat: -1, tier: 0, pool: [], pos: 0, right: 0, locked: false };
+var elCat = document.getElementById('catChips');
+var elTier = document.getElementById('tierChips');
+var elQtag = document.getElementById('qtag');
+var elQ = document.getElementById('qtext');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elExp = document.getElementById('exp');
+
+function buildChips() {
+  elCat.innerHTML = '';
+  var all = document.createElement('button');
+  all.type = 'button'; all.className = 'chip' + (state.cat < 0 ? ' on' : '');
+  all.innerHTML = '全部 <span class="n">100</span>';
+  all.addEventListener('click', function () { state.cat = -1; rebuild(); });
+  elCat.appendChild(all);
+  CATS.forEach(function (c, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip' + (state.cat === i ? ' on' : '');
+    var cnt = Q.filter(function (q) { return q[0] === i; }).length;
+    b.innerHTML = c + ' <span class="n">' + cnt + '</span>';
+    b.addEventListener('click', function () { state.cat = i; rebuild(); });
+    elCat.appendChild(b);
+  });
+  elTier.innerHTML = '';
+  ['全部年级', '1~2 年级', '3~4 年级', '5~6 年级'].forEach(function (label, i) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip' + (state.tier === i ? ' on' : '');
+    b.textContent = label;
+    b.addEventListener('click', function () { state.tier = i; rebuild(); });
+    elTier.appendChild(b);
+  });
+}
+
+function rebuild() {
+  state.pool = Q.filter(function (q) {
+    return (state.cat < 0 || q[0] === state.cat) && (state.tier === 0 || q[1] === state.tier);
+  });
+  state.pos = 0; state.right = 0; state.locked = false;
+  buildChips();
+  render();
+}
+
+function cur() { return state.pool[state.pos]; }
+
+function render() {
+  var q = cur();
+  if (!q) { elQ.textContent = '这个分类没有题目啦～'; elOpts.innerHTML = ''; return; }
+  state.locked = false;
+  elQtag.textContent = CATS[q[0]] + ' · ' + ['1~2 年级', '3~4 年级', '5~6 年级'][q[1] - 1] +
+    '　第 ' + (state.pos + 1) + ' / ' + state.pool.length + ' 题';
+  elQ.innerHTML = q[2].replace(/（\s*）/g, '<u>　　</u>');
+  elFb.className = 'feedback'; elFb.textContent = '';
+  elExp.className = 'exp'; elExp.textContent = '';
+  elOpts.innerHTML = '';
+  shuffle(q[3]).forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'opt'; b.textContent = o;
+    b.addEventListener('click', function () { choose(b, o, q); });
+    elOpts.appendChild(b);
+  });
+  say(q[2].replace(/（\s*）/g, '什么'));
+}
+
+function choose(btn, o, q) {
+  if (state.locked) return;
+  if (o === q[4]) {
+    state.locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { if (b !== btn) b.classList.add('faded'); });
+    state.right++;
+    mark('right');
+    elFb.className = 'feedback ok'; elFb.textContent = '✅ 答对啦！';
+    elExp.textContent = '💡 ' + q[5]; elExp.className = 'exp show';
+    say('答对啦。' + q[5]);
+  } else {
+    btn.classList.add('bad');
+    setTimeout(function () { btn.classList.remove('bad'); }, 500);
+    mark('wrong');
+    elFb.className = 'feedback bad'; elFb.textContent = '❌ 再想想～';
+    elExp.textContent = '💡 ' + q[5]; elExp.className = 'exp show';
+    say('再想想。' + q[5]);
+  }
+}
+
+function nextQ() {
+  state.pos++;
+  if (state.pos >= state.pool.length) {
+    state.pool = shuffle(state.pool); state.pos = 0;
+  }
+  render();
+}
+document.getElementById('hear').addEventListener('click', function () {
+  var q = cur(); if (q) say(q[2].replace(/（\s*）/g, '什么'));
+});
+document.getElementById('next').addEventListener('click', nextQ);
+
+buildChips();
+state.pool = Q.slice();
+render();
+window.__chinese = { list: Q, state: state, cats: CATS, rebuild: rebuild };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

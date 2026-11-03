@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>时间顺序与作息 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff4e8,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef3ff,transparent 55%),
+             linear-gradient(160deg,#fffbf4,#f6f8ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;
+  font-size:.85rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.pill{background:#fff;border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);white-space:nowrap;}
+.pill b{color:var(--accent);}
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;width:100%;}
+.qtext{font-size:clamp(1rem,2.6vw,1.3rem);font-weight:900;text-align:center;}
+.order{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.stepchip{background:#fff;border-radius:999px;padding:5px 12px;font-size:.82rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);}
+.steps{display:grid;grid-template-columns:1fr;gap:10px;width:100%;max-width:640px;}
+.step{min-height:76px;display:flex;align-items:center;gap:10px;border:2px solid rgba(36,59,83,.10);
+  border-radius:18px;background:#fff;font-family:inherit;font-weight:900;
+  font-size:clamp(1rem,2.6vw,1.15rem);color:var(--ink);cursor:pointer;padding:10px 14px;
+  box-shadow:0 5px 14px rgba(36,59,83,.10);text-align:left;}
+.step .e{font-size:clamp(1.6rem,6vw,2.2rem);line-height:1;}
+.step .n{margin-left:auto;width:28px;height:28px;border-radius:50%;background:#f1f4f8;color:#8aa0b8;
+  display:flex;align-items:center;justify-content:center;font-size:.9rem;flex:none;}
+.step.good{border-color:var(--ok);background:#eaf8ee;color:#1b7c33;animation:pop .45s ease;}
+.step.good .n{background:var(--ok);color:#fff;}
+.step.bad{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+.sentence{display:none;width:100%;max-width:640px;background:#fffdf3;border:2px solid #ffe4a3;
+  border-radius:16px;padding:12px 14px;font-size:clamp(.95rem,2.4vw,1.1rem);font-weight:900;
+  line-height:1.5;color:#7a5a00;text-align:center;}
+.sentence.show{display:block;}
+.feedback{min-height:30px;font-size:1.05rem;font-weight:900;text-align:center;}
+.feedback.ok{color:var(--ok);} .feedback.bad{color:var(--bad);}
+.controls{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.btn{min-height:44px;padding:0 20px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  font-family:inherit;font-weight:800;font-size:.9rem;color:var(--ink);cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:rgba(124,92,255,.5);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.06)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@media (min-width:700px){
+  body{padding:18px 26px;gap:14px;}
+  h1{font-size:1.4rem;}
+  .qtext{font-size:1.5rem;}
+  .step{min-height:92px;font-size:1.25rem;}
+}
+@media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .step{min-height:58px;} }
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <h1>⏰ 时间顺序与作息</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+<div class="stats">
+  <span class="pill">📖 第 <b id="qno">1</b> / 20 组</span>
+  <span class="pill">✅ 排对 <b id="right">0</b></span>
+</div>
+<div class="stage">
+  <div class="qtext" id="qtext">按顺序点一点，先做什么？</div>
+  <div class="steps" id="steps"></div>
+  <div class="sentence" id="sentence"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+<div class="controls">
+  <button class="btn" id="hear" type="button">🔊 读一读</button>
+  <button class="btn primary" id="next" type="button">➡️ 下一组</button>
+</div>
+<script>
+var CAN = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+function say(t) {
+  if (!t) return;
+  try {
+    if (window.XNLY && XNLY.voice && XNLY.voice.speak) { XNLY.voice.speak(String(t)); return; }
+    if (!CAN) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function mark(k) { try { if (window.XNLY && XNLY.mark) XNLY.mark(k); } catch (e) { } }
+function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+
+/* 20 组：[步骤 1, 步骤 2, 步骤 3, 完整句] 每步 = [图案, 文字] */
+var GROUPS = [
+  [['🛏️','起床'],['👕','穿衣服'],['🪥','刷牙'],'先起床，再穿衣服，然后刷牙。'],
+  [['🧼','洗手'],['🍚','吃饭'],['🧻','擦嘴'],'先洗手，再吃饭，然后擦嘴。'],
+  [['👟','脱鞋'],['🚪','进门'],['🧼','洗手'],'先脱鞋，再进门，然后洗手。'],
+  [['💰','拿钱'],['🛒','选商品'],['🧾','付钱'],'先拿钱，再选商品，然后付钱。'],
+  [['💧','烧水'],['🍵','泡茶'],['😋','喝茶'],'先烧水，再泡茶，然后喝茶。'],
+  [['🧦','穿袜子'],['👟','穿鞋子'],['🎀','系鞋带'],'先穿袜子，再穿鞋子，然后系鞋带。'],
+  [['🎒','打开书包'],['📓','拿出本子'],['✏️','写作业'],'先打开书包，再拿出本子，然后写作业。'],
+  [['🪥','挤牙膏'],['🦷','刷牙'],['💧','漱口'],'先挤牙膏，再刷牙，然后漱口。'],
+  [['👕','脱衣服'],['🚿','洗澡'],['🧻','擦干'],'先脱衣服，再洗澡，然后擦干。'],
+  [['🛏️','铺床'],['😴','躺下'],['🛌','盖被子'],'先铺床，再躺下，然后盖被子。'],
+  [['🥬','洗菜'],['🔪','切菜'],['🍳','炒菜'],'先洗菜，再切菜，然后炒菜。'],
+  [['🌱','种种子'],['💧','浇水'],['🌿','发芽'],'先种下种子，再浇水，然后等它发芽。'],
+  [['🌅','早上'],['🌞','中午'],['🌙','晚上'],'早上过了是中午，中午过了是晚上。'],
+  [['⬅️','昨天'],['📍','今天'],['➡️','明天'],'昨天过去了，今天是现在，明天还没到。'],
+  [['🌸','春天'],['🌻','夏天'],['🍁','秋天'],'春天过去是夏天，夏天过去是秋天。'],
+  [['🥣','和面'],['🤲','揉面'],['🥟','蒸馒头'],'先和面，再揉面，然后蒸馒头。'],
+  [['☂️','打开伞'],['🌧️','走进雨里'],['☂️','收伞'],'先打开伞，再走进雨里，最后收伞。'],
+  [['📖','看书'],['💡','关灯'],['😴','睡觉'],'先看一会儿书，再关灯，然后睡觉。'],
+  [['🗑️','捡起垃圾'],['🪣','放进垃圾桶'],['🧼','洗手'],'先捡起垃圾，再放进垃圾桶，然后洗手。'],
+  [['🚶','排队'],['🚌','上车'],['💺','找座位'],'先排队，再上车，然后找座位。']
+];
+
+var state = { no: 0, right: 0, next: 0, locked: false, idx: [] };
+var elQno = document.getElementById('qno');
+var elRight = document.getElementById('right');
+var elSteps = document.getElementById('steps');
+var elSentence = document.getElementById('sentence');
+var elFb = document.getElementById('feedback');
+var elQ = document.getElementById('qtext');
+
+function current() { return GROUPS[state.idx[state.no]]; }
+
+function render() {
+  var g = current();
+  state.next = 0; state.locked = false;
+  elQno.textContent = state.no + 1;
+  elRight.textContent = state.right;
+  elQ.textContent = '按顺序点一点，先做什么？';
+  elSentence.className = 'sentence'; elSentence.textContent = '';
+  elFb.className = 'feedback'; elFb.textContent = '';
+  elSteps.innerHTML = '';
+  shuffle(g.slice(0, 3)).forEach(function (s) {
+    var b = document.createElement('button');
+    b.type = 'button'; b.className = 'step';
+    b.innerHTML = '<span class="e">' + s[0] + '</span><span>' + s[1] + '</span><span class="n">?</span>';
+    b.addEventListener('click', function () { tap(b, s, g); });
+    elSteps.appendChild(b);
+  });
+  say('按顺序点一点，先做什么？');
+}
+
+function tap(btn, s, g) {
+  if (state.locked) return;
+  var want = g[state.next];
+  if (s[1] === want[1]) {
+    btn.classList.add('good');
+    btn.querySelector('.n').textContent = state.next + 1;
+    btn.disabled = true;
+    state.next++;
+    if (state.next >= 3) {
+      state.locked = true;
+      state.right++; elRight.textContent = state.right;
+      mark('right');
+      elFb.className = 'feedback ok'; elFb.textContent = '✅ 顺序排对啦！';
+      elSentence.textContent = '📝 ' + g[3];
+      elSentence.className = 'sentence show';
+      say(g[3]);
+    } else {
+      elFb.className = 'feedback ok'; elFb.textContent = '👍 对，接下来呢？';
+    }
+  } else {
+    btn.classList.add('bad');
+    setTimeout(function () { btn.classList.remove('bad'); }, 500);
+    mark('wrong');
+    elFb.className = 'feedback bad'; elFb.textContent = '❌ 先想一想，前面还有一步';
+    say('先想一想，前面还有一步。');
+    setTimeout(function () {
+      var okBtn = null;
+      Array.prototype.forEach.call(elSteps.children, function (b) {
+        if (b.textContent.indexOf(want[1]) >= 0) okBtn = b;
+      });
+      if (okBtn) { okBtn.classList.add('bad'); setTimeout(function () { okBtn.classList.remove('bad'); }, 500); }
+    }, 200);
+  }
+}
+
+function nextG() {
+  state.no++;
+  if (state.no >= GROUPS.length) { GROUPS = shuffle(GROUPS.slice()); state.no = 0; state.idx = GROUPS.map(function (_, i) { return i; }); }
+  render();
+}
+document.getElementById('hear').addEventListener('click', function () {
+  var g = current();
+  say('按顺序点一点。' + g[3]);
+});
+document.getElementById('next').addEventListener('click', nextG);
+
+state.idx = shuffle(GROUPS.map(function (_, i) { return i; }));
+render();
+window.__daily = { list: GROUPS, state: state, next: nextG };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

@@ -13,8 +13,13 @@
  *  4) 逐条容错 install + skipWaiting + 清理旧版本缓存 + clients.claim + 导航离线兜底。
  *
  * v16 变化：只新增 voice.js / sound.js / parent.html 三个条目，其余策略不变。
+ * v18 变化：全站图片在平板上放大（7 个含图页面的内联样式已改），版本号 +1 以刷新缓存。
+ * v19 变化：新增第二批 4 个页面（应用题 / 看图写话 / 自然科学 / 小古文）并加入预缓存。
+ * v20 变化：新增幼儿园 5 个页面（安全 / 情绪 / 方位 / 关联配对 / 作息顺序），形状扩到 8 种。
+ * v21 变化：新增现代语文基础、单词消消乐；补入阅读理解 / 近反义词 / 单词图配 / 钟表与人民币；移除调试页。
+ * v22 变化：新增外链书架（只放站内链接与说明，不内嵌外部资源）。
  */
-var CACHE = 'xnly-v16';
+var CACHE = 'xnly-v22';
 
 var PRECACHE = [
   './',
@@ -28,7 +33,11 @@ var PRECACHE = [
   'games/blackjack.html',
   'games/bubble.html',
   'games/color.html',
+  'games/chinese-basics.html',
+  'games/clock-money.html',
   'games/count.html',
+  'games/daily-order.html',
+  'games/emotions.html',
   'games/english.html',
   'games/gomoku.html',
   'games/guess-number.html',
@@ -40,18 +49,27 @@ var PRECACHE = [
   'games/img/icon-512.png',
   'games/junqi.html',
   'games/klondike.html',
+  'games/links.html',
   'games/logic-clues.html',
   'games/memory-match.html',
+  'games/math-word.html',
   'games/more-less.html',
   'games/music-pad.html',
   'games/nearby-words.html',
+  'games/near-syn.html',
   'games/number-match.html',
   'games/odd-one.html',
+  'games/english-words.html',
+  'games/pairs.html',
   'games/path-connect.html',
   'games/pattern.html',
+  'games/pic-write.html',
   'games/reaction.html',
   'games/rhythm.html',
+  'games/read-comp.html',
   'games/riddle.html',
+  'games/safety.html',
+  'games/science-nature.html',
   'games/scene-words.html',
   'games/sequence.html',
   'games/shadow.html',
@@ -61,8 +79,11 @@ var PRECACHE = [
   'games/shapes.html',
   'games/slide15.html',
   'games/sort-home.html',
+  'games/spatial.html',
   'games/steps.html',
   'games/weather.html',
+  'games/wenyan.html',
+  'games/word-match.html',
   'games/xiangqi.html',
   'games/xiangxingzi.html',
   'games/yuwen-baike.html',

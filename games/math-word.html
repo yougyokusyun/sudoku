@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>应用题小博士 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--ok:#2fb344;--bad:#ff5c5c;--accent:#e08a00;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff4e6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef7ff,transparent 55%),
+             linear-gradient(160deg,#fffaf3,#f4f9ff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid rgba(36,59,83,.10);color:var(--accent);font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+
+.stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  background:rgba(255,255,255,.82);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:12px;
+  box-shadow:0 10px 24px rgba(36,59,83,.08);overflow:hidden;}
+.tierbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.tbtn{min-height:36px;padding:4px 14px;border-radius:999px;border:2px solid rgba(36,59,83,.10);background:#fff;
+  font-family:inherit;font-weight:800;font-size:.8rem;color:#3b5370;cursor:pointer;}
+.tbtn.on{border-color:var(--accent);background:#fff3df;color:#a75f00;}
+
+.qcard{width:min(96vw,680px);background:#fff;border:2px solid rgba(224,138,0,.22);border-radius:18px;
+  padding:14px 18px;box-shadow:0 8px 18px rgba(36,59,83,.08);flex:none;}
+.qcard .tag{display:inline-block;background:#fff3df;color:#a75f00;border-radius:999px;font-size:.7rem;
+  font-weight:800;padding:2px 10px;margin-bottom:8px;}
+.qcard .txt{font-size:clamp(1.02rem,2.6vh,1.32rem);font-weight:800;line-height:1.75;}
+
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(94vw,600px);flex:none;}
+.opt{min-height:clamp(52px,10vh,64px);border-radius:16px;border:2px solid rgba(36,59,83,.12);background:#fff;
+  font-family:inherit;font-size:clamp(1rem,3.2vh,1.35rem);font-weight:900;color:var(--ink);cursor:pointer;
+  box-shadow:0 5px 12px rgba(36,59,83,.08);}
+.opt:active{transform:scale(.96);}
+.opt.good{border-color:var(--ok);background:#e9fbee;}
+.opt.bad{border-color:var(--bad);background:#ffeded;}
+.opt.faded{opacity:.38;pointer-events:none;}
+
+.feedback{min-height:24px;font-size:.92rem;font-weight:900;text-align:center;color:var(--muted);flex:none;}
+.feedback.ok{color:var(--ok);}
+.feedback.bad{color:var(--bad);}
+.exp{width:min(94vw,600px);background:#fffbe8;border:2px dashed #e0b23e;border-radius:16px;padding:10px 14px;
+  font-size:clamp(.84rem,2.4vh,1rem);font-weight:800;line-height:1.65;color:#6e5410;flex:none;display:none;}
+.exp.show{display:block;}
+
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;flex:none;}
+.btn{min-height:42px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:999px;background:#fff;
+  color:var(--ink);font-family:inherit;font-weight:800;font-size:.86rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);}
+.btn.primary{border-color:rgba(224,138,0,.5);color:#fff;background:linear-gradient(135deg,#f6b93b,#e08a00);}
+.btn.warn{border-color:rgba(240,161,26,.5);color:#a06a00;background:#fff7e0;}
+
+@media (max-height:520px){
+  body{padding:6px 10px;gap:5px;}
+  h1{font-size:.95rem;}
+  .stage{gap:6px;padding:8px;}
+  .qcard{padding:8px 12px;}
+  .qcard .txt{font-size:.98rem;}
+  .opt{min-height:44px;font-size:1rem;}
+  .feedback{min-height:16px;font-size:.8rem;}
+  .btn{min-height:34px;font-size:.78rem;padding:0 14px;}
+}
+</style>
+<link rel="manifest" href="../manifest.json">
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🧮 应用题小博士</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">📚 第 <b id="qno">1</b> 题</span>
+  </div>
+</header>
+
+<div class="stage" id="stage">
+  <div class="tierbar" id="tierbar">
+    <button class="tbtn on" type="button" data-t="1">① 简单</button>
+    <button class="tbtn" type="button" data-t="2">② 进阶</button>
+    <button class="tbtn" type="button" data-t="3">③ 挑战</button>
+  </div>
+  <div class="qcard">
+    <span class="tag" id="tag">一步加减法</span>
+    <div class="txt" id="qtext">正在出题…</div>
+  </div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="exp" id="exp"></div>
+  <div class="controls">
+    <button class="btn warn" id="hear" type="button">🔊 再听一遍</button>
+    <button class="btn primary" id="next" type="button">➡️ 下一题</button>
+  </div>
+</div>
+
+<script>
+var elQ = document.getElementById('qtext');
+var elTag = document.getElementById('tag');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elExp = document.getElementById('exp');
+var elStreak = document.getElementById('streak');
+var elQno = document.getElementById('qno');
+
+var V = (window.XNLY && window.XNLY.voice) || null;
+function speak(t) {
+  if (V && V.speak) { V.speak(t, { rate: 0.92 }); return; }
+  if (!window.speechSynthesis) return;
+  try {
+    var u = new SpeechSynthesisUtterance(t);
+    u.lang = 'zh-CN'; u.rate = 0.9; u.pitch = 1.1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+function mark(kind) {
+  if (window.XNLY && window.XNLY.mark) window.XNLY.mark(kind);
+}
+
+var NAMES = ['小明', '小红', '小华', '小刚', '乐乐', '朵朵', '小宇', '佳佳', '小美', '小兰'];
+function name() { return NAMES[Math.floor(Math.random() * NAMES.length)]; }
+function ri(a, b) { return a + Math.floor(Math.random() * (b - a + 1)); }
+function pick(a) { return a[Math.floor(Math.random() * a.length)]; }
+
+/* 三档各 20 个模板；每次进入重新随机数字与姓名 */
+var LEVELS = {
+  1: { tag: '一步加减法', items: [
+    function () { var n = name(), a = ri(3, 9), b = ri(3, 9); return { q: '盘子里有 ' + a + ' 个苹果，妈妈又放进 ' + b + ' 个，一共有多少个苹果？', a: a + b, u: '个', e: '把原来的和新放进来的合起来，用加法：' + a + ' + ' + b + ' = ' + (a + b) + '（个）。' }; },
+    function () { var n = name(), a = ri(8, 16), b = ri(3, 7); return { q: n + '有 ' + a + ' 颗糖，吃了 ' + b + ' 颗，还剩几颗？', a: a - b, u: '颗', e: '吃掉了就要减去：' + a + ' − ' + b + ' = ' + (a - b) + '（颗）。' }; },
+    function () { var a = ri(4, 7), b = ri(2, a - 1); return { q: '红气球有 ' + a + ' 个，蓝气球有 ' + b + ' 个，红气球比蓝气球多几个？', a: a - b, u: '个', e: '求多几个用减法：' + a + ' − ' + b + ' = ' + (a - b) + '（个）。' }; },
+    function () { var a = ri(4, 12), b = ri(2, 5), c = ri(2, 5); return { q: '公交车上有 ' + a + ' 人，到站下去 ' + b + ' 人，又上来 ' + c + ' 人，现在车上有几人？', a: a - b + c, u: '人', e: '先减去下车的，再加上上车的：' + a + ' − ' + b + ' + ' + c + ' = ' + (a - b + c) + '（人）。' }; },
+    function () { var a = ri(10, 18), b = ri(2, 6); return { q: '树上有 ' + a + ' 只小鸟，飞走了 ' + b + ' 只，树上还剩几只？', a: a - b, u: '只', e: '飞走了用减法：' + a + ' − ' + b + ' = ' + (a - b) + '（只）。' }; },
+    function () { var n1 = name(), n2 = name(), a = ri(3, 9), b = ri(3, 9); return { q: n1 + '有 ' + a + ' 支铅笔，' + n2 + '有 ' + b + ' 支，两人一共有几支？', a: a + b, u: '支', e: '两人合起来用加法：' + a + ' + ' + b + ' = ' + (a + b) + '（支）。' }; },
+    function () { var n = name(), a = ri(5, 15), b = ri(2, 5); return { q: '排队时，' + n + '前面有 ' + a + ' 人，后面有 ' + b + ' 人，这一队一共有几人？', a: a + b + 1, u: '人', e: '前面的人 + 后面的人 + 自己：' + a + ' + ' + b + ' + 1 = ' + (a + b + 1) + '（人）。' }; },
+    function () { var a = ri(6, 14), b = ri(2, 5); return { q: '白兔有 ' + a + ' 只，黑兔比白兔少 ' + b + ' 只，黑兔有几只？', a: a - b, u: '只', e: '比白兔少，就用白兔的只数减去少的：' + a + ' − ' + b + ' = ' + (a - b) + '（只）。' }; },
+    function () { var a = ri(5, 12), b = ri(2, 5), c = ri(2, 4); return { q: '图书角有 ' + a + ' 本书，借走 ' + b + ' 本，又还回 ' + c + ' 本，现在有几本？', a: a - b + c, u: '本', e: '借走减去，还回加上：' + a + ' − ' + b + ' + ' + c + ' = ' + (a - b + c) + '（本）。' }; },
+    function () { var a = ri(4, 10), b = ri(2, 5); return { q: '红花有 ' + a + ' 朵，黄花比红花多 ' + b + ' 朵，黄花有几朵？', a: a + b, u: '朵', e: '比红花多，就用红花加多的：' + a + ' + ' + b + ' = ' + (a + b) + '（朵）。' }; },
+    function () { var a = ri(10, 16), b = ri(3, 7); return { q: '妈妈买了 ' + a + ' 个鸡蛋，用了 ' + b + ' 个，还剩几个？', a: a - b, u: '个', e: '用掉了就减去：' + a + ' − ' + b + ' = ' + (a - b) + '（个）。' }; },
+    function () { var a = ri(6, 12), b = ri(2, 5), c = ri(2, 5); return { q: '篮子里有 ' + a + ' 个梨，又放入 ' + b + ' 个，再拿走 ' + c + ' 个，现在有几个？', a: a + b - c, u: '个', e: '放入加上，拿走减去：' + a + ' + ' + b + ' − ' + c + ' = ' + (a + b - c) + '（个）。' }; },
+    function () { var n1 = name(), n2 = name(), a = ri(3, 8), b = ri(3, 8); return { q: n1 + '跳了 ' + a + ' 下绳，' + n2 + '跳了 ' + b + ' 下，两人一共跳了几下？', a: a + b, u: '下', e: '两人合起来：' + a + ' + ' + b + ' = ' + (a + b) + '（下）。' }; },
+    function () { var a = ri(12, 18), b = ri(2, 6); return { q: '停车场有 ' + a + ' 辆车，开走 ' + b + ' 辆，还剩几辆？', a: a - b, u: '辆', e: '开走用减法：' + a + ' − ' + b + ' = ' + (a - b) + '（辆）。' }; },
+    function () { var n = name(), a = ri(4, 9), b = ri(2, 5); return { q: n + '有 ' + a + ' 元，买本子花了 ' + b + ' 元，还剩几元？', a: a - b, u: '元', e: '花掉的钱要减去：' + a + ' − ' + b + ' = ' + (a - b) + '（元）。' }; },
+    function () { var a = ri(7, 15), b = ri(2, 6); return { q: '树上有 ' + a + ' 只猴子，下来了 ' + b + ' 只，树上还有几只？', a: a - b, u: '只', e: '下来用减法：' + a + ' − ' + b + ' = ' + (a - b) + '（只）。' }; },
+    function () { var a = ri(3, 8), b = ri(2, 5), c = ri(2, 6); return { q: '池塘里有 ' + a + ' 条小鱼，又游来 ' + b + ' 条，接着游走 ' + c + ' 条，现在有几条？', a: a + b - c, u: '条', e: '游来加上，游走减去：' + a + ' + ' + b + ' − ' + c + ' = ' + (a + b - c) + '（条）。' }; },
+    function () { var n1 = name(), n2 = name(), b = ri(2, 5), a = b + ri(2, 8); return { q: n1 + '折了 ' + a + ' 只纸鹤，' + n2 + '折了 ' + b + ' 只，' + n1 + '比' + n2 + '多折几只？', a: a - b, u: '只', e: '求多几只，用多的减少的：' + a + ' − ' + b + ' = ' + (a - b) + '（只）。' }; },
+    function () { var a = ri(5, 10), b = ri(2, 4), c = ri(2, 4); return { q: '盒子里有 ' + a + ' 块巧克力，' + name() + '吃了 ' + b + ' 块，妹妹吃了 ' + c + ' 块，还剩几块？', a: a - b - c, u: '块', e: '两次吃掉都要减：' + a + ' − ' + b + ' − ' + c + ' = ' + (a - b - c) + '（块）。' }; },
+    function () { var a = ri(6, 13), b = ri(2, 5); return { q: '操场上有 ' + a + ' 个小朋友在玩，又来了 ' + b + ' 个，现在一共有几个？', a: a + b, u: '个', e: '又来了用加法：' + a + ' + ' + b + ' = ' + (a + b) + '（个）。' }; }
+  ] },
+  2: { tag: '乘除与两步', items: [
+    function () { var a = ri(2, 6), b = ri(2, 5); return { q: '每盒有 ' + a + ' 支彩笔，' + b + ' 盒一共有几支？', a: a * b, u: '支', e: '每盒的支数 × 盒数：' + a + ' × ' + b + ' = ' + (a * b) + '（支）。' }; },
+    function () { var b = ri(2, 5), c = ri(2, 6), a = b * c; return { q: a + ' 颗糖平均分给 ' + b + ' 个小朋友，每人分几颗？', a: c, u: '颗', e: '平均分用除法：' + a + ' ÷ ' + b + ' = ' + c + '（颗）。' }; },
+    function () { var a = ri(2, 6), b = ri(3, 5); return { q: '一个笔记本 ' + a + ' 元，买 ' + b + ' 个要多少元？', a: a * b, u: '元', e: '单价 × 数量：' + a + ' × ' + b + ' = ' + (a * b) + '（元）。' }; },
+    function () { var n = name(), a = ri(20, 50), b = ri(5, 15); return { q: n + '带了 ' + a + ' 元，买书花了 ' + b + ' 元，还剩多少元？', a: a - b, u: '元', e: '总钱数减去花掉的：' + a + ' − ' + b + ' = ' + (a - b) + '（元）。' }; },
+    function () { var a = ri(30, 80), b = ri(5, 20); return { q: '一本书共 ' + a + ' 页，已经看了 ' + b + ' 页，还剩多少页？', a: a - b, u: '页', e: '总页数减去已看：' + a + ' − ' + b + ' = ' + (a - b) + '（页）。' }; },
+    function () { var c = ri(10, 30), a = c * 3; return { q: '3 天一共看了 ' + a + ' 页书，平均每天看多少页？', a: c, u: '页', e: '总数 ÷ 天数：' + a + ' ÷ 3 = ' + c + '（页）。' }; },
+    function () { var a = ri(20, 60), b = ri(5, 15); return { q: '一根绳子长 ' + a + ' 米，用去 ' + b + ' 米，还剩多少米？', a: a - b, u: '米', e: '总长减用去：' + a + ' − ' + b + ' = ' + (a - b) + '（米）。' }; },
+    function () { var a = ri(20, 30), b = ri(2, 6); return { q: '一班有 ' + a + ' 人，二班比一班多 ' + b + ' 人，两班一共有多少人？', a: 2 * a + b, u: '人', e: '先算二班：' + a + ' + ' + b + ' = ' + (a + b) + '；再相加：' + a + ' + ' + (a + b) + ' = ' + (2 * a + b) + '（人）。' }; },
+    function () { var a = ri(3, 9), b = ri(2, 4); return { q: '苹果有 ' + a + ' 个，梨的个数是苹果的 ' + b + ' 倍，梨有多少个？', a: a * b, u: '个', e: '求几倍用乘法：' + a + ' × ' + b + ' = ' + (a * b) + '（个）。' }; },
+    function () { var a = ri(30, 60), b = ri(5, 15), c = ri(3, 10); return { q: '停车场有 ' + a + ' 辆车，开走 ' + b + ' 辆，又开来 ' + c + ' 辆，现在有多少辆？', a: a - b + c, u: '辆', e: '开走减，开来加：' + a + ' − ' + b + ' + ' + c + ' = ' + (a - b + c) + '（辆）。' }; },
+    function () { var a = ri(4, 9), b = ri(3, 6); return { q: '同学们做操，每排 ' + a + ' 人，站了 ' + b + ' 排，一共有多少人？', a: a * b, u: '人', e: '每排人数 × 排数：' + a + ' × ' + b + ' = ' + (a * b) + '（人）。' }; },
+    function () { var b = ri(2, 6), c = ri(2, 5), a = b * c; return { q: '有 ' + a + ' 元，每个本子 ' + b + ' 元，最多能买几个本子？', a: c, u: '个', e: '总钱数 ÷ 每本价钱：' + a + ' ÷ ' + b + ' = ' + c + '（个）。' }; },
+    function () { var b = ri(5, 15), c = ri(4, 10), a = b * c; return { q: '一本书 ' + a + ' 页，每天看 ' + b + ' 页，几天能看完？', a: c, u: '天', e: '总页数 ÷ 每天页数：' + a + ' ÷ ' + b + ' = ' + c + '（天）。' }; },
+    function () { var b = ri(3, 8), a = b * 2 + ri(2, 10); var n1 = name(), n2 = name(); return { q: n1 + '给' + n2 + ' ' + b + ' 张卡片后，两人都是 ' + a + ' 张，' + n2 + '原来有几张？', a: a - b, u: '张', e: n2 + '原来 = 现在的 ' + a + ' 张 − ' + n1 + '给的 ' + b + ' 张 = ' + (a - b) + '（张）。' }; },
+    function () { var n = name(), a = ri(40, 80), b = ri(10, 30); return { q: '从' + n + '家到学校有 ' + a + ' 米，他已经走了 ' + b + ' 米，还剩多少米？', a: a - b, u: '米', e: '全程减去已走：' + a + ' − ' + b + ' = ' + (a - b) + '（米）。' }; },
+    function () { var a = ri(20, 40), b = ri(3, 10); return { q: '果园里有 ' + a + ' 棵苹果树，梨树比苹果树少 ' + b + ' 棵，两种树一共有多少棵？', a: 2 * a - b, u: '棵', e: '先算梨树：' + a + ' − ' + b + ' = ' + (a - b) + '；再合起来：' + a + ' + ' + (a - b) + ' = ' + (2 * a - b) + '（棵）。' }; },
+    function () { var a = ri(12, 24), b = ri(2, 4); return { q: '一箱饮料有 ' + a + ' 瓶，' + b + ' 箱一共有多少瓶？', a: a * b, u: '瓶', e: '每箱瓶数 × 箱数：' + a + ' × ' + b + ' = ' + (a * b) + '（瓶）。' }; },
+    function () { var n = name(), a = ri(30, 45), b = ri(5, 12); return { q: '妈妈 ' + a + ' 岁，' + n + '比妈妈小 ' + b + ' 岁，' + n + '多少岁？', a: a - b, u: '岁', e: '比妈妈小，用妈妈年龄减去相差的：' + a + ' − ' + b + ' = ' + (a - b) + '（岁）。' }; },
+    function () { var a = ri(30, 45), b = ri(12, 20); return { q: '全班 ' + a + ' 人，男生 ' + b + ' 人，女生有多少人？', a: a - b, u: '人', e: '总人数减去男生：' + a + ' − ' + b + ' = ' + (a - b) + '（人）。' }; },
+    function () { var a = ri(2, 5), b = ri(6, 12), c = ri(5, 10); return { q: '买 ' + a + ' 个玩具，每个 ' + b + ' 元，付了 ' + (a * b + c) + ' 元，应找回多少元？', a: c, u: '元', e: '先算总价：' + a + ' × ' + b + ' = ' + (a * b) + '；再找回：' + (a * b + c) + ' − ' + (a * b) + ' = ' + c + '（元）。' }; }
+  ] },
+  3: { tag: '分数 · 小数 · 行程', items: [
+    function () { var a = ri(2, 6) * 2; return { q: '一袋米重 ' + a + ' 千克，吃了它的一半，吃了多少千克？', a: a / 2, u: '千克', e: '一半就是 ' + a + ' ÷ 2 = ' + (a / 2) + '（千克）。' }; },
+    function () { var a = ri(2, 5) * 4; return { q: '一根彩带长 ' + a + ' 分米，用去它的 3/4，用去多少分米？', a: (3 * a) / 4, u: '分米', e: '把 ' + a + ' 平均分成 4 份，取 3 份：' + a + ' ÷ 4 × 3 = ' + ((3 * a) / 4) + '（分米）。' }; },
+    function () { var a = ri(1, 5); return { q: '一本练习本 1.5 元，买 ' + a + ' 本一共多少元？', a: 1.5 * a, u: '元', e: '1.5 × ' + a + ' = ' + (1.5 * a) + '（元）。' }; },
+    function () { var a = ri(10, 40) * 5; return { q: '一个书包原价 ' + a + ' 元，现在便宜 20%，便宜了多少元？', a: a * 0.2, u: '元', e: '求一个数的 20%：' + a + ' × 20% = ' + (a * 0.2) + '（元）。' }; },
+    function () { var a = ri(10, 40) * 5; return { q: '一双鞋原价 ' + a + ' 元，打八折后多少元？', a: a * 0.8, u: '元', e: '八折就是原价的 80%：' + a + ' × 80% = ' + (a * 0.8) + '（元）。' }; },
+    function () { var a = ri(20, 60), b = ri(2, 5); return { q: '一辆汽车每小时行 ' + a + ' 千米，' + b + ' 小时行多少千米？', a: a * b, u: '千米', e: '速度 × 时间 = 路程：' + a + ' × ' + b + ' = ' + (a * b) + '（千米）。' }; },
+    function () { var b = ri(20, 60), c = ri(2, 5), a = b * c; return { q: '两地相距 ' + a + ' 千米，汽车每小时行 ' + b + ' 千米，需要几小时？', a: c, u: '小时', e: '路程 ÷ 速度 = 时间：' + a + ' ÷ ' + b + ' = ' + c + '（小时）。' }; },
+    function () { var a = ri(2, 8) * 5; return { q: '一本书有 ' + a + ' 页，看了全书的 1/5，看了多少页？', a: a / 5, u: '页', e: '把 ' + a + ' 平均分成 5 份，取 1 份：' + a + ' ÷ 5 = ' + (a / 5) + '（页）。' }; },
+    function () { var s = ri(10, 30), d = ri(2, 10); if ((s + d) % 2) { d++; } var big = (s + d) / 2, small = (s - d) / 2; return { q: '两个数的和是 ' + s + '，差是 ' + d + '，较大的那个数是多少？', a: big, u: '', e: '较大数 =（和 + 差）÷ 2：(' + s + ' + ' + d + ') ÷ 2 = ' + big + '。' }; },
+    function () { var b = ri(3, 10), k = ri(2, 4), a = b * (k + 1); return { q: '甲数是乙数的 ' + k + ' 倍，甲乙两数的和是 ' + a + '，乙数是多少？', a: b, u: '', e: '把乙数看成 1 份，甲就是 ' + k + ' 份，一共 ' + (k + 1) + ' 份：' + a + ' ÷ ' + (k + 1) + ' = ' + b + '。' }; },
+    function () { var a = ri(3, 8) * 4; return { q: '一根绳子长 ' + a + ' 米，用去它的 1/4，还剩多少米？', a: (3 * a) / 4, u: '米', e: '剩下的占 3/4：' + a + ' ÷ 4 × 3 = ' + ((3 * a) / 4) + '（米）。' }; },
+    function () { var a = ri(10, 20) * 5; return { q: '全班 ' + a + ' 人，男生占 40%，男生有多少人？', a: a * 0.4, u: '人', e: a + ' × 40% = ' + (a * 0.4) + '（人）。' }; },
+    function () { var a = ri(2, 5), b = a * ri(3, 8); return { q: '在一条长 ' + b + ' 米的路的一边种树，每隔 ' + a + ' 米种一棵，两端都种，一共种几棵？', a: b / a + 1, u: '棵', e: '间隔数 = ' + b + ' ÷ ' + a + ' = ' + (b / a) + '；棵数 = 间隔数 + 1 = ' + (b / a + 1) + '（棵）。' }; },
+    function () { var a = ri(4, 12), b = ri(3, 9); return { q: '一个长方形长 ' + a + ' 厘米，宽 ' + b + ' 厘米，面积是多少平方厘米？', a: a * b, u: '平方厘米', e: '长方形面积 = 长 × 宽：' + a + ' × ' + b + ' = ' + (a * b) + '（平方厘米）。' }; },
+    function () { var a = ri(3, 10); return { q: '一个正方形的边长是 ' + a + ' 厘米，它的周长是多少厘米？', a: 4 * a, u: '厘米', e: '正方形周长 = 边长 × 4：' + a + ' × 4 = ' + (4 * a) + '（厘米）。' }; },
+    function () { var a = ri(2, 5), b = ri(2, 5), c = ri(2, 4); return { q: '一个长方体长 ' + a + ' 厘米，宽 ' + b + ' 厘米，高 ' + c + ' 厘米，体积是多少立方厘米？', a: a * b * c, u: '立方厘米', e: '长方体体积 = 长 × 宽 × 高：' + a + ' × ' + b + ' × ' + c + ' = ' + (a * b * c) + '（立方厘米）。' }; },
+    function () { var c = ri(70, 95), a = 4 * c; return { q: '四科的总分是 ' + a + ' 分，平均每科多少分？', a: c, u: '分', e: '总分 ÷ 科数：' + a + ' ÷ 4 = ' + c + '（分）。' }; },
+    function () { var a = ri(30, 50), b = ri(20, 40), t = ri(2, 4); return { q: '两车同时从两地相向开出，甲车每小时行 ' + a + ' 千米，乙车每小时行 ' + b + ' 千米，' + t + ' 小时后相遇，两地相距多少千米？', a: (a + b) * t, u: '千米', e: '速度和 × 时间：(' + a + ' + ' + b + ') × ' + t + ' = ' + ((a + b) * t) + '（千米）。' }; },
+    function () { var a = ri(2, 9) * 5; return { q: '一本书有 ' + a + ' 页，看了全书的 1/5，还剩多少页？', a: a - a / 5, u: '页', e: '已看 ' + a + ' ÷ 5 = ' + (a / 5) + ' 页，还剩 ' + a + ' − ' + (a / 5) + ' = ' + (a - a / 5) + '（页）。' }; },
+    function () { var a = ri(2, 9) * 10; return { q: '去年收苹果 ' + a + ' 千克，今年比去年增产 10%，今年收多少千克？', a: a * 1.1, u: '千克', e: '今年 = 去年 ×（1 + 10%）：' + a + ' × 1.1 = ' + (a * 1.1) + '（千克）。' }; }
+  ] }
+};
+
+var state = { tier: 1, streak: 0, right: 0, wrong: 0, qno: 0, cur: null, locked: false, timer: null };
+
+function fmtNum(v) {
+  if (typeof v === 'number' && Math.abs(v - Math.round(v)) > 1e-9) {
+    return String(Math.round(v * 100) / 100);
+  }
+  return String(Math.round(v));
+}
+function optionSet(ans) {
+  var out = [ans], guard = 0;
+  while (out.length < 4 && guard++ < 40) {
+    var delta = pick([1, 2, 3, 4, 5, 10, 20, 0.5, 1.5]);
+    var v = (Math.random() < 0.65) ? ans + delta : ans - delta;
+    if (v <= 0) continue;
+    if (Math.abs(v - ans) < 1e-9) continue;
+    var dup = false;
+    for (var i = 0; i < out.length; i++) { if (Math.abs(out[i] - v) < 1e-9) dup = true; }
+    if (!dup) out.push(v);
+  }
+  while (out.length < 4) { out.push(ans + out.length * 3); }
+  for (var j = out.length - 1; j > 0; j--) { var k = Math.floor(Math.random() * (j + 1)); var t = out[j]; out[j] = out[k]; out[k] = t; }
+  return out;
+}
+
+function setTier(t) {
+  state.tier = t;
+  Array.prototype.forEach.call(document.querySelectorAll('.tbtn'), function (b) {
+    b.classList.toggle('on', Number(b.dataset.t) === t);
+  });
+  state.qno = 0;
+  state.streak = 0;
+  elStreak.textContent = '0';
+  newRound();
+}
+
+function newRound() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  var L = LEVELS[state.tier];
+  var item = L.items[Math.floor(Math.random() * L.items.length)]();
+  state.cur = item;
+  state.qno++;
+  elQno.textContent = state.qno;
+  elTag.textContent = L.tag;
+  elQ.textContent = item.q;
+  elExp.className = 'exp';
+  elExp.textContent = '';
+  elFb.className = 'feedback';
+  elFb.textContent = '';
+  elOpts.innerHTML = '';
+  optionSet(item.a).forEach(function (v) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = fmtNum(v) + (item.u ? ' ' + item.u : '');
+    b.addEventListener('click', function () { tap(b, v); });
+    elOpts.appendChild(b);
+  });
+  speak(item.q);
+}
+
+function tap(btn, val) {
+  if (state.locked) return;
+  var cur = state.cur;
+  if (Math.abs(val - cur.a) < 1e-9) {
+    state.locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { if (b !== btn) b.classList.add('faded'); });
+    state.streak++;
+    state.right++;
+    elStreak.textContent = state.streak;
+    mark('right');
+    elFb.className = 'feedback ok';
+    elFb.textContent = '✅ 答对啦！';
+    elExp.textContent = '💡 ' + cur.e;
+    elExp.className = 'exp show';
+    speak('答对啦。' + cur.e);
+    if (state.streak >= 3 && state.tier < 3) { setTimeout(function () { setTier(state.tier + 1); }, 2800); return; }
+    state.timer = setTimeout(newRound, 2800);
+  } else {
+    btn.classList.add('bad', 'faded');
+    state.streak = 0;
+    state.wrong++;
+    elStreak.textContent = '0';
+    mark('wrong');
+    elFb.className = 'feedback bad';
+    elFb.textContent = '❌ 再想想～可以先听一遍题目';
+    speak('不对哦，再读一遍题目。' + cur.q);
+    if (state.wrong >= 2 && state.tier > 1) {
+      state.wrong = 0;
+      setTimeout(function () { setTier(state.tier - 1); }, 1800);
+    }
+  }
+}
+
+document.getElementById('hear').addEventListener('click', function () {
+  if (state.cur) speak(state.cur.q);
+});
+document.getElementById('next').addEventListener('click', function () {
+  state.streak = 0; elStreak.textContent = '0';
+  newRound();
+});
+Array.prototype.forEach.call(document.querySelectorAll('.tbtn'), function (b) {
+  b.addEventListener('click', function () { setTier(Number(b.dataset.t)); });
+});
+
+/* 首次答对/答错后自动回到第 1 档累计 */
+newRound();
+window.__mathWords = LEVELS;
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

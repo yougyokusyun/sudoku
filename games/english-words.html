@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>单词图配 · 小脑袋乐园</title>
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<link rel="manifest" href="../manifest.json">
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#2563eb;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#e8f0ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff0f6,transparent 55%),
+             linear-gradient(160deg,#f7faff,#fff7fb);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;font-size:.85rem;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
+  font-family:inherit;font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip.on{background:linear-gradient(135deg,#2f7ed8,#2563eb);color:#fff;border-color:transparent;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.chipbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.tchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
+  font-family:inherit;font-size:.75rem;font-weight:800;color:#4a6076;cursor:pointer;
+  box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.tchip.on{background:linear-gradient(135deg,#2f7ed8,#2563eb);color:#fff;border-color:transparent;}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  min-height:0;overflow-y:auto;width:100%;}
+.prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a6076;line-height:1.5;}
+.big{display:block;font-size:clamp(3rem,14vw,4.6rem);line-height:1.15;margin-top:2px;}
+.cn{display:block;font-size:clamp(1.5rem,7vw,2rem);font-weight:900;color:#1d4ed8;margin-top:2px;}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(540px,100%);}
+.opt{min-height:62px;border:2px solid var(--line);border-radius:16px;background:#fff;
+  font-family:inherit;font-size:1.05rem;font-weight:900;color:var(--ink);cursor:pointer;
+  box-shadow:0 5px 14px rgba(36,59,83,.08);transition:transform .14s,border-color .18s,background .18s;}
+.opt:active{transform:scale(.97);}
+.opt emoji{font-style:normal;font-size:2rem;}
+.opt.big-emoji{font-size:2.6rem;min-height:82px;line-height:1.2;}
+.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;color:#b02a2a;}
+.opt[disabled]{opacity:.45;cursor:default;}
+.feedback{min-height:34px;font-size:1rem;font-weight:800;text-align:center;line-height:1.45;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+.feedback small{display:block;font-size:.76rem;font-weight:700;color:#7b8ea8;margin-top:2px;}
+.replay{min-height:40px;padding:0 16px;border-radius:999px;border:2px solid rgba(37,99,235,.25);
+  background:#fff;color:#1d4ed8;font-family:inherit;font-weight:900;font-size:.86rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.08);}
+.replay[hidden]{display:none;}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){
+  body{padding:8px;gap:6px;}
+  h1{font-size:1rem;}
+  .stage{gap:8px;}
+  .opt{min-height:46px;font-size:.92rem;}
+  .opt.big-emoji{min-height:58px;font-size:1.9rem;}
+  .prompt{font-size:.86rem;}
+  .big{font-size:2.6rem;}
+}
+</style>
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🖼️ 单词图配</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+<div class="chipbar" id="themeBar"></div>
+
+<div class="stage">
+  <div class="prompt" id="prompt">小狗用英语怎么说？</div>
+  <div class="opts" id="opts"></div>
+  <button class="replay" id="replay" type="button" hidden>🔊 再听一遍</button>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<script>
+/* ============ 200 个小学高频词：英文|中文|emoji ============ */
+var RAW = [
+'dog|狗|🐶','cat|猫|🐱','pig|猪|🐷','cow|奶牛|🐮','sheep|绵羊|🐑',
+'horse|马|🐴','rabbit|兔子|🐰','mouse|老鼠|🐭','bird|鸟|🐦','duck|鸭子|🦆',
+'chicken|鸡|🐔','fish|鱼|🐟','tiger|老虎|🐯','lion|狮子|🦁','elephant|大象|🐘',
+'monkey|猴子|🐒','panda|熊猫|🐼','bear|熊|🐻','wolf|狼|🐺','fox|狐狸|🦊',
+'frog|青蛙|🐸','turtle|乌龟|🐢','snake|蛇|🐍','bee|蜜蜂|🐝','butterfly|蝴蝶|🦋',
+'ant|蚂蚁|🐜','spider|蜘蛛|🕷️','dolphin|海豚|🐬','whale|鲸鱼|🐳','penguin|企鹅|🐧',
+'owl|猫头鹰|🦉','goat|山羊|🐐','camel|骆驼|🐫','giraffe|长颈鹿|🦒','zebra|斑马|🦓',
+'deer|鹿|🦌','squirrel|松鼠|🐿️','snail|蜗牛|🐌','crab|螃蟹|🦀','shark|鲨鱼|🦈',
+'apple|苹果|🍎','banana|香蕉|🍌','orange|橙子|🍊','grape|葡萄|🍇','watermelon|西瓜|🍉',
+'strawberry|草莓|🍓','pear|梨|🍐','peach|桃子|🍑','lemon|柠檬|🍋','pineapple|菠萝|🍍',
+'cherry|樱桃|🍒','mango|芒果|🥭','coconut|椰子|🥥','tomato|西红柿|🍅','potato|土豆|🥔',
+'carrot|胡萝卜|🥕','corn|玉米|🌽','bread|面包|🍞','cake|蛋糕|🍰','cookie|饼干|🍪',
+'candy|糖果|🍬','chocolate|巧克力|🍫','egg|鸡蛋|🥚','milk|牛奶|🥛','water|水|💧',
+'juice|果汁|🧃','rice|米饭|🍚','noodle|面条|🍜','hamburger|汉堡|🍔','pizza|披萨|🍕',
+'sandwich|三明治|🥪','ice cream|冰淇淋|🍦','honey|蜂蜜|🍯','cheese|奶酪|🧀',
+'red|红色|🔴','blue|蓝色|🔵','yellow|黄色|🟡','green|绿色|🟢','black|黑色|⚫',
+'white|白色|⚪','brown|棕色|🟤','purple|紫色|🟣','pink|粉色|🩷',
+'face|脸|😊','eye|眼睛|👁️','ear|耳朵|👂','nose|鼻子|👃','mouth|嘴|👄',
+'tooth|牙齿|🦷','tongue|舌头|👅','hand|手|✋','foot|脚|🦶','leg|腿|🦵',
+'arm|手臂|💪','heart|心脏|❤️','body|身体|🧍','finger|手指|☝️','thumb|拇指|👍','bone|骨头|🦴',
+'book|书|📖','pen|钢笔|🖊️','pencil|铅笔|✏️','ruler|尺子|📏','notebook|笔记本|📓',
+'bag|书包|🎒','school|学校|🏫','teacher|老师|🧑‍🏫','student|学生|🧑‍🎓','chair|椅子|🪑',
+'computer|电脑|💻','phone|手机|📱','clock|钟|🕐','map|地图|🗺️','ball|球|⚽',
+'paper|纸|📄','scissors|剪刀|✂️','crayon|蜡笔|🖍️',
+'bed|床|🛏️','door|门|🚪','window|窗户|🪟','house|房子|🏠','room|房间|🏘️',
+'table|桌子|🍽️','sofa|沙发|🛋️','lamp|台灯|💡','key|钥匙|🔑','cup|杯子|☕',
+'spoon|勺子|🥄','fork|叉子|🍴','knife|刀|🔪','bowl|碗|🥣','bottle|瓶子|🍶',
+'towel|毛巾|🧻','soap|肥皂|🧼','brush|刷子|🪥','mirror|镜子|🪞','basket|篮子|🧺',
+'car|小汽车|🚗','bus|公交车|🚌','bike|自行车|🚲','train|火车|🚂','plane|飞机|✈️',
+'ship|轮船|🚢','boat|小船|⛵','taxi|出租车|🚕','truck|卡车|🚚','rocket|火箭|🚀',
+'sun|太阳|☀️','moon|月亮|🌙','star|星星|⭐','cloud|云|☁️','rain|雨|🌧️',
+'snow|雪|❄️','wind|风|🌬️','tree|树|🌳','flower|花|🌸','grass|草|🌿',
+'leaf|树叶|🍃','mountain|山|⛰️','river|河流|🏞️','sea|大海|🌊','sky|天空|🌤️',
+'beach|海滩|🏖️','forest|森林|🌲','garden|花园|🌷','seed|种子|🌱',
+'hot|热|🔥','cold|冷|🧊','rainbow|彩虹|🌈',
+'morning|早上|🌅','night|夜晚|🌃','day|白天|🌞','week|星期|📅','year|年|📆',
+'park|公园|🎡','zoo|动物园|🎪','hospital|医院|🏥','bank|银行|🏦','library|图书馆|📚',
+'museum|博物馆|🏛️','supermarket|超市|🛒','restaurant|餐馆|🥘','farm|农场|🚜','factory|工厂|🏭',
+'hat|帽子|👒','shirt|衬衫|👕','dress|连衣裙|👗','shoe|鞋|👟','sock|袜子|🧦',
+'coat|外套|🧥','glove|手套|🧤','scarf|围巾|🧣','glasses|眼镜|👓','umbrella|雨伞|☂️',
+'run|跑|🏃','swim|游泳|🏊','jump|跳|🤸','sing|唱歌|🎤','dance|跳舞|💃','sleep|睡觉|😴',
+/* 新增：数字（配合 8 主题） */
+'one|一|1️⃣','two|二|2️⃣','three|三|3️⃣','four|四|4️⃣','five|五|5️⃣',
+'six|六|6️⃣','seven|七|7️⃣','eight|八|8️⃣','nine|九|9️⃣','ten|十|🔟',
+/* 新增：家庭（配合 8 主题） */
+'mother|妈妈|👩','father|爸爸|👨','sister|姐妹|👧','brother|兄弟|👦','baby|宝宝|👶',
+'grandma|奶奶|👵','grandpa|爷爷|👴','uncle|叔叔|🧔','aunt|阿姨|👩‍🦰','cousin|表亲|🧒',
+/* 新增：动作补充 */
+'eat|吃|🍽️','drink|喝|🥤','read|读|📚','write|写|✍️','walk|走|🚶'
+];
+var WORDS = RAW.map(function (s) {
+  var p = s.split('|');
+  return { en: p[0], cn: p[1], emoji: p[2] || '⭐' };
+});
+
+/* 8 个主题：按词条索引区间归类（新增词追加在数组末尾） */
+var THEME_RANGES = {
+  '动物': [[0, 39]],
+  '食物': [[40, 71]],
+  '颜色': [[72, 79]],
+  '身体': [[80, 95]],
+  '文具': [[96, 113]],
+  '动作': [[175, 179], [200, 204]],
+  '数字': [[180, 189]],
+  '家庭': [[190, 199]]
+};
+function themeOf(i) {
+  for (var k in THEME_RANGES) {
+    var rs = THEME_RANGES[k];
+    for (var j = 0; j < rs.length; j++) {
+      if (i >= rs[j][0] && i <= rs[j][1]) return k;
+    }
+  }
+  return '更多';
+}
+WORDS.forEach(function (w, i) { w.theme = themeOf(i); });
+var curTheme = '全部';
+function pool() {
+  return curTheme === '全部' ? WORDS : WORDS.filter(function (w) { return w.theme === curTheme; });
+}
+
+var KEY_BEST = 'pew.best';
+var state = { streak: 0, best: 0, cur: null, locked: false, timer: null };
+
+var elPrompt = document.getElementById('prompt');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+var elReplay = document.getElementById('replay');
+
+function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function pick(a) { return a[rand(a.length)]; }
+function speak(text, opts) { if (window.XNLY && XNLY.voice) XNLY.voice.speak(text, opts || {}); }
+
+/* 中文先读，再排队读英文（英文强制 en-US，避免读成中文腔） */
+function speakWord(w) {
+  speak(w.cn);
+  speak(w.en, { queue: true, lang: 'en-US' });
+}
+
+function updateStats() {
+  elStreak.textContent = state.streak;
+  elBest.textContent = state.best;
+}
+
+function setFb(html, good, sub) {
+  elFb.className = 'feedback ' + (good === true ? 'ok' : good === false ? 'bad' : '');
+  elFb.innerHTML = html + (sub ? '<small>' + sub + '</small>' : '');
+}
+
+function makeQuestion() {
+  var type = rand(3);           /* 0 中文选英文 · 1 图选英文 · 2 听音选图 */
+  var P = pool();
+  var target = pick(P);
+  var others = shuffle(P.filter(function (w) { return w !== target; })).slice(0, 3);
+  if (others.length < 3) {
+    others = shuffle(WORDS.filter(function (w) { return w !== target; })).slice(0, 3);
+  }
+  return { type: type, w: target, opts: shuffle([target].concat(others)) };
+}
+
+function askAgain() {
+  if (!state.cur) return;
+  if (state.cur.type === 2) speak(state.cur.w.en, { lang: 'en-US' });
+  else if (state.cur.type === 1) speak(state.cur.w.cn);
+}
+
+function nextQuestion() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  state.cur = makeQuestion();
+  var q = state.cur;
+  elOpts.innerHTML = '';
+  elReplay.hidden = true;
+
+  if (q.type === 0) {
+    elPrompt.innerHTML = '“<span class="cn">' + q.w.cn + '</span>” 用英语怎么说？';
+    q.opts.forEach(function (w) { addOpt(w, w.en, ''); });
+    speak(q.w.cn + '，用英语怎么说？');
+  } else if (q.type === 1) {
+    elPrompt.innerHTML = '这个用英语怎么说？<span class="big">' + q.w.emoji + '</span>';
+    q.opts.forEach(function (w) { addOpt(w, w.en, ''); });
+    speak('这个用英语怎么说？');
+  } else {
+    elPrompt.innerHTML = '🎧 听一听，点出听到的东西';
+    q.opts.forEach(function (w) { addOpt(w, w.emoji, 'big-emoji'); });
+    elReplay.hidden = false;
+    setTimeout(function () { speak(q.w.en, { lang: 'en-US' }); }, 260);
+  }
+  setFb('', null);
+}
+
+function addOpt(w, text, cls) {
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'opt' + (cls ? ' ' + cls : '');
+  b.textContent = text;
+  b.dataset.en = w.en;
+  b.addEventListener('click', function () { answer(w, b); });
+  elOpts.appendChild(b);
+}
+
+function answer(w, btn) {
+  if (state.locked || !state.cur) return;
+  var q = state.cur;
+  if (w === q.w) {
+    state.locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { if (b !== btn) b.disabled = true; });
+    state.streak++;
+    if (state.streak > state.best) { state.best = state.streak; safeSet(KEY_BEST, state.best); }
+    if (window.XNLY && XNLY.mark) XNLY.mark('right');
+    setFb('✅ ' + q.w.cn + ' — ' + q.w.en, true, '连对 ' + state.streak + ' 题');
+    speakWord(q.w);
+    updateStats();
+    state.timer = setTimeout(nextQuestion, 1700);
+  } else {
+    state.locked = true;
+    state.streak = 0;
+    btn.classList.add('bad', 'shake');
+    Array.prototype.forEach.call(elOpts.children, function (b) {
+      if (b.dataset.en === q.w.en) b.classList.add('good');
+      b.disabled = true;
+    });
+    if (window.XNLY && XNLY.mark) XNLY.mark('wrong');
+    setFb('❌ 正确答案是 ' + q.w.en + ' · ' + q.w.cn, false);
+    speakWord(q.w);
+    updateStats();
+    state.timer = setTimeout(nextQuestion, 2000);
+  }
+}
+
+elReplay.addEventListener('click', askAgain);
+
+(function init() {
+  var b = parseInt(safeGet(KEY_BEST), 10);
+  state.best = isNaN(b) || b < 0 ? 0 : b;
+  buildThemeBar();
+  updateStats();
+  nextQuestion();
+})();
+
+function buildThemeBar() {
+  var bar = document.getElementById('themeBar');
+  var names = ['全部', '颜色', '动物', '数字', '食物', '文具', '身体', '家庭', '动作', '更多'];
+  bar.innerHTML = '';
+  names.forEach(function (n) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tchip' + (curTheme === n ? ' on' : '');
+    var cnt = n === '全部' ? WORDS.length : WORDS.filter(function (w) { return w.theme === n; }).length;
+    b.textContent = n + ' ' + cnt;
+    b.addEventListener('click', function () {
+      curTheme = n;
+      buildThemeBar();
+      state.streak = 0;
+      updateStats();
+      nextQuestion();
+    });
+    bar.appendChild(b);
+  });
+}
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

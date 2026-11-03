@@ -65,6 +65,13 @@ h1{font-size:1.15rem;}
   box-shadow:0 4px 12px rgba(36,59,83,.10);}
 .btn.primary{border-color:rgba(42,157,143,.5);color:#fff;background:linear-gradient(135deg,#4fc3ae,#2a9d8f);}
 
+/* iPad：场景里的实物图放大，方便点数与辨认 */
+@media (min-width:700px){
+  .thing .ph{width:clamp(88px,9vw,116px);height:clamp(88px,9vw,116px);border-width:4px;}
+  .thing .e{font-size:clamp(2.2rem,4.6vw,2.9rem);}
+  .thing .lb{font-size:.8rem;}
+}
+
 @media (max-height:430px){
   body{padding:6px 10px;gap:5px;}
   h1{font-size:.95rem;}

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>钟表与人民币 · 小脑袋乐园</title>
+<meta name="theme-color" content="#ff8fbe">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<link rel="manifest" href="../manifest.json">
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#b45309;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff6e6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eaf7ff,transparent 55%),
+             linear-gradient(160deg,#fffdf7,#f5faff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;font-size:.85rem;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.tiers{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.tier{border:none;border-radius:999px;padding:7px 14px;min-height:40px;background:#fff;color:var(--ink);
+  font-family:inherit;font-size:.84rem;font-weight:900;box-shadow:0 3px 10px rgba(36,59,83,.10);cursor:pointer;}
+.tier.on{background:linear-gradient(135deg,#fbbf24,#b45309);color:#fff;box-shadow:0 6px 16px rgba(180,83,9,.28);}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  min-height:0;overflow-y:auto;width:100%;}
+.prompt{font-size:1.02rem;font-weight:900;text-align:center;color:#4a6076;line-height:1.5;}
+.clockbox{display:flex;align-items:center;justify-content:center;}
+.clockbox svg{width:min(210px,46vw);height:auto;}
+.moneybox{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;max-width:520px;}
+.mnote{background:linear-gradient(160deg,#fff3d6,#ffe3ad);border:2px solid #e9c27a;border-radius:10px;
+  padding:8px 12px;font-weight:900;font-size:.92rem;color:#8a5a00;box-shadow:0 4px 10px rgba(180,83,9,.12);white-space:nowrap;}
+.mnote .x{font-size:.7rem;color:#a87b2d;margin-left:2px;}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(540px,100%);}
+.opt{min-height:60px;border:2px solid var(--line);border-radius:16px;background:#fff;
+  font-family:inherit;font-size:1.05rem;font-weight:900;color:var(--ink);cursor:pointer;
+  box-shadow:0 5px 14px rgba(36,59,83,.08);transition:transform .14s,border-color .18s,background .18s;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;color:#b02a2a;}
+.opt[disabled]{opacity:.45;cursor:default;}
+.feedback{min-height:34px;font-size:1rem;font-weight:800;text-align:center;line-height:1.45;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+.feedback small{display:block;font-size:.76rem;font-weight:700;color:#7b8ea8;margin-top:2px;}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){
+  body{padding:8px;gap:6px;}
+  h1{font-size:1rem;}
+  .stage{gap:6px;}
+  .clockbox svg{width:min(150px,30vh);}
+  .opt{min-height:44px;font-size:.92rem;}
+  .prompt{font-size:.86rem;}
+  .mnote{font-size:.8rem;padding:6px 9px;}
+}
+</style>
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🕐 钟表与人民币</h1>
+  <div class="chips">
+    <span class="chip">📄 第 <b id="idx">1</b>/20 题</span>
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+
+<div class="tiers" id="tiers"></div>
+
+<div class="stage">
+  <div class="prompt" id="prompt">钟面上是几时几分？</div>
+  <div class="clockbox" id="clockbox"></div>
+  <div class="moneybox" id="moneybox"></div>
+  <div class="opts" id="opts"></div>
+  <div class="feedback" id="feedback"></div>
+</div>
+
+<script>
+/* ============ 题库：每档 20 题（钟表 10 + 人民币 10），共 60 题 ============ */
+var BANK = {
+  1: [
+    { kind: 'clock', h: 3, m: 0 }, { kind: 'clock', h: 7, m: 0 }, { kind: 'clock', h: 9, m: 0 },
+    { kind: 'clock', h: 12, m: 0 }, { kind: 'clock', h: 11, m: 0 },
+    { kind: 'clock', h: 6, m: 30 }, { kind: 'clock', h: 8, m: 30 }, { kind: 'clock', h: 10, m: 30 },
+    { kind: 'clock', h: 2, m: 30 }, { kind: 'clock', h: 4, m: 30 },
+    { kind: 'money', parts: [[100, 1], [50, 1]] },
+    { kind: 'money', parts: [[100, 2], [10, 1]] },
+    { kind: 'money', parts: [[50, 2]] },
+    { kind: 'money', parts: [[100, 1], [10, 2]] },
+    { kind: 'money', parts: [[200, 1], [50, 1]] },
+    { kind: 'money', parts: [[500, 1]] },
+    { kind: 'money', parts: [[100, 3], [50, 1]] },
+    { kind: 'money', parts: [[10, 5]] },
+    { kind: 'money', parts: [[200, 2]] },
+    { kind: 'money', parts: [[100, 1], [50, 2]] }
+  ],
+  2: [
+    { kind: 'clock', h: 7, m: 5 }, { kind: 'clock', h: 9, m: 15 }, { kind: 'clock', h: 4, m: 20 },
+    { kind: 'clock', h: 1, m: 35 }, { kind: 'clock', h: 6, m: 40 }, { kind: 'clock', h: 11, m: 45 },
+    { kind: 'clock', h: 2, m: 50 }, { kind: 'clock', h: 5, m: 55 }, { kind: 'clock', h: 8, m: 10 },
+    { kind: 'clock', h: 3, m: 25 },
+    { kind: 'money', parts: [[500, 1], [200, 1], [100, 1]] },
+    { kind: 'money', parts: [[1000, 1], [500, 1], [50, 1]] },
+    { kind: 'money', parts: [[2000, 1], [1000, 1], [500, 1]] },
+    { kind: 'money', parts: [[1000, 1], [100, 2], [50, 1]] },
+    { kind: 'money', parts: [[5000, 1], [2000, 1]] },
+    { kind: 'convert', text: '7 元 = （ ）角', ans: 70, unit: '角' },
+    { kind: 'convert', text: '90 角 = （ ）元', ans: 9, unit: '元' },
+    { kind: 'convert', text: '6 元 5 角 = （ ）角', ans: 65, unit: '角' },
+    { kind: 'convert', text: '125 角 = （ ）元（ ）角', ans: '12 元 5 角', unit: 'string' },
+    { kind: 'convert', text: '3 元 8 角 = （ ）角', ans: 38, unit: '角' }
+  ],
+  3: [
+    { kind: 'clock', h: 10, m: 7 }, { kind: 'clock', h: 1, m: 23 }, { kind: 'clock', h: 7, m: 38 },
+    { kind: 'clock', h: 4, m: 52 }, { kind: 'clock', h: 9, m: 47 }, { kind: 'clock', h: 12, m: 18 },
+    { kind: 'clock', h: 6, m: 33 }, { kind: 'clock', h: 2, m: 41 }, { kind: 'clock', h: 11, m: 56 },
+    { kind: 'clock', h: 5, m: 14 },
+    { kind: 'money', parts: [[10000, 1], [5000, 1], [2000, 1], [500, 1]] },
+    { kind: 'money', parts: [[5000, 1], [1000, 2], [500, 2], [100, 1]] },
+    { kind: 'money', parts: [[10000, 1], [1000, 3], [50, 1]] },
+    { kind: 'money', parts: [[2000, 2], [1000, 2], [500, 1]] },
+    { kind: 'money', parts: [[10000, 1], [5000, 1], [100, 3]] },
+    { kind: 'convert', text: '350 角 = （ ）元', ans: 35, unit: '元' },
+    { kind: 'convert', text: '12 元 5 角 = （ ）角', ans: 125, unit: '角' },
+    { kind: 'convert', text: '806 角 = （ ）元（ ）角', ans: '80 元 6 角', unit: 'string' },
+    { kind: 'convert', text: '1 元 = （ ）分', ans: 100, unit: '分' },
+    { kind: 'convert', text: '45 角 = （ ）元（ ）角', ans: '4 元 5 角', unit: 'string' }
+  ]
+};
+
+var KEY_BEST = 'pcm.best', KEY_TIER = 'pcm.tier';
+var state = { tier: 1, order: [], pos: 0, cur: null, locked: false, streak: 0, best: 0, timer: null };
+
+var elTiers = document.getElementById('tiers');
+var elPrompt = document.getElementById('prompt');
+var elClock = document.getElementById('clockbox');
+var elMoney = document.getElementById('moneybox');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+var elIdx = document.getElementById('idx');
+
+function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function speak(t) { if (window.XNLY && XNLY.voice) XNLY.voice.speak(t); }
+
+/* ---------- 金额格式（单位：角） ---------- */
+function fmtJiao(v) {
+  if (v % 10 === 0) return (v / 10) + ' 元';
+  var y = Math.floor(v / 10), j = v % 10;
+  return (y ? y + ' 元 ' : '') + j + ' 角';
+}
+
+/* ---------- 钟面 SVG（不引用任何外部图片） ---------- */
+function clockSVG(h, m) {
+  var s = '<svg viewBox="0 0 200 200" role="img" aria-label="钟面">';
+  s += '<circle cx="100" cy="100" r="92" fill="#fff" stroke="#c9d7e5" stroke-width="4"/>';
+  s += '<circle cx="100" cy="100" r="86" fill="none" stroke="#eef4fa" stroke-width="2"/>';
+  for (var i = 1; i <= 12; i++) {
+    var a = i * 30 * Math.PI / 180;
+    var x = 100 + Math.sin(a) * 70, y = 100 - Math.cos(a) * 70;
+    s += '<text x="' + x.toFixed(1) + '" y="' + (y + 6).toFixed(1) +
+      '" text-anchor="middle" font-size="17" font-weight="900" fill="#243b53" font-family="system-ui,sans-serif">' + i + '</text>';
+  }
+  var ha = (h % 12) * 30 + m * 0.5;
+  var ma = m * 6;
+  var hp = pt(ha, 50), mp = pt(ma, 74);
+  s += '<line x1="100" y1="100" x2="' + hp.x.toFixed(1) + '" y2="' + hp.y.toFixed(1) +
+    '" stroke="#1d4ed8" stroke-width="8" stroke-linecap="round"/>';
+  s += '<line x1="100" y1="100" x2="' + mp.x.toFixed(1) + '" y2="' + mp.y.toFixed(1) +
+    '" stroke="#ef4444" stroke-width="5" stroke-linecap="round"/>';
+  s += '<circle cx="100" cy="100" r="6" fill="#243b53"/>';
+  s += '</svg>';
+  return s;
+}
+function pt(angleDeg, len) {
+  var a = angleDeg * Math.PI / 180;
+  return { x: 100 + Math.sin(a) * len, y: 100 - Math.cos(a) * len };
+}
+
+function timeText(h, m) {
+  if (m === 0) return h + ' 时整';
+  if (m === 30) return h + ' 时 30 分';
+  return h + ' 时 ' + m + ' 分';
+}
+
+/* ---------- 生成 4 个选项 ---------- */
+function clockOptions(h, m) {
+  var out = [timeText(h, m)], set = {};
+  set[out[0]] = 1;
+  var cands = [];
+  var hs = [h === 12 ? 1 : h + 1, h === 1 ? 12 : h - 1, h];
+  var ms = [m === 0 ? 30 : m - 30, m + 30, m === 0 ? 5 : 0, m === 30 ? 0 : 30];
+  hs.forEach(function (hh) { ms.forEach(function (mm) { if (mm >= 0 && mm < 60) cands.push([hh, mm]); }); });
+  cands = shuffle(cands);
+  for (var i = 0; i < cands.length && out.length < 4; i++) {
+    var t = timeText(cands[i][0], cands[i][1]);
+    if (!set[t]) { set[t] = 1; out.push(t); }
+  }
+  return shuffle(out);
+}
+
+function moneyTotal(parts) {
+  var v = 0;
+  parts.forEach(function (p) { v += p[0] * p[1]; });
+  return v;
+}
+
+function moneyOptions(total) {
+  var out = [fmtJiao(total)], set = {};
+  set[out[0]] = 1;
+  var cands = [total + 50, total - 50, total + 10, total - 10, total * 10, Math.round(total / 10),
+    total + 5, total - 5, total + 100];
+  cands = shuffle(cands);
+  for (var i = 0; i < cands.length && out.length < 4; i++) {
+    var v = cands[i];
+    if (v <= 0 || v === total || v % 10 !== 0 && v < 10) continue;
+    var t = fmtJiao(v);
+    if (!set[t]) { set[t] = 1; out.push(t); }
+  }
+  return shuffle(out);
+}
+
+function convertOptions(item) {
+  if (typeof item.ans === 'string') {
+    var nums = (item.ans.match(/\d+/g) || ['0']).map(Number);
+    var yuan = nums[0] || 0, jiao = nums.length > 1 ? nums[1] : 0;
+    var total = yuan * 10 + jiao;
+    var out0 = [item.ans];
+    var set0 = {}; set0[item.ans] = 1;
+    var cands0 = shuffle([total + 1, total - 1, total + 10, total - 10, total + 5]);
+    for (var i0 = 0; i0 < cands0.length && out0.length < 4; i0++) {
+      var v0 = cands0[i0];
+      if (v0 <= 0 || v0 === total) continue;
+      var t0 = Math.floor(v0 / 10) + ' 元 ' + (v0 % 10) + ' 角';
+      if (!set0[t0]) { set0[t0] = 1; out0.push(t0); }
+    }
+    return shuffle(out0);
+  }
+  var out = [item.ans + ' ' + item.unit], set = {};
+  set[out[0]] = 1;
+  var cands = [item.ans + 10, item.ans - 10, item.ans + 1, item.ans - 1,
+    item.ans * 10, Math.round(item.ans / 10), item.ans + 100, item.ans + 5];
+  cands = shuffle(cands);
+  for (var i = 0; i < cands.length && out.length < 4; i++) {
+    var v = cands[i];
+    if (!isFinite(v) || v <= 0 || v === item.ans || v % 1 !== 0) continue;
+    var t = v + ' ' + item.unit;
+    if (!set[t]) { set[t] = 1; out.push(t); }
+  }
+  return shuffle(out);
+}
+
+/* ---------- 渲染 ---------- */
+function updateStats() {
+  elStreak.textContent = state.streak;
+  elBest.textContent = state.best;
+  elIdx.textContent = String(state.pos + 1);
+}
+
+function renderTiers() {
+  elTiers.innerHTML = '';
+  Object.keys(BANK).forEach(function (k) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tier' + (Number(k) === state.tier ? ' on' : '');
+    b.textContent = ['', '第 1 档 · 1~2 年级', '第 2 档 · 3~4 年级', '第 3 档 · 5~6 年级'][k];
+    b.addEventListener('click', function () {
+      if (Number(k) === state.tier) return;
+      state.tier = Number(k); safeSet(KEY_TIER, state.tier);
+      state.streak = 0;
+      state.order = shuffle(BANK[state.tier]);
+      state.pos = 0;
+      renderTiers(); updateStats(); nextQuestion();
+    });
+    elTiers.appendChild(b);
+  });
+}
+
+function setFb(html, good, sub) {
+  elFb.className = 'feedback ' + (good === true ? 'ok' : good === false ? 'bad' : '');
+  elFb.innerHTML = html + (sub ? '<small>' + sub + '</small>' : '');
+}
+
+function nextQuestion() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  if (!state.order || state.pos >= state.order.length) {
+    state.order = shuffle(BANK[state.tier]);
+    state.pos = 0;
+  }
+  state.cur = state.order[state.pos];
+  state.pos++;
+  var q = state.cur;
+  elClock.innerHTML = '';
+  elMoney.innerHTML = '';
+  elOpts.innerHTML = '';
+
+  var opts, say;
+  if (q.kind === 'clock') {
+    elClock.innerHTML = clockSVG(q.h, q.m);
+    elPrompt.textContent = '钟面上是几时几分？';
+    opts = clockOptions(q.h, q.m);
+    say = '钟面上是几时几分？';
+  } else if (q.kind === 'money') {
+    var html = '';
+    q.parts.forEach(function (p) {
+      html += '<span class="mnote">' + fmtJiao(p[0]) + (p[1] > 1 ? '<span class="x">×' + p[1] + '</span>' : '') + '</span>';
+    });
+    elMoney.innerHTML = html;
+    elPrompt.textContent = '这些钱一共多少？';
+    opts = moneyOptions(moneyTotal(q.parts));
+    say = '这些钱一共多少？';
+  } else {
+    elPrompt.textContent = q.text;
+    opts = convertOptions(q);
+    say = q.text;
+  }
+
+  opts.forEach(function (t) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = t;
+    b.addEventListener('click', function () { answer(t, b, opts); });
+    elOpts.appendChild(b);
+  });
+  setFb('', null);
+  updateStats();
+  speak(say);
+}
+
+function correctText(q, right) {
+  if (q.kind === 'clock') return timeText(q.h, q.m);
+  if (q.kind === 'money') return fmtJiao(moneyTotal(q.parts));
+  return q.ans + ' ' + q.unit;
+}
+
+function answer(val, btn, opts) {
+  if (state.locked || !state.cur) return;
+  var q = state.cur;
+  var right = correctText(q, true);
+  if (val === right) {
+    state.locked = true;
+    btn.classList.add('good');
+    Array.prototype.forEach.call(elOpts.children, function (b) { if (b !== btn) b.disabled = true; });
+    state.streak++;
+    if (state.streak > state.best) { state.best = state.streak; safeSet(KEY_BEST, state.best); }
+    if (window.XNLY && XNLY.mark) XNLY.mark('right');
+    setFb('✅ 答对啦！' + right, true, '连对 ' + state.streak + ' 题');
+    speak('答对啦，' + right + '。');
+    updateStats();
+    state.timer = setTimeout(nextQuestion, 1500);
+  } else {
+    state.locked = true;
+    state.streak = 0;
+    btn.classList.add('bad', 'shake');
+    Array.prototype.forEach.call(elOpts.children, function (b) {
+      if (b.textContent === right) b.classList.add('good');
+      b.disabled = true;
+    });
+    if (window.XNLY && XNLY.mark) XNLY.mark('wrong');
+    setFb('❌ 正确答案是 ' + right, false);
+    speak('再想一想。正确答案是' + right + '。');
+    updateStats();
+    state.timer = setTimeout(nextQuestion, 2200);
+  }
+}
+
+(function init() {
+  var t = parseInt(safeGet(KEY_TIER), 10);
+  state.tier = (t >= 1 && t <= 3) ? t : 1;
+  var b = parseInt(safeGet(KEY_BEST), 10);
+  state.best = isNaN(b) || b < 0 ? 0 : b;
+  state.order = shuffle(BANK[state.tier]);
+  state.pos = 0;
+  renderTiers();
+  updateStats();
+  nextQuestion();
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

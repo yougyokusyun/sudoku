@@ -40,6 +40,11 @@ h1{font-size:1.15rem;}
 .sh-triangle{clip-path:polygon(50% 0%,0% 100%,100% 100%);background:#f4d03f;}
 .sh-star{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);background:#9b5de5;}
 .sh-heart{background:none;}
+.sh-rect{border-radius:8%;width:100%;height:64%;background:linear-gradient(145deg,#8ee6a8,#22a06b);}
+.sh-ellipse{border-radius:50%;width:100%;height:64%;background:linear-gradient(145deg,#ffc07a,#ee8b1e);}
+.sh-semicircle{border-radius:999px 999px 0 0;width:100%;height:50%;background:linear-gradient(160deg,#8fd3ff,#2f7ed8);}
+.sh-diamond{clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);width:76%;height:76%;
+  background:linear-gradient(160deg,#ffb3d1,#e0357b);}
 @media (max-height:430px){
   .choice{width:84px;height:84px;border-radius:18px;}
   .choice .shape{--s:56px;}
@@ -79,7 +84,11 @@ var SHAPES=[
   {name:'方形',cls:'sh-square'},
   {name:'三角形',cls:'sh-triangle'},
   {name:'星形',cls:'sh-star'},
-  {name:'心形',cls:'sh-heart'}
+  {name:'心形',cls:'sh-heart'},
+  {name:'长方形',cls:'sh-rect'},
+  {name:'椭圆',cls:'sh-ellipse'},
+  {name:'半圆',cls:'sh-semicircle'},
+  {name:'菱形',cls:'sh-diamond'}
 ];
 let locked=false,newRoundTimer=null,current=null;
 

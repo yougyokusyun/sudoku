@@ -41,6 +41,16 @@ h1{font-size:1.15rem;}
 .s-triangle{clip-path:polygon(50% 2%,2% 98%,98% 98%);background:linear-gradient(160deg,#ffe07a,#f2b705);}
 .s-star{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
   background:linear-gradient(160deg,#c9a6ff,#7c3aff);}
+/* 新增 4 种：长方形 / 椭圆 / 半圆 / 菱形 */
+.s-rect{width:100%;height:64%;border-radius:10%;background:linear-gradient(145deg,#8ee6a8,#22a06b);}
+.s-ellipse{width:100%;height:64%;border-radius:50%;background:linear-gradient(145deg,#ffc07a,#ee8b1e);}
+.s-semicircle{width:100%;height:50%;border-radius:999px 999px 0 0;background:linear-gradient(160deg,#8fd3ff,#2f7ed8);}
+.s-diamond{width:76%;height:76%;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);
+  background:linear-gradient(160deg,#ffb3d1,#e0357b);}
+
+.examples{min-height:24px;font-size:.92rem;font-weight:800;color:#7a5a00;text-align:center;
+  background:#fffdf3;border:2px solid #ffe4a3;border-radius:14px;padding:6px 12px;max-width:92vw;}
+.examples:empty{display:none;}
 
 .feedback{min-height:30px;font-size:1.15rem;font-weight:900;text-align:center;color:var(--muted);}
 .feedback.ok{color:var(--ok);}
@@ -102,6 +112,7 @@ h1{font-size:1.15rem;}
   <button class="shape-btn" id="shapeBtn" type="button" aria-label="形状">
     <span class="shape" id="shape"></span>
   </button>
+  <div class="examples" id="examples"></div>
   <div class="names" id="names" style="display:none"></div>
   <div class="feedback" id="feedback"></div>
   <div class="controls">
@@ -112,10 +123,14 @@ h1{font-size:1.15rem;}
 
 <script>
 var SHAPES = [
-  { name: '圆形', cls: 's-circle', color: '#e63946' },
-  { name: '方形', cls: 's-square', color: '#1e7fc2' },
-  { name: '三角形', cls: 's-triangle', color: '#f2b705' },
-  { name: '星形', cls: 's-star', color: '#7c3aff' }
+  { name: '圆形', cls: 's-circle', color: '#e63946', items: ['太阳', '盘子', '车轮'] },
+  { name: '方形', cls: 's-square', color: '#1e7fc2', items: ['手帕', '饼干', '魔方'] },
+  { name: '三角形', cls: 's-triangle', color: '#f2b705', items: ['三角尺', '屋顶', '帐篷'] },
+  { name: '星形', cls: 's-star', color: '#7c3aff', items: ['星星', '海星', '奖章'] },
+  { name: '长方形', cls: 's-rect', color: '#22a06b', items: ['门', '书本', '黑板', '面包片'] },
+  { name: '椭圆', cls: 's-ellipse', color: '#ee8b1e', items: ['鸡蛋', '橄榄球', '树叶'] },
+  { name: '半圆', cls: 's-semicircle', color: '#2f7ed8', items: ['彩虹桥', '半个西瓜', '月牙'] },
+  { name: '菱形', cls: 's-diamond', color: '#e0357b', items: ['风筝', '钻石', '菱形地砖'] }
 ];
 
 var cur = null;
@@ -125,6 +140,7 @@ var locked = false, timer = null;
 var elShapeBtn = document.getElementById('shapeBtn');
 var elShape = document.getElementById('shape');
 var elNames = document.getElementById('names');
+var elExamples = document.getElementById('examples');
 var elPrompt = document.getElementById('prompt');
 var elFb = document.getElementById('feedback');
 var btnNext = document.getElementById('next');
@@ -173,6 +189,7 @@ function newRound() {
   void elShapeBtn.offsetWidth;
 
   elNames.innerHTML = '';
+  elExamples.textContent = quizMode ? '' : (cur.name + '：像 ' + cur.items.join('、') + '。');
   if (quizMode) {
     elNames.style.display = 'flex';
     var others = shuffle(SHAPES.filter(function (s) { return s.name !== cur.name; })).slice(0, 3);
@@ -204,7 +221,7 @@ function explore() {
   elShapeBtn.classList.remove('bounce', 'glow');
   void elShapeBtn.offsetWidth;
   elShapeBtn.classList.add('bounce', 'glow');
-  say('这是' + cur.name);
+  say('这是' + cur.name + '，像' + cur.items.join('、') + '。');
   feedback('这是' + cur.name + '！', 'ok');
   timer = setTimeout(function () {
     elShapeBtn.classList.remove('glow');
@@ -218,8 +235,9 @@ function guess(btn, s) {
     locked = true;
     btn.classList.add('good');
     elShapeBtn.classList.add('bounce', 'glow');
-    say('对啦，这是' + cur.name);
+    say('对啦，这是' + cur.name + '，像' + cur.items.join('、') + '。');
     feedback('✅ 对啦，这是' + cur.name + '！', 'ok');
+    elExamples.textContent = cur.name + '：像 ' + cur.items.join('、') + '。';
     timer = setTimeout(newRound, 1100);
   } else {
     btn.classList.add('badd');
