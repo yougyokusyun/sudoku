@@ -1,11 +1,18 @@
-/* 小脑袋乐园 · Service Worker v14
- * 修复说明：v13 的 PRECACHE 里含有 ".nojekyll"，该文件在 GitHub Pages 上恒为 404，
- * 而 v13 用的是"全有或全无"的批量预缓存 —— 一条 404 就让整个 install 阶段 reject，
- * 结果缓存始终为空，SW 虽然后来被 skipWaiting 激活，却没有任何离线资源，
- * 表现就是"添加到主屏幕后每次打开仍要联网且很慢"。
- * v14 改为逐条容错：每条单独 fetch + cache.put，失败只忽略，不影响其它资源。
+/* 小脑袋乐园 · Service Worker v15（核心优先预缓存版）
+ *
+ * 背景：v14 的 install 需要一次性拉完 181 条 / 7.39 MB（含 126 张游戏图片），
+ * 在国内访问 GitHub Pages 时平均 746 ms/请求、最慢 17~31 s，首次安装要数分钟，
+ * Safari 一旦切到后台 install 就被中断，缓存停在半途，表现为"还是没装上"。
+ *
+ * v15 策略：
+ *  1) 预缓存只放核心文件（HTML / JS / CSS / manifest / 图标），约 1.9 MB，
+ *     安装几十秒内即可完成，首页离线打开视觉完整。
+ *  2) 126 张游戏图片不进预缓存，改为运行时缓存：同源 GET、response.ok、
+ *     type 为 basic/default 时才 cache.put —— 打开过的游戏，图片会自动落地。
+ *  3) sw.js 自身永不入缓存，避免更新被旧缓存拦住。
+ *  4) 逐条容错 install + skipWaiting + 清理旧版本缓存 + clients.claim + 导航离线兜底。
  */
-var CACHE = 'xnly-v14';
+var CACHE = 'xnly-v15';
 
 var PRECACHE = [
   './',
@@ -26,132 +33,9 @@ var PRECACHE = [
   'games/gushi.html',
   'games/idiom-cat.html',
   'games/idioms.html',
-  'games/img/ant.jpg',
-  'games/img/apple.jpg',
-  'games/img/balloon.jpg',
-  'games/img/bamboo.jpg',
-  'games/img/banana.jpg',
-  'games/img/bear.jpg',
-  'games/img/bee.jpg',
-  'games/img/bicycle.jpg',
-  'games/img/bird.jpg',
-  'games/img/bone.jpg',
-  'games/img/bread.jpg',
-  'games/img/bug.jpg',
-  'games/img/butterfly.jpg',
-  'games/img/candy.jpg',
-  'games/img/car.jpg',
-  'games/img/carrot.jpg',
-  'games/img/cart.jpg',
-  'games/img/cat.jpg',
-  'games/img/caterpillar.jpg',
-  'games/img/chair.jpg',
-  'games/img/cheese.jpg',
-  'games/img/chick.jpg',
-  'games/img/cloud.jpg',
-  'games/img/coat.jpg',
-  'games/img/cow.jpg',
-  'games/img/crab.jpg',
-  'games/img/dairycow.jpg',
-  'games/img/deer.jpg',
-  'games/img/dog.jpg',
-  'games/img/door.jpg',
-  'games/img/dress.jpg',
-  'games/img/duck.jpg',
-  'games/img/elephant.jpg',
-  'games/img/fish.jpg',
-  'games/img/fishfood.jpg',
-  'games/img/flower.jpg',
-  'games/img/fox.jpg',
-  'games/img/frog.jpg',
-  'games/img/giraffe.jpg',
-  'games/img/gloves.jpg',
-  'games/img/goose.jpg',
-  'games/img/grape.jpg',
-  'games/img/grass.jpg',
-  'games/img/greens.jpg',
-  'games/img/hamster.jpg',
-  'games/img/hat.jpg',
-  'games/img/hedgehog.jpg',
-  'games/img/honey.jpg',
-  'games/img/horse.jpg',
-  'games/img/house.jpg',
-  'games/img/icecream.jpg',
   'games/img/icon-180.png',
   'games/img/icon-192.png',
   'games/img/icon-512.png',
-  'games/img/idiom/bamiaozhuzhang.jpg',
-  'games/img/idiom/beigongsheying.jpg',
-  'games/img/idiom/chizhiyiheng.jpg',
-  'games/img/idiom/duiniutanqin.jpg',
-  'games/img/idiom/gezhiyici.jpg',
-  'games/img/idiom/hualongdianjing.jpg',
-  'games/img/idiom/huashetianzu.jpg',
-  'games/img/idiom/hujiahuwei.jpg',
-  'games/img/idiom/jingdizhiwa.jpg',
-  'games/img/idiom/jinggongzhiniao.jpg',
-  'games/img/idiom/kezhouqiujian.jpg',
-  'games/img/idiom/lanyuchongshu.jpg',
-  'games/img/idiom/qishangbaxia.jpg',
-  'games/img/idiom/sanxineryi.jpg',
-  'games/img/idiom/shoukouruping.jpg',
-  'games/img/idiom/shouzhudaitu.jpg',
-  'games/img/idiom/wangyangbulao.jpg',
-  'games/img/idiom/weiyuchoumou.jpg',
-  'games/img/idiom/xinggaocaile.jpg',
-  'games/img/idiom/yanerdaoling.jpg',
-  'games/img/idiom/yegonghaolong.jpg',
-  'games/img/idiom/yimingjingren.jpg',
-  'games/img/idiom/yugongyishan.jpg',
-  'games/img/idiom/zixiangmaodun.jpg',
-  'games/img/koala.jpg',
-  'games/img/lamp.jpg',
-  'games/img/leaves.jpg',
-  'games/img/lion.jpg',
-  'games/img/meat.jpg',
-  'games/img/milk.jpg',
-  'games/img/monkey.jpg',
-  'games/img/mosquito.jpg',
-  'games/img/mouse.jpg',
-  'games/img/mushroom.jpg',
-  'games/img/orange.jpg',
-  'games/img/owl.jpg',
-  'games/img/panda.jpg',
-  'games/img/pants.jpg',
-  'games/img/peach.jpg',
-  'games/img/peanut.jpg',
-  'games/img/penguin.jpg',
-  'games/img/pig.jpg',
-  'games/img/pinecone.jpg',
-  'games/img/pinetree.jpg',
-  'games/img/rabbit.jpg',
-  'games/img/rainbow.jpg',
-  'games/img/rice.jpg',
-  'games/img/sailboat.jpg',
-  'games/img/seashell.jpg',
-  'games/img/sheep.jpg',
-  'games/img/shirt.jpg',
-  'games/img/shrimp.jpg',
-  'games/img/snail.jpg',
-  'games/img/soccer.jpg',
-  'games/img/socks.jpg',
-  'games/img/sofa.jpg',
-  'games/img/squirrel.jpg',
-  'games/img/strawberry.jpg',
-  'games/img/sun.jpg',
-  'games/img/sunflower.jpg',
-  'games/img/swallow.jpg',
-  'games/img/sweetpotato.jpg',
-  'games/img/tiger.jpg',
-  'games/img/tractor.jpg',
-  'games/img/tree.jpg',
-  'games/img/turtle.jpg',
-  'games/img/tv.jpg',
-  'games/img/umbrella.jpg',
-  'games/img/watermelon.jpg',
-  'games/img/waves.jpg',
-  'games/img/wheat.jpg',
-  'games/img/woodpecker.jpg',
   'games/junqi.html',
   'games/klondike.html',
   'games/logic-clues.html',
@@ -188,10 +72,9 @@ var PRECACHE = [
   'sudoku-core.js',
   'sudoku-ui.js',
   'sudoku.html',
-  'sw.js',
 ];
 
-/* 逐条预缓存：单条失败不会让整个 install 失败 */
+/* 逐条预缓存：单条失败只跳过，不会让整个 install 失败 */
 self.addEventListener('install', function (e) {
   e.waitUntil(
     caches.open(CACHE).then(function (c) {
@@ -215,7 +98,7 @@ self.addEventListener('activate', function (e) {
       return Promise.all(keys.filter(function (k) {
         return k !== CACHE;
       }).map(function (k) {
-        return caches.delete(k);
+        return caches.delete(k);   /* 清掉 xnly-v13 / v14 等旧缓存 */
       }));
     }).then(function () {
       return self.clients.claim();
@@ -223,13 +106,26 @@ self.addEventListener('activate', function (e) {
   );
 });
 
+/* 是否可以写入运行时缓存 */
+function cacheable(request, resp, url) {
+  if (request.method !== 'GET') return false;
+  if (!resp || !resp.ok || resp.status !== 200) return false;       // 失败/非 200 不缓存
+  if (resp.type !== 'basic' && resp.type !== 'default') return false; // 跨域 opaque 不缓存
+  if (url.origin !== self.location.origin) return false;            // 仅同源
+  if (/\/sw\.js$/.test(url.pathname)) return false;                // 不缓存 sw.js 自身
+  return true;
+}
+
 self.addEventListener('fetch', function (e) {
   if (e.request.method !== 'GET') return;
+  var reqUrl = new URL(e.request.url);
+  if (reqUrl.origin !== self.location.origin) return;               // 跨域交给浏览器
+
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then(function (hit) {
       if (hit) return hit;
       return fetch(e.request).then(function (resp) {
-        if (resp && resp.ok && e.request.url.indexOf(self.location.origin) === 0) {
+        if (cacheable(e.request, resp, reqUrl)) {
           var clone = resp.clone();
           caches.open(CACHE).then(function (c) { c.put(e.request, clone); });
         }
@@ -237,7 +133,12 @@ self.addEventListener('fetch', function (e) {
       }).catch(function () {
         if (e.request.mode === 'navigate') {
           return caches.match('index.html').then(function (f) {
-            return f || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+            return f || caches.match('./').then(function (g) {
+              return g || new Response('离线中，且该页面尚未缓存', {
+                status: 503,
+                headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+              });
+            });
           });
         }
         return Response.error();
