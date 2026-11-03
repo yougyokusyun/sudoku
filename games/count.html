@@ -84,7 +84,9 @@ h1{font-size:1.15rem;}
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="小脑袋乐园">
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
-<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
 <body>
 <header>
   <a class="back" href="../index.html">🏠 首页</a>
@@ -92,6 +94,7 @@ h1{font-size:1.15rem;}
   <div class="chips">
     <span class="chip">🔥 连对 <b id="streak">0</b></span>
     <span class="chip">🏆 最佳 <b id="best">0</b></span>
+    <span class="chip">⭐ 第 <b id="lvl">1</b> 档 <span id="rng">1~5</span></span>
   </div>
 </header>
 
@@ -102,7 +105,6 @@ h1{font-size:1.15rem;}
   <div class="feedback" id="feedback"></div>
   <div class="controls">
     <button class="btn primary" id="next" type="button">🔄 换一组</button>
-    <button class="btn" id="hard" type="button">🔟 数到 10</button>
   </div>
 </div>
 
@@ -114,10 +116,17 @@ var THINGS = [
   { e: '⭐', n: '星星' }, { e: '🐰', n: '小兔' }, { e: '🚗', n: '小车' }, { e: '🍪', n: '饼干' }
 ];
 
-var maxN = 5;                 // 进阶后变 10
+/* 难度档位：连对 3 题升一档，错 2 题降一档
+ *   1 档：1~5   （默认，3 岁）
+ *   2 档：1~8
+ *   3 档：1~10  （5 岁以上） */
+var LEVELS = [{ max: 5, txt: '1~5' }, { max: 8, txt: '1~8' }, { max: 10, txt: '1~10' }];
+var level = 1;
+var maxN = LEVELS[0].max;
+var okRun = 0, badRun = 0;
 var count = 1, thing = null;
 var streak = 0, best = readNum('pcount.best');
-var locked = false, timer = null;
+var locked = false, timer = null, lockTimer = null;
 
 var elItems = document.getElementById('items');
 var elNums = document.getElementById('nums');
@@ -125,7 +134,8 @@ var elFb = document.getElementById('feedback');
 var elPrompt = document.getElementById('prompt');
 var elStreak = document.getElementById('streak');
 var elBest = document.getElementById('best');
-var btnHard = document.getElementById('hard');
+var elLvl = document.getElementById('lvl');
+var elRng = document.getElementById('rng');
 
 function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 0 : v; }
 function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) { } }
@@ -155,7 +165,9 @@ function say(text) {
 
 function newRound() {
   clearTimeout(timer);
-  locked = false;
+  locked = true;                 /* 800ms 输入锁：题刚出来时朗读还没结束，防连点 */
+  clearTimeout(lockTimer);
+  lockTimer = setTimeout(function () { locked = false; }, 800);
 
   var prev = count;
   do { count = 1 + rand(maxN); } while (maxN > 1 && count === prev);
@@ -211,6 +223,13 @@ function tap(btn, n) {
     streak++;
     if (streak > best) { best = streak; writeNum('pcount.best', best); }
     updateStats();
+    /* 连对 3 题升一档 */
+    okRun++; badRun = 0;
+    if (okRun >= 3 && level < LEVELS.length) {
+      okRun = 0;
+      setLevel(level + 1);
+      if (window.XNLY) XNLY.sound.win();
+    }
     /* 用阿拉伯数字进语音稿：合成音会自然读成「三个」，避免中文「二个」这种别扭说法 */
     var said = count + '个' + thing.n;
     say(said + '！');
@@ -219,9 +238,23 @@ function tap(btn, n) {
   } else {
     btn.classList.add('badd');
     setTimeout(function () { btn.classList.remove('badd'); }, 450);
+    /* 连续答错 2 题降一档 */
+    badRun++; okRun = 0;
+    if (badRun >= 2 && level > 1) {
+      badRun = 0;
+      setLevel(level - 1);
+    }
     voiceSpeak('再数一数，慢慢来');
     feedback('❌ 再数一数～', 'bad');
   }
+}
+
+function setLevel(n) {
+  level = Math.min(LEVELS.length, Math.max(1, n));
+  maxN = LEVELS[level - 1].max;
+  if (elLvl) elLvl.textContent = level;
+  if (elRng) elRng.textContent = LEVELS[level - 1].txt;
+  try { localStorage.setItem('pcount.level', String(level)); } catch (e) { }
 }
 
 document.getElementById('next').addEventListener('click', function () {
@@ -231,17 +264,10 @@ document.getElementById('next').addEventListener('click', function () {
   feedback('换了一组，重新数～');
 });
 
-btnHard.addEventListener('click', function () {
-  maxN = maxN === 5 ? 10 : 5;
-  btnHard.classList.toggle('on', maxN === 10);
-  btnHard.textContent = maxN === 10 ? '🖐 数到 5' : '🔟 数到 10';
-  streak = 0;
-  updateStats();
-  newRound();
-});
-
 function initCount() {
   best = readNum('pcount.best');
+  var saved = readNum('pcount.level');
+  setLevel(saved >= 1 && saved <= LEVELS.length ? saved : 1);
   updateStats();
   newRound();
 }

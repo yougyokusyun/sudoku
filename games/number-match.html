@@ -97,7 +97,9 @@ h1{font-size:1.15rem;}
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="小脑袋乐园">
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
-<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
 <body>
 <header>
   <a class="back" href="../index.html">🏠 首页</a>
@@ -105,6 +107,7 @@ h1{font-size:1.15rem;}
   <div class="chips">
     <span class="chip">🔥 连对 <b id="streak">0</b></span>
     <span class="chip">🏆 最佳 <b id="best">0</b></span>
+    <span class="chip">⭐ 第 <b id="lvl">1</b> 档 <span id="rng">1~5</span></span>
   </div>
 </header>
 
@@ -122,9 +125,14 @@ h1{font-size:1.15rem;}
 /* 数量卡用到的 emoji（每轮 4 张各用一种，避免同图案干扰判断） */
 var FRUITS = ['🍎', '🍌', '🍓', '🍇', '🍊', '🍑', '🍐', '🍉', '🥕', '🍋', '🌸', '🐟'];
 
+/* 难度档位：连对 3 题升一档，错 2 题降一档
+ *   1 档：1~5（默认）  2 档：1~8  3 档：1~10 */
+var LEVELS = [{ max: 5, txt: '1~5' }, { max: 8, txt: '1~8' }, { max: 10, txt: '1~10' }];
+var level = 1, MAX = LEVELS[0].max, okRun = 0, badRun = 0;
+
 var target = 3;
 var streak = 0, best = readNum('pnum.best');
-var locked = false, timer = null;
+var locked = false, timer = null, lockTimer = null;
 
 var elBig = document.getElementById('big');
 var elCards = document.getElementById('cards');
@@ -160,15 +168,19 @@ function say(text) {
 
 function newRound() {
   clearTimeout(timer);
-  locked = false;
+  locked = true;                 /* 800ms 输入锁：题刚出来时朗读还没结束，防连点 */
+  clearTimeout(lockTimer);
+  lockTimer = setTimeout(function () { locked = false; }, 800);
 
   var prev = target;
-  do { target = 1 + rand(5); } while (target === prev);
+  do { target = 1 + rand(MAX); } while (target === prev && MAX > 1);
   elBig.textContent = target;
   elBig.classList.remove('pop');
 
   /* 4 张卡：1 张数量 = 目标，另外 3 张数量互不相同且 ≠ 目标 */
-  var others = shuffle([1, 2, 3, 4, 5].filter(function (v) { return v !== target; })).slice(0, 3);
+  var all = [];
+  for (var v = 1; v <= MAX; v++) all.push(v);
+  var others = shuffle(all.filter(function (x) { return x !== target; })).slice(0, 3);
   var counts = shuffle([target].concat(others));
   var fruits = shuffle(FRUITS).slice(0, 4);
 
@@ -206,15 +218,29 @@ function tap(btn, c) {
     streak++;
     if (streak > best) { best = streak; writeNum('pnum.best', best); }
     updateStats();
+    okRun++; badRun = 0;
+    if (okRun >= 3 && level < LEVELS.length) { okRun = 0; setLevel(level + 1); if (window.XNLY) XNLY.sound.win(); }
     say('对啦，' + target + '个！');
     feedback('🎉 对啦，' + target + '个！', 'ok');
     timer = setTimeout(newRound, 1200);
   } else {
     btn.classList.add('badd');
     setTimeout(function () { btn.classList.remove('badd'); }, 450);
+    badRun++; okRun = 0;
+    if (badRun >= 2 && level > 1) { badRun = 0; setLevel(level - 1); }
     voiceSpeak('再数一数，哪一张一样多');
     feedback('❌ 这张不是 ' + target + ' 个，再数一数', 'bad');
   }
+}
+
+function setLevel(n) {
+  level = Math.min(LEVELS.length, Math.max(1, n));
+  MAX = LEVELS[level - 1].max;
+  var l = document.getElementById('lvl');
+  var r = document.getElementById('rng');
+  if (l) l.textContent = level;
+  if (r) r.textContent = LEVELS[level - 1].txt;
+  try { localStorage.setItem('pnum.level', String(level)); } catch (e) { }
 }
 
 /* 卡片飞向大数字并合并 */
@@ -246,6 +272,8 @@ document.getElementById('next').addEventListener('click', function () {
 
 function initNumberMatch() {
   best = readNum('pnum.best');
+  var saved = readNum('pnum.level');
+  setLevel(saved >= 1 && saved <= LEVELS.length ? saved : 1);
   updateStats();
   newRound();
 }

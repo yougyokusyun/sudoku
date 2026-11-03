@@ -46,7 +46,9 @@ h1{font-size:1.15rem;}
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="小脑袋乐园">
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
-<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
 <body>
 <header>
   <h1>🐘 大小比较</h1>
@@ -54,6 +56,7 @@ h1{font-size:1.15rem;}
 </header>
 <div class="stage">
   <div class="prompt" id="prompt"></div>
+  <div id="lvl" style="text-align:center;font-size:.78rem;font-weight:800;color:#8aa0b8;"></div>
   <div class="options" id="options"></div>
   <div class="feedback" id="feedback"></div>
 </div>
@@ -70,19 +73,53 @@ var PAIRS=[
   {big:'🍉',small:'🍓'},
   {big:'🚌',small:'🚗'}
 ];
-let locked=false,newRoundTimer=null,askBig=true;
+let locked=false,newRoundTimer=null,askBig=true,lockTimer=null;
+
+/* 难度档位：连对 3 题升一档，错 2 题降一档
+ *   1 档：2 选 1，大小差距很大
+ *   2 档：2 选 1，大小差距变小
+ *   3 档：3 选 1，找出最大 / 最小 */
+var LEVELS=[
+  {n:2,big:2.9,small:1.15,txt:'2 选 1 · 差距大'},
+  {n:2,big:2.15,small:1.6,txt:'2 选 1 · 差距小'},
+  {n:3,big:2.7,small:1.45,txt:'3 选 1 · 找最大 / 最小'}
+];
+var level=1, okRun=0, badRun=0;
 
 function clearFeedback(){var f=document.getElementById('feedback');f.className='feedback';f.textContent='';}
 
+function setLevel(n){
+  level=Math.min(LEVELS.length,Math.max(1,n));
+  var el=document.getElementById('lvl');
+  if(el) el.textContent='第 '+level+' 档 · '+LEVELS[level-1].txt;
+  try{localStorage.setItem('pbs.level',String(level));}catch(e){}
+}
+
 function newRound(){
+  clearTimeout(newRoundTimer);
+  locked=true;                                  /* 800ms 输入锁，防连点 */
+  clearTimeout(lockTimer);
+  lockTimer=setTimeout(function(){locked=false;},800);
+
+  var cfg=LEVELS[level-1];
   var p=pick(PAIRS);
   var bigEmoji=p.same||p.big, smallEmoji=p.same||p.small;
   askBig=Math.random()<0.5;
+
+  var opts=[{emoji:bigEmoji,size:'big',fs:cfg.big},
+            {emoji:smallEmoji,size:'small',fs:cfg.small}];
+  if(cfg.n>=3){
+    var pool=PAIRS.map(function(x){return x.same||x.small;}).concat(PAIRS.map(function(x){return x.big;}));
+    var third=pick(pool), guard=0;
+    while((third===bigEmoji||third===smallEmoji)&&guard++<30){ third=pick(pool); }
+    opts.push({emoji:third,size:'small',fs:cfg.small});
+  }
+  opts=shuffle(opts);
+
   document.getElementById('prompt').textContent=askBig?'哪个更大？':'哪个更小？';
-  var opts=shuffle([{emoji:bigEmoji,size:'big'},{emoji:smallEmoji,size:'small'}]);
   document.getElementById('options').innerHTML=opts.map(function(o){
     return '<button class="bs-card" type="button" data-size="'+o.size+'">'+
-           '<span class="bs-emoji '+o.size+'">'+o.emoji+'</span></button>';
+           '<span class="bs-emoji '+o.size+'" style="font-size:'+o.fs+'em">'+o.emoji+'</span></button>';
   }).join('');
   clearFeedback();
   voiceSpeak(askBig?'哪个更大？':'哪个更小？');
@@ -98,15 +135,26 @@ document.getElementById('options').addEventListener('click',function(e){
     replay(card,'pop');
     feedback('✅ 对啦！'+(askBig?'这个好大呀！':'这个小巧巧！'),true);
     voiceSpeak(askBig?'对啦，这个大！':'对啦，这个小！');
+    if(window.XNLY) XNLY.sound.correct();
+    okRun++; badRun=0;
+    if(okRun>=3&&level<LEVELS.length){ okRun=0; setLevel(level+1); if(window.XNLY) XNLY.sound.win(); }
     clearTimeout(newRoundTimer);
     newRoundTimer=setTimeout(function(){locked=false;newRound();},1000);
   }else{
     replay(card,'shake');
     feedback('❌ 再试试',false);
     voiceSpeak(askBig?'再看看，哪一个大一点？':'再看看，哪一个小一点？');
+    badRun++; okRun=0;
+    if(badRun>=2&&level>1){ badRun=0; setLevel(level-1); }
+    if(window.XNLY) XNLY.sound.wrong();
   }
 });
 
+/* 读回上次的档位 */
+(function(){
+  var saved=parseInt('0'+localStorage.getItem('pbs.level'),10);
+  setLevel(saved>=1&&saved<=LEVELS.length?saved:1);
+})();
 newRound();
 
 /* ===== 语音播报：进入先读玩法，右上角 🔊 可随时重听 ===== */

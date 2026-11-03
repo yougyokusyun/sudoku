@@ -143,7 +143,9 @@ h1{font-size:1.12rem;}
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="小脑袋乐园">
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
-<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
 <body>
 <header>
   <a class="back" href="../index.html">🏠 首页</a>
@@ -770,6 +772,7 @@ var streak = 0, best = readNum('pidiom.best');
 var cur = null;                 /* 当前题目 */
 var lockQ = false;              /* 当前题是否已判定 */
 var timer = null;               /* 自动换题计时 */
+var lockT = null;               /* 换题后的输入锁计时 */
 var matchState = null;          /* 配一配状态 */
 var lockMatch = false;
 
@@ -798,6 +801,12 @@ function bumpStreak() {
   updateStats();
 }
 function clearTimer() { clearTimeout(timer); timer = null; }
+/* 换题后 800ms 输入锁：朗读还在播，防止连点把新题也点掉 */
+function lockInput() {
+  lockQ = true;
+  clearTimeout(lockT);
+  lockT = setTimeout(function () { lockQ = false; }, 800);
+}
 
 var canSpeak = typeof window.speechSynthesis !== 'undefined';
 function say(text) {
@@ -843,7 +852,7 @@ function guessImgCard(q) {
 }
 
 function newGuess() {
-  clearTimer(); lockQ = false;
+  clearTimer(); lockInput();
   var prev = cur && cur.a;
   var q;
   do { q = GUESSES[rand(GUESSES.length)]; } while (GUESSES.length > 1 && q.a === prev);
@@ -926,7 +935,7 @@ function fillImgCard(src) {
 }
 
 function newFill() {
-  clearTimer(); lockQ = false;
+  clearTimer(); lockInput();
   var prev = cur && cur.a;
   var q;
   do { q = FILLS[rand(FILLS.length)]; } while (FILLS.length > 1 && q.a === prev);
@@ -1054,7 +1063,7 @@ function flipCard(i, btn) {
 
 /* ===== 四、演一演 ===== */
 function newScene() {
-  clearTimer(); lockQ = false;
+  clearTimer(); lockInput();
   var prev = cur && cur.s;
   var q;
   do { q = SCENES[rand(SCENES.length)]; } while (SCENES.length > 1 && q.s === prev);

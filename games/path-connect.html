@@ -74,7 +74,9 @@ h1{font-size:1.15rem;}
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="小脑袋乐园">
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
-<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
 <body>
 <header>
   <h1>🚩 路径连线</h1>
@@ -230,6 +232,7 @@ function newLevel(){
   generateLevel();
   resetPath();
   feedback('🆕 新关卡来啦！从 🚩 出发，走到 🏁 吧',true);
+  if(window.XNLY) XNLY.voice.speak('新的一关。从绿旗出发，一格一格走到小旗。');
 }
 function finish(){
   done=true;
@@ -248,21 +251,31 @@ function finish(){
   feedback('✅ 到达终点！用了 '+steps+' 步，最短 '+shortest+' 步'+(record?' 🏆 新纪录！':''),true);
   render();
   confetti();
+  if(window.XNLY){ XNLY.sound.win(); XNLY.voice.speak('到达终点啦，真棒！用了' + steps + '步。'); }
 }
 function tryExtend(i,silent){
   if(done)return false;
   var last=path[path.length-1];
   if(i===last)return false;
   if(blockedSet.has(i)){
-    if(!silent)feedback('❌ 这里有座大山，绕开它吧',false);
+    if(!silent){
+      feedback('❌ 这里有座大山，绕开它吧',false);
+      if(window.XNLY){ XNLY.mark('wrong'); }
+    }
     return false;
   }
   if(path.indexOf(i)>=0){
-    if(!silent)feedback('❌ 不能重复经过同一格',false);
+    if(!silent){
+      feedback('❌ 不能重复经过同一格',false);
+      if(window.XNLY){ XNLY.mark('wrong'); }
+    }
     return false;
   }
   if(!adjacent(last,i)){
-    if(!silent)feedback('❌ 只能走上下左右相邻的格子',false);
+    if(!silent){
+      feedback('❌ 只能走上下左右相邻的格子',false);
+      if(window.XNLY){ XNLY.mark('wrong'); }
+    }
     return false;
   }
   path.push(i);
@@ -332,6 +345,25 @@ function initPath(){
 }
 
 initPath();
+
+/* ===== 语音：进入先读玩法，右上角 🔊 可重听 ===== */
+var VOICE_TEXT = '路径连线游戏。从绿旗出发，一格一格连到小旗，路上有小山要绕开。';
+function pcSpeak(t) { if (window.XNLY) XNLY.voice.speak(t); }
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { pcSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) h.appendChild(b);
+})();
+setTimeout(function () {
+  var s = window.speechSynthesis;
+  if (s && (s.speaking || s.pending)) return;
+  var once = function () { document.removeEventListener('pointerdown', once); pcSpeak(VOICE_TEXT); };
+  document.addEventListener('pointerdown', once);
+}, 1200);
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

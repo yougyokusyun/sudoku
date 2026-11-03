@@ -45,7 +45,9 @@ h1{font-size:1.15rem;}
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="小脑袋乐园">
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
-<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
 <body>
 <header>
   <h1>🍎 多少比较</h1>
@@ -53,6 +55,7 @@ h1{font-size:1.15rem;}
 </header>
 <div class="stage">
   <div class="prompt" id="prompt"></div>
+  <div id="lvl" style="text-align:center;font-size:.78rem;font-weight:800;color:#8aa0b8;"></div>
   <div class="panels" id="panels"></div>
   <div class="feedback" id="feedback"></div>
 </div>
@@ -63,7 +66,25 @@ function feedback(text,good){var f=document.getElementById('feedback');f.classNa
 function replay(node,cls){node.classList.remove('pop','shake');void node.offsetWidth;node.classList.add(cls);}
 /* 游戏逻辑 */
 const COUNTERS=['🍎','⭐','🍓','🌻','🐟','🎈','🍪','🐤','🚗','🌸','🐛','🍇'];
-let locked=false,newRoundTimer=null,askMore=true,countA=0,countB=0,emojiNow='🍎';
+let locked=false,newRoundTimer=null,askMore=true,countA=0,countB=0,emojiNow='🍎',lockTimer=null;
+
+/* 难度档位：连对 3 题升一档，错 2 题降一档
+ *   1 档：1~5，两边至少差 3 个（一眼就能看出）
+ *   2 档：1~6，两边至少差 2 个
+ *   3 档：1~8，两边至少差 1 个（要数一数） */
+var LEVELS=[
+  {max:5,minGap:3,txt:'1~5 · 差 3 个以上'},
+  {max:6,minGap:2,txt:'1~6 · 差 2 个以上'},
+  {max:8,minGap:1,txt:'1~8 · 差 1 个以上'}
+];
+var level=1, okRun=0, badRun=0;
+
+function setLevel(n){
+  level=Math.min(LEVELS.length,Math.max(1,n));
+  var el=document.getElementById('lvl');
+  if(el) el.textContent='第 '+level+' 档 · '+LEVELS[level-1].txt;
+  try{localStorage.setItem('pml.level',String(level));}catch(e){}
+}
 
 function clearFeedback(){var f=document.getElementById('feedback');f.className='feedback';f.textContent='';}
 
@@ -79,10 +100,15 @@ function emojiRow(n){
 }
 
 function newRound(){
+  clearTimeout(newRoundTimer);
+  locked=true;                                  /* 800ms 输入锁，防连点 */
+  clearTimeout(lockTimer);
+  lockTimer=setTimeout(function(){locked=false;},800);
+  var cfg=LEVELS[level-1];
   do{
-    countA=1+Math.floor(Math.random()*5);
-    countB=1+Math.floor(Math.random()*5);
-  }while(Math.abs(countA-countB)<2);   /* 至少相差 2 个，避免看不出多少 */
+    countA=1+Math.floor(Math.random()*cfg.max);
+    countB=1+Math.floor(Math.random()*cfg.max);
+  }while(Math.abs(countA-countB)<cfg.minGap);   /* 拉开差距，避免看不出多少 */
   askMore=Math.random()<0.5;
   emojiNow=pick(COUNTERS);
   document.getElementById('prompt').textContent=askMore?'哪边多？':'哪边少？';
@@ -106,15 +132,26 @@ document.getElementById('panels').addEventListener('click',function(e){
     replay(panel,'pop');
     feedback('✅ 太棒了',true);
     voiceSpeak('太棒了，答对啦');
+    if(window.XNLY) XNLY.sound.correct();
+    okRun++; badRun=0;
+    if(okRun>=3&&level<LEVELS.length){ okRun=0; setLevel(level+1); if(window.XNLY) XNLY.sound.win(); }
     clearTimeout(newRoundTimer);
     newRoundTimer=setTimeout(function(){locked=false;newRound();},1000);
   }else{
     replay(panel,'shake');
     feedback('❌ 再数一数哦',false);
     voiceSpeak(askMore?'再数一数，哪边多？':'再数一数，哪边少？');
+    badRun++; okRun=0;
+    if(badRun>=2&&level>1){ badRun=0; setLevel(level-1); }
+    if(window.XNLY) XNLY.sound.wrong();
   }
 });
 
+/* 读回上次的档位 */
+(function(){
+  var saved=parseInt('0'+localStorage.getItem('pml.level'),10);
+  setLevel(saved>=1&&saved<=LEVELS.length?saved:1);
+})();
 newRound();
 
 /* ===== 语音播报：进入先读玩法，右上角 🔊 可随时重听 ===== */

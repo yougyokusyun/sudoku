@@ -32,9 +32,59 @@
         }
         .wrap { max-width: 1080px; margin: 0 auto; }
 
-        header { text-align: center; margin-bottom: 22px; }
+        header { text-align: center; margin-bottom: 16px; }
         h1 { font-size: 1.7rem; letter-spacing: 1px; }
         .sub { margin-top: 6px; font-size: .92rem; color: #6b7f95; }
+
+        /* ---------- 点击开始 ---------- */
+        .startcard {
+            display: flex; flex-direction: column; align-items: center; gap: 8px;
+            margin: 0 0 16px;
+            padding: 14px;
+            border-radius: 24px;
+            background: linear-gradient(160deg, #fff, #fff3f8);
+            border: 2px dashed rgba(255, 143, 190, .55);
+        }
+        .startbtn {
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            width: min(420px, 100%);
+            min-height: 84px;
+            border: none; border-radius: 999px;
+            background: linear-gradient(135deg, #ff8fbe, #ff6f9c 55%, #ff5c81);
+            color: #fff; font-family: inherit;
+            font-size: 1.7rem; font-weight: 900; letter-spacing: 2px;
+            box-shadow: 0 12px 26px rgba(255, 92, 129, .38);
+            cursor: pointer;
+        }
+        .startbtn:active { transform: scale(.97); }
+        .startico { font-size: 1.9rem; }
+        .startsub { font-size: .82rem; font-weight: 700; color: #8a7d86; }
+        .startcard.done { border-style: solid; background: #fff; padding: 10px; }
+        .startcard.done .startbtn {
+            min-height: 60px; font-size: 1.15rem; letter-spacing: 1px;
+            background: linear-gradient(135deg, #8fe3b0, #4cc98a);
+            box-shadow: 0 8px 18px rgba(76, 201, 138, .32);
+        }
+
+        /* ---------- 工具条 ---------- */
+        .tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 6px; }
+        .agebtn, .tool {
+            min-height: 44px; padding: 6px 14px;
+            border-radius: 999px; border: 2px solid rgba(36, 59, 83, .10);
+            background: #fff; color: #3b5370;
+            font-family: inherit; font-size: .88rem; font-weight: 800;
+            box-shadow: 0 4px 12px rgba(36, 59, 83, .08);
+            text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+            cursor: pointer;
+        }
+        .agebtn.on { background: #7c5cff; border-color: #7c5cff; color: #fff; }
+        .ages { display: inline-flex; gap: 8px; }
+        .storehint {
+            margin: 10px auto 0; max-width: 560px;
+            font-size: .76rem; font-weight: 700; color: #a06b1f;
+            background: #fff7e3; border: 1px solid #ffe1a8; border-radius: 12px;
+            padding: 6px 10px; text-align: center;
+        }
 
         .grid {
             display: grid;
@@ -67,6 +117,7 @@
             background: var(--c, #7c5cff);
         }
         .card:active { transform: scale(.95); }
+        .card.tapped { transform: scale(.93); box-shadow: 0 0 0 4px rgba(124, 92, 255, .35); }
         @media (hover: hover) {
             .card:hover { transform: translateY(-4px); box-shadow: 0 14px 26px rgba(36, 59, 83, .16); }
         }
@@ -93,7 +144,7 @@
 
         footer { margin-top: 26px; text-align: center; font-size: .76rem; color: #9fb1c6; }
 
-        /* 分区标题：3~5 岁 / 8~12 岁 */
+        /* 分区标题 */
         .sect {
             display: flex;
             align-items: center;
@@ -103,316 +154,483 @@
             font-weight: 800;
             color: #3b5370;
         }
-        .sect:first-of-type { margin-top: 0; }
+        .sect.first { margin-top: 0; }
         .sect .line { flex: 1; height: 1px; background: rgba(36, 59, 83, .14); }
         .sect .cnt { font-size: .72rem; font-weight: 700; color: #8aa0b8; }
+
+        /* 折叠区 */
+        .fold {
+            width: 100%;
+            display: flex; align-items: center; justify-content: space-between;
+            gap: 10px;
+            margin-top: 26px;
+            min-height: 58px;
+            padding: 10px 18px;
+            border-radius: 18px;
+            border: 2px dashed rgba(36, 59, 83, .16);
+            background: rgba(255, 255, 255, .72);
+            color: #3b5370; font-family: inherit; font-size: 1rem; font-weight: 900;
+            cursor: pointer;
+        }
+        .fold .foldico { font-size: 1.1rem; transition: transform .2s ease; }
+        .fold.open .foldico { transform: rotate(180deg); }
+        .foldwrap[hidden] { display: none; }
 
         @media (max-width: 380px) {
             .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .card { min-height: 132px; padding: 12px 8px; }
             .card .ico { font-size: 2.1rem; }
+            .startbtn { font-size: 1.4rem; min-height: 72px; }
         }
     </style>
+<script src="voice.js"></script>
+<script src="sound.js"></script>
 </head>
 <body>
 <div class="wrap">
     <header>
         <h1>🧸 小脑袋乐园</h1>
-        <div class="sub">3~12 岁宝贝的益智小游戏，点一个就能开始</div>
+        <div class="sub">3~12 岁宝贝的益智小游戏 · 点一下就能开始</div>
     </header>
 
-    <h2 class="sect">🧸 3~5 岁 · 认知启蒙 <span class="cnt">22 个</span><span class="line"></span></h2>
-    <div class="grid">
-        <a class="card" style="--c:#e63946" href="games/shapes.html">
-            <span class="ico">🟦🔺⚪</span>
-            <span class="name">形状认知配对</span>
-            <span class="desc">圆 · 方 · 三角 · 星 · 心</span>
-        </a>
+    <div class="startcard" id="startCard">
+        <button class="startbtn" id="startBtn" type="button">
+            <span class="startico">▶️</span><span class="starttxt">点我开始</span>
+        </button>
+        <div class="startsub" id="startSub">点一下就有声音 · 宝宝不用认字</div>
+    </div>
 
-        <a class="card" style="--c:#7c5cff" href="games/shapes-learn.html">
+    <div class="tools">
+        <div class="ages" id="ages">
+            <button class="agebtn" type="button" data-tier="3">3 岁</button>
+            <button class="agebtn" type="button" data-tier="4">4 岁</button>
+            <button class="agebtn" type="button" data-tier="5">5 岁</button>
+        </div>
+        <button class="tool" id="speedBtn" type="button">🔊 语速 1.0</button>
+        <a class="tool" href="parent.html">👨‍👩‍👧 家长面板</a>
+    </div>
+
+    <div class="storehint" id="storeHint" hidden>⚠️ 这次是用文件方式打开的，成绩只留在这一次，不影响玩</div>
+
+    <h2 class="sect first" id="mainTitle">🍼 3 岁 · 先玩这些 <span class="cnt" id="mainCnt"></span><span class="line"></span></h2>
+    <div class="grid" id="mainGrid">
+        <a class="card" style="--c:#7c5cff" data-age="3" data-name="形状认识" href="games/shapes-learn.html">
             <span class="ico">🔺👂</span>
             <span class="name">形状认识</span>
             <span class="desc">点一下形状，听它叫什么</span>
         </a>
 
-        <a class="card" style="--c:#2fb344" href="games/shapes-panel.html">
-            <span class="ico">🧩🔺</span>
-            <span class="name">形状嵌板</span>
-            <span class="desc">把形状放进对应的洞里</span>
+        <a class="card" style="--c:#e63946" data-age="3" data-name="形状认知配对" href="games/shapes.html">
+            <span class="ico">🟦🔺⚪</span>
+            <span class="name">形状认知配对</span>
+            <span class="desc">圆 · 方 · 三角 · 星 · 心</span>
         </a>
 
-        <a class="card" style="--c:#7c5cff" href="games/shape-insert.html">
-            <span class="ico">🧠🔺</span>
-            <span class="name">形状嵌入</span>
-            <span class="desc">拖进缺口，方向对才算成功</span>
-        </a>
-
-        <a class="card" style="--c:#e08a00" href="games/count.html">
+        <a class="card" style="--c:#e08a00" data-age="3" data-name="数一数" href="games/count.html">
             <span class="ico">🍎🔢</span>
             <span class="name">数一数</span>
             <span class="desc">有几个苹果？数完点数字</span>
         </a>
 
-        <a class="card" style="--c:#7c5cff" href="games/number-match.html">
-            <span class="ico">🔢🍎</span>
-            <span class="name">数字配对</span>
-            <span class="desc">找出和数字一样多的那张卡</span>
-        </a>
-
-        <a class="card" style="--c:#e08a00" href="games/animals-learn.html">
+        <a class="card" style="--c:#e08a00" data-age="3" data-name="动物认识" href="games/animals-learn.html">
             <span class="ico">🐶🐱🐘</span>
             <span class="name">动物认识</span>
             <span class="desc">一页一只，左右滑或点箭头换</span>
         </a>
 
-        <a class="card" style="--c:#e0559b" href="games/animals-mom.html">
-            <span class="ico">🐘👶</span>
-            <span class="name">动物找妈妈</span>
-            <span class="desc">大动物配小宝宝</span>
-        </a>
-
-        <a class="card" style="--c:#2a9d8f" href="games/sort-home.html">
-            <span class="ico">🛒🦁🧸</span>
-            <span class="name">分类找一找</span>
-            <span class="desc">点一点属于它的东西</span>
-        </a>
-
-        <a class="card" style="--c:#2a9d8f" href="games/scene-words.html">
-            <span class="ico">🖼️👆</span>
-            <span class="name">看图说话</span>
-            <span class="desc">点图里的东西，听词语</span>
-        </a>
-
-        <a class="card" style="--c:#ff8f3f" href="games/music-pad.html">
-            <span class="ico">🥁🎵</span>
-            <span class="name">敲敲打打</span>
-            <span class="desc">四个彩色按钮，点出 do re mi fa</span>
-        </a>
-
-        <a class="card" style="--c:#e0559b" href="games/rhythm.html">
-            <span class="ico">👏🔴🟡</span>
-            <span class="name">节奏模仿</span>
-            <span class="desc">照着顺序拍一遍，越拍越长</span>
-        </a>
-
-        <a class="card" style="--c:#f4a261" href="games/odd-one.html">
-            <span class="ico">🔍</span>
-            <span class="name">找不同</span>
-            <span class="desc">5 张卡片里挑出不一样的那个</span>
-        </a>
-
-        <a class="card" style="--c:#2a9d8f" href="games/big-small.html">
-            <span class="ico">🐘🐭</span>
-            <span class="name">大小比较</span>
-            <span class="desc">哪个更大？哪个更小？</span>
-        </a>
-
-        <a class="card" style="--c:#e76f51" href="games/more-less.html">
-            <span class="ico">🍎🍎🍎</span>
-            <span class="name">多少比较</span>
-            <span class="desc">哪边多？哪边少？</span>
-        </a>
-
-        <a class="card" style="--c:#6c757d" href="games/shadow.html">
-            <span class="ico">🌑</span>
-            <span class="name">影子配对</span>
-            <span class="desc">3 个影子里找出它的形状</span>
-        </a>
-
-        <a class="card" style="--c:#48cae4" href="games/bubble.html">
-            <span class="ico">🫧</span>
-            <span class="name">拍泡泡</span>
-            <span class="desc">手眼协调 · 点破小泡泡</span>
-        </a>
-
-        <a class="card" style="--c:#f9c74f" href="games/animal-feed.html">
-            <span class="ico">🐰🥕</span>
-            <span class="name">动物喂食</span>
-            <span class="desc">4 样里挑出它最爱吃的那一个</span>
-        </a>
-
-        <a class="card" style="--c:#ef476f" href="games/pattern.html">
-            <span class="ico">🔴🔵🔴🔵</span>
-            <span class="name">规律排序</span>
-            <span class="desc">下一个应该是什么颜色？</span>
-        </a>
-
-        <a class="card" style="--c:#e63946" href="games/color.html">
+        <a class="card" style="--c:#e63946" data-age="3" data-name="颜色配对" href="games/color.html">
             <span class="ico">🎨🔴🔵</span>
             <span class="name">颜色配对</span>
             <span class="desc">找出一样的颜色，还能按名字找</span>
         </a>
 
-        <a class="card" style="--c:#90be6d" href="games/weather.html">
-            <span class="ico">☀️🧥</span>
-            <span class="name">天气与穿衣</span>
-            <span class="desc">今天该带什么出门？</span>
-        </a>
-
-        <a class="card" style="--c:#4361ee" href="games/steps.html">
-            <span class="ico">🧼🪥</span>
-            <span class="name">步骤排序</span>
-            <span class="desc">洗手要先做什么？</span>
-        </a>
-    </div>
-
-    <h2 class="sect">♟️ 棋类对战 · 人机 / 双人 <span class="cnt">4 个</span><span class="line"></span></h2>
-    <div class="grid">
-        <a class="card" style="--c:#6a4bff" href="games/gomoku.html">
-            <span class="ico">⚫⚪</span>
-            <span class="name">五子棋</span>
-            <span class="desc">15×15 · 棋型评估 AI · 双人 / 人机</span>
-        </a>
-
-        <a class="card" style="--c:#b03030" href="games/xiangqi.html">
-            <span class="ico">🀄</span>
-            <span class="name">中国象棋</span>
-            <span class="desc">完整规则 · 4 层搜索 AI · 双人 / 人机</span>
-        </a>
-
-        <a class="card" style="--c:#2f5bd6" href="games/junqi.html">
-            <span class="ico">🚩</span>
-            <span class="name">军棋 · 翻开版</span>
-            <span class="desc">50 张牌铺满棋盘 · 翻牌定阵营 · 公路 / 铁路走棋</span>
-        </a>
-
-        <a class="card" style="--c:#1f8a5f" href="games/animal-chess.html">
+        <a class="card" style="--c:#2a9d8f" data-age="3" data-name="大小比较" href="games/big-small.html">
             <span class="ico">🐘🐭</span>
-            <span class="name">动物棋 · 翻翻棋</span>
-            <span class="desc">16 枚棋子 · 4×4 交叉点 · 翻牌开战</span>
+            <span class="name">大小比较</span>
+            <span class="desc">哪个更大？哪个更小？</span>
+        </a>
+
+        <a class="card" style="--c:#e76f51" data-age="3" data-name="多少比较" href="games/more-less.html">
+            <span class="ico">🍎🍎🍎</span>
+            <span class="name">多少比较</span>
+            <span class="desc">哪边多？哪边少？</span>
+        </a>
+
+        <a class="card" style="--c:#ff8f3f" data-age="3" data-name="敲敲打打" href="games/music-pad.html">
+            <span class="ico">🥁🎵</span>
+            <span class="name">敲敲打打</span>
+            <span class="desc">四个彩色按钮，点出 do re mi fa</span>
         </a>
     </div>
 
-    <h2 class="sect">🃏 纸牌游戏 · 单人 / 人机 <span class="cnt">2 个</span><span class="line"></span></h2>
-    <div class="grid">
-        <a class="card" style="--c:#1f8a5f" href="games/blackjack.html">
-            <span class="ico">🃏</span>
-            <span class="name">21 点</span>
-            <span class="desc">对庄家 · 要牌 / 停牌 · 教练提示</span>
-        </a>
+    <button class="fold" id="foldBtn" type="button">
+        <span id="foldLabel">🧒 大孩子专区 · 4 岁及以上</span><span class="foldico">▾</span>
+    </button>
 
-        <a class="card" style="--c:#2f5bd6" href="games/klondike.html">
-            <span class="ico">♠️♦️</span>
-            <span class="name">纸牌接龙</span>
-            <span class="desc">经典 Klondike · 点击移动 · 支持悔棋</span>
-        </a>
-    </div>
+    <div class="foldwrap" id="foldWrap" hidden>
+        <h2 class="sect" id="h4">🧩 4 岁 · 玩一玩 <span class="cnt">14 个</span><span class="line"></span></h2>
+        <div class="grid" id="grid4">
+            <a class="card" style="--c:#2fb344" data-age="4" data-name="形状嵌板" href="games/shapes-panel.html">
+                <span class="ico">🧩🔺</span>
+                <span class="name">形状嵌板</span>
+                <span class="desc">把形状放进对应的洞里</span>
+            </a>
+            <a class="card" style="--c:#7c5cff" data-age="4" data-name="形状嵌入" href="games/shape-insert.html">
+                <span class="ico">🧠🔺</span>
+                <span class="name">形状嵌入</span>
+                <span class="desc">拖进缺口，方向对才算成功</span>
+            </a>
+            <a class="card" style="--c:#7c5cff" data-age="4" data-name="数字配对" href="games/number-match.html">
+                <span class="ico">🔢🍎</span>
+                <span class="name">数字配对</span>
+                <span class="desc">找出和数字一样多的那张卡</span>
+            </a>
+            <a class="card" style="--c:#e0559b" data-age="4" data-name="动物找妈妈" href="games/animals-mom.html">
+                <span class="ico">🐘👶</span>
+                <span class="name">动物找妈妈</span>
+                <span class="desc">大动物配小宝宝</span>
+            </a>
+            <a class="card" style="--c:#2a9d8f" data-age="4" data-name="分类找一找" href="games/sort-home.html">
+                <span class="ico">🛒🦁🧸</span>
+                <span class="name">分类找一找</span>
+                <span class="desc">点一点属于它的东西</span>
+            </a>
+            <a class="card" style="--c:#2a9d8f" data-age="4" data-name="看图说话" href="games/scene-words.html">
+                <span class="ico">🖼️👆</span>
+                <span class="name">看图说话</span>
+                <span class="desc">点图里的东西，听词语</span>
+            </a>
+            <a class="card" style="--c:#e0559b" data-age="4" data-name="节奏模仿" href="games/rhythm.html">
+                <span class="ico">👏🔴🟡</span>
+                <span class="name">节奏模仿</span>
+                <span class="desc">照着顺序拍一遍，越拍越长</span>
+            </a>
+            <a class="card" style="--c:#f4a261" data-age="4" data-name="找不同" href="games/odd-one.html">
+                <span class="ico">🔍</span>
+                <span class="name">找不同</span>
+                <span class="desc">5 张卡片里挑出不一样的那个</span>
+            </a>
+            <a class="card" style="--c:#6c757d" data-age="4" data-name="影子配对" href="games/shadow.html">
+                <span class="ico">🌑</span>
+                <span class="name">影子配对</span>
+                <span class="desc">3 个影子里找出它的形状</span>
+            </a>
+            <a class="card" style="--c:#48cae4" data-age="4" data-name="拍泡泡" href="games/bubble.html">
+                <span class="ico">🫧</span>
+                <span class="name">拍泡泡</span>
+                <span class="desc">手眼协调 · 点破小泡泡</span>
+            </a>
+            <a class="card" style="--c:#f9c74f" data-age="4" data-name="动物喂食" href="games/animal-feed.html">
+                <span class="ico">🐰🥕</span>
+                <span class="name">动物喂食</span>
+                <span class="desc">4 样里挑出它最爱吃的那一个</span>
+            </a>
+            <a class="card" style="--c:#ef476f" data-age="4" data-name="规律排序" href="games/pattern.html">
+                <span class="ico">🔴🔵🔴🔵</span>
+                <span class="name">规律排序</span>
+                <span class="desc">下一个应该是什么颜色？</span>
+            </a>
+            <a class="card" style="--c:#90be6d" data-age="4" data-name="天气与穿衣" href="games/weather.html">
+                <span class="ico">☀️🧥</span>
+                <span class="name">天气与穿衣</span>
+                <span class="desc">今天该带什么出门？</span>
+            </a>
+            <a class="card" style="--c:#4361ee" data-age="4" data-name="步骤排序" href="games/steps.html">
+                <span class="ico">🧼🪥</span>
+                <span class="name">步骤排序</span>
+                <span class="desc">洗手要先做什么？</span>
+            </a>
+        </div>
 
-    <h2 class="sect">🚀 8~12 岁 · 思维挑战 <span class="cnt">10 个</span><span class="line"></span></h2>
-    <div class="grid">
-        <a class="card sudoku" href="sudoku.html">
-            <span class="tag">经典</span>
-            <span class="ico">🧩</span>
-            <span class="name">数独解题器</span>
-            <span class="desc">逻辑推理 · 教学模式 · 语音讲解</span>
-        </a>
+        <h2 class="sect" id="h5">🎲 5 岁 · 想一想 <span class="cnt">5 个</span><span class="line"></span></h2>
+        <div class="grid" id="grid5">
+            <a class="card" style="--c:#7c5cff" data-age="5" data-name="记忆翻牌" href="games/memory-match.html">
+                <span class="ico">🃏</span>
+                <span class="name">记忆翻牌</span>
+                <span class="desc">翻两张，拼成一个词语</span>
+            </a>
+            <a class="card" style="--c:#0288d1" data-age="5" data-name="路径连线" href="games/path-connect.html">
+                <span class="ico">🗺️</span>
+                <span class="name">路径连线</span>
+                <span class="desc">从 🚩 走到 🏁，绕开小山</span>
+            </a>
+            <a class="card" style="--c:#ffa000" data-age="5" data-name="反应小游戏" href="games/reaction.html">
+                <span class="ico">⚡</span>
+                <span class="name">反应小游戏</span>
+                <span class="desc">变绿了再点 · 只数对几次，不排名次</span>
+            </a>
+            <a class="card" style="--c:#8d6e63" data-age="5" data-name="猜数字" href="games/guess-number.html">
+                <span class="ico">🎲</span>
+                <span class="name">猜数字</span>
+                <span class="desc">●○ 提示，用推理锁定答案</span>
+            </a>
+            <a class="card" style="--c:#c2701e" data-age="5" data-name="象形字变变变" href="games/xiangxingzi.html">
+                <span class="ico">🈶</span>
+                <span class="name">象形字变变变</span>
+                <span class="desc">看古人画的字，猜猜是哪个字</span>
+            </a>
+        </div>
 
-        <a class="card" style="--c:#ff7043" href="games/24point.html">
-            <span class="ico">🧮</span>
-            <span class="name">24 点挑战</span>
-            <span class="desc">4 张牌，加减乘除凑出 24</span>
-        </a>
-
-        <a class="card" style="--c:#5c6bc0" href="games/slide15.html">
-            <span class="ico">🔢</span>
-            <span class="name">数字华容道</span>
-            <span class="desc">3×3 滑动拼图 · 4×4 挑战</span>
-        </a>
-
-        <a class="card" style="--c:#26a69a" href="games/sequence.html">
-            <span class="ico">📈</span>
-            <span class="name">找规律填数</span>
-            <span class="desc">等差 · 等比 · 混合规律</span>
-        </a>
-
-        <a class="card" style="--c:#8d6e63" href="games/guess-number.html">
-            <span class="ico">🎲</span>
-            <span class="name">猜数字</span>
-            <span class="desc">●○ 提示，用推理锁定答案</span>
-        </a>
-
-        <a class="card" style="--c:#ffa000" href="games/reaction.html">
-            <span class="ico">⚡</span>
-            <span class="name">反应测试</span>
-            <span class="desc">变绿就点 · 本地排行榜</span>
-        </a>
-
-        <a class="card" style="--c:#7e57c2" href="games/logic-clues.html">
-            <span class="ico">🕵️</span>
-            <span class="name">逻辑推理</span>
-            <span class="desc">20 道题 · 4~5 条线索推出答案</span>
-        </a>
-
-        <a class="card" style="--c:#6a4bff" href="games/idioms.html">
-            <span class="ico">📖</span>
-            <span class="name">成语闯关</span>
-            <span class="desc">猜一猜 / 填一填 / 配一配 / 演一演</span>
-        </a>
-
-        <a class="card" style="--c:#c2701e" href="games/xiangxingzi.html">
-            <span class="ico">🈶</span>
-            <span class="name">象形字变变变</span>
-            <span class="desc">看古人画的字，猜猜是哪个字</span>
-        </a>
-
-        <a class="card" style="--c:#0ea5a4" href="games/bingju.html">
-            <span class="ico">🩺</span>
-            <span class="name">病句门诊</span>
-            <span class="desc">36 个病句 · 四选一找出病根</span>
-        </a>
-
-        <a class="card" style="--c:#f08a3c" href="games/yuwen-baike.html">
-            <span class="ico">📚</span>
-            <span class="name">语文小百科</span>
-            <span class="desc">30 个专题 · 看百科 / 专题问答</span>
-        </a>
-
-        <a class="card" style="--c:#f08a3c" href="games/nearby-words.html">
-            <span class="ico">🏠</span>
-            <span class="name">形近字找家</span>
-            <span class="desc">把字送回相同偏旁的家</span>
-        </a>
-
-        <a class="card" style="--c:#7c5cff" href="games/gushi.html">
-            <span class="ico">📖</span>
-            <span class="name">古诗闯关</span>
-            <span class="desc">按年级 · 填空 / 作者 / 上句接下句</span>
-        </a>
-
-        <a class="card" style="--c:#0288d1" href="games/english.html">
-            <span class="ico">🔤</span>
-            <span class="name">英语简单句型</span>
-            <span class="desc">5 单元 · 配图 + 发音</span>
-        </a>
-
-        <a class="card" style="--c:#e63946" href="games/idiom-cat.html">
-            <span class="ico">📌</span>
-            <span class="name">成语分类</span>
-            <span class="desc">寓言 / 历史 / 神话 / 动物 / 数字 / 四季</span>
-        </a>
-
-        <a class="card" style="--c:#d81b60" href="games/riddle.html">
-            <span class="ico">🎯</span>
-            <span class="name">猜谜语</span>
-            <span class="desc">1000+ 条谜语 · 提示可用</span>
-        </a>
-
-        <a class="card" style="--c:#0288d1" href="games/path-connect.html">
-            <span class="ico">🗺️</span>
-            <span class="name">路径连线</span>
-            <span class="desc">5×5 网格，找最短通路</span>
-        </a>
+        <h2 class="sect" id="h6">🚀 6 岁以上 · 大挑战 <span class="cnt">19 个</span><span class="line"></span></h2>
+        <div class="grid" id="grid6">
+            <a class="card sudoku" data-age="6" data-name="数独解题器" href="sudoku.html">
+                <span class="tag">经典</span>
+                <span class="ico">🧩</span>
+                <span class="name">数独解题器</span>
+                <span class="desc">逻辑推理 · 教学模式 · 语音讲解</span>
+            </a>
+            <a class="card" style="--c:#6a4bff" data-age="6" data-name="五子棋" href="games/gomoku.html">
+                <span class="ico">⚫⚪</span>
+                <span class="name">五子棋</span>
+                <span class="desc">15×15 · 棋型评估 AI · 双人 / 人机</span>
+            </a>
+            <a class="card" style="--c:#b03030" data-age="6" data-name="中国象棋" href="games/xiangqi.html">
+                <span class="ico">🀄</span>
+                <span class="name">中国象棋</span>
+                <span class="desc">完整规则 · 4 层搜索 AI · 双人 / 人机</span>
+            </a>
+            <a class="card" style="--c:#2f5bd6" data-age="6" data-name="军棋翻开版" href="games/junqi.html">
+                <span class="ico">🚩</span>
+                <span class="name">军棋 · 翻开版</span>
+                <span class="desc">50 张牌铺满棋盘 · 翻牌定阵营</span>
+            </a>
+            <a class="card" style="--c:#1f8a5f" data-age="6" data-name="动物棋翻翻棋" href="games/animal-chess.html">
+                <span class="ico">🐘🐭</span>
+                <span class="name">动物棋 · 翻翻棋</span>
+                <span class="desc">16 枚棋子 · 4×4 交叉点 · 翻牌开战</span>
+            </a>
+            <a class="card" style="--c:#1f8a5f" data-age="6" data-name="21 点" href="games/blackjack.html">
+                <span class="ico">🃏</span>
+                <span class="name">21 点</span>
+                <span class="desc">对庄家 · 要牌 / 停牌 · 教练提示</span>
+            </a>
+            <a class="card" style="--c:#2f5bd6" data-age="6" data-name="纸牌接龙" href="games/klondike.html">
+                <span class="ico">♠️♦️</span>
+                <span class="name">纸牌接龙</span>
+                <span class="desc">经典 Klondike · 点击移动 · 支持悔棋</span>
+            </a>
+            <a class="card" style="--c:#ff7043" data-age="6" data-name="24 点挑战" href="games/24point.html">
+                <span class="ico">🧮</span>
+                <span class="name">24 点挑战</span>
+                <span class="desc">4 张牌，加减乘除凑出 24</span>
+            </a>
+            <a class="card" style="--c:#5c6bc0" data-age="6" data-name="数字华容道" href="games/slide15.html">
+                <span class="ico">🔢</span>
+                <span class="name">数字华容道</span>
+                <span class="desc">3×3 滑动拼图 · 4×4 挑战</span>
+            </a>
+            <a class="card" style="--c:#26a69a" data-age="6" data-name="找规律填数" href="games/sequence.html">
+                <span class="ico">📈</span>
+                <span class="name">找规律填数</span>
+                <span class="desc">等差 · 等比 · 混合规律</span>
+            </a>
+            <a class="card" style="--c:#7e57c2" data-age="6" data-name="逻辑推理" href="games/logic-clues.html">
+                <span class="ico">🕵️</span>
+                <span class="name">逻辑推理</span>
+                <span class="desc">20 道题 · 4~5 条线索推出答案</span>
+            </a>
+            <a class="card" style="--c:#6a4bff" data-age="6" data-name="成语闯关" href="games/idioms.html">
+                <span class="ico">📖</span>
+                <span class="name">成语闯关</span>
+                <span class="desc">猜一猜 / 填一填 / 配一配 / 演一演</span>
+            </a>
+            <a class="card" style="--c:#0ea5a4" data-age="6" data-name="病句门诊" href="games/bingju.html">
+                <span class="ico">🩺</span>
+                <span class="name">病句门诊</span>
+                <span class="desc">36 个病句 · 四选一找出病根</span>
+            </a>
+            <a class="card" style="--c:#f08a3c" data-age="6" data-name="语文小百科" href="games/yuwen-baike.html">
+                <span class="ico">📚</span>
+                <span class="name">语文小百科</span>
+                <span class="desc">30 个专题 · 看百科 / 专题问答</span>
+            </a>
+            <a class="card" style="--c:#f08a3c" data-age="6" data-name="形近字找家" href="games/nearby-words.html">
+                <span class="ico">🏠</span>
+                <span class="name">形近字找家</span>
+                <span class="desc">把字送回相同偏旁的家</span>
+            </a>
+            <a class="card" style="--c:#7c5cff" data-age="6" data-name="古诗闯关" href="games/gushi.html">
+                <span class="ico">📖</span>
+                <span class="name">古诗闯关</span>
+                <span class="desc">按年级 · 填空 / 作者 / 上句接下句</span>
+            </a>
+            <a class="card" style="--c:#0288d1" data-age="6" data-name="英语简单句型" href="games/english.html">
+                <span class="ico">🔤</span>
+                <span class="name">英语简单句型</span>
+                <span class="desc">5 单元 · 配图 + 发音</span>
+            </a>
+            <a class="card" style="--c:#e63946" data-age="6" data-name="成语分类" href="games/idiom-cat.html">
+                <span class="ico">📌</span>
+                <span class="name">成语分类</span>
+                <span class="desc">寓言 / 历史 / 神话 / 动物 / 数字 / 四季</span>
+            </a>
+            <a class="card" style="--c:#d81b60" data-age="6" data-name="猜谜语" href="games/riddle.html">
+                <span class="ico">🎯</span>
+                <span class="name">猜谜语</span>
+                <span class="desc">1000+ 条谜语 · 提示可用</span>
+            </a>
+        </div>
     </div>
 
     <footer>纯 HTML 小游戏 · 无广告 · 无计时 · 不扣分</footer>
 </div>
 <script>
-/* 离线缓存：HTTPS 环境下首次打开自动缓存全部页面和图片，之后无网络也能玩 */
-if ('serviceWorker' in navigator && location.protocol === 'https:') {
-    window.addEventListener('load', function () {
-        navigator.serviceWorker.register('sw.js').catch(function () { });
+(function () {
+  var X = window.XNLY || {};
+  var V = X.voice, S = X.sound;
+  var startCard = document.getElementById('startCard');
+  var startBtn = document.getElementById('startBtn');
+  var startSub = document.getElementById('startSub');
+  var mainGrid = document.getElementById('mainGrid');
+  var foldBtn = document.getElementById('foldBtn');
+  var foldWrap = document.getElementById('foldWrap');
+  var mainTitle = document.getElementById('mainTitle');
+  var mainCnt = document.getElementById('mainCnt');
+  var foldLabel = document.getElementById('foldLabel');
+  var speedBtn = document.getElementById('speedBtn');
+  var started = false;
+  var navLock = false;
+
+  var groups = {
+    4: document.getElementById('grid4'),
+    5: document.getElementById('grid5'),
+    6: document.getElementById('grid6')
+  };
+  var heads = {
+    4: document.getElementById('h4'),
+    5: document.getElementById('h5'),
+    6: document.getElementById('h6')
+  };
+
+  /* ---------- 点我开始：解锁音频 + 语音导览 ---------- */
+  function startAll() {
+    if (started) return;
+    started = true;
+    if (S && S.unlock) S.unlock();
+    if (V && V.unlock) V.unlock();
+    startCard.classList.add('done');
+    startBtn.querySelector('.startico').textContent = '🔊';
+    startBtn.querySelector('.starttxt').textContent = '声音好啦';
+    startSub.textContent = '点一下图标就能玩 · 想再听一遍就点这里';
+    if (V) V.speak('点一下图标就能玩。先看这几个三岁的游戏，点一下试试吧。');
+  }
+  startBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (started && V) { V.speak('点一下图标就能玩。'); return; }
+    startAll();
+  });
+
+  /* ---------- 年龄档 ---------- */
+  var note = document.getElementById('storeHint');
+  function applyTier() {
+    var tier = (X.stats && X.stats.getTier) ? X.stats.getTier() : 3;
+
+    /* 先把卡片放回各自的原分组 */
+    Object.keys(groups).forEach(function (k) {
+      var g = groups[k];
+      Array.prototype.slice.call(mainGrid.querySelectorAll('.card[data-age="' + k + '"]'))
+        .forEach(function (c) { g.appendChild(c); });
     });
-}
+
+    /* 再把 <= 当前年龄档的都放回主区 */
+    Object.keys(groups).forEach(function (k) {
+      if (Number(k) <= tier) {
+        Array.prototype.slice.call(groups[k].querySelectorAll('.card'))
+          .forEach(function (c) { mainGrid.appendChild(c); });
+      }
+    });
+
+    /* 空分组连同标题一起收起 */
+    Object.keys(groups).forEach(function (k) {
+      var empty = groups[k].querySelectorAll('.card').length === 0;
+      groups[k].style.display = empty ? 'none' : '';
+      heads[k].style.display = empty ? 'none' : '';
+    });
+
+    mainTitle.textContent = '';
+    mainTitle.appendChild(document.createTextNode((tier === 3 ? '🍼' : tier === 4 ? '🧩' : '🎲') +
+      ' ' + tier + ' 岁 · 先玩这些 '));
+    var cnt = document.createElement('span');
+    cnt.className = 'cnt';
+    cnt.textContent = mainGrid.querySelectorAll('.card').length + ' 个';
+    mainTitle.appendChild(cnt);
+    var line = document.createElement('span');
+    line.className = 'line';
+    mainTitle.appendChild(line);
+
+    var rest = foldWrap.querySelectorAll('.card').length;
+    foldLabel.textContent = '🧒 大孩子专区 · ' + (tier + 1) + ' 岁以上（' + rest + ' 个）';
+
+    Array.prototype.forEach.call(document.querySelectorAll('.agebtn'), function (b) {
+      b.classList.toggle('on', Number(b.dataset.tier) === tier);
+    });
+  }
+
+  Array.prototype.forEach.call(document.querySelectorAll('.agebtn'), function (b) {
+    b.addEventListener('click', function () {
+      var t = Number(b.dataset.tier);
+      if (X.stats && X.stats.setTier) X.stats.setTier(t);
+      applyTier();
+      if (V) V.speak(t + ' 岁的游戏。');
+    });
+  });
+
+  /* ---------- 折叠区 ---------- */
+  foldBtn.addEventListener('click', function () {
+    var open = !foldWrap.hidden;
+    foldWrap.hidden = open;
+    foldBtn.classList.toggle('open', !open);
+    if (!open && V) V.speak('这里是大孩子的游戏。');
+  });
+
+  /* ---------- 卡片：先念名字再进 ---------- */
+  document.addEventListener('click', function (e) {
+    var a = e.target.closest ? e.target.closest('a.card') : null;
+    if (!a || navLock) return;
+    e.preventDefault();
+    navLock = true;
+    var href = a.getAttribute('href');
+    var name = a.dataset.name || (a.querySelector('.name') || {}).textContent || '';
+    a.classList.add('tapped');
+    if (!started) startAll();
+    if (V) V.speak(name);
+    setTimeout(function () { location.href = href; }, 820);
+  });
+
+  /* ---------- 语速 ---------- */
+  function renderSpeed() {
+    var v = (V && V.speed) ? V.speed() : 1.0;
+    speedBtn.textContent = '🔊 语速 ' + v.toFixed(1);
+    speedBtn.title = v === 1.3 ? '点一下变慢' : '点一下变快';
+  }
+  speedBtn.addEventListener('click', function () {
+    if (!V) return;
+    var next = V.speed() === 1.3 ? 1.0 : 1.3;
+    V.setSpeed(next);
+    renderSpeed();
+    V.speak(next === 1.3 ? '语速变快啦。' : '语速变慢啦。');
+  });
+
+  /* ---------- file:// 下存储不可用的轻提示 ---------- */
+  if (X.canStore === false) note.hidden = false;
+
+  renderSpeed();
+  applyTier();
+
+  /* 第一次点屏幕（不在卡片上）也算「已开始」 */
+  document.addEventListener('pointerdown', function (e) {
+    if (started) return;
+    if (e.target.closest && e.target.closest('a.card, #startBtn')) return;
+    startAll();
+  }, true);
+
+  /* 离线缓存 */
+  if ('serviceWorker' in navigator && location.protocol === 'https:') {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () { });
+    });
+  }
+})();
 </script>
 </body>
 </html>

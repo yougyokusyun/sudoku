@@ -1,4 +1,4 @@
-/* 小脑袋乐园 · Service Worker v15（核心优先预缓存版）
+/* 小脑袋乐园 · Service Worker v16（核心优先预缓存版 + 语音/音效共享模块）
  *
  * 背景：v14 的 install 需要一次性拉完 181 条 / 7.39 MB（含 126 张游戏图片），
  * 在国内访问 GitHub Pages 时平均 746 ms/请求、最慢 17~31 s，首次安装要数分钟，
@@ -11,8 +11,10 @@
  *     type 为 basic/default 时才 cache.put —— 打开过的游戏，图片会自动落地。
  *  3) sw.js 自身永不入缓存，避免更新被旧缓存拦住。
  *  4) 逐条容错 install + skipWaiting + 清理旧版本缓存 + clients.claim + 导航离线兜底。
+ *
+ * v16 变化：只新增 voice.js / sound.js / parent.html 三个条目，其余策略不变。
  */
-var CACHE = 'xnly-v15';
+var CACHE = 'xnly-v16';
 
 var PRECACHE = [
   './',
@@ -67,11 +69,14 @@ var PRECACHE = [
   'games/yuwen-data.js',
   'index.html',
   'manifest.json',
+  'parent.html',
   'puzzles.js',
+  'sound.js',
   'style.css',
   'sudoku-core.js',
   'sudoku-ui.js',
   'sudoku.html',
+  'voice.js',
 ];
 
 /* 逐条预缓存：单条失败只跳过，不会让整个 install 失败 */

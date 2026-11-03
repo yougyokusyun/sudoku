@@ -144,7 +144,9 @@ h1{font-size:1.15rem}
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="小脑袋乐园">
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
-<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
 <body>
 <header>
   <a class="back" href="../index.html">🏠 首页</a>
@@ -213,7 +215,7 @@ var ANIMALS = [
 var OPTION_COUNT = 4;     // 4 个食物选项，其中 1 个正确
 var q = null;             // { animal, correct:{name,emoji}, options:[...] }
 var streak = 0, best = readNum('pgr.best');
-var lock = false, timer = null, lastAnimal = '';
+var lock = false, timer = null, lastAnimal = '', lockTimer = null;
 
 var elAnimal = document.getElementById('animal');
 var elAnimalEmoji = document.getElementById('animalEmoji');
@@ -332,8 +334,11 @@ function renderQuestion() {
 
 function newRound() {
   clearTimeout(timer);
-  lock = false;
+  /* 800ms 输入锁：新题刚出来时说话还没结束，避免孩子连点把下一题也点掉 */
+  lock = true;
   renderQuestion();
+  clearTimeout(lockTimer);
+  lockTimer = setTimeout(function () { lock = false; }, 800);
 }
 
 function tapFood(o, btn) {

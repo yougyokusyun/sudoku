@@ -95,7 +95,9 @@ h1{font-size:1.15rem;}
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="小脑袋乐园">
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
-<link rel="icon" type="image/png" href="../games/img/icon-192.png"></head>
+<link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
 <body>
 <header>
   <h1>🎯 猜数字</h1>
@@ -175,6 +177,7 @@ function resetGuess(){
   renderHistory();
   updateStats();
   clearFeedback();
+  if(window.XNLY) XNLY.voice.speak(MODES[mode].desc+'。');
 }
 
 function setMode(m){
@@ -269,6 +272,7 @@ function inputDigit(d){
   if(MODES[mode].digits.indexOf(d)<0)return;
   guess.push(d);
   renderSlots();
+  if(window.XNLY) XNLY.voice.speak(String(d));
 }
 
 function backspace(){
@@ -288,6 +292,7 @@ function submitGuess(){
   var need=MODES[mode].len-guess.length;
   if(need>0){
     feedback('❌ 还差 '+need+' 位哦',false);
+    if(window.XNLY) XNLY.voice.speak('还差'+need+'个数字。');
     return;
   }
   attempts++;
@@ -302,6 +307,10 @@ function submitGuess(){
     win();
   }else{
     feedback('❌ 还没猜中，看看提示再试一次',false);
+    if(window.XNLY){
+      XNLY.mark('wrong');
+      XNLY.voice.speak('位置对了'+r.exact+'个，数字对了'+r.cow+'个。再试一次。');
+    }
   }
 }
 
@@ -316,6 +325,7 @@ function win(){
   document.getElementById('actions').style.display='none';
   document.getElementById('winbar').classList.add('show');
   confetti();
+  if(window.XNLY){ XNLY.mark('right'); XNLY.sound.win(); XNLY.voice.speak('猜中啦！你用了'+attempts+'次。'); }
 }
 
 function confetti(){
@@ -351,6 +361,25 @@ function onKey(e){
 
 /* ---------- 启动 ---------- */
 initGuess();
+
+/* ===== 语音：进入先读玩法，右上角 🔊 可重听 ===== */
+var VOICE_TEXT = '猜数字游戏。想好一串数字，每猜一次我会告诉你，有几个位置对了、几个数字对了。';
+function gnSpeak(t) { if (window.XNLY) XNLY.voice.speak(t); }
+(function () {
+  var b = document.createElement('button');
+  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
+  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
+    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
+  b.onclick = function () { gnSpeak(VOICE_TEXT); };
+  var h = document.querySelector('header');
+  if (h) h.appendChild(b);
+})();
+setTimeout(function () {
+  var s = window.speechSynthesis;
+  if (s && (s.speaking || s.pending)) return;
+  var once = function () { document.removeEventListener('pointerdown', once); gnSpeak(VOICE_TEXT); };
+  document.addEventListener('pointerdown', once);
+}, 900);
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
