@@ -1,11 +1,14 @@
-﻿/* Service Worker v13 - GH Pages ready */
-/* build: 2026-11-02 17:10:41 */
-/* bump CACHE version on every deploy */
-var CACHE = 'xnly-v13';
+/* 小脑袋乐园 · Service Worker v14
+ * 修复说明：v13 的 PRECACHE 里含有 ".nojekyll"，该文件在 GitHub Pages 上恒为 404，
+ * 而 v13 用的是"全有或全无"的批量预缓存 —— 一条 404 就让整个 install 阶段 reject，
+ * 结果缓存始终为空，SW 虽然后来被 skipWaiting 激活，却没有任何离线资源，
+ * 表现就是"添加到主屏幕后每次打开仍要联网且很慢"。
+ * v14 改为逐条容错：每条单独 fetch + cache.put，失败只忽略，不影响其它资源。
+ */
+var CACHE = 'xnly-v14';
 
 var PRECACHE = [
   './',
-  '.nojekyll',
   'games/24point.html',
   'games/animal-chess.html',
   'games/animal-feed.html',
@@ -167,9 +170,9 @@ var PRECACHE = [
   'games/sequence.html',
   'games/shadow.html',
   'games/shape-insert.html',
-  'games/shapes.html',
   'games/shapes-learn.html',
   'games/shapes-panel.html',
+  'games/shapes.html',
   'games/slide15.html',
   'games/sort-home.html',
   'games/steps.html',
@@ -182,18 +185,26 @@ var PRECACHE = [
   'manifest.json',
   'puzzles.js',
   'style.css',
-  'sudoku.html',
   'sudoku-core.js',
   'sudoku-ui.js',
+  'sudoku.html',
   'sw.js',
 ];
 
+/* 逐条预缓存：单条失败不会让整个 install 失败 */
 self.addEventListener('install', function (e) {
   e.waitUntil(
     caches.open(CACHE).then(function (c) {
-      return c.addAll(PRECACHE).then(function () {
-        return self.skipWaiting();
-      }).catch(function () { return self.skipWaiting(); });
+      return Promise.all(PRECACHE.map(function (url) {
+        return fetch(url, { cache: 'no-cache' }).then(function (resp) {
+          if (!resp || !resp.ok) return;
+          return c.put(url, resp.clone());
+        }).catch(function () {
+          /* 忽略单条失败 */
+        });
+      }));
+    }).then(function () {
+      return self.skipWaiting();
     })
   );
 });
@@ -201,9 +212,14 @@ self.addEventListener('install', function (e) {
 self.addEventListener('activate', function (e) {
   e.waitUntil(
     caches.keys().then(function (keys) {
-      return Promise.all(keys.filter(function (k) { return k !== CACHE; })
-        .map(function (k) { return caches.delete(k); }));
-    }).then(function () { return self.clients.claim(); })
+      return Promise.all(keys.filter(function (k) {
+        return k !== CACHE;
+      }).map(function (k) {
+        return caches.delete(k);
+      }));
+    }).then(function () {
+      return self.clients.claim();
+    })
   );
 });
 
@@ -221,7 +237,7 @@ self.addEventListener('fetch', function (e) {
       }).catch(function () {
         if (e.request.mode === 'navigate') {
           return caches.match('index.html').then(function (f) {
-            return f || new Response('Offline', { status: 503 });
+            return f || new Response('Offline', { status: 503, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
           });
         }
         return Response.error();
