@@ -86,6 +86,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -163,15 +164,35 @@ function say(text) {
   } catch (e) { }
 }
 
+var countDeck = null, countKey = '';
+function countPool(cfg) {
+  var out = [];
+  for (var n = 1; n <= cfg.max; n++) {
+    THINGS.forEach(function (t) { out.push({ n: n, thing: t }); });
+  }
+  return out;
+}
+function countDeckFor() {
+  var k = 'count.' + level;
+  if (!countDeck || countKey !== k) {
+    countDeck = XNLY.deck.make(countPool(LEVELS[level - 1]), k, {
+      head: 5,
+      id: function (q) { return q.n + '|' + q.thing.e; }
+    });
+    countKey = k;
+  }
+  return countDeck;
+}
+
 function newRound() {
   clearTimeout(timer);
   locked = true;                 /* 800ms 输入锁：题刚出来时朗读还没结束，防连点 */
   clearTimeout(lockTimer);
   lockTimer = setTimeout(function () { locked = false; }, 800);
 
-  var prev = count;
-  do { count = 1 + rand(maxN); } while (maxN > 1 && count === prev);
-  thing = THINGS[rand(THINGS.length)];
+  var q = countDeckFor().next();
+  count = q.n;
+  thing = q.thing;
 
   elItems.setAttribute('data-n', count);
   elItems.innerHTML = '';

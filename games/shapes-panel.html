@@ -102,6 +102,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -181,14 +182,13 @@ function clickSound() {
   } catch (e) { }
 }
 
+var shapeDeck = XNLY.deck.make(SHAPES, 'shapes-panel', { head: 5 });
+
 function newRound() {
   clearTimeout(timer);
   locked = false;
 
-  var prev = cur ? cur.name : '';
-  var pick;
-  do { pick = SHAPES[rand(SHAPES.length)]; } while (SHAPES.length > 1 && pick.name === prev);
-  cur = pick;
+  cur = shapeDeck.next();
 
   /* 凹槽 = 目标形状的灰色剪影 */
   elGhost.className = 'ghost sh ' + cur.s;

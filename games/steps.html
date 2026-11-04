@@ -76,6 +76,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -118,18 +119,21 @@ function schedule(fn,ms){var id=setTimeout(fn,ms);timers.push(id);return id;}
 function clearTimers(){for(var i=0;i<timers.length;i++)clearTimeout(timers[i]);timers=[];}
 
 /* 发牌：固定 5 个洗手步骤（打乱后放上方待选） */
+var stepDeck=XNLY.deck.make(STEPS,'steps',{head:5});
+
 function deal(){
   clearTimers();
   locked=false; filled=0;
   againBtn.style.display='none';
   row.innerHTML=''; slotsBox.innerHTML='';
-  shuffle(STEPS).forEach(function(s){
+  for(var n=0;n<STEPS.length;n++){
+    var s=stepDeck.next();
     var c=document.createElement('button');
     c.type='button'; c.className='card'; c.dataset.order=s.order;
     c.innerHTML='<span class="emoji">'+s.emoji+'</span><span class="txt">'+s.text+'</span>';
-    c.onclick=function(){place(c);};
+    c.onclick=(function(card){return function(){place(card);};})(c);
     row.appendChild(c);
-  });
+  }
   for(var i=1;i<=STEPS.length;i++){
     var cell=document.createElement('div');
     cell.className='cell'; cell.dataset.n=i;

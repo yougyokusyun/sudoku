@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>英语听力选择 · 小脑袋乐园</title>
+<meta name="theme-color" content="#0288d1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<link rel="manifest" href="../manifest.json">
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#0288d1;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#e6f6ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff3e8,transparent 55%),
+             linear-gradient(160deg,#f7fbff,#fffaf5);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;font-size:.85rem;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
+  font-family:inherit;font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.chipbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.tchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
+  font-family:inherit;font-size:.75rem;font-weight:800;color:#4a6076;cursor:pointer;
+  box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.tchip.on{background:linear-gradient(135deg,#0891b2,#0288d1);color:#fff;border-color:transparent;}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  min-height:0;overflow-y:auto;width:100%;}
+.prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a6076;line-height:1.5;}
+.prompt span{display:block;font-size:.76rem;font-weight:700;color:#8aa0b8;margin-top:2px;}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(560px,100%);}
+.opt{min-height:64px;border:2px solid var(--line);border-radius:16px;background:#fff;padding:6px 10px;
+  font-family:inherit;font-size:1.05rem;font-weight:900;color:var(--ink);cursor:pointer;
+  box-shadow:0 5px 14px rgba(36,59,83,.08);transition:transform .14s,border-color .18s,background .18s;}
+.opt:active{transform:scale(.97);}
+.opt.imgopt{font-size:2.5rem;min-height:88px;line-height:1.2;}
+.opt.sceneopt{font-size:2.15rem;min-height:96px;line-height:1.25;letter-spacing:2px;}
+.opt.replyopt{font-size:.9rem;line-height:1.35;min-height:70px;}
+.opt.longopt{font-size:.95rem;line-height:1.35;min-height:68px;}
+.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;color:#b02a2a;}
+.opt[disabled]{opacity:.45;cursor:default;}
+.feedback{min-height:40px;font-size:1rem;font-weight:800;text-align:center;line-height:1.45;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+.feedback small{display:block;font-size:.78rem;font-weight:700;color:#7b8ea8;margin-top:3px;}
+.replay{min-height:44px;padding:0 18px;border-radius:999px;border:2px solid rgba(2,136,209,.25);
+  background:#fff;color:#0277bd;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.08);}
+.hint{font-size:.72rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
+.summary{display:none;flex-direction:column;align-items:center;gap:8px;width:min(520px,100%);
+  background:#fff;border:2px solid var(--line);border-radius:18px;padding:16px 18px;text-align:center;
+  box-shadow:0 8px 22px rgba(36,59,83,.10);}
+.summary.show{display:flex;}
+.sumtitle{font-size:1.05rem;font-weight:900;}
+.sumline{font-size:1rem;font-weight:800;color:#2f4a63;}
+.sumline b{color:var(--accent);font-size:1.22rem;}
+.sumgrades{font-size:.78rem;font-weight:800;color:#7b8ea8;line-height:1.65;}
+.sumagain{min-height:44px;padding:0 18px;border-radius:999px;border:2px solid rgba(2,136,209,.25);
+  background:#fff;color:#0277bd;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+.pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
+@media (max-height:430px){
+  body{padding:8px;gap:6px;}
+  h1{font-size:1rem;}
+  .stage{gap:8px;}
+  .opt{min-height:48px;font-size:.92rem;}
+  .opt.imgopt{min-height:62px;font-size:1.9rem;}
+  .opt.sceneopt{min-height:68px;font-size:1.6rem;}
+  .prompt{font-size:.86rem;}
+}
+</style>
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+<script src="../deck.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🎧 英语听力</h1>
+  <div class="chips">
+    <span class="chip">🔥 连对 <b id="streak">0</b></span>
+    <span class="chip">🏆 最佳 <b id="best">0</b></span>
+  </div>
+</header>
+<div class="chipbar" id="modeBar"></div>
+<div class="chipbar" id="gradeBar"></div>
+
+<div class="stage">
+  <div class="prompt" id="prompt">🎧 听一听，选出正确的答案<span>没听清可以点下面的 🔊 再听一遍</span></div>
+  <div class="opts" id="opts"></div>
+  <button class="replay" id="replay" type="button">🔊 再听一遍</button>
+  <div class="feedback" id="feedback"></div>
+  <div class="summary" id="summary"></div>
+  <div class="hint">没有声音时，请检查设备是否安装了英文语音包</div>
+</div>
+
+<script>
+/* ============ 200 道听力题（3/4/5/6 年级各 50 题） ============
+ * [题型, 年级, 主题, 英文音频, 正确选项, 干扰项(|分隔), 中文解释]
+ * 题型：detail=细节辨图 / img=听句选图 / word=听句选词 / cn=听句选中文 / reply=听问句选回答
+ * 全部原创，模仿人教版小学 3~6 年级句式与话题。
+ */
+var Q = [
+/* 主题一：上学与交通 */
+["detail",3,"上学与交通","We go to school by bus.","🚌🧒","🚲🧒","听到 bus，所以图里是公交车；另一张是自行车。"],
+["detail",4,"上学与交通","My father drives me to school in a car.","🚗👨","🚌👨","听到 car，所以是爸爸开车；另一张是公交车。"],
+["detail",5,"上学与交通","I take the subway to school. It is fast.","🚇🧒","🚕🧒","听到 subway，所以是地铁；另一张是出租车。"],
+["img",3,"上学与交通","I ride my bike to the park.","🚲","🚌|🚗|🚶","听到 bike，所以选自行车。"],
+["word",3,"上学与交通","I take the bus to school.","bus","car|bike|train","听到 bus，公交车。"],
+["cn",3,"上学与交通","I walk to school every day.","我每天走路上学。","我每天坐公交车上学。|我每天骑自行车上学。|我每天坐火车上学。","听到 walk，走路。"],
+["reply",4,"上学与交通","How do you go to school?","By bus.","It is a bus.|I go to school at seven.|Yes, I do.","问怎么上学，回答交通方式 by bus。"],
+["word",5,"上学与交通","The school is far, so I take the subway.","subway","bus|bike|taxi","听到 subway，地铁。"],
+["cn",6,"上学与交通","It takes me twenty minutes to get to school by bus.","我坐公交车上学需要二十分钟。","我骑自行车上学需要十二分钟。|我走路去学校需要二十分钟。|我坐地铁上学需要二十分钟。","听到 twenty minutes 和 by bus。"],
+["reply",6,"上学与交通","Is your school near your home?","Yes, it is. I walk there.","Yes, it does.|No, it is.|It is near the bank.","问学校近不近，回答 near 并补充走路去。"],
+/* 主题二：家庭与人物 */
+["detail",3,"家庭与人物","This is my mother. She is a teacher.","👩","👧","听到 mother，所以是妈妈；另一张是小女孩。"],
+["detail",4,"家庭与人物","My brother has a dog.","👦🐶","👦🐱","听到 dog，所以是小狗；另一张是小猫。"],
+["detail",5,"家庭与人物","My grandma is cooking noodles.","👵🍜","👴🍜","听到 grandma，所以是奶奶；另一张是爷爷。"],
+["img",3,"家庭与人物","My grandpa likes reading books.","👴","👩|👦|👶","听到 grandpa，爷爷。"],
+["word",3,"家庭与人物","This is my sister.","sister","brother|mother|father","听到 sister，姐妹。"],
+["cn",4,"家庭与人物","My father is a doctor. He works in a hospital.","我爸爸是医生，在医院工作。","我妈妈是老师，在学校工作。|我叔叔是司机，在开车。|我爷爷是农民，在农场工作。","听到 doctor 和 hospital。"],
+["reply",4,"家庭与人物","Who is that woman?","She is my aunt.","He is my uncle.|It is my cat.|They are my friends.","问那位女士是谁，回答 aunt。"],
+["word",5,"家庭与人物","My cousin lives in another city.","cousin","aunt|uncle|sister","听到 cousin，表兄弟姐妹。"],
+["cn",6,"家庭与人物","My parents both work in a big city.","我父母都在大城市工作。","我父母都在学校工作。|我父母都在医院工作。|我父母都在农场工作。","听到 parents 和 big city。"],
+["reply",6,"家庭与人物","How many people are there in your family?","There are four people in my family.","It is four o'clock.|I have four books.|I am four years old.","问家里几口人，回答 four people。"],
+/* 主题三：食物与饮料 */
+["detail",3,"食物与饮料","I eat two apples every day.","🍎🍎","🍎🍎🍎","听到 two，所以是两个苹果；另一张是三个。"],
+["detail",4,"食物与饮料","I drink a glass of milk every morning.","🥛","🧃","听到 milk，牛奶；另一张是果汁。"],
+["detail",5,"食物与饮料","I would like some noodles for lunch.","🍜","🍚","听到 noodles，面条；另一张是米饭。"],
+["img",3,"食物与饮料","I eat a banana after lunch.","🍌","🍎|🍊|🍓","听到 banana，香蕉。"],
+["word",3,"食物与饮料","I like milk.","milk","water|juice|tea","听到 milk，牛奶。"],
+["cn",4,"食物与饮料","My mother makes dumplings for us.","妈妈给我们包饺子。","妈妈给我们做面条。|妈妈给我们买面包。|妈妈给我们煮米饭。","听到 dumplings，饺子。"],
+["reply",4,"食物与饮料","Would you like some rice?","Yes, please.","Yes, I am.|It is rice.|I like rice, too.","问要不要米饭，回答 Yes, please。"],
+["img",5,"食物与饮料","I want a hamburger.","🍔","🍕|🥪|🍰","听到 hamburger，汉堡。"],
+["cn",6,"食物与饮料","We usually have breakfast at seven in the morning.","我们通常早上七点吃早饭。","我们通常中午十二点吃午饭。|我们通常晚上七点吃晚饭。|我们通常下午三点吃点心。","听到 breakfast 和 seven in the morning。"],
+["reply",6,"食物与饮料","What would you like to drink?","Some water, please.","Some bread, please.|I like apples.|Yes, I would.","问想喝什么，回答 water。"],
+/* 主题四：动物 */
+["detail",3,"动物","The cat is sleeping on the sofa.","🛋️🐱","🛋️🐶","听到 cat，所以是小猫；另一张是小狗。"],
+["detail",4,"动物","The rabbit is eating a carrot.","🐰🥕","🐰🍌","听到 carrot，所以是胡萝卜；另一张是香蕉。"],
+["detail",5,"动物","The elephant has a long nose.","🐘🌳","🦒🌳","听到 elephant，所以是大象；另一张是长颈鹿。"],
+["img",3,"动物","Look at the bird in the tree.","🐦","🐟|🐝|🐸","听到 bird，小鸟。"],
+["word",3,"动物","I have a dog.","dog","duck|deer|doll","听到 dog，小狗。"],
+["cn",4,"动物","The panda likes eating bamboo.","熊猫喜欢吃竹子。","熊猫喜欢吃鱼。|熊猫喜欢喝牛奶。|熊猫喜欢吃苹果。","听到 bamboo，竹子。"],
+["reply",4,"动物","What is your favourite animal?","I like pandas best.","It is a panda.|I have a panda.|They are cute.","问最喜欢的动物，回答 pandas。"],
+["img",5,"动物","The fish is swimming in the river.","🐟","🐢|🐳|🦆","听到 fish，鱼。"],
+["cn",6,"动物","Many birds fly to the south in winter.","冬天许多鸟飞到南方。","冬天许多鸟飞到北方。|夏天许多鸟飞到南方。|秋天许多鸟飞到东方。","听到 south 和 winter。"],
+["reply",6,"动物","Can the monkey climb the tree?","Yes, it can.","Yes, it does.|No, it is not.|Yes, it is.","问猴子会不会爬树，回答 it can。"],
+/* 主题五：颜色与形状 */
+["detail",3,"颜色与形状","I have a red balloon.","🎈🔴","🎈🔵","听到 red，所以是红色气球；另一张是蓝色。"],
+["detail",4,"颜色与形状","There are three stars on the card.","⭐⭐⭐","⭐⭐","听到 three，所以是三颗星；另一张是两颗。"],
+["detail",5,"颜色与形状","Her dress is purple.","👗🟣","👗🔴","听到 purple，所以是紫色裙子；另一张是红色。"],
+["img",3,"颜色与形状","The sky is blue.","🔵","🔴|🟡|🟢","听到 blue，蓝色。"],
+["word",3,"颜色与形状","My bag is black.","black","blue|brown|pink","听到 black，黑色。"],
+["cn",4,"颜色与形状","The leaves are green in spring.","春天树叶是绿色的。","春天树叶是黄色的。|秋天树叶是绿色的。|春天花朵是红色的。","听到 green 和 spring。"],
+["reply",4,"颜色与形状","What colour is your schoolbag?","It is blue.","It is a bag.|Yes, it is.|It is big.","问书包什么颜色，回答 blue。"],
+["img",5,"颜色与形状","The panda is black and white.","🐼","🐧|🦓|🐮","听到 panda，熊猫。"],
+["cn",6,"颜色与形状","The traffic light turns red, so we must stop.","红灯亮了，我们必须停下来。","绿灯亮了，我们必须停下来。|红灯亮了，我们可以过马路。|黄灯亮了，我们必须停下来。","听到 red 和 stop。"],
+["reply",6,"颜色与形状","Is your coat brown or black?","It is brown.","It is a coat.|Yes, it is.|I like black.","问棕色还是黑色，回答 brown。"],
+/* 主题六：数字与时间 */
+["detail",3,"数字与时间","I have three pencils.","✏️✏️✏️","✏️✏️","听到 three，所以是三支铅笔；另一张是两支。"],
+["detail",4,"数字与时间","There are four people in my family.","👨👩👧👦","👨👩👧","听到 four，所以是四口人；另一张是三个人。"],
+["detail",5,"数字与时间","It is eight o'clock now.","🕗","🕘","听到 eight，所以是八点；另一张是九点。"],
+["img",3,"数字与时间","There are two cats under the chair.","2️⃣","1️⃣|3️⃣|4️⃣","听到 two，两只猫。"],
+["word",3,"数字与时间","I get up at seven.","seven","six|eight|nine","听到 seven，七。"],
+["cn",4,"数字与时间","It is eight o'clock. Time for school.","八点了，该上学了。","七点了，该上学了。|九点了，该睡觉了。|八点了，该吃饭了。","听到 eight o'clock 和 school。"],
+["reply",4,"数字与时间","What time is it now?","It is half past six.","It is Monday.|It is six books.|It is sunny.","问几点，回答时间 half past six。"],
+["img",5,"数字与时间","There are five birds on the line.","5️⃣","3️⃣|4️⃣|6️⃣","听到 five，五只鸟。"],
+["cn",6,"数字与时间","We have four classes in the morning.","我们上午有四节课。","我们下午有四节课。|我们上午有三节课。|我们上午有四十分钟课。","听到 four classes 和 in the morning。"],
+["reply",6,"数字与时间","How many books are there on the desk?","There are six.","They are books.|It is six o'clock.|There is a desk.","问桌上有几本书，回答 six。"],
+/* 主题七：天气与季节 */
+["detail",3,"天气与季节","It is raining. I take my umbrella.","🚶☂️","🚶","听到 umbrella，所以图里有伞；另一张没有伞。"],
+["detail",4,"天气与季节","It is sunny today.","☀️🌳","☁️🌳","听到 sunny，所以是晴天；另一张是多云。"],
+["detail",5,"天气与季节","It is snowing outside.","❄️🏠","🌧️🏠","听到 snowing，所以是下雪；另一张是下雨。"],
+["img",3,"天气与季节","It is cold. I wear my gloves.","🧤","👒|🕶️|👕","听到 gloves，手套。"],
+["word",3,"天气与季节","It is cold in winter.","cold","hot|warm|windy","听到 cold，冷。"],
+["cn",4,"天气与季节","It is windy. Let us fly a kite.","刮风了，我们去放风筝吧。","下雨了，我们回家吧。|下雪了，我们堆雪人吧。|天晴了，我们去游泳吧。","听到 windy 和 kite。"],
+["reply",4,"天气与季节","How is the weather today?","It is cloudy.","It is Sunday.|I am fine.|It is a cloud.","问天气，回答 cloudy。"],
+["img",5,"天气与季节","It is hot. I want some ice cream.","🍦","☕|🍜|🍞","听到 ice cream，冰淇淋。"],
+["cn",6,"天气与季节","Autumn is cool, and the leaves turn yellow.","秋天很凉爽，树叶变黄了。","春天很温暖，树叶变黄了。|夏天很热，树叶变黄了。|冬天很冷，树叶变黄了。","听到 autumn 和 cool。"],
+["reply",6,"天气与季节","Which season do you like best?","I like autumn best.","I like apples best.|It is autumn.|Yes, I do.","问最喜欢哪个季节，回答 autumn。"],
+/* 主题八：文具与教室 */
+["detail",3,"文具与教室","I write with a pencil.","✏️📝","📏📝","听到 pencil，所以是铅笔；另一张是尺子。"],
+["detail",4,"文具与教室","I cut the paper with scissors.","✂️📄","🖍️📄","听到 scissors，所以是剪刀；另一张是蜡笔。"],
+["detail",5,"文具与教室","The clock on the wall says eight.","🕗","🕙","听到 eight，所以是八点；另一张是十点。"],
+["img",3,"文具与教室","I read a book in the library.","📖","🎒|✏️|🖊️","听到 book，书。"],
+["word",3,"文具与教室","This is my schoolbag.","schoolbag","book|ruler|desk","听到 schoolbag，书包。"],
+["cn",4,"文具与教室","Please open your books and turn to page ten.","请打开书，翻到第十页。","请合上书，翻到第十页。|请打开书，翻到第十二页。|请拿出本子，翻到第十页。","听到 open 和 page ten。"],
+["reply",4,"文具与教室","May I use your ruler?","Sure. Here you are.","Yes, I am.|It is a ruler.|Thank you.","请求借尺子，回答 Here you are。"],
+["img",5,"文具与教室","There is a map on the wall.","🗺️","🕐|🪟|🖼️","听到 map，地图。"],
+["cn",6,"文具与教室","Our classroom is big and bright.","我们的教室又大又明亮。","我们的教室又小又暗。|我们的教室又大又安静。|我们的操场又大又明亮。","听到 classroom 和 bright。"],
+["reply",6,"文具与教室","What is in your schoolbag?","Two books and a pencil box.","It is a schoolbag.|Yes, it is.|They are books.","问书包里有什么，回答书和文具盒。"],
+/* 主题九：购物与场所 */
+["detail",3,"购物与场所","Mum buys apples in the supermarket.","🛒🍎","🏥🍎","听到 supermarket，所以是超市；另一张是医院。"],
+["detail",4,"购物与场所","The bookstore is next to the bank.","📚🏦","🏥🏦","听到 bookstore，所以是书店；另一张是医院。"],
+["detail",5,"购物与场所","I want to buy a toy car.","🧸🚗","🧸🚂","听到 toy car，所以是小汽车；另一张是小火车。"],
+["img",3,"购物与场所","We see a film in the cinema.","🎬","🏫|🏥|🏖️","听到 cinema，电影院。"],
+["word",3,"购物与场所","Let us go to the zoo.","zoo","park|shop|bank","听到 zoo，动物园。"],
+["cn",4,"购物与场所","The post office is behind the hospital.","邮局在医院后面。","邮局在医院前面。|邮局在医院里面。|邮局在医院旁边。","听到 behind，在后面。"],
+["reply",4,"购物与场所","How much is this book?","It is ten yuan.","It is ten books.|It is a book.|It is ten years.","问多少钱，回答 ten yuan。"],
+["img",5,"购物与场所","We have dinner in a restaurant.","🍽️","🏠|🏫|🏥","听到 restaurant，餐馆。"],
+["cn",6,"购物与场所","Excuse me, where is the hospital?","打扰一下，医院在哪里？","打扰一下，邮局在哪里？|打扰一下，银行在哪里？|打扰一下，书店在哪里？","听到 hospital，医院。"],
+["reply",6,"购物与场所","Can I help you?","I would like a pair of shoes.","Yes, you can.|I am fine, thank you.|It is a shoe.","店员问需要什么，回答想买鞋。"],
+/* 主题十：爱好与日常 */
+["detail",3,"爱好与日常","I like playing basketball.","🏀","⚽","听到 basketball，所以是篮球；另一张是足球。"],
+["detail",4,"爱好与日常","I am running in the park.","🏃🌳","🚶🌳","听到 running，所以是在跑步；另一张是在走路。"],
+["detail",5,"爱好与日常","My sister likes singing songs.","👧🎤","👧🖍️","听到 singing，所以是在唱歌；另一张是在画画。"],
+["img",3,"爱好与日常","After school, I ride my bike.","🚲","🚌|🚗|🛴","听到 bike，自行车。"],
+["word",3,"爱好与日常","I like reading books.","reading","singing|dancing|drawing","听到 reading，读书。"],
+["cn",4,"爱好与日常","My hobby is drawing pictures.","我的爱好是画画。","我的爱好是唱歌。|我的爱好是跳舞。|我的爱好是读书。","听到 drawing，画画。"],
+["reply",4,"爱好与日常","What do you like doing after school?","I like playing football.","I go to school by bus.|It is four o'clock.|I am fine, thank you.","问放学后喜欢做什么，回答 playing football。"],
+["img",5,"爱好与日常","We often swim in summer.","🏊","🏃|🚴|⛹️","听到 swim，游泳。"],
+["cn",6,"爱好与日常","I usually do my homework before dinner.","我通常在晚饭前做作业。","我通常在晚饭后做作业。|我通常在早饭前做作业。|我通常在睡觉前做作业。","听到 before dinner，晚饭前。"],
+["reply",6,"爱好与日常","Do you like playing the piano?","Yes, I do.","Yes, I am.|Yes, it is.|Yes, I can.","问是否喜欢弹钢琴，回答 Yes, I do。"],
+/* ===== 补题：3 年级（新增 19 题，共 50 题） ===== */
+["detail",3,"上学与交通","I go to school on foot.","🚶🧒","🚲🧒","听到 on foot，所以是走路；另一张是骑自行车。"],
+["detail",3,"动物","The bird is in the tree.","🌳🐦","🌳🐱","听到 bird，所以树上是小鸟；另一张是小猫。"],
+["detail",3,"颜色与形状","My new schoolbag is blue.","🎒🔵","🎒🟢","听到 blue，所以是蓝色书包；另一张是绿色。"],
+["img",3,"食物与饮料","I want some bread.","🍞","🍚|🍜|🍰","听到 bread，面包。"],
+["img",3,"天气与季节","It is windy today.","🌬️","☀️|🌧️|❄️","听到 windy，刮风。"],
+["img",3,"爱好与日常","I can draw a picture.","🖍️","🎤|🏀|📖","听到 draw，画画。"],
+["word",3,"文具与教室","Open your book, please.","book","desk|chair|bag","听到 book，书。"],
+["word",3,"数字与时间","It is nine o'clock.","nine","five|seven|ten","听到 nine，九。"],
+["cn",3,"上学与交通","I go to school at seven thirty.","我七点半去上学。","我七点去上学。|我八点半去上学。|我七点半回家。","听到 seven thirty 和 go to school。"],
+["cn",3,"家庭与人物","My mother is a nurse.","我妈妈是护士。","我妈妈是老师。|我爸爸是护士。|我妈妈是医生。","听到 nurse，护士。"],
+["cn",3,"食物与饮料","I would like some juice.","我想要一些果汁。","我想要一些牛奶。|我想要一些面包。|我想要一些米饭。","听到 juice，果汁。"],
+["cn",3,"动物","The dog is black.","这只狗是黑色的。","这只狗是白色的。|这只猫是黑色的。|这只狗是棕色的。","听到 dog 和 black。"],
+["cn",3,"购物与场所","Let us buy some fruit in the shop.","我们去商店买些水果吧。","我们去公园买些水果吧。|我们去商店买些书吧。|我们去医院买些水果吧。","听到 shop 和 fruit。"],
+["reply",3,"上学与交通","How do you go to the park?","On foot.","It is a park.|At seven o'clock.|Yes, I do.","问怎么去公园，回答 on foot。"],
+["reply",3,"家庭与人物","Who is he?","He is my brother.","She is my sister.|It is a cat.|I am a boy.","问他是谁，回答 brother。"],
+["reply",3,"食物与饮料","Do you like bananas?","Yes, I like them.","Yes, I am.|Yes, it is.|Yes, I can.","问是否喜欢香蕉，回答 Yes, I like them。"],
+["reply",3,"动物","What is this?","It is a duck.","It is yellow.|Yes, it is.|I like it.","问这是什么，回答 a duck。"],
+["reply",3,"颜色与形状","What colour is the apple?","It is red.","It is an apple.|Yes, it is.|It is round.","问苹果颜色，回答 red。"],
+["reply",3,"文具与教室","How many pencils do you have?","I have three.","They are pencils.|It is three o'clock.|Yes, I do.","问有几支铅笔，回答 three。"],
+/* ===== 补题：4 年级（新增 21 题，共 50 题） ===== */
+["detail",4,"数字与时间","I get up at six thirty.","🕡","🕢","听到 six，所以是六点半；另一张是七点半。"],
+["detail",4,"天气与季节","It is raining outside.","🌧️🏠","⛅🏠","听到 raining，所以是下雨；另一张是多云。"],
+["detail",4,"购物与场所","Dad buys a pair of shoes in the shop.","👞🛍️","👕🛍️","听到 shoes，所以是鞋子；另一张是衬衫。"],
+["img",4,"上学与交通","We go to the library by bus.","📚","🚌|🚇|🚕","听到 library，图书馆。"],
+["img",4,"食物与饮料","Mum buys some eggs in the market.","🥚","🍎|🥕|🍖","听到 eggs，鸡蛋。"],
+["img",4,"动物","The monkey is eating a banana.","🐵🍌","🐵🍎|🐵🥕|🐵🍞","听到 banana，香蕉。"],
+["img",4,"文具与教室","The teacher is writing on the blackboard.","👩‍🏫","👩‍🎨|👩‍⚕️|👩‍🍳","听到 teacher，老师。"],
+["img",4,"爱好与日常","I play football with my friends.","⚽","🏀|🏓|🏸","听到 football，足球。"],
+["word",4,"购物与场所","We buy books in the bookstore.","bookstore","hospital|cinema|bank","听到 bookstore，书店。"],
+["word",4,"天气与季节","It is warm in spring.","warm","cold|hot|cool","听到 warm，温暖。"],
+["word",4,"家庭与人物","My aunt is a nurse.","aunt","uncle|cousin|brother","听到 aunt，姑姑或阿姨。"],
+["word",4,"数字与时间","There are twelve months in a year.","twelve","ten|eleven|twenty","听到 twelve，十二。"],
+["word",4,"文具与教室","I need a ruler to draw a line.","ruler","pen|eraser|book","听到 ruler，尺子。"],
+["cn",4,"上学与交通","I go to school by subway every morning.","我每天早上坐地铁上学。","我每天早上坐公交车上学。|我每天早上骑自行车上学。|我每天早上走路去学校。","听到 subway 和 every morning。"],
+["cn",4,"动物","The lion is sleeping under the tree.","狮子在树下睡觉。","狮子在树上睡觉。|老虎在树下睡觉。|狮子在树下吃东西。","听到 lion 和 sleeping。"],
+["cn",4,"颜色与形状","My new hat is yellow.","我的新帽子是黄色的。","我的新书包是黄色的。|我的新帽子是橘色的。|我的新鞋是黄色的。","听到 hat 和 yellow。"],
+["cn",4,"爱好与日常","I often play chess with my grandpa.","我经常和爷爷下棋。","我经常和爸爸下棋。|我经常和爷爷打篮球。|我经常和奶奶下棋。","听到 chess 和 grandpa。"],
+["reply",4,"上学与交通","Where is your school?","It is near the park.","It is eight o'clock.|I go to school by bus.|Yes, it is.","问学校在哪里，回答 near the park。"],
+["reply",4,"食物与饮料","What do you have for breakfast?","Some bread and milk.","At seven o'clock.|In the kitchen.|Yes, I do.","问早饭吃什么，回答 bread and milk。"],
+["reply",4,"颜色与形状","Whose book is this?","It is Amy's.","It is a book.|Yes, it is.|I like books.","问这是谁的书，回答 Amy's。"],
+["reply",4,"购物与场所","Where can I buy a pencil?","In the shop.","At six o'clock.|It is a pencil.|Yes, please.","问在哪买铅笔，回答 in the shop。"],
+/* ===== 补题：5 年级（新增 30 题，共 50 题） ===== */
+["detail",5,"上学与交通","My mother goes to work by bike.","🚲👩","🚗👩","听到 bike，所以是骑自行车；另一张是开汽车。"],
+["detail",5,"数字与时间","The film starts at seven o'clock.","🕖","🕗","听到 seven，所以是七点；另一张是八点。"],
+["detail",5,"文具与教室","The boy is drawing a picture on the blackboard.","👦🖍️","👦📝","听到 drawing，所以是画画；另一张是写字。"],
+["img",5,"上学与交通","The train is coming.","🚆","🚌|🚕|🚲","听到 train，火车。"],
+["img",5,"食物与饮料","I would like some soup.","🍲","🍜|🍚|🥗","听到 soup，汤。"],
+["img",5,"动物","The panda is climbing a tree.","🐼🌳","🐼🎋|🐻🌳|🐨🌳","听到 panda，熊猫。"],
+["img",5,"天气与季节","We make a snowman in winter.","⛄","🍂|🌻|🌊","听到 snowman，雪人。"],
+["img",5,"购物与场所","I send a letter in the post office.","✉️","📚|💊|🍞","听到 post office，邮局寄信。"],
+["word",5,"上学与交通","I usually go to school by bike.","usually","sometimes|never|often","听到 usually，通常。"],
+["word",5,"家庭与人物","My uncle is a policeman.","policeman","farmer|driver|doctor","听到 policeman，警察。"],
+["word",5,"食物与饮料","I have breakfast at half past seven.","breakfast","lunch|dinner|supper","听到 breakfast，早饭。"],
+["word",5,"动物","The giraffe is very tall.","giraffe","elephant|monkey|lion","听到 giraffe，长颈鹿。"],
+["word",5,"颜色与形状","This box is square.","square","round|long|small","听到 square，正方形。"],
+["word",5,"数字与时间","There are sixty minutes in an hour.","sixty","fifty|seventy|sixteen","听到 sixty，六十。"],
+["word",5,"天气与季节","We can see many kites in spring.","spring","summer|autumn|winter","听到 spring，春天。"],
+["word",5,"文具与教室","Our teacher is in the office.","office","library|classroom|playground","听到 office，办公室。"],
+["cn",5,"上学与交通","My school is not far from my home, so I walk there.","我的学校离家不远，所以我走路去。","我的学校离家很远，所以我坐车去。|我的学校离家不远，所以我坐车去。|我的学校在公园旁边，所以我走路去。","听到 not far 和 walk。"],
+["cn",5,"家庭与人物","My mother usually gets up at six in the morning.","我妈妈通常早上六点起床。","我妈妈通常早上七点起床。|我爸爸通常早上六点起床。|我妈妈通常晚上六点起床。","听到 mother 和 get up。"],
+["cn",5,"食物与饮料","We often have dinner at half past six.","我们经常六点半吃晚饭。","我们经常七点半吃晚饭。|我们经常六点半吃早饭。|我们经常五点半吃晚饭。","听到 dinner 和 half past six。"],
+["cn",5,"动物","The elephant is drinking water by the river.","大象在河边喝水。","大象在河边吃东西。|大象在树下喝水。|猴子在河边喝水。","听到 elephant 和 drinking water。"],
+["cn",5,"天气与季节","It is going to rain tomorrow.","明天要下雨了。","昨天已经下过雨了。|明天要下雪了。|今天正在下雨。","听到 tomorrow 和 rain。"],
+["cn",5,"购物与场所","The cinema is between the bank and the hospital.","电影院在银行和医院之间。","电影院在银行前面。|电影院在医院后面。|电影院在银行旁边。","听到 between。"],
+["cn",5,"爱好与日常","My brother often plays basketball after school.","我哥哥经常放学后打篮球。","我哥哥经常放学后踢足球。|我弟弟经常放学后打篮球。|我哥哥经常放学前打篮球。","听到 brother 和 basketball。"],
+["reply",5,"上学与交通","When do you go to school?","At seven thirty.","By bus.|In the classroom.|It is Monday.","问什么时候上学，回答时间。"],
+["reply",5,"家庭与人物","What does your mother do?","She is a teacher.","She is at home.|She likes apples.|Yes, she does.","问妈妈做什么工作，回答 teacher。"],
+["reply",5,"食物与饮料","What would you like for dinner?","Some noodles, please.","At six o'clock.|In the kitchen.|Yes, please.","问晚饭想吃什么，回答 noodles。"],
+["reply",5,"动物","Where does the panda live?","It lives in China.","It is a panda.|It likes bamboo.|Yes, it does.","问熊猫住在哪里，回答 in China。"],
+["reply",5,"颜色与形状","How many stars are there?","There are five.","They are stars.|It is five o'clock.|Yes, there are.","问有几颗星，回答 five。"],
+["reply",5,"天气与季节","What is the weather like in spring?","It is warm and windy.","It is Monday.|I like spring.|Yes, it is.","问春天天气怎么样，回答 warm and windy。"],
+["reply",5,"爱好与日常","How often do you play football?","Twice a week.","At four o'clock.|In the park.|Yes, I do.","问多久踢一次球，回答 twice a week。"],
+/* ===== 补题：6 年级（新增 30 题，共 50 题） ===== */
+["detail",6,"上学与交通","Yesterday I went to the museum by bus.","🚌🏛️","🚕🏛️","听到 bus，所以是公交车；另一张是出租车。"],
+["detail",6,"家庭与人物","My grandparents live in a small village.","👴👵🏡","👴👵🏢","听到 village，所以是乡村小屋；另一张是高楼。"],
+["detail",6,"食物与饮料","We had rice and fish for lunch yesterday.","🍚🐟","🍚🍗","听到 fish，所以是鱼；另一张是鸡肉。"],
+["detail",6,"动物","The little boy is feeding the ducks.","🧒🦆","🧒🐔","听到 ducks，所以是鸭子；另一张是鸡。"],
+["detail",6,"颜色与形状","My sister's new dress is pink.","👗💗","👗💜","听到 pink，所以是粉色裙子；另一张是紫色。"],
+["detail",6,"数字与时间","The train leaves at nine o'clock.","🕘","🕙","听到 nine，所以是九点；另一张是十点。"],
+["detail",6,"天气与季节","It was cold and windy yesterday.","🌬️🧥","🌬️👕","听到 cold，所以是外套；另一张是短袖。"],
+["detail",6,"文具与教室","The students are reading in the library.","🧑‍🎓📚","🧑‍🎓✏️","听到 reading，所以是看书；另一张是写字。"],
+["detail",6,"购物与场所","I bought a new book in the bookstore yesterday.","📚🏪","📚🏥","听到 bookstore，所以是书店；另一张是医院。"],
+["detail",6,"爱好与日常","My cousin can play the guitar very well.","🧒🎸","🧒🎻","听到 guitar，所以是吉他；另一张是小提琴。"],
+["detail",6,"上学与交通","The children are waiting for the school bus.","🚌🏫","🚲🏫","听到 school bus，所以是校车；另一张是自行车。"],
+["detail",6,"动物","The cat caught a mouse last night.","🐱🐭","🐱🐟","听到 mouse，所以是老鼠；另一张是鱼。"],
+["detail",6,"数字与时间","The meeting begins at ten o'clock.","🕙","🕚","听到 ten，所以是十点；另一张是十一点。"],
+["img",6,"上学与交通","We visited the museum last Sunday.","🏛️","🎡|🛝|🏟️","听到 museum，博物馆。"],
+["img",6,"家庭与人物","My uncle is a farmer. He works on a farm.","👨‍🌾","👨‍🍳|👨‍⚕️|👨‍🏫","听到 farmer，农民。"],
+["img",6,"食物与饮料","I would like a glass of water.","💧","🥛|🧃|🍵","听到 water，水。"],
+["img",6,"天气与季节","It was rainy and cold last weekend.","🌧️","☀️|❄️|🌪️","听到 rainy，下雨。"],
+["img",6,"文具与教室","Our class will have a test tomorrow.","📝","🎨|🎵|⚽","听到 test，考试。"],
+["word",6,"上学与交通","We arrived at the station at eight.","arrived","left|started|waited","听到 arrived，到达。"],
+["word",6,"家庭与人物","My father is older than my mother.","older","younger|taller|shorter","听到 older，更年长。"],
+["word",6,"动物","The rabbit can jump very high.","jump","swim|fly|run","听到 jump，跳。"],
+["word",6,"购物与场所","This coat is more expensive than that one.","more expensive","cheaper|bigger|smaller","听到 more expensive，更贵。"],
+["word",6,"爱好与日常","I must finish my homework before dinner.","must","can|may|would","听到 must，必须。"],
+["cn",6,"上学与交通","I missed the bus this morning, so I was late for school.","今天早上我错过了公交车，所以上学迟到了。","今天早上我赶上了公交车，所以上学迟到了。|今天早上我错过了公交车，所以上学很早。|今天早上我错过了火车，所以上学迟到了。","听到 missed 和 late。"],
+["cn",6,"家庭与人物","My grandma told us a story last night.","昨晚奶奶给我们讲了一个故事。","昨晚爷爷给我们讲了一个故事。|昨晚奶奶给我们唱了一首歌。|明天晚上奶奶给我们讲故事。","听到 grandma 和 last night。"],
+["cn",6,"食物与饮料","I ate too much ice cream and felt cold.","我吃了太多冰淇淋，觉得冷。","我吃了太多冰淇淋，觉得热。|我吃了太多面包，觉得冷。|我喝了很多牛奶，觉得冷。","听到 ate 和 too much。"],
+["cn",6,"购物与场所","The supermarket is bigger than the shop near my home.","这家超市比我家附近的小店大。","这家超市比我家附近的小店小。|这家书店比我家附近的小店大。|这家超市和我家附近的小店一样大。","听到 bigger 和 supermarket。"],
+["reply",6,"上学与交通","Did you go to school by bus yesterday?","No, I went by bike.","Yes, I do.|No, I am not.|Yes, I go.","问昨天是否坐公交车，回答 went by bike。"],
+["reply",6,"动物","What did you see in the zoo last Sunday?","I saw many monkeys.","I see many monkeys.|Yes, I did.|It is a zoo.","问上周日看到了什么，回答 saw many monkeys。"],
+["reply",6,"爱好与日常","Could you play the piano when you were five?","Yes, I could.","Yes, I can.|Yes, I do.|Yes, I am.","问五岁时会不会弹琴，回答 could。"],
+];
+
+var TYPE_PROMPT = {
+  detail: '🎧 听句子，选出和听到的一样的图',
+  img: '🎧 听句子，点出你听到的图',
+  word: '🎧 听句子，选出你听到的词',
+  cn: '🎧 听句子，选出正确的中文意思',
+  reply: '🎧 听问句，选出合适的回答'
+};
+
+var ITEMS = Q.map(function (row, i) {
+  return { type: row[0], grade: row[1], topic: row[2], audio: row[3], answer: row[4],
+           wrong: row[5].split('|'), zh: row[6], id: i };
+});
+
+var KEY_BEST = 'el.best';
+var state = { mode: 'all', grade: 'all', best: 0, streak: 0, cur: null, answered: false, timer: null,
+              session: null };
+var decks = {};
+var lastId = -1;
+
+var elPrompt = document.getElementById('prompt');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elStreak = document.getElementById('streak');
+var elBest = document.getElementById('best');
+var elReplay = document.getElementById('replay');
+var elBar = document.getElementById('gradeBar');
+var elMode = document.getElementById('modeBar');
+var elSummary = document.getElementById('summary');
+
+function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) { } }
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+
+/* 题目池：mode=all 为全部题，mode=detail 只含细节辨图；grade=all 或 3/4/5/6 */
+function pool(g, mode) {
+  mode = mode || state.mode;
+  return ITEMS.filter(function (it) {
+    return (mode === 'all' || it.type === 'detail') && (g === 'all' || it.grade === g);
+  });
+}
+
+function take() {
+  var key = state.mode + ':' + state.grade;
+  var d = decks[key];
+  if (!d) {
+    /* 每档一副牌：抽完才重洗，新局开头避开上一局开头 */
+    d = decks[key] = XNLY.deck.make(pool(state.grade, state.mode).map(function (it) { return it.id; }),
+      'english-listening.' + key, { head: 5 });
+  }
+  var id = d.next();
+  lastId = id;
+  return ITEMS[id];
+}
+
+function speakEn(t) {
+  if (window.XNLY && XNLY.voice) XNLY.voice.speak(t, { lang: 'en-US', rate: 0.9 });
+}
+function speakZh(t) {
+  if (window.XNLY && XNLY.voice) XNLY.voice.speak(t, { lang: 'zh-CN' });
+}
+
+function replayNow() {
+  if (state.cur) speakEn(state.cur.audio);
+}
+
+function setFb(html, good, sub) {
+  elFb.className = 'feedback ' + (good === true ? 'ok' : good === false ? 'bad' : '');
+  elFb.innerHTML = html + (sub ? '<small>' + sub + '</small>' : '');
+}
+
+function buildBar() {
+  if (state.mode === 'detail') { elBar.style.display = 'none'; state.grade = 'all'; return; }
+  elBar.style.display = '';
+  elBar.innerHTML = '';
+  var list = [{ g: 'all', n: '全部' }, { g: 3, n: '3 年级' }, { g: 4, n: '4 年级' },
+              { g: 5, n: '5 年级' }, { g: 6, n: '6 年级' }];
+  list.forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tchip' + (state.grade === o.g ? ' on' : '');
+    b.textContent = o.n + ' ' + pool(o.g, 'all').length;
+    b.addEventListener('click', function () {
+      if (state.grade === o.g) return;
+      state.grade = o.g;
+      state.streak = 0;
+      resetSession();
+      updateStats();
+      buildBar();
+      nextQuestion();
+    });
+    elBar.appendChild(b);
+  });
+}
+
+function buildModeBar() {
+  elMode.innerHTML = '';
+  var list = [{ m: 'all', n: '全部 ' + ITEMS.length + ' 题' },
+              { m: 'detail', n: '细节辨图 ' + pool('all', 'detail').length + ' 题' }];
+  list.forEach(function (o) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tchip' + (state.mode === o.m ? ' on' : '');
+    b.textContent = o.n;
+    b.addEventListener('click', function () { setMode(o.m); });
+    elMode.appendChild(b);
+  });
+}
+
+function setMode(m) {
+  if (state.mode === m) return;
+  state.mode = m;
+  state.grade = 'all';
+  state.streak = 0;
+  if (m === 'detail') { delete decks['detail:all']; lastId = -1; }
+  resetSession();
+  updateStats();
+  buildModeBar();
+  buildBar();
+  hideSummary();
+  try {
+    var u = new URL(location.href);
+    if (m === 'detail') u.searchParams.set('type', 'detail'); else u.searchParams.delete('type');
+    history.replaceState(null, '', u.href);
+  } catch (e) { }
+  nextQuestion();
+}
+
+function resetSession() {
+  state.session = { n: 0, right: 0, by: {} };
+}
+function noteAnswer(grade, right) {
+  if (!state.session) resetSession();
+  var s = state.session;
+  s.n++;
+  if (right) s.right++;
+  var g = s.by[grade] || (s.by[grade] = { n: 0, right: 0 });
+  g.n++;
+  if (right) g.right++;
+}
+function hideSummary() {
+  elSummary.classList.remove('show');
+  elSummary.innerHTML = '';
+  elOpts.style.display = '';
+  elReplay.style.display = '';
+}
+function showSummary() {
+  clearTimeout(state.timer);
+  var s = state.session, total = s.n, acc = total ? Math.round(s.right / total * 100) : 0;
+  var rows = [3, 4, 5, 6].map(function (g) {
+    var d = s.by[g];
+    return d ? g + ' 年级 ' + d.right + '/' + d.n : g + ' 年级 暂无';
+  });
+  elSummary.innerHTML =
+    '<div class="sumtitle">🎉 ' + pool('all', 'detail').length + ' 道细节辨图练完啦</div>' +
+    '<div class="sumline">答对 <b>' + s.right + '</b> / ' + total + ' · 正确率 <b>' + acc + '%</b></div>' +
+    '<div class="sumgrades">按年级：' + rows.join(' · ') + '</div>' +
+    '<button class="sumagain" id="sumAgain" type="button">🔁 再练一轮</button>';
+  elSummary.classList.add('show');
+  elOpts.style.display = 'none';
+  elReplay.style.display = 'none';
+  elPrompt.innerHTML = '🎧 细节辨图完成<span>看看哪一档还需要多听几遍</span>';
+  setFb('', null);
+  speakZh('这一轮答对了' + s.right + '题，正确率百分之' + acc + '。');
+  document.getElementById('sumAgain').addEventListener('click', function () {
+    delete decks['detail:all'];
+    lastId = -1;
+    resetSession();
+    hideSummary();
+    nextQuestion();
+  });
+}
+
+function finishOrNext() {
+  if (state.mode === 'detail' && state.session.n >= pool('all', 'detail').length) showSummary();
+  else nextQuestion();
+}
+
+function updateStats() {
+  elStreak.textContent = state.streak;
+  elBest.textContent = state.best;
+}
+
+function nextQuestion() {
+  clearTimeout(state.timer);
+  hideSummary();
+  state.answered = false;
+  state.cur = take();
+  var q = state.cur;
+
+  elPrompt.innerHTML = TYPE_PROMPT[q.type] +
+    '<span>' + q.grade + ' 年级 · ' + q.topic + '</span>';
+  elOpts.innerHTML = '';
+  setFb('', null);
+
+  var opts = shuffle([q.answer].concat(q.wrong));
+  opts.forEach(function (v) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt' + (q.type === 'detail' ? ' sceneopt'
+      : q.type === 'img' ? ' imgopt' : q.type === 'reply' ? ' replyopt'
+      : q.type === 'cn' ? ' longopt' : '');
+    b.textContent = v;
+    b.dataset.val = v;
+    b.addEventListener('click', function () { answer(v, b); });
+    elOpts.appendChild(b);
+  });
+
+  setTimeout(replayNow, 220);
+}
+
+function answer(v, btn) {
+  if (state.answered) return;
+  state.answered = true;
+  var q = state.cur;
+  var right = v === q.answer;
+  noteAnswer(q.grade, right);
+
+  Array.prototype.forEach.call(elOpts.children, function (b) {
+    if (b.dataset.val === q.answer) b.classList.add('good');
+    if (b !== btn) b.disabled = true;
+  });
+
+  if (right) {
+    btn.classList.add('good', 'pop');
+    state.streak++;
+    if (state.streak > state.best) { state.best = state.streak; safeSet(KEY_BEST, state.best); }
+    if (window.XNLY && XNLY.mark) XNLY.mark('right');
+    setFb('✅ 答对了！', true, q.zh);
+    speakZh('答对了。' + q.zh);
+    updateStats();
+    state.timer = setTimeout(finishOrNext, 1900);
+  } else {
+    btn.classList.add('bad', 'shake');
+    state.streak = 0;
+    if (window.XNLY && XNLY.mark) XNLY.mark('wrong');
+    setFb('❌ 正确答案是 ' + q.answer, false, q.zh);
+    speakEn(q.audio);
+    speakZh(q.zh);
+    updateStats();
+    state.timer = setTimeout(finishOrNext, 2400);
+  }
+}
+
+elReplay.addEventListener('click', replayNow);
+
+(function init() {
+  var b = parseInt(safeGet(KEY_BEST), 10);
+  state.best = isNaN(b) || b < 0 ? 0 : b;
+  var tp = '';
+  try { tp = new URLSearchParams(location.search).get('type') || ''; } catch (e) { }
+  if (tp === 'detail') { state.mode = 'detail'; delete decks['detail:all']; }
+  resetSession();
+  buildModeBar();
+  buildBar();
+  updateStats();
+  nextQuestion();
+
+  /* 首题照常显示；第一次任意点击解锁音频并补读当前题 */
+  var firstTap = false;
+  document.addEventListener('pointerdown', function () {
+    if (firstTap) return;
+    firstTap = true;
+    if (window.XNLY && XNLY.voice && XNLY.voice.unlock) {
+      try { XNLY.voice.unlock(); } catch (e) { }
+    }
+    if (!state.answered) replayNow();
+  }, { passive: true });
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

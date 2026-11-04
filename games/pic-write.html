@@ -79,6 +79,7 @@ h1{font-size:1.15rem;}
 <link rel="icon" type="image/png" href="../games/img/icon-192.png">
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -159,7 +160,8 @@ var SCENES = [
   { img: 'img/soccer.jpg', emo: '⚽', when: ['放学后', '周末'], who: ['小朋友们', '哥哥'], where: ['操场上', '草地上'], what: ['踢足球', '拍皮球'], more: ['热闹', '满头大汗'] }
 ];
 
-var state = { i: 0, picks: [null, null, null, null] };
+var state = { i: 0, picks: [null, null, null, null], cur: null };
+var sceneDeck = XNLY.deck.make(SCENES, 'pic-write', { head: 5 });
 var elPhoto = document.getElementById('photo');
 var elBank = document.getElementById('bank');
 var elSlots = document.getElementById('slots');
@@ -177,7 +179,7 @@ function bankWords(s) {
 }
 
 function render() {
-  var s = SCENES[state.i];
+  var s = state.cur = sceneDeck.next();
   elIdx.textContent = state.i + 1;
   elPhoto.src = s.img;
   elPhoto.alt = '看图写话：' + s.emo;

@@ -82,6 +82,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -153,9 +154,13 @@ function findIdiom(chars){
   for(var i=0;i<IDIOMS.length;i++){if(idiomKey(IDIOMS[i])===key)return IDIOMS[i];}
   return null;
 }
+var wordDeck = XNLY.deck.make(WORDS, 'memory-match.words', { head: 6 });
+var idiomDeck = XNLY.deck.make(IDIOMS, 'memory-match.idioms', { head: 3 });
+
 function pickWordSet(){
   for(var t=0;t<600;t++){
-    var cand=shuffle(WORDS).slice(0,6);
+    var cand=[];
+    for(var i=0;i<6;i++)cand.push(wordDeck.next());
     var chars=[];
     for(var i=0;i<cand.length;i++){chars.push(cand[i].charAt(0));chars.push(cand[i].charAt(1));}
     var bad=false;
@@ -167,11 +172,14 @@ function pickWordSet(){
     }
     if(!bad)return cand;
   }
-  return shuffle(WORDS).slice(0,6);
+  var fallback=[];
+  for(var f=0;f<6;f++)fallback.push(wordDeck.next());
+  return fallback;
 }
 function pickIdiomSet(){
   for(var t=0;t<400;t++){
-    var cand=shuffle(IDIOMS).slice(0,3);
+    var cand=[];
+    for(var i=0;i<3;i++)cand.push(idiomDeck.next());
     var chars=[];
     for(var i=0;i<cand.length;i++)chars=chars.concat(cand[i].split(''));
     var bad=false;
@@ -187,7 +195,9 @@ function pickIdiomSet(){
     }
     if(!bad)return cand;
   }
-  return shuffle(IDIOMS).slice(0,3);
+  var fallback=[];
+  for(var f=0;f<3;f++)fallback.push(idiomDeck.next());
+  return fallback;
 }
 function buildCards(){
   var picks=state.mode===2?pickWordSet():pickIdiomSet();

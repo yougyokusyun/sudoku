@@ -73,6 +73,7 @@ h1{font-size:1.15rem;}
 </style>
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -213,10 +214,20 @@ function setFb(html, good, sub) {
   elFb.innerHTML = html + (sub ? '<small>' + sub + '</small>' : '');
 }
 
+var wordDecks = {};
+function targetDeck() {
+  if (!wordDecks[curTheme]) {
+    wordDecks[curTheme] = XNLY.deck.make(pool(), 'english-words.' + curTheme, {
+      head: 5, id: function (w) { return w.en; }
+    });
+  }
+  return wordDecks[curTheme];
+}
+
 function makeQuestion() {
   var type = rand(3);           /* 0 中文选英文 · 1 图选英文 · 2 听音选图 */
   var P = pool();
-  var target = pick(P);
+  var target = targetDeck().next();
   var others = shuffle(P.filter(function (w) { return w !== target; })).slice(0, 3);
   if (others.length < 3) {
     others = shuffle(WORDS.filter(function (w) { return w !== target; })).slice(0, 3);

@@ -103,6 +103,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -176,14 +177,14 @@ function feedback(t, cls) {
     elFb.textContent = t || '';
 }
 
+var shadowDeck = XNLY.deck.make(POOL, 'shadow', { head: 5 });
+
 function newRound() {
     clearTimeout(timer);
     locked = false;
 
-    var pick = shuffle(POOL);
-    answer = pick[0];
-    var wrongs = pick.slice(1, 3);
-    while (cur === answer) { pick = shuffle(POOL); answer = pick[0]; wrongs = pick.slice(1, 3); }
+    answer = shadowDeck.next();
+    var wrongs = shuffle(POOL.filter(function (x) { return x !== answer; })).slice(0, 2);
     cur = answer;
 
     setPhoto(elHero, answer.f, answer.e);

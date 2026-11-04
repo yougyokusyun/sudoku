@@ -81,6 +81,7 @@ h1{font-size:1.15rem;}
 <link rel="icon" type="image/png" href="../games/img/icon-192.png">
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -250,13 +251,14 @@ function newRound() {
   state.locked = false;
   var L = LEVELS[state.tier];
   /* 本轮内不重复：每档一副牌，抽完一轮才重洗 */
-  if (!state.decks) state.decks = { 1: [], 2: [], 3: [] };
+  if (!state.decks) state.decks = {};
   var d = state.decks[state.tier];
-  if (!d.length) {
-    for (var i = 0; i < L.items.length; i++) d.push(i);
-    for (var j = d.length - 1; j > 0; j--) { var k = Math.floor(Math.random() * (j + 1)); var t = d[j]; d[j] = d[k]; d[k] = t; }
+  if (!d || typeof d.next !== 'function') {
+    d = state.decks[state.tier] = XNLY.deck.make(
+      L.items.map(function (_, i) { return i; }),
+      'math-word.tier' + state.tier, { head: 5 });
   }
-  var idx = d.pop();
+  var idx = d.next();
   var item = L.items[idx]();
   state.cur = item;
   state.qno++;

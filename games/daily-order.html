@@ -69,6 +69,7 @@ h1{font-size:1.15rem;}
 <link rel="icon" type="image/png" href="../games/img/icon-192.png">
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -129,7 +130,8 @@ var GROUPS = [
   [['🚶','排队'],['🚌','上车'],['💺','找座位'],'先排队，再上车，然后找座位。']
 ];
 
-var state = { no: 0, right: 0, next: 0, locked: false, idx: [] };
+var state = { no: 0, right: 0, next: 0, locked: false, cur: null };
+var groupDeck = XNLY.deck.make(GROUPS.map(function (g, i) { return i; }), 'daily-order', { head: 5 });
 var elQno = document.getElementById('qno');
 var elRight = document.getElementById('right');
 var elSteps = document.getElementById('steps');
@@ -137,12 +139,14 @@ var elSentence = document.getElementById('sentence');
 var elFb = document.getElementById('feedback');
 var elQ = document.getElementById('qtext');
 
-function current() { return GROUPS[state.idx[state.no]]; }
+function current() { return state.cur; }
 
 function render() {
-  var g = current();
+  if (state.no >= GROUPS.length) state.no = 0;
+  state.no++;
+  var g = state.cur = GROUPS[groupDeck.next()];
   state.next = 0; state.locked = false;
-  elQno.textContent = state.no + 1;
+  elQno.textContent = state.no;
   elRight.textContent = state.right;
   elQ.textContent = '按顺序点一点，先做什么？';
   elSentence.className = 'sentence'; elSentence.textContent = '';
@@ -194,8 +198,6 @@ function tap(btn, s, g) {
 }
 
 function nextG() {
-  state.no++;
-  if (state.no >= GROUPS.length) { GROUPS = shuffle(GROUPS.slice()); state.no = 0; state.idx = GROUPS.map(function (_, i) { return i; }); }
   render();
 }
 document.getElementById('hear').addEventListener('click', function () {
@@ -204,7 +206,7 @@ document.getElementById('hear').addEventListener('click', function () {
 });
 document.getElementById('next').addEventListener('click', nextG);
 
-state.idx = shuffle(GROUPS.map(function (_, i) { return i; }));
+/* 开局顺序由 groupDeck 洗牌决定，state.idx 已不再使用 */
 render();
 window.__daily = { list: GROUPS, state: state, next: nextG };
 </script>

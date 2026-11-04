@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>情景对话 · 小脑袋乐园</title>
+<meta name="theme-color" content="#6a4bff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<link rel="manifest" href="../manifest.json">
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#6a4bff;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#efeaff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e8f7ff,transparent 55%),
+             linear-gradient(160deg,#faf8ff,#f5fbff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:9px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;font-size:.85rem;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
+  font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.88rem;}
+.chipbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;flex:none;}
+.tchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;
+  font-family:inherit;font-size:.76rem;font-weight:800;color:#4a6076;cursor:pointer;
+  box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;min-height:38px;}
+.tchip.on{background:linear-gradient(135deg,#8b6bff,#6a4bff);color:#fff;border-color:transparent;}
+.stage{flex:1;display:flex;flex-direction:column;min-height:0;width:100%;}
+.listview{flex:1;display:flex;flex-direction:column;gap:8px;min-height:0;overflow-y:auto;padding-bottom:8px;}
+.listtip{font-size:.76rem;font-weight:700;color:#8aa0b8;text-align:center;line-height:1.5;flex:none;}
+.scenes{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;width:min(720px,100%);margin:0 auto;}
+.scene{display:flex;align-items:center;gap:8px;min-height:58px;border:2px solid var(--line);border-radius:14px;
+  background:#fff;padding:6px 10px;font-family:inherit;text-align:left;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.06);}
+.scene .em{font-size:1.35rem;flex:none;}
+.scene .meta{flex:1;min-width:0;}
+.scene .nm{display:block;font-size:.86rem;font-weight:900;color:#31465c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.scene .st{display:block;font-size:.66rem;font-weight:700;color:#93a7bd;}
+.scene .tick{font-size:1rem;color:var(--ok);font-weight:900;flex:none;}
+.scene.done{border-color:rgba(47,179,68,.28);background:#f6fdf8;}
+.play{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;min-height:0;
+  overflow-y:auto;width:100%;}
+.scenehead{text-align:center;font-size:.9rem;font-weight:900;color:#4b2fd0;}
+.scenehead span{display:block;font-size:.7rem;font-weight:700;color:#8aa0b8;margin-top:1px;}
+.npc{width:min(600px,100%);background:#fff;border:2px solid rgba(106,75,255,.18);border-radius:16px;
+  padding:10px 14px;box-shadow:0 6px 16px rgba(36,59,83,.08);}
+.npc .who{font-size:.68rem;font-weight:800;color:#8d7ee0;margin-bottom:3px;}
+.npc .line{font-size:1.06rem;font-weight:900;line-height:1.4;color:#2c3e57;word-break:break-word;}
+.cnline{font-size:.8rem;font-weight:700;color:#7b8ea8;text-align:center;line-height:1.5;max-width:600px;}
+.opts{display:flex;flex-direction:column;gap:9px;width:min(600px,100%);}
+.opt{min-height:56px;border:2px solid var(--line);border-radius:14px;background:#fff;padding:8px 13px;
+  font-family:inherit;font-size:.94rem;font-weight:800;line-height:1.4;color:#26425c;text-align:left;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.06);transition:transform .14s,border-color .18s,background .18s;}
+.opt:active{transform:scale(.985);}
+.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;color:#b02a2a;}
+.opt[disabled]{opacity:.45;cursor:default;}
+.feedback{min-height:38px;font-size:.92rem;font-weight:800;text-align:center;line-height:1.45;max-width:620px;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+.feedback small{display:block;font-size:.74rem;font-weight:700;color:#7b8ea8;margin-top:2px;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.mini{min-height:42px;padding:0 16px;border-radius:999px;border:2px solid rgba(106,75,255,.24);
+  background:#fff;color:#4b2fd0;font-family:inherit;font-weight:900;font-size:.84rem;cursor:pointer;}
+.summary{display:none;flex-direction:column;gap:9px;width:min(540px,100%);background:#fff;
+  border:2px solid var(--line);border-radius:18px;padding:14px 16px;text-align:center;
+  box-shadow:0 10px 26px rgba(36,59,83,.12);}
+.summary.show{display:flex;}
+.sumtitle{font-size:1.05rem;font-weight:900;color:#4b2fd0;}
+.sumline{font-size:.9rem;font-weight:800;color:#2f4a63;line-height:1.6;}
+.again{min-height:46px;border-radius:999px;border:none;background:linear-gradient(135deg,#8b6bff,#6a4bff);
+  color:#fff;font-family:inherit;font-weight:900;font-size:.95rem;cursor:pointer;box-shadow:0 8px 18px rgba(106,75,255,.25);}
+.tip{font-size:.7rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
+@media (max-width:520px){ .scenes{grid-template-columns:1fr;} }
+@media (max-height:430px){
+  body{padding:8px;gap:6px;} h1{font-size:1rem;}
+  .npc{padding:8px 10px;} .npc .line{font-size:.94rem;} .opt{min-height:46px;font-size:.86rem;}
+  .scene{min-height:48px;} .play{gap:6px;}
+}
+</style>
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>💬 情景对话</h1>
+  <div class="chips">
+    <span class="chip">✅ 完成 <b id="doneChip">0</b>/100</span>
+    <span class="chip">🎬 场景 <b id="sceneChip">25</b></span>
+  </div>
+</header>
+<div class="chipbar" id="gradeBar"></div>
+<div class="stage">
+  <div class="listview" id="listView">
+    <div class="listtip">选一个场景，点进去一步一步往下演 · 选错会有中文提示，不会赶你走</div>
+    <div class="scenes" id="sceneList"></div>
+    <div class="tip">共 100 个场景 · 完成会打勾，随时可以回来重演</div>
+  </div>
+  <div class="play" id="playView" hidden>
+    <div class="scenehead" id="playTitle"></div>
+    <div class="npc">
+      <div class="who">👤 对方说</div>
+      <div class="line" id="npcLine"></div>
+    </div>
+    <div class="cnline" id="cnLine"></div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="summary" id="summary"></div>
+    <div class="actions">
+      <button class="mini" id="backBtn" type="button">← 返回场景列表</button>
+      <button class="mini" id="replayBtn" type="button">🔊 再听一遍</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============ 100 个情景对话：3/4/5/6 年级各 25 个 ============
+ * 结构：[年级, 场景名, emoji, [ [对方英文, 中文情境, 正确回应, 错误回应1|错误回应2, 中文提示], ... ]]
+ */
+var S = [
+/* ---------- 三年级 25 个 ---------- */
+[3,"打招呼","👋",[
+ ["Hello! I'm Amy. What's your name?","你好！我是艾米。你叫什么名字？","My name is Ben.","I'm fine, thank you.|It's a cat.","别人问名字，要回答 My name is..."],
+ ["Nice to meet you, Ben.","很高兴认识你，本。","Nice to meet you, too.","I'm nine.|Thank you.","回应 Nice to meet you 用 Nice to meet you, too."],
+ ["Let's play together!","我们一起玩吧！","OK! Let's go.","It's a book.|I'm sorry.","接受邀请就说 OK, let's go."]
+]],
+[3,"早上到校","🌅",[
+ ["Good morning, Tom.","早上好，汤姆。","Good morning, Miss Li.","Good night, Miss Li.|Good afternoon, Miss Li.","早上问候用 Good morning。"],
+ ["How are you today?","你今天好吗？","I'm fine, thank you.","I'm nine.|It's Monday.","问 How are you，回答 I'm fine, thank you。"],
+ ["See you tomorrow.","明天见。","See you, Miss Li.","Good morning.|Thank you.","道别用 See you。"]
+]],
+[3,"介绍朋友","👫",[
+ ["This is my friend, Lucy.","这是我的朋友露西。","Nice to meet you, Lucy.","This is my mother.|Goodbye, Lucy.","初次见面说 Nice to meet you。"],
+ ["Nice to meet you, too. I'm Lucy.","我也很高兴认识你。我是露西。","Let's play together.","I'm sorry.|It's a pencil.","认识以后可以邀请一起玩。"],
+ ["OK! What do you want to play?","好呀！你想玩什么？","Let's play football.","I'm fine.|See you.","提议玩什么用 Let's play..."],
+]],
+[3,"课堂问答颜色","🎨",[
+ ["Look at the picture. What color is the apple?","看图片。苹果是什么颜色？","It's red.","It's a book.|It's Monday.","问颜色回答 It's red。"],
+ ["Yes, it is red. What color is the banana?","对，是红色。香蕉是什么颜色？","It's yellow.","It's blue.|It's an apple.","香蕉是黄色。"],
+ ["Very good! Do you like red?","很好！你喜欢红色吗？","Yes, I do.","Yes, it is.|No, I am.","Do you like...? 用 Yes, I do 回答。"]
+]],
+[3,"借铅笔","✏️",[
+ ["Do you have a pencil?","你有铅笔吗？","Yes, I do. Here you are.","No, I am.|It's red.","有就回答 Yes, I do，并递给对方。"],
+ ["Thank you. Do you have a ruler, too?","谢谢。你还有尺子吗？","Sorry, I don't. But I have an eraser.","Yes, I am.|It's a ruler.","没有就说 Sorry, I don't。"],
+ ["That's OK. I can use my ruler. Thanks!","没关系。我可以用我的尺子。谢谢！","You're welcome.","Good morning.|I'm sorry.","别人道谢，回答 You're welcome。"]
+]],
+[3,"问时间","🕗",[
+ ["Excuse me, what time is it?","打扰一下，现在几点了？","It's eight o'clock.","It's Monday.|It's a clock.","问时间回答 It's ... o'clock。"],
+ ["It's eight? Oh, we are late for class!","八点了？我们上课要迟到了！","Let's go quickly.","Let's have lunch.|It's sunny.","要迟到了就快点走。"],
+ ["OK. Don't run in the hallway.","好。走廊里不要跑。","OK, I won't.","I'm fine.|Thank you.","答应不乱跑说 OK, I won't。"]
+]],
+[3,"喜欢的动物","🐼",[
+ ["What's your favourite animal?","你最喜欢的动物是什么？","I like pandas.","I like red.|I'm nine.","问动物回答 I like pandas。"],
+ ["Why do you like pandas?","你为什么喜欢熊猫？","Because they are cute.","Because it is Monday.|Yes, I do.","回答原因用 Because...。"],
+ ["I like pandas, too. They are black and white.","我也喜欢熊猫。它们是黑白相间的。","Yes! Let's see the pandas.","It's a panda.|Goodbye.","一起去看熊猫。"]
+]],
+[3,"数一数","🔢",[
+ ["How many cats are there?","有几只猫？","There are three cats.","There are three dogs.|It's a cat.","问数量用 There are three..."],
+ ["Yes, three cats. How many dogs?","对，三只猫。那狗呢？","There is one dog.","There are three dogs.|It's a dog.","一只狗用 There is one dog。"],
+ ["Good job! Count again with me.","真棒！和我一起再数一遍。","One, two, three!","Red, blue, green.|Monday, Tuesday.","数数是 one, two, three。"]
+]],
+[3,"介绍家人","👩",[
+ ["Who is she?","她是谁？","She is my mother.","He is my father.|It's a cat.","问女性是谁，用 She is my..."],
+ ["What does your mother do?","你妈妈做什么工作？","She is a teacher.","She is fine.|He is a teacher.","问职业回答 She is a teacher。"],
+ ["She is a teacher? My mother is a teacher, too.","她是老师？我妈妈也是老师。","Great! They are both teachers.","It's a school.|Goodbye.","两个人都是老师，用 both。"]
+]],
+[3,"天气怎么样","☀️",[
+ ["How's the weather today?","今天天气怎么样？","It's sunny.","It's Monday.|It's a sun.","问天气回答 It's sunny。"],
+ ["It's sunny. Let's go to the park.","天气晴朗。我们去公园吧。","Good idea!","It's rainy.|I'm sorry.","赞同提议说 Good idea。"],
+ ["Don't forget your cap. It's hot.","别忘了戴帽子。天气很热。","OK, Mom. Thank you.","Yes, it is cold.|I'm nine.","答应并道谢。"]
+]],
+[3,"水果喜好","🍎",[
+ ["Do you like apples?","你喜欢苹果吗？","Yes, I do.","Yes, it is.|No, I am.","Do you like...? 用 Yes, I do 或 No, I don't。"],
+ ["Here is an apple for you.","给你一个苹果。","Thank you!","You're welcome.|Goodbye.","接受东西说 Thank you。"],
+ ["Do you want a banana, too?","你还要一根香蕉吗？","No, thanks. I'm full.","Yes, it is.|I'm nine.","不要就说 No, thanks。"]
+]],
+[3,"找小猫","🐱",[
+ ["Where is my cat? I can't find it.","我的猫在哪？我找不到它。","Is it under the chair?","Is it Monday?|Are you nine?","猜测位置用 Is it under...?"],
+ ["No, it isn't. It's not under the chair.","不，不在椅子下面。","Look! It's on the bed.","It's red.|It's a cat.","找到了说 It's on the bed。"],
+ ["Yes! Thank you for your help.","对！谢谢你的帮助。","You're welcome.","Good morning.|I'm sorry.","回答感谢用 You're welcome。"]
+]],
+[3,"生日祝福","🎂",[
+ ["Happy birthday, Lily!","莉莉，生日快乐！","Thank you!","Happy New Year.|Good morning.","别人祝你生日快乐，回复 Thank you。"],
+ ["Here is a gift for you.","这是给你的礼物。","Wow! Thank you very much.","It's a gift.|Goodbye.","收礼物要表示感谢。"],
+ ["Let's eat the birthday cake!","我们来吃生日蛋糕吧！","Great! I love cake.","It's a cat.|I'm nine.","赞同说 Great。"],
+]],
+[3,"文具店","🏪",[
+ ["Can I help you?","需要帮忙吗？","I want a ruler, please.","I'm fine.|It's sunny.","想买东西说 I want..."],
+ ["Here is a ruler. Is this one OK?","给你尺子。这把可以吗？","Yes, it's nice. How much is it?","It's Monday.|No, I am.","问价格用 How much is it?"],
+ ["It's two yuan.","两元。","Here you are. Thank you.","It's a ruler.|Goodbye.","付钱说 Here you are。"]
+]],
+[3,"下午问候","🌤️",[
+ ["Good afternoon, Ben.","下午好，本。","Good afternoon, Miss Li.","Good morning.|Good night.","下午问候用 Good afternoon。"],
+ ["Are you ready for class?","准备好上课了吗？","Yes, I am.","Yes, I do.|It's a book.","Are you ready? 用 Yes, I am。"],
+ ["Please open your books.","请打开书。","OK, Miss Li.","I'm sorry.|It's red.","答应老师用 OK。"]
+]],
+[3,"放学道别","👋",[
+ ["It's time to go home. Goodbye!","该回家了。再见！","Goodbye! See you tomorrow.","Good morning.|Thank you.","道别说 Goodbye 或 See you。"],
+ ["See you tomorrow. Don't forget your bag.","明天见。别忘了书包。","Thanks. I have it.","It's a bag.|I'm nine.","提醒后表示感谢。"],
+ ["Bye! Have a nice evening.","再见！晚上愉快。","You too! Bye.","It's Monday.|I'm sorry.","回应祝福说 You too。"]
+]],
+[3,"请求帮助","🤝",[
+ ["Can you help me, please?","你能帮帮我吗？","Sure. What do you need?","I'm fine.|Goodbye.","答应帮助说 Sure。"],
+ ["I can't carry this box. It's too heavy.","我搬不动这个箱子，太重了。","Let me help you.","It's a box.|I'm nine.","主动帮助说 Let me help you。"],
+ ["Thank you so much!","太感谢你了！","My pleasure.","Good morning.|It's red.","回答感谢说 My pleasure 或 You're welcome。"]
+]],
+[3,"拼写名字","🔤",[
+ ["How do you spell your name?","你的名字怎么拼？","B-E-N.","I'm Ben.|It's a pen.","拼写要一个字母一个字母说。"],
+ ["B-E-N. Is that right?","B-E-N。对吗？","Yes, that's right.","No, I'm nine.|It's Monday.","确认正确说 Yes, that's right。"],
+ ["Great. I'll write it down.","好的。我记下来。","Thank you, Miss Li.","Goodbye.|I'm sorry.","礼貌道谢。"]
+]],
+[3,"颜色喜好","🔵",[
+ ["What color do you like?","你喜欢什么颜色？","I like blue.","I like apples.|I'm nine.","问颜色回答 I like blue。"],
+ ["Blue is nice. Look at the blue sky.","蓝色很好看。看蓝色的天空。","Yes, it's beautiful.","It's a bird.|I'm sorry.","赞同说 It's beautiful。"],
+ ["Do you like green, too?","你也喜欢绿色吗？","No, I don't. I like blue.","Yes, I am.|It's green.","不喜欢用 No, I don't。"]
+]],
+[3,"会不会游泳","🏊",[
+ ["Can you swim?","你会游泳吗？","Yes, I can.","Yes, I do.|It's a pool.","Can you...? 用 Yes, I can 或 No, I can't。"],
+ ["Great! Let's go swimming.","太棒了！我们去游泳吧。","OK! Let's go.","I'm sorry.|It's Monday.","同意说 OK。"],
+ ["Don't swim in the river. It's dangerous.","不要在河里游泳。很危险。","OK. We'll swim in the pool.","Yes, it is safe.|Goodbye.","答应去泳池。"]
+]],
+[3,"问年龄","🎈",[
+ ["How old are you?","你多大了？","I'm nine.","I'm fine.|It's Monday.","问年龄回答 I'm nine。"],
+ ["I'm nine, too. When is your birthday?","我也九岁。你的生日是什么时候？","It's in May.","It's a cake.|I'm nine.","生日月份用 It's in May。"],
+ ["My birthday is in May, too. Let's have a party!","我的生日也在五月。我们办个派对！","Great idea!","It's Monday.|I'm sorry.","赞同说 Great idea。"]
+]],
+[3,"课堂指令","📚",[
+ ["Class, open your books, please.","同学们，请打开书。","OK, Miss Li.","Goodbye.|It's red.","听指令回答 OK。"],
+ ["Now read after me: I like apples.","现在跟我读：I like apples。","I like apples.","I'm nine.|It's a book.","跟着读句子。"],
+ ["Good! Close your books now.","很好！现在合上书。","OK. Books closed.","Open your books.|Good morning.","合上书说 Books closed。"]
+]],
+[3,"找书包","🎒",[
+ ["Where is my schoolbag?","我的书包在哪？","Is it on the desk?","Is it Monday?|Are you nine?","猜测位置用 Is it on...?"],
+ ["No, it's not on the desk. Maybe it's under the chair.","不在桌上。也许在椅子下面。","Let me look. Yes, it's here!","It's a chair.|I'm fine.","找到了说 It's here。"],
+ ["Great! Don't forget it again.","太好了！下次别再忘了。","I won't. Thank you.","It's a bag.|Goodbye.","答应并道谢。"]
+]],
+[3,"午饭吃什么","🍚",[
+ ["What do you have for lunch?","你午饭吃什么？","I have rice and chicken.","I have a book.|It's Monday.","问午饭回答食物。"],
+ ["Do you like chicken?","你喜欢鸡肉吗？","Yes, I do. It's delicious.","Yes, it is my book.|No, I am.","喜欢并形容好吃。"],
+ ["Would you like some soup?","你想喝点汤吗？","Yes, please.","No, I am.|It's a bowl.","想喝说 Yes, please。"]
+]],
+[3,"儿童节","🎉",[
+ ["Happy Children's Day!","儿童节快乐！","Thank you! The same to you.","Good night.|It's Monday.","节日祝福要回应。"],
+ ["We have a party in the classroom.","我们在教室开派对。","Great! I'm so happy.","I'm sorry.|It's a classroom.","表达开心。"],
+ ["Let's sing and dance together.","我们一起唱歌跳舞吧。","OK! Let's have fun.","It's a song.|Goodbye.","同意并玩得开心。"]
+]],
+/* ---------- 四年级 25 个 ---------- */
+[4,"快餐店点餐","🍽️",[
+ ["What would you like?","你想吃什么？","I'd like some noodles.","I'm fine.|It's Monday.","点餐用 I'd like..."],
+ ["Would you like some soup?","你想喝汤吗？","Yes, please.","Yes, I am.|It's a bowl.","想喝说 Yes, please。"],
+ ["Here you are. Enjoy your meal.","给你。用餐愉快。","Thank you very much.","Goodbye.|It's a restaurant.","道谢。"]
+]],
+[4,"问路去银行","🏦",[
+ ["Excuse me, where is the bank?","打扰一下，银行在哪？","Go straight and turn left.","It's a bank.|I'm nine.","指路说 Go straight and turn left。"],
+ ["Is it far from here?","离这儿远吗？","No, it's near. About five minutes.","Yes, I am.|It's Monday.","回答远近。"],
+ ["Thank you for your help.","谢谢你的帮助。","You're welcome.","Good morning.|It's a bank.","回答感谢。"]
+]],
+[4,"图书馆借书","📚",[
+ ["Can I borrow this book?","我可以借这本书吗？","Sure. Here you are.","It's a book.|I'm nine.","同意借给说 Sure。"],
+ ["How long can I keep it?","我可以借多久？","You can keep it for two weeks.","It's Monday.|Two books.","借期回答 two weeks。"],
+ ["OK, I'll return it on time.","好，我会按时还。","Great. Please keep it clean.","It's dirty.|Goodbye.","提醒保持干净。"]
+]],
+[4,"打电话找朋友","📞",[
+ ["Hello, may I speak to Tom?","你好，我可以和汤姆通话吗？","This is Tom speaking.","I'm fine.|It's a phone.","电话中自我介绍用 This is Tom speaking。"],
+ ["Hi, Tom. This is Amy. Are you free this afternoon?","嗨，汤姆。我是艾米。你下午有空吗？","Yes, I am. What's up?","No, it's Monday.|I'm nine.","有空回答 Yes, I am，并问什么事。"],
+ ["Let's play basketball in the park.","我们去公园打篮球吧。","Good idea! See you at three.","It's a ball.|I'm sorry.","约时间说 See you at three。"]
+]],
+[4,"邀请生日会","🎂",[
+ ["Would you like to come to my birthday party?","你愿意来我的生日会吗？","Yes, I'd love to.","Yes, I am.|It's a cake.","Would you like to...? 用 Yes, I'd love to。"],
+ ["The party is at six on Saturday.","派对在周六六点。","OK. I'll be there on time.","It's Monday.|I'm nine.","答应准时到。"],
+ ["Great! Don't forget to bring a smile.","太好了！别忘了带上笑容。","Haha, I will. See you!","It's a smile.|Goodbye.","幽默回应。"]
+]],
+[4,"感冒看医生","🏥",[
+ ["What's wrong with you?","你怎么了？","I have a cold and a headache.","I'm nine.|It's Monday.","描述病情用 I have a cold。"],
+ ["You should drink more water and rest.","你应该多喝水、多休息。","OK, doctor. Thank you.","It's a hospital.|Goodbye.","听从建议。"],
+ ["Take this medicine twice a day.","这药每天吃两次。","OK. Twice a day.","Once a week.|I'm fine.","确认用药次数。"]
+]],
+[4,"买鞋","👟",[
+ ["Can I help you?","需要帮忙吗？","I'd like a pair of shoes.","I'm nine.|It's Monday.","想买鞋说 I'd like a pair of shoes。"],
+ ["What size do you want?","你要多大码？","Size thirty-six, please.","It's red.|Three yuan.","回答尺码。"],
+ ["They are eighty yuan. Do you want them?","八十元。你要吗？","Yes, I'll take them.","No, it's Monday.|I'm nine.","要买说 I'll take them。"]
+]],
+[4,"上学交通","🚌",[
+ ["How do you go to school?","你怎么去上学？","I go to school by bus.","I'm nine.|It's Monday.","回答交通方式用 by bus。"],
+ ["Is your school far?","你的学校远吗？","No, it's near my home.","Yes, I am.|It's a school.","回答远近。"],
+ ["How long does it take?","要花多长时间？","About ten minutes.","Ten books.|It's Monday.","回答时间。"]
+]],
+[4,"最喜欢的科目","📖",[
+ ["What's your favourite subject?","你最喜欢什么科目？","My favourite subject is English.","I'm nine.|It's Monday.","回答科目。"],
+ ["Why do you like English?","你为什么喜欢英语？","Because it's interesting.","Because it's Monday.|Yes, I do.","回答原因用 Because..."],
+ ["We have English on Monday and Wednesday.","我们周一和周三有英语课。","Great! I like English classes.","It's a book.|Goodbye.","表达喜欢。"]
+]],
+[4,"值日扫地","🧹",[
+ ["Let's clean the classroom.","我们打扫教室吧。","OK. What can I do?","I'm fine.|It's Monday.","同意并问做什么。"],
+ ["Please clean the blackboard.","请擦黑板。","All right. I'll clean it.","It's a desk.|I'm nine.","答应擦黑板。"],
+ ["Good job! The classroom is clean now.","干得好！教室现在很干净。","Yes, it looks nice.","It's dirty.|Goodbye.","赞同。"]
+]],
+[4,"找眼镜","👓",[
+ ["Where are my glasses?","我的眼镜在哪？","Are they on the table?","Is it Monday?|Are you nine?","猜测位置用 Are they...?"],
+ ["No, they aren't. Are they in your bag?","不在。在你的包里吗？","Let me check. Yes, they are!","It's a bag.|I'm fine.","找到了说 Yes, they are。"],
+ ["Great. Please put them on the desk.","太好了。请把它们放桌上。","OK, I will.","It's a desk.|Goodbye.","答应。"]
+]],
+[4,"天气穿衣","🧥",[
+ ["It's cold today. Put on your coat.","今天很冷。穿上外套。","OK, Mom. Where is my coat?","It's hot.|I'm nine.","找外套。"],
+ ["It's on the chair.","在椅子上。","Thank you. I see it.","It's a chair.|I'm fine.","感谢。"],
+ ["Don't forget your scarf, too.","也别忘了围巾。","OK. I'm ready now.","It's hot.|Goodbye.","准备好。"]
+]],
+[4,"家庭照片","📷",[
+ ["Who's this in the photo?","照片里这是谁？","This is my uncle.","It's a photo.|I'm nine.","介绍人物。"],
+ ["What does he do?","他做什么工作？","He is a bus driver.","He is fine.|It's a bus.","问职业。"],
+ ["He looks very kind.","他看起来很和善。","Yes, he is very nice.","It's a photo.|Goodbye.","赞同。"]
+]],
+[4,"农场动物","🐑",[
+ ["What are these?","这些是什么？","They are sheep.","It's a sheep.|They are Monday.","复数动物用 They are...。"],
+ ["How many sheep are there?","有几只羊？","There are five sheep.","There is one sheep.|It's five.","回答数量。"],
+ ["Look! The sheep are eating grass.","看！羊在吃草。","Yes, they are hungry.","It's a farm.|Goodbye.","观察。"]
+]],
+[4,"学校午饭","🍚",[
+ ["What's for lunch today?","今天午饭吃什么？","We have rice and fish.","It's Monday.|I'm nine.","回答食物。"],
+ ["Do you like fish?","你喜欢鱼吗？","Yes, it's delicious.","Yes, it is Monday.|No, I am.","喜欢并形容好吃。"],
+ ["Would you like some vegetables?","你想要一些蔬菜吗？","Yes, please. Thank you.","No, I am.|It's a bowl.","想要说 Yes, please。"]
+]],
+[4,"图书馆规则","🤫",[
+ ["Please be quiet in the library.","在图书馆请保持安静。","OK. I will keep quiet.","It's a library.|I'm nine.","答应安静。"],
+ ["You can read books here, but you can't eat.","你可以在这里看书，但不能吃东西。","I see. I won't eat here.","Yes, I am eating.|Goodbye.","承诺不吃。"],
+ ["Good. Enjoy your reading.","很好。祝你阅读愉快。","Thank you.","It's a book.|I'm sorry.","道谢。"]
+]],
+[4,"写作业","📝",[
+ ["Can you help me with my homework?","你能帮我做作业吗？","Sure. What's the question?","I'm nine.|It's Monday.","答应并问问题。"],
+ ["I don't understand this word.","我不懂这个词。","Let me read it with you.","It's a word.|Goodbye.","一起读。"],
+ ["Now I understand. Thank you!","现在我懂了。谢谢！","You're welcome. Keep trying.","It's Monday.|I'm sorry.","鼓励。"]
+]],
+[4,"迟到","⏰",[
+ ["Sorry I'm late, Miss Li.","对不起，李老师，我迟到了。","That's all right. Please sit down.","Good morning.|It's Monday.","迟到道歉，老师说没关系。"],
+ ["Why are you late?","你为什么迟到？","The bus was late.","I'm nine.|It's a bus.","解释原因。"],
+ ["OK. Try to come earlier tomorrow.","好。明天尽量早点来。","Yes, Miss Li. I will.","It's a bus.|Goodbye.","答应。"]
+]],
+[4,"借雨伞","☂️",[
+ ["It's raining. Do you have an umbrella?","下雨了。你有雨伞吗？","No, I don't.","No, I am.|It's a rain.","没有用 No, I don't。"],
+ ["You can borrow mine. Here you are.","你可以借我的。给你。","Thank you so much.","It's an umbrella.|Goodbye.","感谢。"],
+ ["Please return it tomorrow.","请明天还给我。","OK, I will.","It's sunny.|I'm nine.","答应归还。"]
+]],
+[4,"生日礼物","🎁",[
+ ["Happy birthday! Here is a present for you.","生日快乐！这是给你的礼物。","Thank you! What a nice present!","It's Monday.|Goodbye.","感谢并称赞。"],
+ ["Open it and see.","打开看看。","Wow, a storybook! I love it.","It's a box.|I'm sorry.","打开后的惊喜。"],
+ ["I'm glad you like it.","我很高兴你喜欢。","Thank you again.","It's a book.|Goodbye.","再次感谢。"]
+]],
+[4,"做家务","🧼",[
+ ["Can you sweep the floor?","你能扫地吗？","Sure, I can.","Yes, it is.|It's a floor.","答应说 Sure。"],
+ ["Thank you. I'll wash the dishes.","谢谢。我来洗碗。","OK. Let's work together.","It's a dish.|Goodbye.","一起做。"],
+ ["You are a good helper.","你真是个好帮手。","Thank you, Mom.","It's dirty.|I'm nine.","接受夸奖。"]
+]],
+[4,"问价格","💰",[
+ ["How much is this pencil box?","这个铅笔盒多少钱？","It's fifteen yuan.","It's a pencil.|I'm nine.","问价格用 How much is...?"],
+ ["That's a little expensive. How about this one?","有点贵。这个呢？","It's ten yuan. It's cheaper.","It's Monday.|I'm fine.","比较价格。"],
+ ["OK, I'll take this one.","好，我要这个。","Here you are. Thank you.","It's a box.|Goodbye.","购买。"]
+]],
+[4,"周末活动","⚽",[
+ ["What do you do on weekends?","你周末做什么？","I often play football.","It's Monday.|I'm nine.","回答周末活动。"],
+ ["Do you play with your friends?","你和朋友一起玩吗？","Yes, we play together.","Yes, it is Monday.|No, I am.","回答。"],
+ ["That sounds fun.","听起来很好玩。","Yes, it's a lot of fun.","It's a ball.|Goodbye.","赞同。"]
+]],
+[4,"迷路","🗺️",[
+ ["Excuse me, I'm lost. Where am I?","打扰一下，我迷路了。我在哪？","You are near the park.","I'm nine.|It's Monday.","告知位置。"],
+ ["How can I get to the school?","我怎么去学校？","Go along this street and turn right.","It's a school.|I'm fine.","指路。"],
+ ["Thank you. You are very kind.","谢谢。你真好。","You're welcome. Be careful.","Good morning.|It's a street.","回答感谢。"]
+]],
+[4,"感谢还书","📗",[
+ ["Here is your book. You left it in the classroom.","你的书。你落在教室了。","Thank you so much.","It's a book.|I'm nine.","感谢。"],
+ ["You're welcome. Please check your bag before you leave.","不客气。离开前请检查书包。","OK, I will. Thanks for the tip.","It's a bag.|Goodbye.","接受建议。"],
+ ["No problem. Have a good day.","没问题。祝你今天愉快。","You too. Bye!","It's Monday.|I'm sorry.","回应祝福。"]
+]],
+/* ---------- 五年级 25 个 ---------- */
+[5,"餐厅点餐","🍔",[
+ ["Good evening. May I take your order?","晚上好。可以点餐了吗？","Yes. I'd like a hamburger and a salad.","I'm nine.|It's a book.","点餐用 I'd like..."],
+ ["Would you like something to drink?","要喝点什么吗？","A glass of orange juice, please.","It's a hamburger.|I'm fine.","点饮料。"],
+ ["Your food will be ready in ten minutes.","你的食物十分钟后就好。","OK. Thank you.","It's Monday.|Goodbye.","道谢。"]
+]],
+[5,"问路去博物馆","🏛️",[
+ ["Excuse me, how can I get to the museum?","打扰一下，怎么去博物馆？","Go straight and turn right at the second corner.","It's a museum.|I'm nine.","指路：直走、第二个路口右转。"],
+ ["Is it far from here?","离这儿远吗？","It's about ten minutes on foot.","It's Monday.|Ten museums.","步行约十分钟。"],
+ ["Thank you. Is there a bus?","谢谢。有公交车吗？","Yes, you can take the No. 8 bus.","It's a train.|I'm fine.","公交信息。"]
+]],
+[5,"看医生","🤒",[
+ ["What's the matter with you?","你怎么了？","I have a fever and a sore throat.","I'm nine.|It's Monday.","描述症状。"],
+ ["You should stay in bed and drink more water.","你应该卧床休息、多喝水。","OK, doctor. How long should I rest?","It's a bed.|Goodbye.","询问休息时间。"],
+ ["For two days. Take this medicine after meals.","休息两天。饭后吃这药。","Thank you, doctor.","It's a hospital.|I'm sorry.","道谢。"]
+]],
+[5,"借尺子","📏",[
+ ["Could I use your ruler, please?","我能用一下你的尺子吗？","Of course. Here you are.","It's a ruler.|I'm nine.","同意借出。"],
+ ["Thanks. I'll give it back in a minute.","谢谢。我一会儿还你。","No problem. Take your time.","It's Monday.|Goodbye.","不着急。"],
+ ["Here is your ruler. Thank you for lending it.","你的尺子。谢谢你借给我。","You're welcome.","It's a ruler.|I'm sorry.","回答感谢。"]
+]],
+[5,"电话邀约","📱",[
+ ["Hello, this is Mike. May I speak to Amy?","你好，我是迈克。可以找艾米听电话吗？","This is Amy speaking.","I'm fine.|It's a phone.","接电话自我介绍。"],
+ ["Are you free on Saturday? Let's go to the cinema.","你周六有空吗？我们去看电影吧。","Yes, I'd love to.","No, I'm nine.|It's a movie.","接受邀请。"],
+ ["Great. Let's meet at three at the cinema.","好。三点在电影院见。","OK. See you then.","It's Monday.|Goodbye.","约定时间。"]
+]],
+[5,"超市购物","🛒",[
+ ["Can I help you?","需要帮忙吗？","Yes, where can I find the milk?","I'm nine.|It's Monday.","询问位置。"],
+ ["It's in aisle three, next to the bread.","在三号通道，面包旁边。","Thank you. I'll go and get it.","It's a supermarket.|Goodbye.","感谢。"],
+ ["Do you need anything else?","还需要别的吗？","No, that's all. Thank you.","Yes, I am.|It's a milk.","不需要。"]
+]],
+[5,"邮局寄信","✉️",[
+ ["Good morning. How can I help you?","早上好。有什么可以帮您？","I want to send this letter to Beijing.","It's a letter.|I'm nine.","寄信。"],
+ ["How much is it?","多少钱？","It's eight yuan.","It's Monday.|Eight letters.","邮费。"],
+ ["Here is the money. Thank you.","给你钱。谢谢。","You're welcome. Have a nice day.","Good morning.|It's a post office.","道谢。"]
+]],
+[5,"图书馆借书证","📚",[
+ ["Can I help you?","需要帮忙吗？","I'd like to borrow this book.","It's a book.|I'm nine.","借书。"],
+ ["Sure. Please show me your library card.","好的。请出示借书证。","Here it is.","It's a card.|I'm fine.","出示借书证。"],
+ ["You can keep it for three weeks.","你可以借三周。","Thank you. I'll return it on time.","It's a week.|Goodbye.","答应按时还。"]
+]],
+[5,"生日邀请","🎉",[
+ ["I'm having a birthday party this Saturday. Would you like to come?","我周六办生日会。你愿意来吗？","Yes, I'd love to. Thank you for inviting me.","No, I'm nine.|It's a cake.","接受邀请并感谢。"],
+ ["Great! Can you bring some music CDs?","太好了！你能带一些音乐光盘吗？","Sure. I have many CDs.","It's Monday.|I'm sorry.","答应带。"],
+ ["The party starts at six. Don't be late!","派对六点开始。别迟到！","OK. I'll be there on time.","It's a party.|Goodbye.","答应准时。"]
+]],
+[5,"打碎东西道歉","😢",[
+ ["I'm sorry. I broke your pencil.","对不起，我弄断了你的铅笔。","That's OK. Don't worry.","It's a pencil.|I'm nine.","接受道歉。"],
+ ["I'll buy you a new one.","我给你买一支新的。","You don't have to. It's just a pencil.","Yes, I do.|It's Monday.","不必。"],
+ ["Thank you for being so kind.","谢谢你这么好。","We are friends. That's what friends do.","It's a pencil.|Goodbye.","朋友之间。"]
+]],
+[5,"为什么喜欢英语","🗣️",[
+ ["Why do you like English?","你为什么喜欢英语？","Because I like reading English stories.","Because it's Monday.|Yes, I do.","回答原因。"],
+ ["Do you read English every day?","你每天读英语吗？","Yes, I read for twenty minutes every day.","Yes, it is Monday.|No, I am.","回答并补充时间。"],
+ ["That's a good habit. Keep it up!","好习惯。坚持下去！","Thank you, Miss Li.","Goodbye.|I'm sorry.","接受鼓励。"]
+]],
+[5,"火车站买票","🚄",[
+ ["Good morning. Can I help you?","早上好。需要帮忙吗？","I'd like two tickets to Shanghai, please.","It's a train.|I'm nine.","买票。"],
+ ["When do you want to leave?","你想什么时候出发？","At nine tomorrow morning.","It's Monday.|Two tickets.","时间。"],
+ ["Here are your tickets. Have a good trip!","你的票。旅途愉快！","Thank you very much.","It's a station.|Goodbye.","道谢。"]
+]],
+[5,"最喜欢的季节","🍂",[
+ ["Which season do you like best?","你最喜欢哪个季节？","I like autumn best.","It's Monday.|I'm nine.","回答季节。"],
+ ["Why do you like autumn?","你为什么喜欢秋天？","Because the weather is cool and the leaves are pretty.","Because it's Monday.|Yes, I do.","回答原因。"],
+ ["Autumn is beautiful. I like it, too.","秋天很美。我也喜欢。","Let's go and see the leaves together.","It's a leaf.|Goodbye.","邀请。"]
+]],
+[5,"家人职业","👨‍⚕️",[
+ ["What does your father do?","你爸爸做什么工作？","He is a doctor.","He is fine.|It's a hospital.","问职业。"],
+ ["Where does he work?","他在哪里工作？","He works in a big hospital.","He works in a car.|I'm nine.","工作地点。"],
+ ["That's a great job. He helps many people.","好工作。他帮助很多人。","Yes, I'm proud of him.","It's Monday.|Goodbye.","表达自豪。"]
+]],
+[5,"我的爱好","🎨",[
+ ["What's your hobby?","你的爱好是什么？","My hobby is drawing pictures.","It's a picture.|I'm nine.","回答爱好。"],
+ ["How often do you draw?","你多久画一次？","I draw every weekend.","It's Monday.|I'm fine.","回答频率。"],
+ ["Can you show me one of your pictures?","能给我看一张你的画吗？","Sure. Here is my favourite one.","It's a book.|Goodbye.","展示。"]
+]],
+[5,"学校运动会","🏃",[
+ ["When is the school sports meeting?","学校运动会什么时候？","It's next Friday.","It's Monday.|I'm nine.","时间。"],
+ ["Are you going to run in the race?","你要参加跑步比赛吗？","Yes, I'm going to run the 100-metre race.","Yes, it is Monday.|No, I am.","参加项目。"],
+ ["Good luck! I'll cheer for you.","祝你好运！我会为你加油。","Thank you. That means a lot.","It's a race.|Goodbye.","感谢。"]
+]],
+[5,"问路去科技馆","🚇",[
+ ["Excuse me, how can I get to the science museum?","打扰一下，怎么去科技馆？","Take the subway. It's fast.","It's a museum.|I'm nine.","交通建议。"],
+ ["Which station should I get off at?","我在哪站下车？","Get off at Science Museum Station.","It's Monday.|I'm fine.","站名。"],
+ ["Thank you. Is it near the station?","谢谢。离车站近吗？","Yes, it's just next to the station.","It's a train.|Goodbye.","位置。"]
+]],
+[5,"电话留言","☎️",[
+ ["Hello, may I speak to Mr Li?","你好，可以找李先生听电话吗？","Sorry, he is out. Can I take a message?","I'm fine.|It's a phone.","留言。"],
+ ["Yes. Please tell him to call me back.","好。请让他给我回电话。","OK. What's your name and number?","It's Monday.|Goodbye.","询问信息。"],
+ ["My name is Tom. My number is 1380000.","我叫汤姆。我的号码是 1380000。","Got it. I'll tell him.","It's a phone.|I'm sorry.","记录。"]
+]],
+[5,"餐厅结账","💳",[
+ ["Would you like anything else?","还需要别的吗？","No, thank you. Could I have the bill?","Yes, I am.|It's a table.","结账。"],
+ ["Sure. It's sixty yuan in total.","好的。一共六十元。","Here you are. Keep the change.","It's a bill.|I'm nine.","付钱。"],
+ ["Thank you. Please come again.","谢谢。欢迎再来。","Sure. The food was delicious.","It's Monday.|Goodbye.","称赞。"]
+]],
+[5,"买药","💊",[
+ ["What can I do for you?","有什么可以帮你？","I have a cough. Can I have some medicine?","I'm nine.|It's a hospital.","买药。"],
+ ["How often should I take it?","我应该多久吃一次？","Three times a day after meals.","It's Monday.|Three meals.","用药说明。"],
+ ["OK. How much is it?","好。多少钱？","It's twenty yuan.","It's a medicine.|I'm fine.","价格。"]
+]],
+[5,"借手机","📲",[
+ ["May I use your phone? I need to call my mother.","我能用你的手机吗？我要给妈妈打电话。","Sure. Here you are.","It's a phone.|I'm nine.","同意。"],
+ ["Thank you. I'll finish in a minute.","谢谢。我一分钟就好。","Take your time. No hurry.","It's Monday.|Goodbye.","不着急。"],
+ ["Here is your phone. Thanks a lot.","你的手机。太感谢了。","You're welcome.","It's a phone.|I'm sorry.","回答感谢。"]
+]],
+[5,"约看电影","🎬",[
+ ["There is a new film this weekend. Would you like to see it?","周末有新电影。你想看吗？","Yes, I'd love to. When is it?","No, I'm nine.|It's a film.","接受并问时间。"],
+ ["It's at two on Sunday afternoon.","周日两点。","Perfect. Let's meet at the cinema.","It's Monday.|Goodbye.","约地点。"],
+ ["OK. I'll buy the tickets.","好。我来买票。","Great. Thank you!","It's a ticket.|I'm sorry.","感谢。"]
+]],
+[5,"周末安排","👨‍👩‍👧",[
+ ["What do you usually do on weekends?","你周末通常做什么？","I usually visit my grandparents.","It's Monday.|I'm nine.","回答。"],
+ ["Do they live near your home?","他们住得离你家近吗？","Yes, they live near the park.","No, I am.|It's a park.","回答。"],
+ ["That's nice. Family time is important.","真好。家人时间很重要。","Yes, I enjoy it very much.","It's a weekend.|Goodbye.","赞同。"]
+]],
+[5,"商店退换","👕",[
+ ["Can I help you?","需要帮忙吗？","Yes, I'd like to return this shirt.","I'm nine.|It's Monday.","退货。"],
+ ["What's the problem?","有什么问题？","It's too small for me.","It's red.|I'm fine.","原因。"],
+ ["OK. Here is a bigger one. Do you want to try it?","好。给你一件大点的。要试试吗？","Yes, thank you.","It's a shirt.|Goodbye.","试穿。"]
+]],
+[5,"找洗手间","🚻",[
+ ["Excuse me, where is the restroom?","打扰一下，洗手间在哪？","It's on the second floor.","It's Monday.|I'm nine.","位置。"],
+ ["How can I get there?","我怎么去？","Take the lift to the second floor.","It's a lift.|I'm fine.","怎么走。"],
+ ["Thank you. Is it on the left?","谢谢。在左边吗？","Yes, it's next to the bookshop.","It's a book.|Goodbye.","确认位置。"]
+]],
+/* ---------- 六年级 25 个 ---------- */
+[6,"假期旅行","🏖️",[
+ ["Where did you go on your holiday?","你假期去哪了？","I went to Hainan with my family.","I go to Hainan.|It's Monday.","用过去式 went。"],
+ ["What did you do there?","你在那做了什么？","We swam in the sea and ate seafood.","We swim in the sea.|I'm nine.","过去活动。"],
+ ["That sounds wonderful. Did you take photos?","听起来真棒。你拍照了吗？","Yes, we took many photos.","Yes, we take many photos.|No, I am.","用过去式 took。"]
+]],
+[6,"比较身高","📏",[
+ ["Who is taller, you or your brother?","你和哥哥谁更高？","My brother is taller than me.","My brother is shorter than me.|I'm nine.","比较级 taller than。"],
+ ["How tall is he?","他多高？","He is one metre seventy.","He is seven.|It's Monday.","身高。"],
+ ["He is tall. Can he play basketball well?","他很高。篮球打得好吗？","Yes, he plays very well.","Yes, he is tall.|I'm sorry.","回答。"]
+]],
+[6,"医生的话","🩺",[
+ ["What did the doctor say?","医生怎么说？","He said I should rest for three days.","He says I rest.|I'm nine.","转述用 He said..."],
+ ["Did he give you any medicine?","他给你药了吗？","Yes, he gave me some pills.","Yes, he gives me.|It's Monday.","过去式 gave。"],
+ ["You should take them on time and drink more water.","你要按时吃药、多喝水。","I will. Thank you for your care.","It's a pill.|Goodbye.","答应。"]
+]],
+[6,"问距离","🗺️",[
+ ["How far is the museum from here?","博物馆离这儿多远？","It's about two kilometres.","It's two o'clock.|I'm nine.","距离。"],
+ ["Can I walk there?","我能走路去吗？","Yes, but it will take about thirty minutes.","It's a walk.|I'm fine.","时间。"],
+ ["Then I'll take the bus. Which bus should I take?","那我坐公交。坐几路？","You can take the No. 12 bus.","It's a museum.|Goodbye.","公交。"]
+]],
+[6,"暑假计划","✈️",[
+ ["Where are you going this summer holiday?","这个暑假你去哪？","I'm going to visit my grandparents in Xi'an.","I went to Xi'an.|It's Monday.","用 be going to 表计划。"],
+ ["How are you going there?","你怎么去？","I'm going there by train.","I go there by train.|I'm nine.","交通。"],
+ ["That will be a nice trip. Take care!","旅途愉快。保重！","Thank you. I will.","It's a train.|Goodbye.","感谢。"]
+]],
+[6,"过去的周末","🌾",[
+ ["What did you do last weekend?","上个周末你做了什么？","I visited a farm with my parents.","I visit a farm.|It's Monday.","过去式 visited。"],
+ ["What did you see on the farm?","你在农场看到了什么？","I saw cows, sheep and many chickens.","I see cows.|I'm nine.","过去式 saw。"],
+ ["Did you have a good time?","你玩得开心吗？","Yes, it was great fun.","Yes, it is great fun.|I'm sorry.","回答。"]
+]],
+[6,"失物招领","🎒",[
+ ["I lost my schoolbag. Can you help me?","我的书包丢了。你能帮我吗？","Sure. What color is it?","I'm nine.|It's Monday.","询问特征。"],
+ ["It's blue, and it has a panda on it.","是蓝色的，上面有只熊猫。","I think I saw it in the lost-and-found box.","It's a bag.|Goodbye.","线索。"],
+ ["Really? Let's go and have a look.","真的吗？我们去看看。","OK. Follow me, please.","It's a panda.|I'm sorry.","跟随。"]
+]],
+[6,"打电话道歉","📵",[
+ ["Hello, this is Peter. Is that you, Amy?","你好，我是彼得。你是艾米吗？","Yes, this is Amy speaking.","I'm fine.|It's a phone.","确认。"],
+ ["I'm sorry, but I can't come to your party.","对不起，我不能来你的派对了。","That's OK. Are you all right?","It's a party.|Goodbye.","关心。"],
+ ["I have a bad cold. I need to rest.","我重感冒，需要休息。","Take good care of yourself.","It's a cold.|I'm nine.","关心。"]
+]],
+[6,"拒绝邀请","🎵",[
+ ["Would you like to go to the concert with me?","你想和我去音乐会吗？","I'd love to, but I have to look after my sister.","Yes, I do.|It's a concert.","拒绝并说明原因。"],
+ ["That's OK. Maybe next time.","没关系。下次吧。","Sure. Thank you for understanding.","It's Monday.|Goodbye.","感谢理解。"],
+ ["By the way, the concert is next Saturday.","顺便说，音乐会下周六。","I hope I can go next time.","It's a concert.|I'm sorry.","期待。"]
+]],
+[6,"学琴","🎹",[
+ ["When did you start playing the piano?","你什么时候开始弹钢琴的？","I started when I was six.","I start when I am six.|It's Monday.","过去式 started。"],
+ ["Can you play it well now?","现在弹得好吗？","Yes, I can play many songs.","Yes, I do.|It's a song.","回答能力。"],
+ ["That's great. Practice makes perfect.","太好了。熟能生巧。","I'll keep practising.","It's a piano.|Goodbye.","坚持。"]
+]],
+[6,"试穿外套","🧥",[
+ ["Can I try on this coat?","我可以试穿这件外套吗？","Sure. The fitting room is over there.","It's a coat.|I'm nine.","试穿。"],
+ ["How does it fit?","合身吗？","It's a little big. Do you have a smaller one?","It's Monday.|I'm fine.","尺码。"],
+ ["Yes. Here is a smaller size.","有。给你小一码的。","This one fits well. I'll take it.","It's a coat.|Goodbye.","买下。"]
+]],
+[6,"餐厅甜点","🍨",[
+ ["What would you like to drink?","你想喝什么？","I'd like a cup of tea, please.","It's a cup.|I'm nine.","饮料。"],
+ ["Would you like some dessert?","要甜点吗？","Yes, I'd like some ice cream.","It's Monday.|I'm fine.","甜点。"],
+ ["OK. Your tea and ice cream will be ready soon.","好。你的茶和冰淇淋马上来。","Thank you very much.","It's a restaurant.|Goodbye.","道谢。"]
+]],
+[6,"寄包裹","📦",[
+ ["I want to send this parcel to Guangzhou.","我想把这个包裹寄到广州。","OK. How much is it to send it by express?","It's a parcel.|I'm nine.","询问费用。"],
+ ["It's twenty yuan. It will arrive in two days.","二十元。两天到。","That's fine. Here is the money.","It's Monday.|I'm fine.","付钱。"],
+ ["Thank you. Please write the address clearly.","谢谢。请把地址写清楚。","OK. I'll write it now.","It's a letter.|Goodbye.","答应。"]
+]],
+[6,"还书逾期","📕",[
+ ["I'd like to return this book.","我想还这本书。","Sure. But it is three days late.","It's a book.|I'm nine.","逾期。"],
+ ["I'm sorry. What should I do?","对不起。我该怎么办？","You should pay a small fine.","It's Monday.|Goodbye.","罚款。"],
+ ["OK. How much is the fine?","好。罚款多少？","It's two yuan.","It's a book.|I'm fine.","金额。"]
+]],
+[6,"动物园规则","🐒",[
+ ["Look at the sign. What does it say?","看这个牌子。上面写什么？","It says we must not feed the animals.","It says we can feed them.|I'm nine.","规则用 must not。"],
+ ["Why can't we feed them?","为什么不能喂？","Because some food is bad for them.","Because it's Monday.|It's a zoo.","原因。"],
+ ["I see. We should follow the rules.","明白了。我们应该遵守规则。","Yes. Let's watch the monkeys.","It's a monkey.|Goodbye.","遵守。"]
+]],
+[6,"交通安全","🚦",[
+ ["You must be careful when you cross the road.","过马路时要小心。","OK. I'll look at the traffic lights.","It's a road.|I'm nine.","注意。"],
+ ["What does a red light mean?","红灯是什么意思？","It means we must stop.","It means we can go.|I'm fine.","红灯停。"],
+ ["Right. And a green light means we can go.","对。绿灯表示可以走。","I understand. Thank you.","It's a light.|Goodbye.","理解。"]
+]],
+[6,"去火车站","🚉",[
+ ["Which bus goes to the train station?","哪路公交去火车站？","You can take the No. 5 bus.","It's a train.|I'm nine.","公交。"],
+ ["Where is the bus stop?","公交站在哪？","It's in front of the post office.","It's Monday.|I'm fine.","位置。"],
+ ["How long does it take?","要多久？","About twenty minutes.","Twenty buses.|Goodbye.","时间。"]
+]],
+[6,"天气与出行","🌦️",[
+ ["What will the weather be like tomorrow?","明天天气怎么样？","It will be rainy and windy.","It is rainy.|I'm nine.","将来天气用 will be。"],
+ ["Then we can't have a picnic.","那我们不能野餐了。","We can go to the museum instead.","It's a picnic.|Goodbye.","替代方案。"],
+ ["Good idea. The museum is indoors.","好主意。博物馆在室内。","Yes. Let's meet at ten.","It's a museum.|I'm sorry.","约时间。"]
+]],
+[6,"电话转告","📞",[
+ ["Hello, may I speak to your father?","你好，可以找你爸爸听电话吗？","Sorry, he is not at home. Can I take a message?","I'm fine.|It's a phone.","留言。"],
+ ["Yes. Please tell him to meet me at the hospital tomorrow.","好。请告诉他明天在医院见我。","OK. I'll tell him.","It's a hospital.|I'm nine.","记录。"],
+ ["Thank you. Don't forget, please.","谢谢。请别忘了。","Don't worry. I won't.","It's Monday.|Goodbye.","承诺。"]
+]],
+[6,"梦想职业","🔬",[
+ ["What do you want to be?","你长大想做什么？","I want to be a scientist.","I am a scientist.|It's Monday.","梦想。"],
+ ["Why do you want to be a scientist?","为什么想当科学家？","Because I like science and I want to help people.","Because I'm nine.|Yes, I do.","原因。"],
+ ["That's a good dream. Study hard!","好梦想。努力学习！","I will. Thank you.","It's a book.|Goodbye.","决心。"]
+]],
+[6,"朋友生日","🎁",[
+ ["Happy birthday! Here is a gift for you.","生日快乐！这是给你的礼物。","Thank you! You remembered my birthday.","It's Monday.|Goodbye.","感谢。"],
+ ["Of course. We are good friends.","当然。我们是好朋友。","I'm so lucky to have you as my friend.","It's a gift.|I'm nine.","表达友情。"],
+ ["Let's cut the cake together.","我们一起切蛋糕吧。","Great! Let's do it.","It's a cake.|I'm sorry.","同意。"]
+]],
+[6,"比较城市","🏙️",[
+ ["Which city is bigger, Beijing or Shanghai?","北京和上海哪个城市更大？","Shanghai is bigger than Beijing.","Beijing is bigger than Shanghai.|I'm nine.","比较级 bigger。"],
+ ["Have you been to Shanghai?","你去过上海吗？","Yes, I went there last year.","Yes, I go there.|It's Monday.","过去式 went。"],
+ ["What did you think of it?","你觉得怎么样？","It was busy and beautiful.","It is busy and beautiful.|I'm fine.","评价。"]
+]],
+[6,"健康建议","😴",[
+ ["I always feel tired. What should I do?","我总是觉得累。该怎么办？","You should go to bed earlier.","You should eat more candy.|I'm nine.","建议用 should。"],
+ ["How many hours should I sleep?","该睡几个小时？","You should sleep for eight hours.","Eight minutes.|It's Monday.","时间。"],
+ ["OK. I'll try to sleep earlier.","好。我尽量早点睡。","That's good. You will feel better.","It's a bed.|Goodbye.","鼓励。"]
+]],
+[6,"机场问询","🛫",[
+ ["Excuse me, where is Gate 15?","打扰一下，15 号登机口在哪？","It's on the second floor, on the right.","It's a gate.|I'm nine.","位置。"],
+ ["How long does it take to get there?","到那里要多久？","About ten minutes on foot.","Ten planes.|It's Monday.","时间。"],
+ ["Thank you. When does the plane leave?","谢谢。飞机什么时候起飞？","At three this afternoon.","It's a plane.|Goodbye.","时间。"]
+]],
+[6,"告别祝福","👋",[
+ ["I'm going back to England tomorrow.","我明天要回英国了。","I'm sorry to hear that. I'll miss you.","It's a plane.|I'm nine.","不舍。"],
+ ["I'll miss you, too. Let's keep in touch.","我也会想你。我们保持联系。","Sure. You can email me.","It's a letter.|Goodbye.","联系方式。"],
+ ["Have a safe trip!","一路平安！","Thank you. Goodbye, my friend.","It's Monday.|I'm sorry.","告别。"]
+]],
+];
+
+var GRADES = [3, 4, 5, 6];
+var state = { grade: 3, si: -1, step: 0, locked: false, timer: null, scene: null, opts: [] };
+var completed = loadDone();
+
+var elGradeBar = document.getElementById('gradeBar');
+var elList = document.getElementById('listView');
+var elScenes = document.getElementById('sceneList');
+var elPlay = document.getElementById('playView');
+var elTitle = document.getElementById('playTitle');
+var elNpc = document.getElementById('npcLine');
+var elCn = document.getElementById('cnLine');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elSummary = document.getElementById('summary');
+var elDone = document.getElementById('doneChip');
+var elSceneChip = document.getElementById('sceneChip');
+
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function say(t, o) { if (window.XNLY && XNLY.voice) { try { XNLY.voice.speak(t, o || {}); } catch (e) { } } }
+function sfx(n) { if (window.XNLY && XNLY.sound && XNLY.sound[n]) { try { XNLY.sound[n](); } catch (e) { } } }
+function mark(k) { if (window.XNLY && XNLY.mark) { try { XNLY.mark(k); } catch (e) { } } }
+
+function loadDone() {
+  try {
+    var v = JSON.parse(localStorage.getItem('xnly.dlg.done') || '[]');
+    return Array.isArray(v) ? v.filter(function (x) { return typeof x === 'number'; }) : [];
+  } catch (e) { return []; }
+}
+function saveDone() {
+  try { localStorage.setItem('xnly.dlg.done', JSON.stringify(completed)); } catch (e) { }
+}
+function isDone(i) { return completed.indexOf(i) >= 0; }
+
+function scenesOf(g) {
+  var out = [];
+  S.forEach(function (s, i) { if (s[0] === g) out.push({ i: i, s: s }); });
+  return out;
+}
+
+function renderGradeBar() {
+  elGradeBar.innerHTML = '';
+  GRADES.forEach(function (g) {
+    var n = scenesOf(g).length;
+    var dn = scenesOf(g).filter(function (x) { return isDone(x.i); }).length;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tchip' + (g === state.grade ? ' on' : '');
+    b.textContent = g + ' 年级 · ' + dn + '/' + n;
+    b.addEventListener('click', function () {
+      state.grade = g;
+      renderList();
+      say(g + ' 年级的情景对话。');
+    });
+    elGradeBar.appendChild(b);
+  });
+  elDone.textContent = String(completed.length);
+}
+
+function renderList() {
+  clearTimeout(state.timer);
+  state.si = -1; state.locked = false;
+  elPlay.hidden = true;
+  elList.hidden = false;
+  elSceneChip.textContent = String(scenesOf(state.grade).length);
+  renderGradeBar();
+  elScenes.innerHTML = '';
+  scenesOf(state.grade).forEach(function (x) {
+    var s = x.s;
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'scene' + (isDone(x.i) ? ' done' : '');
+    b.innerHTML = '<span class="em">' + s[2] + '</span><span class="meta"><span class="nm">' + s[1] +
+      '</span><span class="st">' + s[3].length + ' 步 · 选对往下走</span></span>' +
+      '<span class="tick">' + (isDone(x.i) ? '✓' : '') + '</span>';
+    b.addEventListener('click', function () { playScene(x.i); });
+    elScenes.appendChild(b);
+  });
+}
+
+function playScene(i) {
+  clearTimeout(state.timer);
+  state.si = i;
+  state.step = 0;
+  state.scene = S[i];
+  state.locked = false;
+  elList.hidden = true;
+  elPlay.hidden = false;
+  elSummary.classList.remove('show');
+  elSummary.innerHTML = '';
+  elFb.className = 'feedback'; elFb.textContent = '';
+  renderStep();
+}
+
+function renderStep() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  var sc = state.scene, st = sc[3][state.step];
+  elTitle.innerHTML = sc[2] + ' ' + sc[1] + '<span>第 ' + (state.step + 1) + ' / ' + sc[3].length + ' 步</span>';
+  elNpc.textContent = st[0];
+  elCn.textContent = st[1];
+  var wrong = st[3].split('|');
+  var opts = shuffle([{ t: st[2], ok: true }, { t: wrong[0], ok: false }, { t: wrong[1], ok: false }]);
+  state.opts = opts;
+  elOpts.innerHTML = '';
+  opts.forEach(function (o, k) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = o.t;
+    b.addEventListener('click', function () { choose(k, b); });
+    elOpts.appendChild(b);
+  });
+  elFb.className = 'feedback'; elFb.textContent = '';
+  say(st[0], { lang: 'en-US' });
+  say(st[1], { queue: true });
+}
+
+function choose(k, btn) {
+  if (state.locked || state.si < 0) return;
+  var st = state.scene[3][state.step];
+  var o = state.opts[k];
+  if (o.ok) {
+    state.locked = true;
+    btn.classList.add('good');
+    mark('right'); sfx('correct');
+    elFb.className = 'feedback ok';
+    elFb.innerHTML = '✅ 回应得对！<small>' + st[4] + '</small>';
+    Array.prototype.forEach.call(elOpts.children, function (b) { b.disabled = true; });
+    state.timer = setTimeout(function () {
+      state.step++;
+      if (state.step >= state.scene[3].length) finishScene(); else renderStep();
+    }, 1100);
+  } else {
+    mark('wrong'); sfx('wrong');
+    btn.classList.add('bad', 'shake');
+    elFb.className = 'feedback bad';
+    elFb.innerHTML = '❌ ' + st[4] + '<small>再选一次，剧情还在这里等你</small>';
+    setTimeout(function () { btn.classList.remove('shake'); }, 500);
+  }
+}
+
+function finishScene() {
+  clearTimeout(state.timer);
+  state.locked = true;
+  if (!isDone(state.si)) { completed.push(state.si); saveDone(); }
+  renderGradeBar();
+  elOpts.innerHTML = '';
+  elFb.className = 'feedback'; elFb.textContent = '';
+  elNpc.textContent = '🎉 剧情完成！';
+  elCn.textContent = '这个场景的对话你都演对了，可以去场景列表挑下一个。';
+  elTitle.innerHTML = state.scene[2] + ' ' + state.scene[1] + '<span>剧情完成</span>';
+  elSummary.innerHTML = '<div class="sumtitle">🎉 剧情完成</div>' +
+    '<div class="sumline">' + state.scene[1] + ' · 共 ' + state.scene[3].length + ' 步，全部走完</div>' +
+    '<div class="sumline" style="font-size:.78rem;color:#7b8ea8">已完成场景 ' + completed.length + '/100，可以随时回来重演</div>' +
+    '<button class="again" id="againBtn" type="button">🔄 再演一遍</button>' +
+    '<button class="mini" id="nextBtn" type="button">换一个场景 →</button>';
+  elSummary.classList.add('show');
+  sfx('win');
+  say('剧情完成，真棒！');
+  document.getElementById('againBtn').addEventListener('click', function () { playScene(state.si); });
+  document.getElementById('nextBtn').addEventListener('click', renderList);
+}
+
+document.getElementById('backBtn').addEventListener('click', renderList);
+document.getElementById('replayBtn').addEventListener('click', function () {
+  if (state.si < 0) return;
+  var st = state.scene[3][state.step];
+  if (!st) return;
+  say(st[0], { lang: 'en-US' });
+  say(st[1], { queue: true });
+});
+
+var firstTap = false;
+document.addEventListener('pointerdown', function () {
+  if (firstTap) return;
+  firstTap = true;
+  if (window.XNLY && XNLY.voice && XNLY.voice.unlock) { try { XNLY.voice.unlock(); } catch (e) { } }
+  if (window.XNLY && XNLY.sound && XNLY.sound.unlock) { try { XNLY.sound.unlock(); } catch (e) { } }
+  if (state.si < 0) say('选一个场景，点进去一步一步演一演。选错了也没关系，会有中文提示。');
+}, { passive: true });
+
+renderList();
+
+window.DG = { S: S, get state() { return state; }, scenesOf: scenesOf, playScene: playScene,
+  choose: choose, finishScene: finishScene, completed: completed };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

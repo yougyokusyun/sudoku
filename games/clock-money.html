@@ -69,6 +69,7 @@ h1{font-size:1.15rem;}
 </style>
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -292,7 +293,8 @@ function renderTiers() {
       if (Number(k) === state.tier) return;
       state.tier = Number(k); safeSet(KEY_TIER, state.tier);
       state.streak = 0;
-      state.order = shuffle(BANK[state.tier]);
+      state.order = [];
+      state.deck = clockDeckFor();
       state.pos = 0;
       renderTiers(); updateStats(); nextQuestion();
     });
@@ -305,15 +307,24 @@ function setFb(html, good, sub) {
   elFb.innerHTML = html + (sub ? '<small>' + sub + '</small>' : '');
 }
 
+var clockDecks = {};
+function clockDeckFor() {
+  if (!clockDecks[state.tier]) {
+    clockDecks[state.tier] = XNLY.deck.make(BANK[state.tier], 'clock-money.tier' + state.tier, { head: 5 });
+  }
+  return clockDecks[state.tier];
+}
+
 function nextQuestion() {
   clearTimeout(state.timer);
   state.locked = false;
-  if (!state.order || state.pos >= state.order.length) {
-    state.order = shuffle(BANK[state.tier]);
+  if (!state.deck || state.deckTier !== state.tier) {
+    state.deck = clockDeckFor();
+    state.deckTier = state.tier;
     state.pos = 0;
   }
-  state.cur = state.order[state.pos];
-  state.pos++;
+  state.cur = state.deck.next();
+  state.pos = (state.pos + 1) % BANK[state.tier].length;
   var q = state.cur;
   elClock.innerHTML = '';
   elMoney.innerHTML = '';
@@ -395,7 +406,8 @@ function answer(val, btn, opts) {
   state.tier = (t >= 1 && t <= 3) ? t : 1;
   var b = parseInt(safeGet(KEY_BEST), 10);
   state.best = isNaN(b) || b < 0 ? 0 : b;
-  state.order = shuffle(BANK[state.tier]);
+  state.order = [];
+  state.deck = clockDeckFor();
   state.pos = 0;
   renderTiers();
   updateStats();

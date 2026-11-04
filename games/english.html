@@ -107,6 +107,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -377,8 +378,20 @@ function mkLookSay(q){
 }
 
 /* ============= 构建一轮 ============= */
+var gradeDecks = {};
+function gradeDeckFor() {
+  var key = 'english.g' + state.grade;
+  if (!gradeDecks[key]) {
+    gradeDecks[key] = XNLY.deck.make(GROUPS[state.grade].qs, key, {
+      head: 5, id: function (q, i) { return 'q' + i; }
+    });
+  }
+  return gradeDecks[key];
+}
 function buildQuiz(){
-  var pool = shuffle(GROUPS[state.grade].qs.slice());
+  var n = GROUPS[state.grade].qs.length;
+  var pool = [];
+  for (var qi = 0; qi < n; qi++) pool.push(gradeDeckFor().next());
   state.quiz = pool.map(function(q,idx){
     var t = idx % 3;
     if(t===0) return mkListenPick(q);

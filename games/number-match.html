@@ -99,6 +99,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -166,14 +167,26 @@ function say(text) {
   } catch (e) { }
 }
 
+var targetDeck = null, targetKey = '';
+function targetDeckFor() {
+  var k = 'number-match.' + level;
+  if (!targetDeck || targetKey !== k) {
+    var pool = [];
+    for (var v = 1; v <= MAX; v++) pool.push(v);
+    targetDeck = XNLY.deck.make(pool, k, { head: 5, id: function (n) { return 'n' + n; } });
+    targetKey = k;
+  }
+  return targetDeck;
+}
+var fruitDeck = XNLY.deck.make(FRUITS, 'number-match.fruits', { head: 5 });
+
 function newRound() {
   clearTimeout(timer);
   locked = true;                 /* 800ms 输入锁：题刚出来时朗读还没结束，防连点 */
   clearTimeout(lockTimer);
   lockTimer = setTimeout(function () { locked = false; }, 800);
 
-  var prev = target;
-  do { target = 1 + rand(MAX); } while (target === prev && MAX > 1);
+  target = targetDeckFor().next();
   elBig.textContent = target;
   elBig.classList.remove('pop');
 
@@ -182,7 +195,8 @@ function newRound() {
   for (var v = 1; v <= MAX; v++) all.push(v);
   var others = shuffle(all.filter(function (x) { return x !== target; })).slice(0, 3);
   var counts = shuffle([target].concat(others));
-  var fruits = shuffle(FRUITS).slice(0, 4);
+  var fruits = [];
+  for (var fi = 0; fi < 4; fi++) fruits.push(fruitDeck.next());
 
   elCards.innerHTML = '';
   counts.forEach(function (c, idx) {

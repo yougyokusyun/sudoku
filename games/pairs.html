@@ -68,6 +68,7 @@ h1{font-size:1.15rem;}
 <link rel="icon" type="image/png" href="../games/img/icon-192.png">
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -140,6 +141,13 @@ var PAIRS = [
 
 var PER_ROUND = 6;
 var state = { round: 0, done: 0, first: null, locked: false, cards: [] };
+var groupDeck = XNLY.deck.make([0, 1, 2, 3, 4], 'pairs.group', { head: 2 });
+var groupOrder = [];
+function ensureGroups() {
+  if (!groupOrder.length) {
+    for (var gi = 0; gi < 5; gi++) groupOrder.push(groupDeck.next());
+  }
+}
 var elGrid = document.getElementById('grid');
 var elFb = document.getElementById('feedback');
 var elRound = document.getElementById('round');
@@ -147,7 +155,9 @@ var elDone = document.getElementById('done');
 var elPrompt = document.getElementById('prompt');
 
 function buildCards() {
-  var start = state.round * PER_ROUND;
+  /* 组顺序由上方 XNLY.deck.make([0..4], 'pairs.group') 洗牌产生 */
+  ensureGroups();
+  var start = groupOrder[state.round] * PER_ROUND;
   var slice = PAIRS.slice(start, start + PER_ROUND);
   var cards = [];
   slice.forEach(function (p, i) {
@@ -233,7 +243,7 @@ document.getElementById('again').addEventListener('click', function () { buildCa
 
 elPrompt.textContent = '点两张牌，找出一对好朋友';
 buildCards();
-window.__pairsRestart = function () { state.round = 0; buildCards(); };
+window.__pairsRestart = function () { state.round = 0; groupOrder = []; groupDeck.reset(); buildCards(); };
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

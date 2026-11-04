@@ -83,6 +83,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -157,15 +158,22 @@ function say(text) {
 
 function activeColors() { return COLORS.slice(0, count); }
 
+var colorDeck = null, colorDeckKey = '';
+function deckForColors() {
+    var k = count + ':' + (nameMode ? 'name' : 'block');
+    if (!colorDeck || colorDeckKey !== k) {
+        colorDeck = XNLY.deck.make(activeColors(), 'color.' + k, { head: 5 });
+        colorDeckKey = k;
+    }
+    return colorDeck;
+}
+
 function newRound() {
     clearTimeout(timer);
     locked = false;
 
     var list = activeColors();
-    var prev = cur ? cur.name : '';
-    var pick;
-    do { pick = list[rand(list.length)]; } while (list.length > 1 && pick.name === prev);
-    cur = pick;
+    cur = deckForColors().next();
 
     var others = shuffle(list.filter(function (c) { return c.name !== cur.name; }));
     options = shuffle([cur].concat(others.slice(0, count - 1)));

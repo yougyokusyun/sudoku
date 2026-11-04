@@ -63,6 +63,7 @@ h1{font-size:1.15rem;}
 </style>
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -196,10 +197,24 @@ function renderTiers() {
   });
 }
 
+var synDecks = {};
+function tierDeck(lv) {
+  if (!synDecks[lv]) {
+    var items = [];
+    LEVELS[lv].syn.forEach(function (p) { items.push({ pair: p, isSyn: true }); });
+    LEVELS[lv].ant.forEach(function (p) { items.push({ pair: p, isSyn: false }); });
+    synDecks[lv] = XNLY.deck.make(items, 'near-syn.tier' + lv, {
+      head: 5, id: function (x) { return (x.isSyn ? 's' : 'a') + ':' + x.pair[0] + '-' + x.pair[1]; }
+    });
+  }
+  return synDecks[lv];
+}
+
 function makeQuestion() {
   var lv = state.tier, L = LEVELS[lv];
-  var isSyn = Math.random() < 0.5;
-  var pair = pick(isSyn ? L.syn : L.ant);
+  var entry = tierDeck(lv).next();
+  var isSyn = entry.isSyn;
+  var pair = entry.pair;
   var flip = Math.random() < 0.5;
   var ask = flip ? pair[1] : pair[0];
   var ans = flip ? pair[0] : pair[1];

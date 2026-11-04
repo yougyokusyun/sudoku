@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>找不同 · 小脑袋乐园</title>
+<title>火眼金睛 · 小脑袋乐园</title>
 <style>
 :root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -43,10 +43,11 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
-  <h1>🔍 找不同</h1>
+  <h1>🔍 火眼金睛</h1>
   <a class="back" href="../index.html">🏠 首页</a>
 </header>
 <div class="stage">
@@ -65,10 +66,11 @@ let locked=false,newRoundTimer=null,diffEmoji='';
 
 function clearFeedback(){var f=document.getElementById('feedback');f.className='feedback';f.textContent='';}
 
+var oddDeck=XNLY.deck.make(EMOJI_POOL,'odd-one',{head:5});
+
 function newRound(){
-  var pair=shuffle(EMOJI_POOL).slice(0,2);
-  diffEmoji=pair[0];        /* 独一无二的那个 */
-  var sameEmoji=pair[1];    /* 重复四次的那个 */
+  diffEmoji=oddDeck.next();  /* 独一无二的那个 */
+  var sameEmoji=oddDeck.next();  /* 重复四次的那个 */
   var cards=shuffle([sameEmoji,sameEmoji,sameEmoji,sameEmoji,diffEmoji]);
   document.getElementById('cards').innerHTML=cards.map(function(em){
     return '<button class="oc" type="button" data-emoji="'+em+'" aria-label="图案">'+em+'</button>';
@@ -98,7 +100,7 @@ document.getElementById('cards').addEventListener('click',function(e){
 newRound();
 
 /* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
-var VOICE_TEXT = '找不同游戏。五张卡片里，哪一张和其他不一样？点一下它。';
+var VOICE_TEXT = '火眼金睛。五张卡片里，哪一张和其他不一样？点一下它。';
 var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
 function voiceSpeak(text) {
   if (!CAN_VOICE || !text) return;

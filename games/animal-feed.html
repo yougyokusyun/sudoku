@@ -157,6 +157,7 @@ h1{font-size:1.15rem}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -271,14 +272,11 @@ function speak(text) {
 /* 随机出一题：1 只动物 + 1 个正确食物 + 3 个干扰食物
    干扰项不可是这只动物爱吃的东西（名字、图案都不能重复），
    且 4 个选项的名字和图案互不相同 */
-function makeQuestion() {
-  var pool = ANIMALS.slice();
-  if (pool.length > 1 && lastAnimal) {
-    pool = pool.filter(function (a) { return a.n !== lastAnimal; });
-  }
+var animalDeck = XNLY.deck.make(ANIMALS, 'animal-feed', { head: 5 });
 
+function makeQuestion() {
   for (var tryN = 0; tryN < 40; tryN++) {
-    var a = pool[rand(pool.length)];
+    var a = animalDeck.next();
     var correct = parseFood(a.eat[rand(a.eat.length)]);
     var forbidName = {}, forbidEmoji = {};
     a.eat.forEach(function (s) { var f = parseFood(s); forbidName[f.name] = forbidEmoji[f.emoji] = 1; });

@@ -47,6 +47,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -99,18 +100,37 @@ function emojiRow(n){
   return html;
 }
 
+var mlDeck = null, mlKey = '';
+function mlPool(cfg) {
+  var out = [];
+  for (var a = 1; a <= cfg.max; a++) {
+    for (var b = a + 1; b <= cfg.max; b++) {
+      if (Math.abs(a - b) >= cfg.minGap) out.push([a, b]);
+    }
+  }
+  return out;
+}
+function mlDeckFor() {
+  var k = 'more-less.' + level;
+  if (!mlDeck || mlKey !== k) {
+    mlDeck = XNLY.deck.make(mlPool(LEVELS[level-1]), k, { head: 5 });
+    mlKey = k;
+  }
+  return mlDeck;
+}
+var counterDeck = XNLY.deck.make(COUNTERS, 'more-less.counters', { head: 5 });
+
 function newRound(){
   clearTimeout(newRoundTimer);
   locked=true;                                  /* 800ms 输入锁，防连点 */
   clearTimeout(lockTimer);
   lockTimer=setTimeout(function(){locked=false;},800);
   var cfg=LEVELS[level-1];
-  do{
-    countA=1+Math.floor(Math.random()*cfg.max);
-    countB=1+Math.floor(Math.random()*cfg.max);
-  }while(Math.abs(countA-countB)<cfg.minGap);   /* 拉开差距，避免看不出多少 */
+  var q=mlDeckFor().next();
+  countA=q[0];
+  countB=q[1];
   askMore=Math.random()<0.5;
-  emojiNow=pick(COUNTERS);
+  emojiNow=counterDeck.next();
   document.getElementById('prompt').textContent=askMore?'哪边多？':'哪边少？';
   var sides=shuffle([{c:countA},{c:countB}]);
   document.getElementById('panels').innerHTML=sides.map(function(side){

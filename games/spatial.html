@@ -77,6 +77,7 @@ h1{font-size:1.15rem;}
 <link rel="icon" type="image/png" href="../games/img/icon-192.png">
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -202,7 +203,8 @@ function buildQuestions() {
 }
 
 var QS = buildQuestions();
-var state = { no: 0, right: 0, locked: false };
+var state = { no: 0, right: 0, locked: false, cur: null };
+var qDeck = XNLY.deck.make(QS, 'spatial', { head: 5 });
 var elQno = document.getElementById('qno');
 var elRight = document.getElementById('right');
 var elQ = document.getElementById('qtext');
@@ -233,9 +235,11 @@ function renderScene(it) {
 }
 
 function render() {
-  var it = QS[state.no];
+  var it = state.cur = qDeck.next();
+  state.no++;
+  if (state.no > QS.length) state.no = 1;
   state.locked = false;
-  elQno.textContent = state.no + 1;
+  elQno.textContent = state.no;
   elRight.textContent = state.right;
   elQ.textContent = it.q;
   elFb.className = 'feedback'; elFb.textContent = '';
@@ -273,15 +277,14 @@ function choose(btn, o, it) {
 }
 
 function nextQ() {
-  state.no++;
-  if (state.no >= QS.length) { QS = buildQuestions(); state.no = 0; }
+  if (state.no >= QS.length) { QS = buildQuestions(); qDeck = XNLY.deck.make(QS, 'spatial', { head: 5 }); state.no = 0; }
   render();
 }
-document.getElementById('hear').addEventListener('click', function () { say(QS[state.no].q); });
+document.getElementById('hear').addEventListener('click', function () { say(state.cur.q); });
 document.getElementById('next').addEventListener('click', nextQ);
 
 render();
-window.__spatial = { list: QS, state: state, rebuild: function () { QS = buildQuestions(); state.no = 0; render(); } };
+window.__spatial = { list: QS, state: state, rebuild: function () { QS = buildQuestions(); qDeck = XNLY.deck.make(QS, 'spatial', { head: 5 }); state.no = 0; render(); } };
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

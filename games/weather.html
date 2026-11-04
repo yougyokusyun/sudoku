@@ -53,6 +53,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -85,11 +86,13 @@ var wlabel=document.getElementById('wlabel');
 var items=document.getElementById('items');
 let locked=false, flyTimer=null, missTimer=null, entryTimer=null;
 
+var weatherDeck = XNLY.deck.make(WEATHERS, 'weather', { head: 3 });
+
 /* 出一题 */
 function newRound(){
   clearTimeout(flyTimer); clearTimeout(missTimer); clearTimeout(entryTimer);
   locked=false;
-  var wx=pick(WEATHERS);
+  var wx=weatherDeck.next();
   wemoji.textContent=wx.w;
   wlabel.textContent=wx.label;
   replay(wemoji,'pop');

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>计时挑战 · 小脑袋乐园</title>
+<meta name="theme-color" content="#ff6b35">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<link rel="manifest" href="../manifest.json">
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#ff6b35;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff0e6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e9f7ff,transparent 55%),
+             linear-gradient(160deg,#fff8f2,#f7fbff);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:9px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;font-size:.85rem;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
+  font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.9rem;}
+.rule{background:linear-gradient(135deg,#fff3e8,#fff);border:2px solid rgba(255,107,53,.22);border-radius:14px;
+  padding:8px 12px;text-align:center;font-size:.8rem;font-weight:800;color:#8a5a3b;line-height:1.45;
+  box-shadow:0 4px 12px rgba(36,59,83,.06);}
+.rule b{color:#e24b13;}
+.track{height:10px;border-radius:999px;background:#fff;border:1px solid var(--line);overflow:hidden;flex:none;}
+.bar{height:100%;width:100%;background:linear-gradient(90deg,#ffb347,#ff6b35);transition:width .1s linear;}
+.bar.low{background:linear-gradient(90deg,#ff8a8a,#ff3b3b);}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  min-height:0;overflow-y:auto;width:100%;}
+.prompt{width:min(560px,100%);background:#fff;border:2px solid rgba(255,107,53,.18);border-radius:18px;
+  padding:12px 14px;text-align:center;box-shadow:0 8px 22px rgba(36,59,83,.08);}
+.prompt .big{display:block;font-size:2rem;font-weight:900;color:#d94a12;line-height:1.25;word-break:break-word;}
+.prompt .big.cn{color:#243b53;font-size:1.7rem;}
+.prompt .sub{display:block;font-size:.78rem;font-weight:700;color:#8aa0b8;margin-top:4px;}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(560px,100%);}
+.opt{min-height:62px;border:2px solid var(--line);border-radius:16px;background:#fff;padding:6px 10px;
+  font-family:inherit;font-size:1.05rem;font-weight:900;color:var(--ink);cursor:pointer;
+  box-shadow:0 5px 14px rgba(36,59,83,.08);transition:transform .14s,border-color .18s,background .18s;}
+.opt:active{transform:scale(.97);}
+.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;color:#b02a2a;}
+.opt[disabled]{opacity:.45;cursor:default;}
+.feedback{min-height:34px;font-size:.95rem;font-weight:800;text-align:center;line-height:1.45;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+.replay{min-height:44px;padding:0 18px;border-radius:999px;border:2px solid rgba(255,107,53,.28);
+  background:#fff;color:#d94a12;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.08);}
+.summary{display:none;flex-direction:column;gap:10px;width:min(620px,100%);background:#fff;
+  border:2px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:0 10px 26px rgba(36,59,83,.12);}
+.summary.show{display:flex;}
+.sumtitle{font-size:1.05rem;font-weight:900;text-align:center;color:#d94a12;}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.stat{background:#fff8f2;border:1px solid rgba(255,107,53,.16);border-radius:12px;padding:8px 6px;text-align:center;}
+.stat b{display:block;font-size:1.25rem;color:#e24b13;}
+.stat span{font-size:.7rem;font-weight:800;color:#8aa0b8;}
+.review{max-height:210px;overflow-y:auto;display:flex;flex-direction:column;gap:6px;}
+.rv{display:flex;align-items:center;gap:8px;background:#fff7f7;border:1px solid rgba(255,92,92,.2);
+  border-radius:12px;padding:7px 10px;font-size:.8rem;font-weight:800;color:#7a3b3b;}
+.rv .w{flex:1;min-width:0;}
+.rv .w small{display:block;font-weight:700;color:#a06a6a;font-size:.72rem;margin-top:1px;}
+.rv button{min-height:34px;min-width:42px;border-radius:999px;border:2px solid rgba(255,107,53,.3);
+  background:#fff;font-size:.9rem;cursor:pointer;}
+.again{min-height:48px;border-radius:999px;border:none;background:linear-gradient(135deg,#ff8a3d,#ff5a1f);
+  color:#fff;font-family:inherit;font-weight:900;font-size:.95rem;cursor:pointer;
+  box-shadow:0 8px 18px rgba(255,90,31,.28);}
+.tip{font-size:.7rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
+@media (max-height:430px){
+  body{padding:8px;gap:6px;} h1{font-size:1rem;}
+  .prompt{padding:8px 10px;} .prompt .big{font-size:1.5rem;} .opt{min-height:48px;font-size:.92rem;}
+  .stage{gap:8px;} .review{max-height:150px;}
+}
+</style>
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>⏱ 计时挑战</h1>
+  <div class="chips">
+    <span class="chip">⏱ <b id="timeChip">60</b> 秒</span>
+    <span class="chip">✅ 答对 <b id="rightChip">0</b></span>
+  </div>
+</header>
+<div class="rule" id="rule">⏱ <b>60 秒</b> · 点一下任意位置开始计时 · 答错不扣分，只记下来帮你复习</div>
+<div class="track"><div class="bar" id="bar"></div></div>
+<div class="stage">
+  <div class="prompt">
+    <span class="big" id="word">apple</span>
+    <span class="sub" id="subHint">选出正确的中文意思</span>
+  </div>
+  <div class="opts" id="opts"></div>
+  <button class="replay" id="replay" type="button">🔊 再听一遍</button>
+  <div class="feedback" id="feedback"></div>
+  <div class="summary" id="summary"></div>
+  <div class="tip">没有排行榜、没有连胜，只和自己的 60 秒比一比</div>
+</div>
+
+<script>
+/* ============ 词库：225 个站内高频词 + 60 个扩展词 ============ */
+var RAW = [
+'dog|狗','cat|猫','pig|猪','cow|奶牛','sheep|绵羊','horse|马','rabbit|兔子','mouse|老鼠','bird|鸟','duck|鸭子',
+'chicken|鸡','fish|鱼','tiger|老虎','lion|狮子','elephant|大象','monkey|猴子','panda|熊猫','bear|熊','wolf|狼','fox|狐狸',
+'frog|青蛙','turtle|乌龟','snake|蛇','bee|蜜蜂','butterfly|蝴蝶','ant|蚂蚁','spider|蜘蛛','dolphin|海豚','whale|鲸鱼','penguin|企鹅',
+'owl|猫头鹰','goat|山羊','camel|骆驼','giraffe|长颈鹿','zebra|斑马','deer|鹿','squirrel|松鼠','snail|蜗牛','crab|螃蟹','shark|鲨鱼',
+'apple|苹果','banana|香蕉','orange|橙子','grape|葡萄','watermelon|西瓜','strawberry|草莓','pear|梨','peach|桃子','lemon|柠檬','pineapple|菠萝',
+'cherry|樱桃','mango|芒果','coconut|椰子','tomato|西红柿','potato|土豆','carrot|胡萝卜','corn|玉米','bread|面包','cake|蛋糕','cookie|饼干',
+'candy|糖果','chocolate|巧克力','egg|鸡蛋','milk|牛奶','water|水','juice|果汁','rice|米饭','noodle|面条','hamburger|汉堡','pizza|披萨',
+'sandwich|三明治','ice cream|冰淇淋','honey|蜂蜜','cheese|奶酪',
+'red|红色','blue|蓝色','yellow|黄色','green|绿色','black|黑色','white|白色','brown|棕色','purple|紫色','pink|粉色',
+'face|脸','eye|眼睛','ear|耳朵','nose|鼻子','mouth|嘴','tooth|牙齿','tongue|舌头','hand|手','foot|脚','leg|腿',
+'arm|手臂','heart|心脏','body|身体','finger|手指','thumb|拇指','bone|骨头',
+'book|书','pen|钢笔','pencil|铅笔','ruler|尺子','notebook|笔记本','bag|书包','school|学校','teacher|老师','student|学生','chair|椅子',
+'computer|电脑','phone|手机','clock|钟','map|地图','ball|球','paper|纸','scissors|剪刀','crayon|蜡笔',
+'bed|床','door|门','window|窗户','house|房子','room|房间','table|桌子','sofa|沙发','lamp|台灯','key|钥匙','cup|杯子',
+'spoon|勺子','fork|叉子','knife|刀','bowl|碗','bottle|瓶子','towel|毛巾','soap|肥皂','brush|刷子','mirror|镜子','basket|篮子',
+'car|小汽车','bus|公交车','bike|自行车','train|火车','plane|飞机','ship|轮船','boat|小船','taxi|出租车','truck|卡车','rocket|火箭',
+'sun|太阳','moon|月亮','star|星星','cloud|云','rain|雨','snow|雪','wind|风','tree|树','flower|花','grass|草',
+'leaf|树叶','mountain|山','river|河流','sea|大海','sky|天空','beach|海滩','forest|森林','garden|花园','seed|种子',
+'hot|热','cold|冷','rainbow|彩虹','morning|早上','night|夜晚','day|白天','week|星期','year|年',
+'park|公园','zoo|动物园','hospital|医院','bank|银行','library|图书馆','museum|博物馆','supermarket|超市','restaurant|餐馆','farm|农场','factory|工厂',
+'hat|帽子','shirt|衬衫','dress|连衣裙','shoe|鞋','sock|袜子','coat|外套','glove|手套','scarf|围巾','glasses|眼镜','umbrella|雨伞',
+'run|跑','swim|游泳','jump|跳','sing|唱歌','dance|跳舞','sleep|睡觉',
+'one|一','two|二','three|三','four|四','five|五','six|六','seven|七','eight|八','nine|九','ten|十',
+'mother|妈妈','father|爸爸','sister|姐妹','brother|兄弟','baby|宝宝','grandma|奶奶','grandpa|爷爷','uncle|叔叔','aunt|阿姨','cousin|表亲',
+'eat|吃','drink|喝','read|读','write|写','walk|走',
+'english|英语','chinese|语文','math|数学','music|音乐','art|美术','science|科学','sport|运动',
+'football|足球','basketball|篮球','ping-pong|乒乓球','badminton|羽毛球','baseball|棒球','volleyball|排球',
+'cinema|电影院','bookstore|书店','post office|邮局','train station|火车站','airport|机场','city|城市','village|村庄','street|街道','bridge|桥',
+'sunny|晴朗的','rainy|下雨的','cloudy|多云的','windy|有风的','snowy|下雪的',
+'draw|画画','paint|涂色','cook|做饭','wash|洗','clean|打扫','listen|听','watch|看','ride|骑','drive|开车','fly|飞',
+'climb|爬','catch|接住','throw|扔','buy|买','sell|卖',
+'tall|高的','short|矮的','long|长的','new|新的','old|旧的','happy|开心的','sad|难过的','busy|忙的','easy|容易的','hard|困难的',
+'strong|强壮的','cute|可爱的','funny|有趣的','favourite|最喜欢的','holiday|假日','birthday|生日','question|问题','answer|答案','sentence|句子','story|故事','letter|信'
+];
+var WORDS = RAW.map(function (s) {
+  var p = s.split('|');
+  return { en: p[0], cn: p[1], key: p[0].toLowerCase() + '|' + p[1] };
+});
+
+var TIME_LIMIT = 60;
+var state = { deck: [], pos: 0, cur: null, started: false, ended: false, locked: false,
+  right: 0, attempts: 0, sumTime: 0, wrongs: [], qShown: 0, startedAt: 0, tick: null };
+
+var elTime = document.getElementById('timeChip');
+var elRight = document.getElementById('rightChip');
+var elBar = document.getElementById('bar');
+var elWord = document.getElementById('word');
+var elSub = document.getElementById('subHint');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elRule = document.getElementById('rule');
+var elSummary = document.getElementById('summary');
+var elReplay = document.getElementById('replay');
+
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function say(t, o) { if (window.XNLY && XNLY.voice) { try { XNLY.voice.speak(t, o || {}); } catch (e) { } } }
+function sfx(n) { if (window.XNLY && XNLY.sound && XNLY.sound[n]) { try { XNLY.sound[n](); } catch (e) { } } }
+function mark(k) { if (window.XNLY && XNLY.mark) { try { XNLY.mark(k); } catch (e) { } } }
+
+function speakQuestion() {
+  if (!state.cur) return;
+  if (state.cur.type === 'en2cn') {
+    say(state.cur.w.en, { lang: 'en-US' });
+  } else {
+    say(state.cur.w.cn);
+  }
+}
+
+function rebuildDeck() {
+  state.deck = shuffle(WORDS);
+  state.pos = 0;
+}
+
+function nextQuestion() {
+  state.locked = false;
+  if (state.pos >= state.deck.length) rebuildDeck();
+  var w = state.deck[state.pos++];
+  var type = Math.random() < 0.5 ? 'en2cn' : 'cn2en';
+  var distractors = shuffle(WORDS.filter(function (x) {
+    return x !== w && (type === 'en2cn' ? x.cn !== w.cn : x.en.toLowerCase() !== w.en.toLowerCase());
+  })).slice(0, 3);
+  var opts = shuffle([w].concat(distractors));
+  var ans = opts.indexOf(w);
+  state.cur = { w: w, type: type, opts: opts, ans: ans };
+  renderQuestion();
+  if (state.started) state.qShown = Date.now();
+}
+
+function renderQuestion() {
+  var q = state.cur;
+  if (q.type === 'en2cn') {
+    elWord.textContent = q.w.en;
+    elWord.className = 'big';
+    elSub.textContent = '选出正确的中文意思';
+  } else {
+    elWord.textContent = q.w.cn;
+    elWord.className = 'big cn';
+    elSub.textContent = '选出正确的英文单词';
+  }
+  elOpts.innerHTML = '';
+  q.opts.forEach(function (x, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = q.type === 'en2cn' ? x.cn : x.en;
+    b.addEventListener('click', function () { choose(i, b); });
+    elOpts.appendChild(b);
+  });
+  elFb.className = 'feedback';
+  elFb.textContent = '';
+  speakQuestion();
+}
+
+function choose(i, btn) {
+  if (!state.started || state.ended || state.locked) return;
+  state.locked = true;
+  var q = state.cur;
+  var ms = Math.max(1, Date.now() - state.qShown);
+  state.sumTime += ms;
+  state.attempts++;
+  var ok = (i === q.ans);
+  if (ok) {
+    state.right++;
+    mark('right');
+    btn.classList.add('good');
+    elFb.className = 'feedback ok';
+    elFb.textContent = '✅ 答对啦';
+  } else {
+    mark('wrong');
+    btn.classList.add('bad');
+    Array.prototype.forEach.call(elOpts.children, function (b, k) { if (k === q.ans) b.classList.add('good'); });
+    elFb.className = 'feedback bad';
+    elFb.textContent = '❌ 正确答案：' + (q.type === 'en2cn' ? q.w.cn : q.w.en) + '（记在错题里了）';
+    state.wrongs.push(q);
+  }
+  Array.prototype.forEach.call(elOpts.children, function (b) { b.disabled = true; });
+  elRight.textContent = state.right;
+  setTimeout(function () {
+    if (!state.ended) nextQuestion();
+  }, ok ? 360 : 620);
+}
+
+function startTimer() {
+  if (state.started || state.ended) return;
+  state.started = true;
+  state.startedAt = Date.now();
+  state.qShown = Date.now();
+  elRule.innerHTML = '⏱ 计时开始！答得又快又准，60 秒后看看自己的成绩';
+  elRule.style.color = '#d94a12';
+  speakQuestion();
+  state.tick = setInterval(function () {
+    var left = TIME_LIMIT - (Date.now() - state.startedAt) / 1000;
+    if (left < 0) left = 0;
+    elTime.textContent = left >= 10 ? Math.ceil(left) : left.toFixed(1);
+    elBar.style.width = (left / TIME_LIMIT * 100) + '%';
+    elBar.classList.toggle('low', left <= 10);
+    if (left <= 0) endGame();
+  }, 100);
+}
+
+function endGame() {
+  if (state.ended) return;
+  state.ended = true;
+  clearInterval(state.tick);
+  elTime.textContent = '0';
+  elBar.style.width = '0%';
+  elOpts.innerHTML = '';
+  elFb.className = 'feedback';
+  elFb.textContent = '';
+  elWord.textContent = '时间到！';
+  elWord.className = 'big';
+  elSub.textContent = '60 秒结束，下面是你的成绩';
+  elRule.innerHTML = '本轮结束 · 点下面的「再玩一次」再来一局';
+  elRule.style.color = '#8a5a3b';
+  sfx('win');
+  renderSummary();
+  say('时间到。这一轮你答对了 ' + state.right + ' 个单词。');
+}
+
+function renderSummary() {
+  var acc = state.attempts ? Math.round(state.right / state.attempts * 100) : 0;
+  var avg = state.attempts ? (state.sumTime / state.attempts / 1000) : 0;
+  var html = '<div class="sumtitle">⏱ 60 秒成绩单</div>' +
+    '<div class="stats">' +
+    '<div class="stat"><b>' + state.right + '</b><span>答对</span></div>' +
+    '<div class="stat"><b>' + acc + '%</b><span>正确率</span></div>' +
+    '<div class="stat"><b>' + avg.toFixed(1) + 's</b><span>平均每题</span></div>' +
+    '</div>';
+  if (state.wrongs.length) {
+    html += '<div class="sumtitle" style="font-size:.86rem;text-align:left;color:#7a3b3b">📝 错题回顾（点一下重听）</div><div class="review">';
+    state.wrongs.forEach(function (q) {
+      html += '<div class="rv" data-en="' + q.w.en.replace(/"/g, '&quot;') + '">' +
+        '<span class="w">' + q.w.en + '<small>' + q.w.cn + '</small></span>' +
+        '<button type="button" aria-label="重听">🔊</button></div>';
+    });
+    html += '</div>';
+  } else {
+    html += '<div class="sumtitle" style="font-size:.86rem;color:#2fb344">🎉 这一轮一个都没错！</div>';
+  }
+  html += '<button class="again" id="againBtn" type="button">🔄 再玩一次（60 秒）</button>';
+  elSummary.innerHTML = html;
+  elSummary.classList.add('show');
+  var again = document.getElementById('againBtn');
+  again.addEventListener('click', function () {
+    newGame();
+    startTimer();
+  });
+  Array.prototype.forEach.call(elSummary.querySelectorAll('.rv'), function (row) {
+    row.addEventListener('click', function () {
+      say(row.dataset.en, { lang: 'en-US' });
+    });
+  });
+}
+
+function newGame() {
+  clearInterval(state.tick);
+  state.started = false; state.ended = false; state.locked = false;
+  state.right = 0; state.attempts = 0; state.sumTime = 0; state.wrongs = [];
+  state.qShown = 0;
+  elSummary.classList.remove('show');
+  elSummary.innerHTML = '';
+  elRight.textContent = '0';
+  elTime.textContent = '60';
+  elBar.style.width = '100%';
+  elBar.classList.remove('low');
+  elRule.innerHTML = '⏱ <b>60 秒</b> · 点一下任意位置开始计时 · 答错不扣分，只记下来帮你复习';
+  elRule.style.color = '#8a5a3b';
+  rebuildDeck();
+  nextQuestion();
+}
+
+elReplay.addEventListener('click', function () { speakQuestion(); });
+
+/* 第一次点击/触摸开始计时；之后的点击不再重复触发 */
+document.addEventListener('pointerdown', function (e) {
+  if (state.ended) return;
+  if (!state.started) startTimer();
+}, true);
+if (!window.PointerEvent) {
+  document.addEventListener('touchstart', function () {
+    if (!state.ended && !state.started) startTimer();
+  }, { passive: true, capture: true });
+}
+
+newGame();
+
+window.BC = { WORDS: WORDS, get state() { return state; }, newGame: newGame, startTimer: startTimer, endGame: endGame };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

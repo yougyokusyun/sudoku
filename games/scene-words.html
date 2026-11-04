@@ -94,6 +94,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -185,6 +186,7 @@ var SCENES = [
 ];
 
 var curIdx = -1, curScene = null, activeEl = null;
+var sceneDeck = XNLY.deck.make(SCENES, 'scene-words', { head: 3 });
 var elScene = document.getElementById('scene');
 var elFb = document.getElementById('feedback');
 var elPrompt = document.getElementById('prompt');
@@ -202,10 +204,8 @@ function say(text) {
 }
 
 function newScene() {
-  var idx;
-  do { idx = Math.floor(Math.random() * SCENES.length); } while (SCENES.length > 1 && idx === curIdx);
-  curIdx = idx;
-  curScene = SCENES[idx];
+  curScene = sceneDeck.next();
+  curIdx = SCENES.indexOf(curScene);
   activeEl = null;
 
   elScene.className = 'scene ' + curScene.bg;

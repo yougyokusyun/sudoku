@@ -61,6 +61,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -98,8 +99,10 @@ function shapeHTML(s){
 }
 function clearFeedback(){var f=document.getElementById('feedback');f.className='feedback';f.textContent='';}
 
+var shapeDeck = XNLY.deck.make(SHAPES, 'shapes', { head: 5 });
+
 function newRound(){
-  current=pick(SHAPES);
+  current=shapeDeck.next();
   var others=shuffle(SHAPES.filter(function(s){return s.name!==current.name;})).slice(0,3);
   var options=shuffle([current].concat(others));
   document.getElementById('target').innerHTML=shapeHTML(current);

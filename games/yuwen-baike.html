@@ -137,6 +137,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -378,6 +379,18 @@ function makeQuestion(it, pool, type) {
     done: false
   };
 }
+var quizDecks = {};
+function quizDeckFor(id, pool) {
+  if (!quizDecks[id]) {
+    var valid = pool.filter(function (it) {
+      return typeof it.d === 'string' && it.d.length > 1 && typeof it.t === 'string' && it.t.length > 0;
+    });
+    quizDecks[id] = XNLY.deck.make(valid, 'yuwen-baike.' + id, {
+      head: 5, id: function (it) { return it.t + '|' + it.d; }
+    });
+  }
+  return quizDecks[id];
+}
 function startQuiz(silent) {
   var id = currentPick();
   var pool = poolOf(id);
@@ -385,10 +398,13 @@ function startQuiz(silent) {
     elPrompt.textContent = '这个专题太小啦，换一个试试吧';
     return;
   }
-  var n = Math.min(10, pool.length);
-  var chosen = shuffle(pool.filter(function (it) {
+  var valid = pool.filter(function (it) {
     return typeof it.d === 'string' && it.d.length > 1 && typeof it.t === 'string' && it.t.length > 0;
-  })).slice(0, n);
+  });
+  var n = Math.min(10, valid.length);
+  var qd = quizDeckFor(id, pool);
+  var chosen = [];
+  for (var ci = 0; ci < n; ci++) chosen.push(qd.next());
   if (chosen.length < 4) { elPrompt.textContent = '这个专题太小啦，换一个试试吧'; return; }
 
   var qs = chosen.map(function (it, i) { return makeQuestion(it, pool, i % 2); });

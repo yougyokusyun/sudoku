@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>看图选句 · 小脑袋乐园</title>
+<meta name="theme-color" content="#0891b2">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<link rel="manifest" href="../manifest.json">
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#0891b2;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#e6f8ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff6e8,transparent 55%),
+             linear-gradient(160deg,#f7fdff,#fffaf3);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:9px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;font-size:.85rem;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
+  font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.88rem;}
+.chipbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.tchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:7px 13px;
+  font-family:inherit;font-size:.76rem;font-weight:800;color:#4a6076;cursor:pointer;
+  box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;min-height:38px;}
+.tchip.on{background:linear-gradient(135deg,#22c1dc,#0891b2);color:#fff;border-color:transparent;}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
+  min-height:0;overflow-y:auto;width:100%;}
+.fig{width:min(460px,100%);background:#fff;border:2px solid rgba(8,145,178,.16);border-radius:20px;
+  padding:12px;text-align:center;box-shadow:0 8px 22px rgba(36,59,83,.09);}
+.fig .art{display:block;font-size:4.2rem;line-height:1.15;letter-spacing:4px;}
+.fig .cap{display:block;font-size:.72rem;font-weight:800;color:#8aa0b8;margin-top:2px;}
+.prompt{font-size:.95rem;font-weight:900;color:#4a6076;text-align:center;line-height:1.5;}
+.opts{display:flex;flex-direction:column;gap:9px;width:min(600px,100%);}
+.opt{min-height:56px;border:2px solid var(--line);border-radius:14px;background:#fff;padding:8px 14px;
+  font-family:inherit;font-size:.98rem;font-weight:800;line-height:1.4;color:#26425c;text-align:left;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.06);transition:transform .14s,border-color .18s,background .18s;}
+.opt:active{transform:scale(.985);}
+.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;color:#b02a2a;}
+.opt[disabled]{opacity:.45;cursor:default;}
+.feedback{min-height:36px;font-size:.95rem;font-weight:800;text-align:center;line-height:1.45;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+.feedback small{display:block;font-size:.76rem;font-weight:700;color:#7b8ea8;margin-top:2px;}
+.replay{min-height:44px;padding:0 18px;border-radius:999px;border:2px solid rgba(8,145,178,.26);
+  background:#fff;color:#0277bd;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.08);}
+.summary{display:none;flex-direction:column;gap:9px;width:min(520px,100%);background:#fff;
+  border:2px solid var(--line);border-radius:18px;padding:14px 16px;text-align:center;
+  box-shadow:0 10px 26px rgba(36,59,83,.12);}
+.summary.show{display:flex;}
+.sumtitle{font-size:1.05rem;font-weight:900;color:#0277bd;}
+.sumline{font-size:.95rem;font-weight:800;color:#2f4a63;line-height:1.6;}
+.sumline b{color:var(--accent);font-size:1.15rem;}
+.again{min-height:46px;border-radius:999px;border:none;background:linear-gradient(135deg,#22c1dc,#0891b2);
+  color:#fff;font-family:inherit;font-weight:900;font-size:.95rem;cursor:pointer;box-shadow:0 8px 18px rgba(8,145,178,.25);}
+.tip{font-size:.7rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
+@media (max-height:430px){
+  body{padding:8px;gap:6px;} h1{font-size:1rem;}
+  .fig{padding:7px;} .fig .art{font-size:2.8rem;} .opt{min-height:46px;font-size:.88rem;}
+  .stage{gap:7px;} .prompt{font-size:.84rem;}
+}
+</style>
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+<script src="../deck.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🖼️ 看图选句</h1>
+  <div class="chips">
+    <span class="chip">✅ 答对 <b id="rightChip">0</b></span>
+    <span class="chip">📈 进度 <b id="progChip">1</b>/<b id="totalChip">30</b></span>
+  </div>
+</header>
+<div class="chipbar" id="gradeBar"></div>
+<div class="stage">
+  <div class="fig">
+    <span class="art" id="art">👦🏫</span>
+    <span class="cap">看这幅图，哪句英文说得对？</span>
+  </div>
+  <div class="prompt" id="prompt">点一点句子就能听它怎么读</div>
+  <div class="opts" id="opts"></div>
+  <button class="replay" id="replay" type="button">🔊 听三个句子</button>
+  <div class="feedback" id="feedback"></div>
+  <div class="summary" id="summary"></div>
+  <div class="tip">选错可以再试，不扣分 · 点选项会朗读英文</div>
+</div>
+
+<script>
+/* ============ 90 题看图选句：3/4/5 年级各 30 题 ============ */
+var Q = [
+/* ---------- 三年级 30 题 ---------- */
+{g:3,img:'👦🏫',ok:'This is a boy. He is at school.',bad:['This is a girl. She is at school.','This is a boy. He is at the zoo.']},
+{g:3,img:'🐱🛏️',ok:'The cat is on the bed.',bad:['The cat is under the bed.','The dog is on the bed.']},
+{g:3,img:'🍎🔴',ok:'This is a red apple.',bad:['This is a green apple.','This is a red banana.']},
+{g:3,img:'👧📖',ok:'The girl is reading a book.',bad:['The boy is reading a book.','The girl is writing a book.']},
+{g:3,img:'🐶🏃',ok:'The dog is running.',bad:['The dog is sleeping.','The cat is running.']},
+{g:3,img:'🚌🧒',ok:'I go to school by bus.',bad:['I go to school by bike.','I go to the park by bus.']},
+{g:3,img:'☀️🌳',ok:'It is sunny today.',bad:['It is rainy today.','It is cold today.']},
+{g:3,img:'👨🍳',ok:'My father is a cook.',bad:['My mother is a cook.','My father is a driver.']},
+{g:3,img:'🍌🍽️',ok:'I like bananas.',bad:['I like apples.','I do not like bananas.']},
+{g:3,img:'🐟🌊',ok:'The fish is in the water.',bad:['The fish is on the tree.','The bird is in the water.']},
+{g:3,img:'👦⚽',ok:'The boy is playing football.',bad:['The boy is playing basketball.','The girl is playing football.']},
+{g:3,img:'🎒📚',ok:'My bag is on the desk.',bad:['My bag is under the desk.','My book is on the desk.']},
+{g:3,img:'🐘🎪',ok:'The elephant is at the zoo.',bad:['The elephant is at the park.','The lion is at the zoo.']},
+{g:3,img:'👩‍🏫🧑‍🎓',ok:'The teacher is with the students.',bad:['The doctor is with the students.','The teacher is with the babies.']},
+{g:3,img:'🍰🎂',ok:'This is a birthday cake.',bad:['This is a birthday card.','This is a birthday hat.']},
+{g:3,img:'🚗🔵',ok:'The car is blue.',bad:['The car is red.','The bus is blue.']},
+{g:3,img:'👦✏️',ok:'The boy has a pencil.',bad:['The boy has a ruler.','The girl has a pencil.']},
+{g:3,img:'🐰🥕',ok:'The rabbit is eating a carrot.',bad:['The rabbit is eating a banana.','The cat is eating a carrot.']},
+{g:3,img:'🌧️☂️',ok:'It is raining. I have an umbrella.',bad:['It is snowing. I have an umbrella.','It is raining. I have a hat.']},
+{g:3,img:'👵🏠',ok:'My grandma is at home.',bad:['My grandpa is at home.','My grandma is at school.']},
+{g:3,img:'🍦👧',ok:'The girl is eating ice cream.',bad:['The boy is eating ice cream.','The girl is eating a hamburger.']},
+{g:3,img:'🐦🌳',ok:'The bird is in the tree.',bad:['The bird is in the sky.','The cat is in the tree.']},
+{g:3,img:'🖐️5️⃣',ok:'I have five fingers on one hand.',bad:['I have four fingers on one hand.','I have five toes on one hand.']},
+{g:3,img:'🐷🌸',ok:'The pig is on the farm.',bad:['The pig is at the zoo.','The cow is on the farm.']},
+{g:3,img:'☕🍞',ok:'I have milk and bread for breakfast.',bad:['I have milk and rice for breakfast.','I have juice and bread for breakfast.']},
+{g:3,img:'👦😴',ok:'The boy is sleeping.',bad:['The boy is running.','The girl is sleeping.']},
+{g:3,img:'🚲🌳',ok:'The bike is under the tree.',bad:['The bike is on the tree.','The bus is under the tree.']},
+{g:3,img:'👩🍎',ok:'The woman is holding an apple.',bad:['The man is holding an apple.','The woman is holding an orange.']},
+{g:3,img:'🎵👧',ok:'The girl is singing.',bad:['The girl is dancing.','The boy is singing.']},
+{g:3,img:'🐔🥚',ok:'The hen has an egg.',bad:['The hen has a duck.','The hen has two eggs.']},
+/* ---------- 四年级 30 题 ---------- */
+{g:4,img:'🐶🐱🛏️',ok:'There are two cats on the bed.',bad:['There is one cat on the bed.','There are two dogs on the bed.']},
+{g:4,img:'🏫🌳',ok:'There is a big tree in front of the school.',bad:['There is a big tree behind the school.','There is a small tree in front of the school.']},
+{g:4,img:'👦🚲',ok:'The boy can ride a bike.',bad:['The boy cannot ride a bike.','The girl can ride a bike.']},
+{g:4,img:'🕖🌅',ok:'I get up at seven in the morning.',bad:['I get up at seven in the evening.','I get up at six in the morning.']},
+{g:4,img:'🧑‍🍳🍳',ok:'My mother is cooking in the kitchen.',bad:['My father is cooking in the kitchen.','My mother is cooking in the living room.']},
+{g:4,img:'🌧️🏫',ok:'It is rainy, so we stay in the classroom.',bad:['It is sunny, so we stay in the classroom.','It is rainy, so we play in the park.']},
+{g:4,img:'🐘🐘',ok:'There are two elephants at the zoo.',bad:['There are three elephants at the zoo.','There are two tigers at the zoo.']},
+{g:4,img:'👧👟',ok:"The girl's shoes are white.",bad:["The girl's shoes are black.","The boy's shoes are white."]},
+{g:4,img:'📚🛋️',ok:'The books are on the sofa.',bad:['The books are under the sofa.','The pencils are on the sofa.']},
+{g:4,img:'🍽️🥢',ok:'We eat with chopsticks.',bad:['We eat with a knife and fork.','We sleep with chopsticks.']},
+{g:4,img:'👨🏥',ok:'My father is a doctor. He works in a hospital.',bad:['My father is a doctor. He works in a school.','My mother is a doctor. She works in a hospital.']},
+{g:4,img:'🏃‍♂️🏫',ok:'The boy runs to school every day.',bad:['The boy walks to school every day.','The boy runs to the park every day.']},
+{g:4,img:'🍎🍎🍎',ok:'There are three apples in the basket.',bad:['There are two apples in the basket.','There are three bananas in the basket.']},
+{g:4,img:'🐦🎶',ok:'The bird is singing in the tree.',bad:['The bird is sleeping in the tree.','The dog is singing in the tree.']},
+{g:4,img:'👦🧥',ok:'The boy is wearing a coat.',bad:['The boy is wearing a T-shirt.','The girl is wearing a coat.']},
+{g:4,img:'⏰📖',ok:"I read English at eight o'clock.",bad:["I read English at nine o'clock.","I read Chinese at eight o'clock."]},
+{g:4,img:'☁️🌧️',ok:'There are many clouds. It is going to rain.',bad:['There are many clouds. It is going to snow.','There are no clouds. It is going to rain.']},
+{g:4,img:'👩🌷',ok:'My aunt likes flowers.',bad:['My uncle likes flowers.','My aunt likes football.']},
+{g:4,img:'🐟🏞️',ok:'There is a fish in the river.',bad:['There is a fish in the tree.','There are two fish in the river.']},
+{g:4,img:'👦🎹',ok:'The boy can play the piano.',bad:['The boy can play the guitar.','The girl can play the piano.']},
+{g:4,img:'🧒🍼',ok:'The baby is drinking milk.',bad:['The baby is eating bread.','The boy is drinking milk.']},
+{g:4,img:'🏠🔴',ok:'The house has a red door.',bad:['The house has a blue door.','The house has a red roof.']},
+{g:4,img:'🐑🌿',ok:'The sheep are eating grass on the hill.',bad:['The sheep are sleeping on the hill.','The cows are eating grass on the hill.']},
+{g:4,img:'👦📝',ok:'The boy is writing on the blackboard.',bad:['The boy is reading on the blackboard.','The girl is writing on the blackboard.']},
+{g:4,img:'🚌🕗',ok:'The school bus comes at eight.',bad:['The school bus comes at nine.','The school bus leaves at eight.']},
+{g:4,img:'🍉🔪',ok:'Mother is cutting a watermelon.',bad:['Father is cutting a watermelon.','Mother is cutting an orange.']},
+{g:4,img:'👧🛏️',ok:'The girl is making her bed.',bad:['The girl is making her bag.','The boy is making his bed.']},
+{g:4,img:'🐱🐟',ok:'The cat is looking at the fish.',bad:['The cat is looking at the bird.','The dog is looking at the fish.']},
+{g:4,img:'🌞🧢',ok:'It is hot. The boy is wearing a cap.',bad:['It is cold. The boy is wearing a cap.','It is hot. The boy is wearing a coat.']},
+{g:4,img:'👪🚗',ok:'The family is going to the park by car.',bad:['The family is going to the zoo by car.','The family is going to the park by bus.']},
+/* ---------- 五年级 30 题 ---------- */
+{g:5,img:'👧📖🛏️',ok:'The girl is reading a book in her bedroom.',bad:['The girl is reading a book in the classroom.','The boy is reading a book in his bedroom.']},
+{g:5,img:'🏃‍♂️🏞️',ok:'He often runs in the park after school.',bad:['He never runs in the park after school.','He often runs in the park before school.']},
+{g:5,img:'🐱🌳',ok:'The cat is climbing the tree.',bad:['The cat is sleeping under the tree.','The dog is climbing the tree.']},
+{g:5,img:'👨💻',ok:'My father is working on the computer.',bad:['My mother is working on the computer.','My father is playing on the computer.']},
+{g:5,img:'🍜🥢',ok:'They are eating noodles with chopsticks.',bad:['They are eating rice with chopsticks.','They are cooking noodles with chopsticks.']},
+{g:5,img:'🐘🌊',ok:'The elephant is drinking water by the river.',bad:['The elephant is drinking water by the sea.','The elephant is washing water by the river.']},
+{g:5,img:'👦🧹',ok:'The boy is cleaning the classroom.',bad:['The boy is cleaning the bedroom.','The girl is cleaning the classroom.']},
+{g:5,img:'🌧️🚶',ok:'It is raining, but she is walking to school.',bad:['It is snowing, but she is walking to school.','It is raining, but she is driving to school.']},
+{g:5,img:'🍎🛒',ok:'We usually buy fruit in the supermarket.',bad:['We usually buy fruit in the library.','We sometimes buy fruit in the supermarket.']},
+{g:5,img:'👧🎻',ok:'The girl is playing the violin.',bad:['The girl is playing the piano.','The boy is playing the violin.']},
+{g:5,img:'🐶🍖',ok:'The dog is eating meat.',bad:['The dog is eating grass.','The cat is eating meat.']},
+{g:5,img:'👨‍🏫🧑‍🎓',ok:'The teacher is talking to the students.',bad:['The teacher is talking to the parents.','The student is talking to the teachers.']},
+{g:5,img:'🚲🔧',ok:'My brother is fixing his bike.',bad:['My sister is fixing her bike.','My brother is riding his bike.']},
+{g:5,img:'🎂🥳',ok:'They are having a birthday party.',bad:['They are having a picnic.','She is having a birthday party.']},
+{g:5,img:'🌞🕶️',ok:'The sun is shining. He is wearing sunglasses.',bad:['The moon is shining. He is wearing sunglasses.','The sun is shining. He is wearing a scarf.']},
+{g:5,img:'👵🍵',ok:'My grandma is drinking tea.',bad:['My grandpa is drinking tea.','My grandma is drinking milk.']},
+{g:5,img:'🐟🎣',ok:'The man is fishing by the lake.',bad:['The man is swimming in the lake.','The woman is fishing by the lake.']},
+{g:5,img:'👦🏊',ok:'The boy is swimming in the pool.',bad:['The boy is playing in the pool.','The girl is swimming in the pool.']},
+{g:5,img:'🛏️🧸',ok:'There is a teddy bear on the bed.',bad:['There is a teddy bear under the bed.','There are two teddy bears on the bed.']},
+{g:5,img:'👧📱',ok:'The girl is calling her mother.',bad:['The girl is calling her father.','The boy is calling his mother.']},
+{g:5,img:'🍳🥚',ok:'She is cooking eggs in the kitchen.',bad:['She is cooking eggs in the bathroom.','He is cooking eggs in the kitchen.']},
+{g:5,img:'🐦🌅',ok:'The birds are flying in the morning sky.',bad:['The birds are flying in the night sky.','The fish are flying in the morning sky.']},
+{g:5,img:'👦📚',ok:'He often reads books on weekends.',bad:['He seldom reads books on weekends.','He often reads books at night.']},
+{g:5,img:'🎒🏫',ok:'The students are going to school.',bad:['The students are going home.','The teachers are going to school.']},
+{g:5,img:'🧑‍🍳🍲',ok:'The cook is making soup.',bad:['The cook is making bread.','The driver is making soup.']},
+{g:5,img:'🌳🪁',ok:'The children are flying a kite in the park.',bad:['The children are flying a kite in the classroom.','The children are making a kite in the park.']},
+{g:5,img:'🐑☀️',ok:'The sheep is sleeping in the sun.',bad:['The sheep is sleeping in the rain.','The horse is sleeping in the sun.']},
+{g:5,img:'👩‍🎨🖼️',ok:'The woman is painting a picture.',bad:['The woman is buying a picture.','The man is painting a picture.']},
+{g:5,img:'🚉⏰',ok:'They are waiting for the train at the station.',bad:['They are waiting for the bus at the station.','They are waiting for the train at the airport.']},
+{g:5,img:'🐻🍯',ok:'The bear is eating honey.',bad:['The bear is eating fish.','The monkey is eating honey.']},
+];
+
+var state = { grade: 3, deck: [], pos: 0, cur: null, correct: 0, attempts: 0, locked: false, timer: null };
+var elBar = document.getElementById('gradeBar');
+var elArt = document.getElementById('art');
+var elOpts = document.getElementById('opts');
+var elFb = document.getElementById('feedback');
+var elRight = document.getElementById('rightChip');
+var elProg = document.getElementById('progChip');
+var elTotal = document.getElementById('totalChip');
+var elPrompt = document.getElementById('prompt');
+var elSummary = document.getElementById('summary');
+
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function say(t, o) { if (window.XNLY && XNLY.voice) { try { XNLY.voice.speak(t, o || {}); } catch (e) { } } }
+function sfx(n) { if (window.XNLY && XNLY.sound && XNLY.sound[n]) { try { XNLY.sound[n](); } catch (e) { } } }
+function mark(k) { if (window.XNLY && XNLY.mark) { try { XNLY.mark(k); } catch (e) { } } }
+
+function poolFor(g) {
+  return Q.filter(function (q) { return q.g === g; });
+}
+
+function renderBar() {
+  elBar.innerHTML = '';
+  [3, 4, 5].forEach(function (g) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tchip' + (g === state.grade ? ' on' : '');
+    b.textContent = g + ' 年级 · ' + poolFor(g).length + ' 题';
+    b.addEventListener('click', function () {
+      if (g === state.grade) return;
+      state.grade = g;
+      startGrade();
+      say(g + ' 年级的看图选句。');
+    });
+    elBar.appendChild(b);
+  });
+}
+
+function startGrade() {
+  clearTimeout(state.timer);
+  state.deck = XNLY.deck.make(poolFor(state.grade), 'picture-sentence.g' + state.grade, { head: 5 });
+  state.total = state.deck.total();
+  state.pos = 0; state.correct = 0; state.attempts = 0; state.locked = false;
+  elSummary.classList.remove('show'); elSummary.innerHTML = '';
+  elRight.textContent = '0';
+  elTotal.textContent = state.total;
+  renderBar();
+  renderQuestion();
+}
+
+function renderQuestion() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  if (state.pos >= state.total) { finish(); return; }
+  var q = state.deck.next();
+  var opts = shuffle([{ t: q.ok, ok: true }, { t: q.bad[0], ok: false }, { t: q.bad[1], ok: false }]);
+  state.cur = { q: q, opts: opts };
+  elArt.textContent = q.img;
+  elArt.style.letterSpacing = '4px';
+  elProg.textContent = String(state.pos + 1);
+  elOpts.innerHTML = '';
+  opts.forEach(function (o, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'opt';
+    b.textContent = o.t;
+    b.addEventListener('click', function () { choose(i, b); });
+    elOpts.appendChild(b);
+  });
+  elFb.className = 'feedback';
+  elFb.textContent = '';
+}
+
+function choose(i, btn) {
+  if (state.locked) return;
+  var cur = state.cur;
+  var o = cur.opts[i];
+  say(o.t, { lang: 'en-US' });
+  state.attempts++;
+  if (o.ok) {
+    state.locked = true;
+    state.correct++;
+    elRight.textContent = state.correct;
+    mark('right'); sfx('correct');
+    btn.classList.add('good');
+    elFb.className = 'feedback ok';
+    elFb.innerHTML = '✅ 说得对！<small>' + o.t + '</small>';
+    Array.prototype.forEach.call(elOpts.children, function (b) { b.disabled = true; });
+    state.timer = setTimeout(function () {
+      state.pos++;
+      if (state.pos >= state.total) finish(); else renderQuestion();
+    }, 1100);
+  } else {
+    mark('wrong'); sfx('wrong');
+    btn.classList.add('bad', 'shake');
+    elFb.className = 'feedback bad';
+    elFb.textContent = '❌ 再仔细看看图，这句话和图不一样，再试一句';
+  }
+}
+
+function finish() {
+  clearTimeout(state.timer);
+  state.locked = true;
+  elOpts.innerHTML = '';
+  elPrompt.textContent = '';
+  elFb.className = 'feedback';
+  elFb.textContent = '';
+  sfx('win');
+  var acc = state.attempts ? Math.round(state.correct / state.attempts * 100) : 0;
+  elSummary.innerHTML = '<div class="sumtitle">🎉 ' + state.grade + ' 年级读完啦</div>' +
+    '<div class="sumline">答对 <b>' + state.correct + '</b> / ' + state.total +
+    ' 题 · 正确率 <b>' + acc + '%</b></div>' +
+    '<div class="sumline" style="font-size:.78rem;color:#7b8ea8">本年级的 30 道看图题都练过一遍，没有重复题</div>' +
+    '<button class="again" id="againBtn" type="button">🔄 再练一遍本年级</button>';
+  elSummary.classList.add('show');
+  document.getElementById('againBtn').addEventListener('click', startGrade);
+  say('太棒了，这个年级的看图题都练完啦。');
+}
+
+document.getElementById('replay').addEventListener('click', function () {
+  if (!state.cur) return;
+  say('看图，从这三个句子里选出正确的一句。');
+  state.cur.opts.forEach(function (o) { say(o.t, { lang: 'en-US', queue: true }); });
+});
+
+/* 首次点击补读 */
+var firstTap = false;
+document.addEventListener('pointerdown', function () {
+  if (firstTap) return;
+  firstTap = true;
+  if (window.XNLY && XNLY.voice && XNLY.voice.unlock) { try { XNLY.voice.unlock(); } catch (e) { } }
+  if (window.XNLY && XNLY.sound && XNLY.sound.unlock) { try { XNLY.sound.unlock(); } catch (e) { } }
+  if (state.cur && !state.locked) say('看图，哪一句说得对？点一点句子就能听它怎么读。');
+}, { passive: true });
+
+startGrade();
+
+window.PS = { Q: Q, get state() { return state; }, startGrade: startGrade, poolFor: poolFor };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>打地鼠认单词 · 小脑袋乐园</title>
+<meta name="theme-color" content="#8d6e63">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<link rel="manifest" href="../manifest.json">
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#8d6e63;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff4e6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e8f5e9,transparent 55%),
+             linear-gradient(160deg,#fffaf3,#f5fbf5);
+  min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:9px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;font-size:.85rem;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
+  font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.9rem;}
+.rule{background:linear-gradient(135deg,#fff8ec,#fff);border:2px solid rgba(141,110,99,.2);border-radius:14px;
+  padding:8px 12px;text-align:center;font-size:.8rem;font-weight:800;color:#6d5145;line-height:1.5;
+  box-shadow:0 4px 12px rgba(36,59,83,.06);}
+.goal{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap;}
+.goaltxt{background:#fff;border:2px solid rgba(141,110,99,.22);border-radius:16px;padding:7px 16px;
+  text-align:center;box-shadow:0 6px 16px rgba(36,59,83,.08);min-width:min(320px,100%);}
+.goaltxt .lab{display:block;font-size:.68rem;font-weight:800;color:#9b8276;letter-spacing:1px;}
+.goaltxt .val{display:block;font-size:1.5rem;font-weight:900;color:#5d4037;line-height:1.25;word-break:break-word;}
+.goaltxt .val.en{color:#2e7d32;}
+.replay{min-height:42px;padding:0 14px;border-radius:999px;border:2px solid rgba(141,110,99,.28);
+  background:#fff;color:#5d4037;font-family:inherit;font-weight:900;font-size:.84rem;cursor:pointer;}
+.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;width:min(620px,100%);
+  margin:0 auto;flex:none;}
+.hole{position:relative;border:none;background:transparent;padding:0;cursor:pointer;aspect-ratio:1/0.82;
+  min-height:88px;touch-action:manipulation;}
+.hole .pit{position:absolute;left:6%;right:6%;bottom:4%;height:74%;border-radius:50% 50% 46% 46%;
+  background:radial-gradient(ellipse at 50% 28%,#6d4c41 0%,#5d4037 58%,#4e342e 100%);
+  box-shadow:inset 0 7px 12px rgba(0,0,0,.38),0 4px 8px rgba(36,59,83,.12);}
+.hole .card{position:absolute;left:9%;right:9%;top:18%;min-height:64%;display:flex;align-items:center;
+  justify-content:center;padding:4px 6px;border-radius:14px;background:linear-gradient(180deg,#fffdf7,#ffe9c7);
+  border:3px solid #c99a5b;box-shadow:0 6px 14px rgba(36,59,83,.18);font-size:1rem;font-weight:900;
+  color:#4e342e;line-height:1.15;word-break:break-word;text-align:center;transform:translateY(-6px) scale(.86);
+  opacity:0;visibility:hidden;transition:transform .16s ease,opacity .16s ease;}
+.hole .card.up{opacity:1;visibility:visible;transform:translateY(0) scale(1);}
+.hole .card.en{font-size:1.02rem;color:#1b5e20;letter-spacing:.3px;}
+.hole .card.cn{font-size:1.08rem;}
+.hole .card.hit{background:linear-gradient(180deg,#e9fbee,#c8f2d4);border-color:#2fb344;}
+.feedback{min-height:32px;font-size:.94rem;font-weight:800;text-align:center;line-height:1.45;}
+.ok{color:var(--ok);} .bad{color:#e08a00;}
+.summary{display:none;flex-direction:column;gap:10px;width:min(540px,100%);margin:0 auto;background:#fff;
+  border:2px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:0 10px 26px rgba(36,59,83,.12);}
+.summary.show{display:flex;}
+.sumtitle{font-size:1.02rem;font-weight:900;text-align:center;color:#5d4037;}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.stat{background:#fffaf2;border:1px solid rgba(141,110,99,.16);border-radius:12px;padding:8px 6px;text-align:center;}
+.stat b{display:block;font-size:1.2rem;color:#5d4037;}
+.stat span{font-size:.68rem;font-weight:800;color:#9b8276;}
+.again{min-height:46px;border-radius:999px;border:none;background:linear-gradient(135deg,#a1887f,#6d4c41);
+  color:#fff;font-family:inherit;font-weight:900;font-size:.95rem;cursor:pointer;box-shadow:0 8px 18px rgba(93,64,55,.25);}
+.tip{font-size:.7rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:0;
+  overflow-y:auto;width:100%;}
+@media (max-width:520px){ .board{gap:9px;} .hole .card{font-size:.9rem;} }
+@media (max-height:430px){
+  body{padding:8px;gap:6px;} h1{font-size:1rem;}
+  .hole{min-height:66px;} .hole .card{font-size:.82rem;} .stage{gap:6px;}
+  .goaltxt .val{font-size:1.2rem;} .board{gap:8px;}
+}
+</style>
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+<script src="../deck.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🔨 打地鼠认单词</h1>
+  <div class="chips">
+    <span class="chip">🎯 命中 <b id="hitChip">0</b>/10</span>
+    <span class="chip">⏱ <b id="timeChip">30</b> 秒</span>
+  </div>
+</header>
+<div class="rule" id="rule">看上面的目标词，点中意思一样的卡片 · 点错只提示，不扣分 · 第一次点击开始</div>
+<div class="goal">
+  <div class="goaltxt">
+    <span class="lab" id="goalLab">目标词</span>
+    <span class="val" id="goalVal">狗</span>
+  </div>
+  <button class="replay" id="replay" type="button">🔊 听目标词</button>
+</div>
+<div class="stage">
+  <div class="board" id="board"></div>
+  <div class="feedback" id="feedback"></div>
+  <div class="summary" id="summary"></div>
+  <div class="tip">30 秒内点中 10 次就结束 · 速度会一点点变快</div>
+</div>
+
+<script>
+/* ============ 112 个小学常见词：英文|中文|emoji ============ */
+var BANK = {
+  animals: ['dog|狗|🐶','cat|猫|🐱','pig|猪|🐷','cow|奶牛|🐮','sheep|绵羊|🐑','horse|马|🐴','rabbit|兔子|🐰','mouse|老鼠|🐭','bird|鸟|🐦','duck|鸭子|🦆','chicken|鸡|🐔','fish|鱼|🐟','tiger|老虎|🐯','lion|狮子|🦁','elephant|大象|🐘','monkey|猴子|🐒','panda|熊猫|🐼','bear|熊|🐻','frog|青蛙|🐸','bee|蜜蜂|🐝'],
+  food: ['apple|苹果|🍎','banana|香蕉|🍌','orange|橙子|🍊','grape|葡萄|🍇','watermelon|西瓜|🍉','strawberry|草莓|🍓','pear|梨|🍐','peach|桃子|🍑','lemon|柠檬|🍋','bread|面包|🍞','cake|蛋糕|🍰','cookie|饼干|🍪','candy|糖果|🍬','egg|鸡蛋|🥚','milk|牛奶|🥛','water|水|💧','juice|果汁|🧃','rice|米饭|🍚','noodle|面条|🍜','ice cream|冰淇淋|🍦'],
+  colors: ['red|红色|🔴','blue|蓝色|🔵','yellow|黄色|🟡','green|绿色|🟢','black|黑色|⚫','white|白色|⚪','brown|棕色|🟤','pink|粉色|🩷'],
+  body: ['face|脸|😊','eye|眼睛|👁️','ear|耳朵|👂','nose|鼻子|👃','mouth|嘴|👄','hand|手|✋','foot|脚|🦶','leg|腿|🦵','arm|手臂|💪','finger|手指|☝️'],
+  school: ['book|书|📖','pen|钢笔|🖊️','pencil|铅笔|✏️','ruler|尺子|📏','notebook|笔记本|📓','bag|书包|🎒','school|学校|🏫','teacher|老师|🧑‍🏫','student|学生|🧑‍🎓','chair|椅子|🪑','computer|电脑|💻','clock|钟|🕐','ball|球|⚽','paper|纸|📄'],
+  home: ['bed|床|🛏️','door|门|🚪','window|窗户|🪟','house|房子|🏠','room|房间|🏘️','table|桌子|🍽️','sofa|沙发|🛋️','lamp|台灯|💡','key|钥匙|🔑','cup|杯子|☕','spoon|勺子|🥄','fork|叉子|🍴','bowl|碗|🥣','mirror|镜子|🪞'],
+  transport: ['car|小汽车|🚗','bus|公交车|🚌','bike|自行车|🚲','train|火车|🚂','plane|飞机|✈️','ship|轮船|🚢','boat|小船|⛵','taxi|出租车|🚕','truck|卡车|🚚','rocket|火箭|🚀'],
+  nature: ['sun|太阳|☀️','moon|月亮|🌙','star|星星|⭐','cloud|云|☁️','rain|雨|🌧️','snow|雪|❄️','tree|树|🌳','flower|花|🌸','grass|草|🌿','sea|大海|🌊','sky|天空|🌤️','rainbow|彩虹|🌈'],
+  people: ['mother|妈妈|👩','father|爸爸|👨','sister|姐妹|👧','brother|兄弟|👦','baby|宝宝|👶','grandma|奶奶|👵','grandpa|爷爷|👴','uncle|叔叔|🧔'],
+  actions: ['run|跑|🏃','swim|游泳|🏊','jump|跳|🤸','sing|唱歌|🎤','dance|跳舞|💃','sleep|睡觉|😴','eat|吃|🍽️','drink|喝|🥤'],
+  clothes: ['hat|帽子|👒','shirt|衬衫|👕','dress|连衣裙|👗','shoe|鞋|👟','sock|袜子|🧦','coat|外套|🧥'],
+  weather: ['hot|热|🔥','cold|冷|🧊']
+};
+var WORDS = [], CATS = {};
+Object.keys(BANK).forEach(function (cat) {
+  CATS[cat] = BANK[cat].map(function (s) {
+    var p = s.split('|');
+    return { en: p[0], cn: p[1], emoji: p[2] || '⭐', cat: cat };
+  });
+  WORDS = WORDS.concat(CATS[cat]);
+});
+
+var HITS_LIMIT = 10, TIME_LIMIT = 30, HOLES = 6;
+var state = { started: false, ended: false, hits: 0, taps: 0, target: null, targetIsCn: true,
+  fastest: 0, tick: null, wave: null, cards: [], lockUntil: 0 };
+
+var elBoard = document.getElementById('board');
+var elGoalLab = document.getElementById('goalLab');
+var elGoalVal = document.getElementById('goalVal');
+var elHit = document.getElementById('hitChip');
+var elTime = document.getElementById('timeChip');
+var elFb = document.getElementById('feedback');
+var elRule = document.getElementById('rule');
+var elSummary = document.getElementById('summary');
+
+function rand(n) { return Math.floor(Math.random() * n); }
+function shuffle(a) {
+  a = a.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function say(t, o) { if (window.XNLY && XNLY.voice) { try { XNLY.voice.speak(t, o || {}); } catch (e) { } } }
+function sfx(n) { if (window.XNLY && XNLY.sound && XNLY.sound[n]) { try { XNLY.sound[n](); } catch (e) { } } }
+function mark(k) { if (window.XNLY && XNLY.mark) { try { XNLY.mark(k); } catch (e) { } } }
+function speakTarget() {
+  if (!state.target) return;
+  if (state.targetIsCn) say(state.target.cn);
+  else say(state.target.en, { lang: 'en-US' });
+}
+
+var holes = [];
+(function buildHoles() {
+  holes = [];
+  function bind(idx) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'hole';
+    b.dataset.i = String(idx);
+    b.innerHTML = '<span class="pit"></span><span class="card"></span>';
+    var card = b.querySelector('.card');
+    card._card = null;
+    card.textContent = '';
+    holes.push({ btn: b, card: card });
+    b.addEventListener('pointerdown', function (e) { onHole(idx, e); });
+    if (!window.PointerEvent) {
+      b.addEventListener('touchstart', function (e) { onHole(idx, e); }, { passive: false });
+      b.addEventListener('mousedown', function (e) { onHole(idx, e); });
+    }
+    elBoard.appendChild(b);
+  }
+  for (var i = 0; i < HOLES; i++) bind(i);
+})();
+
+var catDeck = XNLY.deck.make(Object.keys(CATS), 'whack-word.cats', { head: 3 });
+var catWordDecks = {};
+
+function newTarget() {
+  var cat = catDeck.next();
+  if (!catWordDecks[cat]) {
+    catWordDecks[cat] = XNLY.deck.make(CATS[cat], 'whack-word.cat.' + cat, { head: 5 });
+  }
+  state.target = catWordDecks[cat].next();
+  state.targetIsCn = Math.random() < 0.5;
+  elGoalLab.textContent = state.targetIsCn ? '目标词（中文）· 点英文卡' : '目标词（英文）· 点中文卡';
+  elGoalVal.textContent = state.targetIsCn ? state.target.cn : state.target.en;
+  elGoalVal.className = 'val' + (state.targetIsCn ? '' : ' en');
+  speakTarget();
+}
+
+function cardsForWave() {
+  var withCard = holes.filter(function (h) { return h.card._card; });
+  var empty = holes.filter(function (h) { return !h.card._card; });
+  if (!empty.length) return { empty: [], withCard: withCard };
+  var needCorrect = !withCard.some(function (h) { return h.card._card && h.card._card.ok; });
+  var n = Math.min(empty.length, 2 + rand(2));
+  var chosen = shuffle(empty).slice(0, n);
+  var target = state.target;
+  var pool = CATS[target.cat].filter(function (w) { return w.en !== target.en; });
+  for (var i = 0; i < chosen.length; i++) {
+    var ok = false;
+    if (needCorrect && i === 0) ok = true;
+    var w;
+    if (ok) {
+      w = target;
+    } else {
+      var cand = pool.filter(function (x) {
+        var shown = chosen.slice(0, i).some(function (h) { return h.card._card && h.card._card.word.en === x.en; });
+        return !shown && (!target || x.en !== target.en);
+      });
+      w = cand.length ? cand[rand(cand.length)] : pool[rand(pool.length)];
+    }
+    showCard(chosen[i], w, ok);
+  }
+  return { empty: empty, withCard: withCard };
+}
+
+function showCard(h, w, ok) {
+  var text = state.targetIsCn ? w.en : w.cn;
+  h.card._card = { word: w, ok: ok, born: Date.now() };
+  h.card.textContent = text;
+  h.card.className = 'card up ' + (state.targetIsCn ? 'en' : 'cn');
+  var life = Math.max(1050, 1800 - state.hits * 70);
+  h.card._hideTimer = setTimeout(function () {
+    if (!h.card._card) return;
+    h.card._card = null;
+    h.card.className = 'card';
+    h.card.textContent = '';
+  }, life);
+}
+
+function clearCards() {
+  holes.forEach(function (h) {
+    clearTimeout(h.card._hideTimer);
+    h.card._card = null;
+    h.card.className = 'card';
+    h.card.textContent = '';
+  });
+}
+
+function onHole(i, e) {
+  if (e && e.cancelable) e.preventDefault();
+  if (!state.started || state.ended) return;
+  if (Date.now() < state.lockUntil) return;
+  state.lockUntil = Date.now() + 120;
+  var h = holes[i];
+  if (!h.card._card) return;
+  var c = h.card._card;
+  clearTimeout(h.card._hideTimer);
+  state.taps++;
+  if (c.ok) {
+    state.hits++;
+    var ms = Date.now() - c.born;
+    if (!state.fastest || ms < state.fastest) state.fastest = ms;
+    h.card.className = 'card up hit ' + (state.targetIsCn ? 'en' : 'cn');
+    h.card._card = null;
+    mark('right'); sfx('correct');
+    elFb.className = 'feedback ok';
+    elFb.textContent = '✅ 找到啦：' + c.word.en + ' 是「' + c.word.cn + '」';
+    elHit.textContent = state.hits;
+    setTimeout(function () { h.card.className = 'card'; h.card.textContent = ''; }, 240);
+    if (state.hits >= HITS_LIMIT) { endGame(); return; }
+    newTarget();
+    clearCards();
+    spawnSoon(260);
+  } else {
+    h.card._card = null;
+    h.card.className = 'card';
+    h.card.textContent = '';
+    mark('wrong'); sfx('wrong');
+    elFb.className = 'feedback bad';
+    elFb.textContent = '❌ 再找找，这一张不是「' + (state.targetIsCn ? state.target.cn : state.target.en) + '」';
+  }
+}
+
+function spawnSoon(ms) {
+  clearTimeout(state.spawnTimer);
+  state.spawnTimer = setTimeout(function () {
+    if (!state.started || state.ended) return;
+    cardsForWave();
+  }, ms);
+}
+
+function waveLoop() {
+  clearInterval(state.wave);
+  state.wave = setInterval(function () {
+    if (!state.started || state.ended) return;
+    cardsForWave();
+  }, Math.max(760, 1180 - state.hits * 55));
+}
+
+function startGame() {
+  if (state.started || state.ended) return;
+  state.started = true;
+  elRule.innerHTML = '⏱ 计时开始！30 秒内点中 10 次就完成 · 点错只提示，不扣分';
+  elRule.style.color = '#5d4037';
+  newTarget();
+  cardsForWave();
+  waveLoop();
+  say('看上面的目标词，点中意思一样的卡片。');
+  var began = Date.now();
+  state.tick = setInterval(function () {
+    var left = TIME_LIMIT - (Date.now() - began) / 1000;
+    if (left < 0) left = 0;
+    elTime.textContent = left >= 10 ? Math.ceil(left) : left.toFixed(1);
+    if (left <= 0) endGame();
+  }, 100);
+}
+
+function endGame() {
+  if (state.ended) return;
+  state.ended = true;
+  clearInterval(state.tick);
+  clearInterval(state.wave);
+  clearTimeout(state.spawnTimer);
+  clearCards();
+  elTime.textContent = '0';
+  elGoalLab.textContent = '本轮结束';
+  elGoalVal.textContent = '🎉';
+  elGoalVal.className = 'val';
+  elFb.className = 'feedback';
+  elFb.textContent = '';
+  sfx('win');
+  var acc = state.taps ? Math.round(state.hits / state.taps * 100) : 0;
+  var fast = state.fastest ? (state.fastest / 1000).toFixed(2) + ' 秒' : '—';
+  elSummary.innerHTML = '<div class="sumtitle">🔨 这一轮的小结</div>' +
+    '<div class="stats">' +
+    '<div class="stat"><b>' + state.hits + '</b><span>点中</span></div>' +
+    '<div class="stat"><b>' + acc + '%</b><span>命中率</span></div>' +
+    '<div class="stat"><b>' + fast + '</b><span>最快反应</span></div>' +
+    '</div>' +
+    '<button class="again" id="againBtn" type="button">🔄 再玩一轮（30 秒）</button>';
+  elSummary.classList.add('show');
+  document.getElementById('againBtn').addEventListener('click', function () {
+    newGame();
+    startGame();
+  });
+  say('这一轮点中了 ' + state.hits + ' 个单词。');
+}
+
+function newGame() {
+  clearInterval(state.tick); clearInterval(state.wave); clearTimeout(state.spawnTimer);
+  state.started = false; state.ended = false; state.hits = 0; state.taps = 0; state.fastest = 0;
+  state.lockUntil = 0;
+  clearCards();
+  elHit.textContent = '0';
+  elTime.textContent = '30';
+  elFb.className = 'feedback'; elFb.textContent = '';
+  elSummary.classList.remove('show'); elSummary.innerHTML = '';
+  elRule.innerHTML = '看上面的目标词，点中意思一样的卡片 · 点错只提示，不扣分 · 第一次点击开始';
+  elRule.style.color = '#6d5145';
+  newTarget();
+}
+
+document.getElementById('replay').addEventListener('click', speakTarget);
+
+document.addEventListener('pointerdown', function () {
+  if (!state.ended && !state.started) startGame();
+}, true);
+if (!window.PointerEvent) {
+  document.addEventListener('touchstart', function () {
+    if (!state.ended && !state.started) startGame();
+  }, { passive: true, capture: true });
+}
+
+newGame();
+
+window.WW = { WORDS: WORDS, get state() { return state; }, startGame: startGame, endGame: endGame,
+  onHole: onHole, holes: holes };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

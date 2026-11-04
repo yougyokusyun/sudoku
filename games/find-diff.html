@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>找不同 · 小脑袋乐园</title>
+<meta name="theme-color" content="#7c5cff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="小脑袋乐园">
+<link rel="apple-touch-icon" href="../games/img/icon-180.png">
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<link rel="manifest" href="../manifest.json">
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#7c5cff;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#eef0ff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff3e8,transparent 55%),
+             linear-gradient(160deg,#f8f9ff,#fffaf5);
+  min-height:100dvh;display:flex;flex-direction:column;padding:12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.15rem;}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;font-size:.85rem;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
+  font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.chipbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
+.tchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 12px;
+  font-family:inherit;font-size:.75rem;font-weight:800;color:#4a6076;cursor:pointer;
+  box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.tchip.on{background:linear-gradient(135deg,#8b5cf6,#7c5cff);color:#fff;border-color:transparent;}
+.top{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
+.scene{font-size:.95rem;font-weight:900;text-align:center;}
+.scene span{display:block;font-size:.74rem;font-weight:700;color:#8aa0b8;margin-top:2px;}
+.replay{min-height:38px;padding:0 14px;border-radius:999px;border:2px solid rgba(124,92,255,.25);
+  background:#fff;color:#5b3fd6;font-family:inherit;font-weight:900;font-size:.82rem;cursor:pointer;
+  box-shadow:0 4px 12px rgba(36,59,83,.08);}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:0;}
+.panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(1040px,100%);}
+.fig{background:#fff;border:2px solid var(--line);border-radius:16px;padding:6px;
+  box-shadow:0 6px 18px rgba(36,59,83,.09);min-width:0;}
+.cap{font-size:.72rem;font-weight:900;color:#7b8ea8;text-align:center;margin-bottom:3px;}
+.wrap{position:relative;width:100%;aspect-ratio:4/3;overflow:hidden;border-radius:10px;}
+.wrap svg{display:block;width:100%;height:100%;cursor:pointer;touch-action:manipulation;}
+.mark{position:absolute;width:30px;height:30px;border-radius:50%;background:rgba(47,179,68,.16);
+  border:3px solid var(--ok);color:#1b7c33;font-size:16px;font-weight:900;line-height:24px;
+  text-align:center;transform:translate(-50%,-50%);pointer-events:none;animation:pop .35s ease;}
+.hintbox{position:absolute;border:3px dashed #ff9800;border-radius:12px;background:rgba(255,193,7,.16);
+  transform:translate(-50%,-50%);pointer-events:none;animation:flash .5s ease 3;}
+.feedback{min-height:34px;font-size:.95rem;font-weight:800;text-align:center;line-height:1.4;}
+.ok{color:var(--ok);} .bad{color:#e08a00;}
+.feedback small{display:block;font-size:.74rem;font-weight:700;color:#7b8ea8;margin-top:2px;}
+.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+.hint{min-height:40px;padding:0 16px;border-radius:999px;border:2px solid rgba(255,152,0,.3);
+  background:#fff;color:#c77700;font-family:inherit;font-weight:900;font-size:.85rem;cursor:pointer;}
+.hint[disabled]{opacity:.45;cursor:default;}
+.tip{font-size:.7rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(.4)}60%{transform:translate(-50%,-50%) scale(1.15)}100%{transform:translate(-50%,-50%) scale(1)}}
+@keyframes flash{0%,100%{opacity:.25}50%{opacity:1}}
+@media (max-width:760px){
+  .panels{grid-template-columns:1fr;}
+  .wrap{max-height:32vh;}
+  .stage{justify-content:flex-start;}
+}
+@media (max-height:520px){
+  body{padding:8px;gap:5px;}
+  h1{font-size:1rem;}
+  .fig{padding:4px;}
+  .wrap{max-height:26vh;}
+}
+</style>
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+<script src="../deck.js"></script>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🔍 找不同</h1>
+  <div class="chips">
+    <span class="chip">🎯 已找到 <b id="found">0</b>/<b id="total">1</b></span>
+    <span class="chip">📈 进度 <b id="prog">1</b>/100</span>
+  </div>
+</header>
+<div class="chipbar" id="tierBar"></div>
+<div class="top">
+  <div class="scene" id="scene">客厅 · 清晨<span>点一点右图不同之处，也可以点左图</span></div>
+  <button class="replay" id="replay" type="button">🔊 再听一遍</button>
+</div>
+<div class="stage">
+  <div class="panels">
+    <div class="fig"><div class="cap">原图</div><div class="wrap" id="left"><svg id="svgL" viewBox="0 0 360 270"></svg><div class="marks" id="marksL"></div></div></div>
+    <div class="fig"><div class="cap">找不同</div><div class="wrap" id="right"><svg id="svgR" viewBox="0 0 360 270"></svg><div class="marks" id="marksR"></div></div></div>
+  </div>
+  <div class="feedback" id="feedback"></div>
+  <div class="actions">
+    <button class="hint" id="hintBtn" type="button">💡 提示（每关 1 次）</button>
+  </div>
+  <div class="tip">点对会打勾；点错只是提示一下，不扣分、不计时</div>
+</div>
+<script>
+/* ================= 场景与差异数据 ================= */
+var SLOTS = [[70, 66], [180, 66], [290, 66], [70, 146], [180, 146], [290, 146], [110, 214], [250, 214]];
+var VARIANTS = ['清晨', '午后', '傍晚', '夜晚', '节日'];
+/* [场景名, 背景色, 8 个元素, 额外元素（只出现在右图）] */
+var SCENES = [
+  ["客厅", ["#fff3e0", "#ffe0b2"], ["🛋️", "📺", "💡", "🪴", "🕐", "🐱", "🧸", "🖼️"], "🪔"],
+  ["教室", ["#e3f2fd", "#bbdefb"], ["📚", "✏️", "🖊️", "📐", "🌏", "🕐", "🪴", "🧑‍🏫"], "🪑"],
+  ["公园", ["#e8f5e9", "#c8e6c9"], ["🌳", "🪁", "⚽", "🐶", "🌸", "☀️", "🪑", "🐦"], "🐿️"],
+  ["餐桌", ["#fff8e1", "#ffe0b2"], ["🍎", "🥛", "🍞", "🍌", "🍽️", "🥤", "🍪", "🪑"], "🍰"],
+  ["动物园", ["#fff3e0", "#ffe0b2"], ["🦁", "🐒", "🐘", "🎋", "🚧", "🌳", "🦒", "🍦"], "🦜"],
+  ["文具盒", ["#f3e5f5", "#e1bee7"], ["✏️", "📏", "🧽", "✂️", "🖍️", "🖊️", "🗂️", "🏷️"], "🖇️"],
+  ["超市", ["#e8f5e9", "#dcedc8"], ["🛒", "🍎", "🍞", "🥛", "🧺", "🥫", "🍌", "🧾"], "🧃"],
+  ["厨房", ["#fff8e1", "#ffe0b2"], ["🍲", "🥕", "🍅", "🥚", "🍳", "🧊", "🥄", "🧑‍🍳"], "🍳"],
+  ["海边", ["#e1f5fe", "#b3e5fc"], ["☀️", "🏖️", "🏰", "⚽", "🐟", "⛵", "🐚", "🕶️"], "🦀"],
+  ["生日会", ["#fce4ec", "#f8bbd0"], ["🎂", "🎈", "🎁", "🕯️", "🥳", "🍬", "🎊", "🪑"], "🎉"],
+  ["卧室", ["#ede7f6", "#d1c4e9"], ["🛏️", "🧸", "💡", "🕐", "🪟", "🧦", "📖", "🌙"], "🧸"],
+  ["农场", ["#f1f8e9", "#dcedc8"], ["🏠", "🐄", "🐔", "🚜", "🌾", "🌻", "🦆", "🚧"], "🌾"],
+  ["游乐场", ["#e3f2fd", "#bbdefb"], ["🎢", "🎠", "🎈", "🍦", "🧒", "🪑", "🪁", "☀️"], "🎠"],
+  ["图书馆", ["#eceff1", "#cfd8dc"], ["📚", "🧑‍🎓", "🪑", "💡", "🕐", "🪴", "🎒", "📖"], "🔖"],
+  ["火车站", ["#eceff1", "#cfd8dc"], ["🚆", "🕐", "🧳", "🎫", "🪑", "🪧", "🧑‍✈️", "🐦"], "🎫"],
+  ["雨天街道", ["#e3f2fd", "#b0bec5"], ["☂️", "🌧️", "💧", "🚌", "🕐", "👢", "☁️", "🚗"], "☔"],
+  ["雪地", ["#e1f5fe", "#e8eaf6"], ["⛄", "🌲", "🧣", "🛷", "❄️", "🏠", "🐦", "🧤"], "⛷️"],
+  ["花园", ["#f1f8e9", "#dcedc8"], ["🌷", "🌻", "🦋", "🚧", "☀️", "🐝", "🪣", "🐦"], "🌷"],
+  ["泳池", ["#e1f5fe", "#b3e5fc"], ["🏊", "🛟", "🥽", "⚽", "☀️", "🧺", "🧒", "🐟"], "🩴"],
+  ["音乐教室", ["#f3e5f5", "#e1bee7"], ["🎹", "🎸", "🥁", "🎵", "🧒", "🪑", "🎼", "🕰️"], "🥁"]
+];
+var SWAP = {
+  "🛋️": "🛏️", "📺": "📻", "💡": "🕯️", "🪴": "🌻", "🕐": "🕰️", "🐱": "🐶", "🧸": "🎁", "🖼️": "🪞",
+  "📚": "📖", "✏️": "🖍️", "🖊️": "✒️", "📐": "📏", "🌏": "🌍", "🧑‍🏫": "🧑‍🎓",
+  "🌳": "🌲", "🪁": "🎈", "⚽": "🏀", "🐶": "🐱", "🌸": "🌻", "☀️": "🌤️", "🪑": "🛋️", "🐦": "🦋",
+  "🍎": "🍊", "🥛": "🧃", "🍞": "🥖", "🍌": "🍐", "🍽️": "🥣", "🥤": "🥛", "🍪": "🍰",
+  "🦁": "🐯", "🐒": "🐵", "🐘": "🦒", "🎋": "🌿", "🚧": "🪧", "🦒": "🐘", "🍦": "🍧",
+  "📏": "📐", "🧽": "🧻", "✂️": "📎", "🖍️": "✏️", "🗂️": "📁", "🏷️": "🔖",
+  "🛒": "🧺", "🧺": "🛒", "🥫": "🥛", "🧾": "🎫",
+  "🍲": "🍜", "🥕": "🌽", "🍅": "🍎", "🥚": "🥔", "🍳": "🍲", "🧊": "💧", "🥄": "🥢", "🧑‍🍳": "🧑‍🏫",
+  "🏖️": "🏝️", "🏰": "🏛️", "🐟": "🐠", "⛵": "🚤", "🐚": "🦀", "🕶️": "🥽",
+  "🎂": "🍰", "🎈": "🎀", "🎁": "🎀", "🕯️": "💡", "🥳": "😀", "🍬": "🍭", "🎊": "🎉",
+  "🛏️": "🛋️", "🪟": "🖼️", "🧦": "🧤", "📖": "📚", "🌙": "☀️",
+  "🏠": "🏡", "🐄": "🐑", "🐔": "🦆", "🚜": "🚙", "🌾": "🌿", "🌻": "🌷", "🦆": "🐔",
+  "🎢": "🎡", "🎠": "🎢", "🧒": "👧", "🍦": "🍧",
+  "🧑‍🎓": "🧑‍🏫", "🎒": "🧳",
+  "🚆": "🚇", "🧳": "🎒", "🎫": "🧾", "🪧": "📌", "🧑‍✈️": "🧑‍🔧",
+  "☂️": "🌂", "🌧️": "❄️", "💧": "🌀", "🚌": "🚐", "👢": "👟", "☁️": "🌤️", "🚗": "🚕",
+  "⛄": "🏔️", "🌲": "🌳", "🧣": "🧤", "🛷": "🛹", "❄️": "💧", "🏘️": "🏠",
+  "🌷": "🌹", "🦋": "🐝", "🐝": "🦋", "🪣": "🧺",
+  "🏊": "🏄", "🛟": "🦺", "🥽": "🕶️", "🐠": "🐟",
+  "🎹": "🎻", "🎸": "🎺", "🥁": "🔔", "🎵": "🎶", "🎼": "📜", "🕰️": "🕐"
+};
+var COUNTABLE = { "🍎": 1, "🍌": 1, "🍊": 1, "🍓": 1, "⭐": 1, "🎈": 1, "📚": 1, "✏️": 1,
+  "🍪": 1, "🎁": 1, "🥚": 1, "🍬": 1, "🌸": 1, "🌻": 1, "🌷": 1, "📖": 1, "🐟": 1, "❄️": 1 };
+var KIND_DESC = {
+  swap: "右边有一处图案变得不一样",
+  hide: "右边少了一样东西",
+  count: "右边的数量不一样",
+  size: "右边有一个东西大小不一样",
+  move: "右边有一个东西的位置不一样",
+  tilt: "右边有一个东西的方向不一样",
+  add: "右边多了一样东西"
+};
+var TIERS = [
+  { name: "简单", label: "🟢 简单 1~2 处", start: 1, end: 40 },
+  { name: "中等", label: "🟡 中等 3 处", start: 41, end: 70 },
+  { name: "困难", label: "🔴 困难 4~5 处", start: 71, end: 100 }
+];
+function tierOf(L) { return L <= 40 ? 0 : L <= 70 ? 1 : 2; }
+function levelCount(L) { return L <= 40 ? (L % 2 ? 1 : 2) : L <= 70 ? 3 : (L % 2 ? 4 : 5); }
+function seeded(L, i) {
+  var x = Math.sin(L * 97.13 + i * 311.7 + 17.29) * 43758.5453;
+  return x - Math.floor(x);
+}
+function shuffledSlots(L) {
+  var a = [0, 1, 2, 3, 4, 5, 6, 7];
+  for (var i = 7; i > 0; i--) { var j = Math.floor(seeded(L, i) * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function emojiBox(x, y, s, n) {
+  var w = s * 1.25 + (n - 1) * s * 0.62;
+  return { x: x - w / 2, y: y - s * 0.92, w: w, h: s * 1.18 };
+}
+function unionBox(a, b) {
+  var x1 = Math.min(a.x, b.x), y1 = Math.min(a.y, b.y);
+  var x2 = Math.max(a.x + a.w, b.x + b.w), y2 = Math.max(a.y + a.h, b.y + b.h);
+  return { x: x1, y: y1, w: x2 - x1, h: y2 - y1 };
+}
+function buildLevel(L) {
+  var si = (L - 1) % SCENES.length, vi = Math.floor((L - 1) / SCENES.length) % 5;
+  var sc = SCENES[si], name = sc[0] + ' · ' + VARIANTS[vi];
+  var n = levelCount(L), order = shuffledSlots(L), used = {}, diffs = [];
+  var kinds = ['swap', 'hide', 'count', 'size', 'move', 'tilt'];
+  var addUsed = false;
+  for (var k = 0; k < n; k++) {
+    var kind = kinds[(L + k) % kinds.length];
+    if (n >= 4 && L % 2 === 0 && k === n - 1) kind = 'add';
+    var slot = -1, emoji = '';
+    if (kind !== 'add') {
+      for (var oi = 0; oi < 8; oi++) {
+        var s0 = order[oi];
+        if (used[s0]) continue;
+        var e0 = sc[2][s0];
+        if (kind === 'count' && !COUNTABLE[e0]) continue;
+        if (kind === 'swap' && !SWAP[e0]) continue;
+        slot = s0; emoji = e0; used[s0] = 1; break;
+      }
+    }
+    if (slot < 0 && kind !== 'add') {
+      kind = 'hide';
+      for (var oj = 0; oj < 8; oj++) { var s1 = order[oj]; if (!used[s1]) { slot = s1; emoji = sc[2][s1]; used[s1] = 1; break; } }
+    }
+    var x = 0, y = 0, sz = 30, cnt = 1, bb = null, cx = 0, cy = 0, right = null;
+    if (kind === 'add') {
+      var spots = [[44, 246], [316, 246], [180, 246]];
+      var sp = spots[L % 3];
+      x = sp[0]; y = sp[1]; sz = 24; emoji = sc[3];
+    } else {
+      x = SLOTS[slot][0] + Math.round(seeded(L, slot) * 8 - 4);
+      y = SLOTS[slot][1] + Math.round(seeded(L, slot + 9) * 8 - 4);
+      cx = x; cy = y - 9;
+    }
+    if (kind === 'count') {
+      cnt = 2 + ((L + k) % 2);
+      bb = emojiBox(x, y, sz, cnt); cx = x + (cnt - 1) * sz * 0.31;
+    } else if (kind === 'swap' || kind === 'hide') {
+      bb = emojiBox(x, y, sz, 1);
+    } else if (kind === 'size') {
+      var big = 1.5;
+      bb = unionBox(emojiBox(x, y, sz, 1), emojiBox(x, y, sz * big, 1)); cy = y - sz * big * 0.3;
+    } else if (kind === 'move') {
+      var dx = 16;
+      bb = unionBox(emojiBox(x, y, sz, 1), emojiBox(x + dx, y, sz, 1)); cx = x + dx / 2;
+      right = { dx: dx };
+    } else if (kind === 'tilt') {
+      bb = emojiBox(x, y, sz, 1); right = { rot: 24 };
+    } else if (kind === 'add') {
+      var spots = [[44, 246], [316, 246], [180, 246]];
+      var sp = spots[L % 3];
+      bb = emojiBox(sp[0], sp[1], 24, 1); cx = sp[0]; cy = sp[1] - 7; emoji = sc[3]; addUsed = true;
+    }
+    if (kind === 'count') right = { count: cnt - 1 };
+    if (kind === 'size') right = { size: 1.5 };
+    diffs.push({ kind: kind, slot: slot, emoji: emoji, alt: SWAP[emoji] || '', count: cnt,
+      right: right, path: '', bbox: bb, cx: cx, cy: cy, desc: KIND_DESC[kind] });
+  }
+  return { idx: L, name: name, tier: tierOf(L), scene: si, variant: vi, n: n, diffs: diffs, sceneData: sc };
+}
+var LEVELS = [];
+for (var LI = 1; LI <= 100; LI++) LEVELS.push(buildLevel(LI));
+/* ================= 渲染与交互 ================= */
+var svgL = document.getElementById('svgL'), svgR = document.getElementById('svgR');
+var marksL = document.getElementById('marksL'), marksR = document.getElementById('marksR');
+var elFound = document.getElementById('found'), elTotal = document.getElementById('total');
+var elProg = document.getElementById('prog'), elScene = document.getElementById('scene');
+var elFb = document.getElementById('feedback'), elHint = document.getElementById('hintBtn');
+var tierBar = document.getElementById('tierBar');
+var curIdx = 1, level = LEVELS[0], found = [], hintUsed = false, solved = false, nextTimer = null;
+var firstTap = false;
+
+function say(t) { if (window.XNLY && XNLY.voice && XNLY.voice.speak) { try { XNLY.voice.speak(t); } catch (e) { } } }
+function sfx(n) { if (window.XNLY && XNLY.sound && XNLY.sound[n]) { try { XNLY.sound[n](); } catch (e) { } } }
+
+function emojiSvg(e, x, y, s, rot) {
+  var t = '<text x="' + x + '" y="' + y + '" font-size="' + s + '" text-anchor="middle">' + e + '</text>';
+  return rot ? '<g transform="rotate(' + rot + ' ' + x + ' ' + y + ')">' + t + '</g>' : t;
+}
+
+function sceneSVG(lv, right) {
+  var sc = lv.sceneData;
+  var by = {};
+  lv.diffs.forEach(function (d) { by[d.slot] = d; });
+  var out = '<rect x="0" y="0" width="360" height="270" fill="' + sc[1][0] + '"/>' +
+    '<rect x="0" y="0" width="360" height="44" fill="#ffffff" opacity=".35"/>' +
+    '<rect x="0" y="188" width="360" height="82" fill="' + sc[1][1] + '" opacity=".75"/>' +
+    '<rect x="0" y="186" width="360" height="4" fill="rgba(36,59,83,.10)"/>' +
+    '<rect x="300" y="16" width="42" height="34" rx="6" fill="#ffffff" opacity=".8"/>' +
+    '<circle cx="30" cy="30" r="15" fill="#ffe082"/>';
+  sc[2].forEach(function (e0, slot) {
+    var d = by[slot];
+    if (d && d.kind === 'hide' && right) return;
+    var p = SLOTS[slot];
+    var x = p[0] + Math.round(seeded(lv.idx, slot) * 8 - 4);
+    var y = p[1] + Math.round(seeded(lv.idx, slot + 9) * 8 - 4);
+    var s = 30, rot = 0, e = e0, n = 1, dx = 0;
+    if (d) {
+      if (d.kind === 'count') { e = d.emoji; n = right ? d.right.count : d.count; }
+      else if (d.kind === 'swap' && right) e = d.alt;
+      else if (d.kind === 'size' && right) s = 30 * d.right.size;
+      else if (d.kind === 'move' && right) dx = d.right.dx;
+      else if (d.kind === 'tilt' && right) rot = d.right.rot;
+    }
+    var start = x - (n - 1) * s * 0.31;
+    for (var i = 0; i < n; i++) out += emojiSvg(e, start + i * s * 0.62 + dx, y, s, rot);
+  });
+  lv.diffs.forEach(function (d) {
+    if (d.kind === 'add' && right) {
+      var sp = [[44, 246], [316, 246], [180, 246]][lv.idx % 3];
+      out += emojiSvg(d.emoji, sp[0], sp[1], 24, 0);
+    }
+  });
+  return out;
+}
+
+function instruction() { return '第 ' + level.idx + ' 关，' + level.name + '。找出 ' + level.n + ' 处不同。'; }
+
+function markAt(d) {
+  var m = document.createElement('div');
+  m.className = 'mark';
+  m.style.left = (d.cx / 360 * 100) + '%';
+  m.style.top = (d.cy / 270 * 100) + '%';
+  m.textContent = '✓';
+  marksL.appendChild(m);
+  var m2 = document.createElement('div');
+  m2.className = 'mark';
+  m2.style.left = m.style.left;
+  m2.style.top = m.style.top;
+  m2.textContent = '✓';
+  marksR.appendChild(m2);
+}
+
+function updateHeader() {
+  elFound.textContent = found.length;
+  elTotal.textContent = level.n;
+  elProg.textContent = level.idx;
+  elScene.innerHTML = level.name + '<span>点一点右图不同之处，也可以点左图</span>';
+  elScene.title = level.name;
+}
+function setFb(txt, cls, sub) {
+  elFb.className = 'feedback' + (cls ? ' ' + cls : '');
+  elFb.innerHTML = txt + (sub ? '<small>' + sub + '</small>' : '');
+}
+
+function renderLevel(idx) {
+  clearTimeout(nextTimer);
+  curIdx = idx; level = LEVELS[curIdx - 1];
+  found = []; hintUsed = false; solved = false;
+  marksL.innerHTML = ''; marksR.innerHTML = '';
+  var old = document.querySelectorAll('.hintbox');
+  Array.prototype.forEach.call(old, function (x) { x.parentNode.removeChild(x); });
+  svgL.innerHTML = sceneSVG(level, false);
+  svgR.innerHTML = sceneSVG(level, true);
+  updateHeader();
+  elHint.disabled = false;
+  elHint.textContent = '💡 提示（每关 1 次）';
+  setFb('找出 ' + level.n + ' 处不同', '', '点对打勾 · 点错只提醒 · 不扣分');
+  renderTierBar();
+  saveState();
+  setTimeout(function () { if (!solved) say(instruction()); }, 320);
+}
+
+function renderTierBar() {
+  tierBar.innerHTML = '';
+  TIERS.forEach(function (t, i) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'tchip' + (tierOf(level.idx) === i ? ' on' : '');
+    b.textContent = t.label;
+    b.addEventListener('click', function () {
+      var L = tierStart(i);
+      renderLevel(L);
+      say('切换到' + t.name + '，第 ' + L + ' 关。');
+    });
+    tierBar.appendChild(b);
+  });
+}
+
+function hitTest(x, y) {
+  var best = -1, bd = 1e9;
+  level.diffs.forEach(function (d, i) {
+    if (found.indexOf(i) >= 0) return;
+    var pad = 12, b = d.bbox;
+    if (x >= b.x - pad && x <= b.x + b.w + pad && y >= b.y - pad && y <= b.y + b.h + pad) {
+      var dx = x - d.cx, dy = y - d.cy, dist = dx * dx + dy * dy;
+      if (dist < bd) { bd = dist; best = i; }
+    }
+  });
+  return best;
+}
+
+function onScene(evt, svg) {
+  if (solved) return;
+  var r = svg.getBoundingClientRect();
+  if (!r.width) return;
+  var sc = r.width / 360;
+  var x = (evt.clientX - r.left) / sc, y = (evt.clientY - r.top) / sc;
+  if (x < 0 || y < 0 || x > 360 || y > 270) return;
+  var i = hitTest(x, y);
+  if (i < 0) {
+    sfx('wrong');
+    setFb('再仔细看看～', 'bad', '点错不要紧，慢慢找');
+    return;
+  }
+  found.push(i);
+  markAt(level.diffs[i]);
+  sfx('correct');
+  if (window.XNLY && XNLY.mark) { try { XNLY.mark('right'); } catch (e) { } }
+  updateHeader();
+  var left = level.n - found.length;
+  if (left > 0) {
+    setFb('找到啦！还剩 ' + left + ' 处', 'ok');
+    say('找到一处，还剩 ' + left + ' 处。');
+    saveState();
+  } else {
+    solved = true;
+    elHint.disabled = true;
+    sfx('win');
+    setFb('🎉 太棒了！' + level.n + ' 处全找到啦', 'ok', '马上进入下一关');
+    say('太棒了，全部找齐！');
+    saveState();
+    nextTimer = setTimeout(nextLevel, 1800);
+  }
+}
+
+var tierDecks = {};
+function tierStart(t) {
+  if (!tierDecks[t]) {
+    var idxs = [];
+    for (var i = TIERS[t].start; i <= TIERS[t].end; i++) idxs.push(i);
+    tierDecks[t] = XNLY.deck.make(idxs, 'find-diff.tier' + t, { head: 2 });
+  }
+  return tierDecks[t].next();
+}
+
+function nextLevel() {
+  var t = tierOf(curIdx);
+  var nxt = curIdx + 1;
+  if (curIdx >= TIERS[t].end) nxt = tierStart(t);
+  renderLevel(nxt);
+}
+
+function useHint() {
+  if (hintUsed || solved) return;
+  var i = -1;
+  for (var k = 0; k < level.diffs.length; k++) { if (found.indexOf(k) < 0) { i = k; break; } }
+  if (i < 0) return;
+  hintUsed = true;
+  elHint.disabled = true;
+  elHint.textContent = '💡 本关提示已用完';
+  var d = level.diffs[i];
+  [document.getElementById('left'), document.getElementById('right')].forEach(function (w) {
+    var h = document.createElement('div');
+    h.className = 'hintbox';
+    h.style.left = ((d.bbox.x + d.bbox.w / 2) / 360 * 100) + '%';
+    h.style.top = ((d.bbox.y + d.bbox.h / 2) / 270 * 100) + '%';
+    h.style.width = (d.bbox.w / 360 * 100) + '%';
+    h.style.height = (d.bbox.h / 270 * 100) + '%';
+    w.appendChild(h);
+    setTimeout(function () { if (h.parentNode) h.parentNode.removeChild(h); }, 2600);
+  });
+  sfx('notice');
+  setFb('💡 提示：' + d.desc, 'bad', '闪烁的位置有一处不同');
+  say('提示。' + d.desc + '。');
+}
+
+svgL.addEventListener('click', function (e) { onScene(e, svgL); });
+svgR.addEventListener('click', function (e) { onScene(e, svgR); });
+elHint.addEventListener('click', useHint);
+document.getElementById('replay').addEventListener('click', function () { say(instruction()); });
+document.addEventListener('pointerdown', function () {
+  if (firstTap) return;
+  firstTap = true;
+  if (window.XNLY && XNLY.voice && XNLY.voice.unlock) { try { XNLY.voice.unlock(); } catch (e) { } }
+  if (window.XNLY && XNLY.sound && XNLY.sound.unlock) { try { XNLY.sound.unlock(); } catch (e) { } }
+  say(instruction());
+}, { passive: true });
+
+function saveState() {
+  try {
+    localStorage.setItem('xnly-finddiff', JSON.stringify({ level: curIdx, tier: tierOf(curIdx) }));
+  } catch (e) { }
+}
+function loadState() {
+  var q = '';
+  try { q = new URLSearchParams(location.search).get('level') || ''; } catch (e) { }
+  if (q) { var qn = parseInt(q, 10); if (qn >= 1 && qn <= 100) return qn; }
+  try {
+    var s = JSON.parse(localStorage.getItem('xnly-finddiff') || '{}');
+    if (s && s.level >= 1 && s.level <= 100) return s.level;
+  } catch (e) { }
+  return tierStart(0);
+}
+
+/* 供离线自测/家长查看 */
+window.FTD = { LEVELS: LEVELS, renderLevel: renderLevel, hitTest: hitTest,
+  get state() { return { idx: curIdx, level: level, found: found.slice(), hintUsed: hintUsed, solved: solved }; } };
+
+renderLevel(loadState());
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+</body>
+</html>

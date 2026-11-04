@@ -67,6 +67,7 @@ h1{font-size:1.15rem;}
 <link rel="icon" type="image/png" href="../games/img/icon-192.png">
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -138,7 +139,8 @@ var Q = [
   ['social','😔','小朋友很难过，你会？',['安慰他，陪陪他','笑他','走开不管'],'安慰他，陪陪他','一句安慰的话能让别人好受一些。']
 ];
 
-var state = { no: 0, right: 0, locked: false, idx: [] };
+var state = { no: 0, right: 0, locked: false, cur: null };
+var qDeck = XNLY.deck.make(Q, 'emotions', { head: 5 });
 var elQno = document.getElementById('qno');
 var elRight = document.getElementById('right');
 var elEmo = document.getElementById('emo');
@@ -147,10 +149,11 @@ var elOpts = document.getElementById('opts');
 var elFb = document.getElementById('feedback');
 var elExp = document.getElementById('exp');
 
-function current() { return Q[state.idx[state.no]]; }
+function current() { return state.cur; }
 
 function render() {
-  var it = current();
+  var it = state.cur = qDeck.next();
+  state.no = (state.no + 1) % Q.length;
   state.locked = false;
   elQno.textContent = state.no + 1;
   elRight.textContent = state.right;
@@ -190,15 +193,15 @@ function choose(btn, o, it) {
 }
 
 function nextQ() {
-  state.no = (state.no + 1) % Q.length;
-  if (state.no === 0) { state.idx = shuffle(Q.map(function (_, i) { return i; })); }
+  if (state.no >= Q.length) state.no = 0;
+  /* 题号与下一题都由 render() 中的 state.no / qDeck.next() 推进 */
   render();
 }
 
 document.getElementById('hear').addEventListener('click', function () { say(current()[2]); });
 document.getElementById('next').addEventListener('click', nextQ);
 
-state.idx = shuffle(Q.map(function (_, i) { return i; }));
+/* 开局顺序由 qDeck 洗牌决定 */
 render();
 window.__emotions = { list: Q, state: state };
 </script>

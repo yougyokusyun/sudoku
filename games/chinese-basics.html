@@ -68,6 +68,7 @@ h1{font-size:1.15rem;}
 <link rel="icon" type="image/png" href="../games/img/icon-192.png">
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -252,15 +253,17 @@ function rebuild() {
   state.pool = Q.filter(function (q) {
     return (state.cat < 0 || q[0] === state.cat) && (state.tier === 0 || q[1] === state.tier);
   });
+  state.deck = XNLY.deck.make(state.pool, 'chinese-basics.' + state.cat + '.' + state.tier, { head: 5 });
+  state.cur = state.deck.next();
   state.pos = 0; state.right = 0; state.locked = false;
   buildChips();
   render();
 }
 
-function cur() { return state.pool[state.pos]; }
+function cur() { return state.cur; }
 
 function render() {
-  var q = cur();
+  var q = state.cur;
   if (!q) { elQ.textContent = '这个分类没有题目啦～'; elOpts.innerHTML = ''; return; }
   state.locked = false;
   elQtag.textContent = CATS[q[0]] + ' · ' + ['1~2 年级', '3~4 年级', '5~6 年级'][q[1] - 1] +
@@ -302,8 +305,9 @@ function choose(btn, o, q) {
 function nextQ() {
   state.pos++;
   if (state.pos >= state.pool.length) {
-    state.pool = shuffle(state.pool); state.pos = 0;
+    state.pos = 0;
   }
+  state.cur = state.deck.next();
   render();
 }
 document.getElementById('hear').addEventListener('click', function () {
@@ -313,6 +317,8 @@ document.getElementById('next').addEventListener('click', nextQ);
 
 buildChips();
 state.pool = Q.slice();
+state.deck = XNLY.deck.make(state.pool, 'chinese-basics.all.all', { head: 5 });
+state.cur = state.deck.next();
 render();
 window.__chinese = { list: Q, state: state, cats: CATS, rebuild: rebuild };
 </script>

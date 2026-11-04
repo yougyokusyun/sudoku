@@ -108,6 +108,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -247,10 +248,12 @@ function step(dir) {
   renderPage(dir, true);
 }
 
+var targetDeck = XNLY.deck.make(ANIMALS, 'animals-learn.quiz', { head: 5 });
+
 function newQuiz() {
   locked = false;
   var guard = 0;
-  do { target = ANIMALS[rand(ANIMALS.length)]; guard++; }
+  do { target = targetDeck.next(); guard++; }
   while (target.n === ANIMALS[idx].n && guard < 30);
   elPrompt.textContent = '找一找' + target.n + '👇';
   voiceSpeak(target.n + '在哪里呀？点一点它');

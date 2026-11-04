@@ -48,6 +48,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -95,6 +96,24 @@ function setLevel(n){
   try{localStorage.setItem('pbs.level',String(level));}catch(e){}
 }
 
+var bsDeck = null, bsKey = '';
+function bsPool() {
+  var out = [];
+  PAIRS.forEach(function (p) {
+    out.push({ p: p, askBig: true });
+    out.push({ p: p, askBig: false });
+  });
+  return out;
+}
+function bsDeckFor() {
+  var k = 'big-small.' + level;
+  if (!bsDeck || bsKey !== k) {
+    bsDeck = XNLY.deck.make(bsPool(), k, { head: 5 });
+    bsKey = k;
+  }
+  return bsDeck;
+}
+
 function newRound(){
   clearTimeout(newRoundTimer);
   locked=true;                                  /* 800ms 输入锁，防连点 */
@@ -102,9 +121,10 @@ function newRound(){
   lockTimer=setTimeout(function(){locked=false;},800);
 
   var cfg=LEVELS[level-1];
-  var p=pick(PAIRS);
+  var q=bsDeckFor().next();
+  var p=q.p;
   var bigEmoji=p.same||p.big, smallEmoji=p.same||p.small;
-  askBig=Math.random()<0.5;
+  askBig=q.askBig;
 
   var opts=[{emoji:bigEmoji,size:'big',fs:cfg.big},
             {emoji:smallEmoji,size:'small',fs:cfg.small}];

@@ -130,6 +130,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -218,13 +219,14 @@ function say(text) {
   } catch (e) { }
 }
 
+var momDeck = XNLY.deck.make(ANIMALS, 'animals-mom', { head: 5 });
+
 function newRound() {
   clearTimeout(timer);
   locked = false;
   Array.prototype.forEach.call(elStage.querySelectorAll('.heart'), function (h) { h.remove(); });
 
-  var prev = mom ? mom.n : '';
-  do { mom = ANIMALS[rand(ANIMALS.length)]; } while (mom.n === prev);
+  mom = momDeck.next();
   var others = shuffle(ANIMALS.filter(function (a) { return a.n !== mom.n; })).slice(0, 2);
   babies = shuffle([mom].concat(others));
 

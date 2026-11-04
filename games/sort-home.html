@@ -109,6 +109,7 @@ h1{font-size:1.15rem;}
 <link rel="apple-touch-icon" href="../games/img/icon-180.png">
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
+<script src="../deck.js"></script>
 </head>
 <body>
 <header>
@@ -212,14 +213,15 @@ function setPhoto(host, f, emoji) {
   host.appendChild(img);
 }
 
+var catDeck = XNLY.deck.make(CATS.map(function (c, i) { return i; }), 'sort-home', { head: 3 });
+
 function newRound() {
   clearTimeout(timer);
   locked = false;
   feedback('');
 
-  /* 分类轮换，打乱顺序循环出题 */
-  if (catIdx >= catOrder.length) { catOrder = shuffle(CATS.map(function (c, i) { return i; })); catIdx = 0; }
-  cur = CATS[catOrder[catIdx++]];
+  /* 分类轮换，洗牌抽完才重洗 */
+  cur = CATS[catDeck.next()];
   elTargetIco.textContent = cur.ico;
   elTargetName.textContent = cur.name;
   elPrompt.textContent = '点一点属于「' + cur.name + '」的东西👇';
