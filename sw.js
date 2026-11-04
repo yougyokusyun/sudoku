@@ -19,8 +19,17 @@
  * v21 变化：新增现代语文基础、单词消消乐；补入阅读理解 / 近反义词 / 单词图配 / 钟表与人民币；移除调试页。
  * v22 变化：新增外链书架（只放站内链接与说明，不内嵌外部资源）。
  * v23 变化：移除成语分类页；去掉英语/古诗/语文百科的开始按钮（进入即出题）。
+ * v24 变化：新增英语听力选择页（100 题，含细节辨图）。
+ * v25 变化：英语听力页新增「细节辨图 30 题」练习模式（页内切换 + ?type=detail，含分年级小结）。
+ * v26 变化：英语听力题库扩到 200 题（各年级 50 题），细节辨图增至 52 题，模式与小结随题量动态显示。
+ * v27 变化：新增「找不同」页（100 关，内联 SVG/emoji 绘制，三档难度，点图找差异）。
+ * v28 变化：新增 4 个游戏页（计时挑战 / 打地鼠认单词 / 看图选句 / 情景对话），加入预缓存。
+ * v29 变化：阅读理解页扩到「60 篇基础 + 100 题新题型」，页面无新增，版本号 +1。
+ * v30 变化：首页改为幼儿园 / 低年级 / 高年级 / 家长 四 tab，parent.html 年龄档同步，页面无新增。
+ * v31 变化：逻辑推理页扩到 40 道（30 常规 + 10 挑战），逐题唯一解已校验，页面无新增。
+ * v32 变化：新增共享洗牌模块 deck.js 并加入预缓存；幼儿园 / 低年级题库型页面开局顺序随机且不连续重复。
  */
-var CACHE = 'xnly-v23';
+var CACHE = 'xnly-v32';
 
 var PRECACHE = [
   './',
@@ -40,6 +49,12 @@ var PRECACHE = [
   'games/daily-order.html',
   'games/emotions.html',
   'games/english.html',
+  'games/english-listening.html',
+  'games/find-diff.html',
+  'games/beat-clock.html',
+  'games/picture-sentence.html',
+  'games/whack-word.html',
+  'games/dialogue-choice.html',
   'games/gomoku.html',
   'games/guess-number.html',
   'games/gushi.html',
@@ -88,6 +103,7 @@ var PRECACHE = [
   'games/xiangxingzi.html',
   'games/yuwen-baike.html',
   'games/yuwen-data.js',
+  'deck.js',
   'index.html',
   'manifest.json',
   'parent.html',

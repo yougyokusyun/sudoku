@@ -66,30 +66,30 @@ footer{text-align:center;font-size:.74rem;color:#9fb1c6;margin-top:10px;line-hei
     用网页地址打开（或加到主屏）后再玩，就能记录了。
   </div>
 
-  <div class="card">
+  <div class="card" id="age">
     <h2>👶 年龄档</h2>
     <div class="seg" id="seg">
-      <button type="button" data-tier="3">3 岁<small>只显示 8 个最基础的</small></button>
-      <button type="button" data-tier="4">4 岁<small>再放出 14 个</small></button>
-      <button type="button" data-tier="5">5 岁<small>再放出 5 个</small></button>
+      <button type="button" data-stage="kid">🍼 幼儿园<small>3~6 岁 · 28 个游戏</small></button>
+      <button type="button" data-stage="low">📚 低年级<small>1~3 年级 · 10 个游戏</small></button>
+      <button type="button" data-stage="high">🚀 高年级<small>4~6 年级 · 29 个游戏</small></button>
     </div>
-    <div class="hint">首页会按这里的选择显示游戏，其余收进「大孩子专区」。改完回首页即可看到。</div>
+    <div class="hint">首页会按这里的选择显示游戏，和首页顶部的 tab 是同一个设置，改完回首页即可看到。</div>
   </div>
 
-  <div class="card">
+  <div class="card" id="stats">
     <h2>📊 最近 7 天</h2>
     <div class="kpis" id="kpis"></div>
     <div class="hint">只统计本机浏览器里的记录；换设备、清理缓存会清零。</div>
   </div>
 
-  <div class="card">
+  <div class="card" id="games">
     <h2>🎮 每个游戏</h2>
     <div id="tableWrap"><div class="empty">还没有记录，去首页玩一会儿吧～</div></div>
   </div>
 
   <footer>
     正确率 = 点对次数 ÷（点对 + 点错）· 「—」表示这几天没有答对/答错的记录<br>
-    小脑袋乐园 · 无广告 · 无排行 · 无倒计时
+    小脑袋乐园 · 无广告 · 无排行 · 不扣分
   </footer>
 </div>
 
@@ -98,18 +98,30 @@ footer{text-align:center;font-size:.74rem;color:#9fb1c6;margin-top:10px;line-hei
   var X = window.XNLY || {};
   var seg = document.getElementById('seg');
 
-  /* ---------- 年龄档 ---------- */
-  function renderTier() {
-    var t = (X.stats && X.stats.getTier) ? X.stats.getTier() : 3;
+  /* ---------- 年龄档（与首页 tab 共用 xnly_stage） ---------- */
+  function readStage() {
+    try {
+      var v = localStorage.getItem('xnly_stage');
+      if (v === 'kid' || v === 'low' || v === 'high') return v;
+      var old = localStorage.getItem('xnly_age');
+      if (old === '4') return 'low';
+      if (old === '5') return 'high';
+    } catch (e) { }
+    return 'kid';
+  }
+  function renderStage() {
+    var s = readStage();
     Array.prototype.forEach.call(seg.querySelectorAll('button'), function (b) {
-      b.classList.toggle('on', Number(b.dataset.tier) === t);
+      b.classList.toggle('on', b.dataset.stage === s);
     });
   }
   seg.addEventListener('click', function (e) {
     var b = e.target.closest('button');
     if (!b) return;
-    if (X.stats && X.stats.setTier) X.stats.setTier(Number(b.dataset.tier));
-    renderTier();
+    try { localStorage.setItem('xnly_stage', b.dataset.stage); } catch (err) { }
+    renderStage();
+    var X = window.XNLY || {};
+    if (X.voice) X.voice.speak(['幼儿园', '低年级', '高年级'][['kid', 'low', 'high'].indexOf(b.dataset.stage)] + '。');
   });
 
   if (X.canStore === false) document.getElementById('storeWarn').hidden = false;
@@ -203,7 +215,7 @@ footer{text-align:center;font-size:.74rem;color:#9fb1c6;margin-top:10px;line-hei
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
-  renderTier();
+  renderStage();
   render();
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'visible') render();
