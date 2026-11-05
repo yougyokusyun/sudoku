@@ -33,8 +33,12 @@
  * v34 变化：连续语速滑杆（0.5~2.0）、首页 5 入口单排、右上角统一工具条（🏠+🔊）、
  *           形状页首题修复、天气页 SVG 场景、全站配图放大、单词图配照片兜底结构、
  *           打地鼠放慢、逻辑推理线索全显；新增 img/words/index.json 入预缓存（照片不入）。
+ * v35 变化：6 条真实动物录音 + animal-voice.js 优先真实录音；音频清单 CREDITS/index.json。
+ * v36 变化：首页语速滑杆改为常显（0.5~2.0，步进 0.05）；每次朗读前重读 xnly_speed，
+ *           讲解模式语速统一走滑杆值（取消 iOS/安卓两档）；voice.js / index.html / sudoku-ui.js 更新。
+ *           打地鼠 whack-word 改为「命中即换词」（去掉 3 周期才换的 gate，同词第二只不重复计分）。
  */
-var CACHE = 'xnly-v35';
+var CACHE = 'xnly-v36';
 
 var PRECACHE = [
   './',

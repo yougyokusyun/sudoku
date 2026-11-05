@@ -120,9 +120,12 @@
       if (mySeq === seq) { busy = false; pump(); }
     };
 
+    /* 每次开口前重读 localStorage('xnly_speed')：首页改完滑杆，
+       其它页面（哪怕早就打开着）下一次朗读立即生效 */
+    var rate = speed();
     var u = new Utter(job.text);
     u.lang = job.lang;
-    u.rate = job.rate;
+    u.rate = rate;
     u.pitch = job.pitch;
     u.volume = 1;
     u.onend = finish;
@@ -131,7 +134,7 @@
     try { synth.speak(u); } catch (e) { finish(); return; }
 
     /* 看门狗：个别浏览器 onend 不触发，按字数估时兜底放行，避免队列卡死 */
-    var guess = Math.max(1500, job.text.length * 320 / Math.max(0.7, job.rate));
+    var guess = Math.max(1500, job.text.length * 320 / Math.max(0.7, rate));
     setTimeout(function () {
       if (done) return;
       if (mySeq !== seq) { finish(); return; }
@@ -148,13 +151,13 @@
 
     if (!opts.queue) cancel();
 
-    /* 全站统一语速：以用户滑杆为准，忽略页面里写死的 rate */
-    var rate = speed();
+    /* 全站统一语速：以用户滑杆为准，忽略页面里写死的 rate。
+       具体数值在 pump() 每次开口前才读，保证「改完立即生效」 */
     var lang = opts.lang || langOf(text);
     /* single:true → 整句一次 utterance（工具条重听用，保证 speak 只调用 1 次） */
     var parts = opts.single ? [text] : splitSentences(text);
     for (var i = 0; i < parts.length; i++) {
-      queue.push({ text: parts[i], rate: rate, lang: lang, pitch: opts.pitch || 1.12 });
+      queue.push({ text: parts[i], lang: lang, pitch: opts.pitch || 1.12 });
     }
     pump();
     watchSilent();
@@ -226,7 +229,8 @@
       '.xnly-speed{width:100%;max-width:100%;font-family:inherit;color:#243b53;}',
       '.xnly-speed .xs-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:900;}',
       '.xnly-speed .xs-title{font-size:1rem;}',
-      '.xnly-speed .xs-val{font-size:1.05rem;color:#7c5cff;font-variant-numeric:tabular-nums;}',
+      '.xnly-speed .xs-val{font-size:1.3rem;color:#7c5cff;font-weight:900;font-variant-numeric:tabular-nums;}',
+      '.xnly-speed .xs-now{text-align:center;margin:2px 0 -2px;}',
       '.xnly-speed .xs-row{display:flex;align-items:center;gap:8px;margin:10px 0 4px;}',
       '.xnly-speed .xs-end{font-size:.76rem;color:#7b8ea8;font-weight:800;white-space:nowrap;}',
       '.xnly-speed .xs-range{flex:1 1 auto;min-width:0;width:100%;height:48px;margin:0;background:transparent;',
@@ -253,11 +257,12 @@
     var box = document.createElement('div');
     box.className = 'xnly-speed';
     box.innerHTML =
-      '<div class="xs-head"><span class="xs-title">🔊 语速</span><span class="xs-val">' + fmtSpeed(speed()) + '</span></div>' +
-      '<div class="xs-row"><span class="xs-end">0.5 慢</span>' +
+      '<div class="xs-head"><span class="xs-title">🔊 朗读语速</span><span class="xs-end">全站生效</span></div>' +
+      '<div class="xs-now"><span class="xs-val">' + fmtSpeed(speed()) + '</span></div>' +
+      '<div class="xs-row"><span class="xs-end">慢 0.5×</span>' +
       '<input class="xs-range" type="range" min="0.5" max="2" step="0.05" aria-label="朗读语速" value="' + speed() + '">' +
-      '<span class="xs-end">2.0 快</span></div>' +
-      '<div class="xs-foot"><button type="button" class="xs-btn primary xs-reset">恢复默认 1.0×</button>' +
+      '<span class="xs-end">快 2.0×</span></div>' +
+      '<div class="xs-foot"><button type="button" class="xs-btn primary xs-reset">恢复 1.0×</button>' +
       '<button type="button" class="xs-btn xs-sample">试听</button></div>';
     var input = box.querySelector('.xs-range');
     var val = box.querySelector('.xs-val');
@@ -276,8 +281,12 @@
       paint(v);
       speak('这是现在的语速。');
     }
-    /* 拖动中只更新数字，不朗读 */
-    input.addEventListener('input', function () { paint(clampSpeed(input.value)); });
+    /* 拖动中：数字实时变，同时写入 localStorage（其它页面下一次朗读立即用新值） */
+    input.addEventListener('input', function () {
+      var v = clampSpeed(input.value);
+      setSpeed(v);
+      paint(v);
+    });
     input.addEventListener('change', commit);
     input.addEventListener('pointerup', commit);
     box.querySelector('.xs-reset').addEventListener('click', function () {

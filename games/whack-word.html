@@ -111,7 +111,7 @@ h1{font-size:1.15rem;}
   <div class="board" id="board"></div>
   <div class="feedback" id="feedback"></div>
   <div class="summary" id="summary"></div>
-  <div class="tip">30 秒内点中 10 次就结束 · 三档速度，默认最慢 · 目标词会停留 3 个冒泡周期</div>
+  <div class="tip">30 秒内点中 10 次就结束 · 三档速度，默认最慢 · 点中正确卡片立即换下一个词</div>
 </div>
 
 <script>
@@ -152,7 +152,7 @@ function readPace() {
 }
 var state = { started: false, ended: false, hits: 0, taps: 0, target: null, targetIsCn: true,
   fastest: 0, tick: null, wave: null, cards: [], lockUntil: 0,
-  paceKey: readPace(), cycles: 0 };
+  paceKey: readPace() };
 function paceInfo() { return PACE[state.paceKey] || PACE.slow; }
 
 var elBoard = document.getElementById('board');
@@ -205,14 +205,13 @@ var holes = [];
 var catDeck = XNLY.deck.make(Object.keys(CATS), 'whack-word.cats', { head: 3 });
 var catWordDecks = {};
 
-function newTarget(force) {
-  if (!force && state.target && state.cycles < 3) return;   /* 目标词至少停留 3 个冒泡周期 */
-  state.cycles = 0;
+function newTarget() {
   var cat = catDeck.next();
   if (!catWordDecks[cat]) {
     catWordDecks[cat] = XNLY.deck.make(CATS[cat], 'whack-word.cat.' + cat, { head: 5 });
   }
   state.target = catWordDecks[cat].next();
+  state.targetHit = false;   /* 同一目标词只算第一次命中 */
   state.targetIsCn = Math.random() < 0.5;
   elGoalLab.textContent = state.targetIsCn ? '目标词（中文）· 点英文卡' : '目标词（英文）· 点中文卡';
   elGoalVal.textContent = state.targetIsCn ? state.target.cn : state.target.en;
@@ -222,11 +221,6 @@ function newTarget(force) {
 
 function cardsForWave() {
   (window.__whackSpawns = window.__whackSpawns || []).push(Date.now());
-  state.cycles++;
-  if (state.cycles > 3) {          /* 3 个周期后换目标，整轮重排 */
-    clearCards();
-    newTarget(true);
-  }
   var withCard = holes.filter(function (h) { return h.card._card; });
   var empty = holes.filter(function (h) { return !h.card._card; });
   if (!empty.length) return { empty: [], withCard: withCard };
@@ -286,7 +280,15 @@ function onHole(i, e) {
   var c = h.card._card;
   clearTimeout(h.card._hideTimer);
   state.taps++;
+  if (c.ok && state.targetHit) {
+    /* 同一目标词的第二只正确地鼠：不再加分，也不影响换词 */
+    h.card._card = null;
+    h.card.className = 'card';
+    h.card.textContent = '';
+    return;
+  }
   if (c.ok) {
+    state.targetHit = true;
     state.hits++;
     var ms = Date.now() - c.born;
     if (!state.fastest || ms < state.fastest) state.fastest = ms;
@@ -298,7 +300,14 @@ function onHole(i, e) {
     elHit.textContent = state.hits;
     setTimeout(function () { h.card.className = 'card'; h.card.textContent = ''; }, 240);
     if (state.hits >= HITS_LIMIT) { endGame(); return; }
-    /* 答对后不立刻换目标词，也不提前补位：等下一个固定冒泡周期 */
+    /* 命中即换词：等对勾动画放完（260ms）就清掉旧目标的所有卡片，换下一个词并重排山洞 */
+    clearTimeout(state.switchTimer);
+    state.switchTimer = setTimeout(function () {
+      if (!state.started || state.ended) return;
+      clearCards();
+      newTarget();
+      cardsForWave();
+    }, 260);
   } else {
     h.card._card = null;
     h.card.className = 'card';
@@ -330,7 +339,6 @@ function startGame() {
   state.started = true;
   elRule.innerHTML = '⏱ 计时开始！30 秒内点中 10 次就完成 · 点错只提示，不扣分';
   elRule.style.color = '#5d4037';
-  newTarget();
   cardsForWave();
   waveLoop();
   say('看上面的目标词，点中意思一样的卡片。');
@@ -349,6 +357,7 @@ function endGame() {
   clearInterval(state.tick);
   clearInterval(state.wave);
   clearTimeout(state.spawnTimer);
+  clearTimeout(state.switchTimer);
   clearCards();
   elTime.textContent = '0';
   elGoalLab.textContent = '本轮结束';
@@ -376,6 +385,7 @@ function endGame() {
 
 function newGame() {
   clearInterval(state.tick); clearInterval(state.wave); clearTimeout(state.spawnTimer);
+  clearTimeout(state.switchTimer);
   state.started = false; state.ended = false; state.hits = 0; state.taps = 0; state.fastest = 0;
   state.lockUntil = 0;
   clearCards();
@@ -385,8 +395,7 @@ function newGame() {
   elSummary.classList.remove('show'); elSummary.innerHTML = '';
   elRule.innerHTML = '看上面的目标词，点中意思一样的卡片 · 点错只提示，不扣分 · 第一次点击开始';
   elRule.style.color = '#6d5145';
-  state.cycles = 0;
-  newTarget(true);
+  newTarget();
 }
 
 /* 三档速度：默认最慢，存 localStorage，切换后立即生效 */

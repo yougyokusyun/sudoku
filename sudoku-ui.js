@@ -4109,11 +4109,18 @@ function isIOSDevice() {
 }
 
 /**
- * 朗读语速：iOS 自带的系统中文音色天生偏快，同样 rate 听感比安卓快不少，
- * 所以 iOS/iPadOS 用 0.9，其余平台（安卓、桌面 Chrome/Edge）保持 1.2。
+ * 朗读语速：统一读全站滑杆值（localStorage.xnly_speed），不再按平台分两档。
+ * 首页滑杆改完，讲解模式下一次朗读立即生效。
  */
 function pickNarrationRate() {
-    return isIOSDevice() ? 0.9 : 1.2;
+    if (window.XNLY && XNLY.voice && typeof XNLY.voice.speed === 'function') {
+        return XNLY.voice.speed();
+    }
+    try {
+        const v = parseFloat(localStorage.getItem('xnly_speed'));
+        if (isFinite(v)) return Math.min(2, Math.max(0.5, Math.round(v / 0.05) * 0.05));
+    } catch (e) { /* 忽略 */ }
+    return 1;
 }
 
 /**
@@ -4125,7 +4132,7 @@ function unlockSpeech() {
     try {
         const u = new SpeechSynthesisUtterance(' ');
         u.volume = 1;
-        u.rate = 1;
+        u.rate = pickNarrationRate();
         u.lang = 'zh-CN';
         window.speechSynthesis.speak(u);   // 必须同步调用，不能放进 setTimeout
         speechUnlocked = true;
@@ -4284,7 +4291,7 @@ function speakNarration(text, onEnd) {
             const u = new SpeechSynthesisUtterance(pieces[i]);
             if (voice) u.voice = voice;
             u.lang = voice ? voice.lang : 'zh-CN';
-            // 语速分平台：iOS / iPadOS 的系统中文音色本身偏快，降一档；安卓保持原速
+            // 语速统一走全站滑杆（localStorage.xnly_speed）
             u.rate = pickNarrationRate();
             u.pitch = 1;
             currentUtterances.push(u);   // 强引用，避免朗读中途被回收导致断音
