@@ -34,7 +34,7 @@
  *           形状页首题修复、天气页 SVG 场景、全站配图放大、单词图配照片兜底结构、
  *           打地鼠放慢、逻辑推理线索全显；新增 img/words/index.json 入预缓存（照片不入）。
  */
-var CACHE = 'xnly-v34';
+var CACHE = 'xnly-v35';
 
 var PRECACHE = [
   './',

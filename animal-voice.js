@@ -11,7 +11,7 @@
   var ctx = null, unlocked = false;
   var buffers = {};        /* slug -> AudioBuffer */
   var failed = {};         /* slug -> true */
-  var indexReady = false, realList = null;
+  var indexReady = false, realPaths = null;
   var AUDIO_BASE = /[\/\\]games[\/\\]/.test(location.pathname) ? '../audio/animals/' : 'audio/animals/';
 
   function ensureCtx() {
@@ -35,12 +35,18 @@
   function loadIndex(cb) {
     if (indexReady) { cb(); return; }
     indexReady = true;
-    realList = [];
+    realPaths = {};
     if (!window.fetch) { cb(); return; }
     fetch(AUDIO_BASE + 'index.json', { cache: 'no-cache' })
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (j) {
-        if (j && Array.isArray(j.files)) realList = j.files;
+        if (j && Array.isArray(j.files)) {
+          for (var i = 0; i < j.files.length; i++) {
+            var f = j.files[i];
+            if (typeof f === 'string') realPaths[f] = f + '.mp3';
+            else if (f && f.slug) realPaths[f.slug] = f.file || (f.slug + '.mp3');
+          }
+        }
         cb();
       })
       .catch(function () { cb(); })
@@ -50,12 +56,21 @@
   function loadFile(slug, done) {
     if (buffers[slug] || failed[slug] || !ctx || !window.fetch) { done(); return; }
     loadIndex(function () {
-      if (!realList || realList.indexOf(slug) < 0) { failed[slug] = true; done(); return; }
-      fetch(AUDIO_BASE + slug + '.mp3')
-        .then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); })
-        .then(function (ab) { return new Promise(function (res, rej) { ctx.decodeAudioData(ab, res, rej); }); })
-        .then(function (buf) { buffers[slug] = buf; done(); })
-        .catch(function () { failed[slug] = true; done(); });
+      if (!realPaths) { failed[slug] = true; done(); return; }
+      /* B 档（仅个人使用）优先放 personal/，公开站点 404 后静默回落标准路径 */
+      var list = ['personal/' + slug + '.mp3'];
+      if (realPaths[slug]) list.push(realPaths[slug]);
+      var i = 0;
+      function next() {
+        if (i >= list.length) { failed[slug] = true; done(); return; }
+        var url = AUDIO_BASE + list[i++];
+        fetch(url)
+          .then(function (r) { if (!r.ok) throw 0; return r.arrayBuffer(); })
+          .then(function (ab) { return new Promise(function (res, rej) { ctx.decodeAudioData(ab, res, rej); }); })
+          .then(function (buf) { buffers[slug] = buf; done(); })
+          .catch(function () { next(); });
+      }
+      next();
     });
   }
 

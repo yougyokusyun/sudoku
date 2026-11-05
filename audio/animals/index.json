@@ -1,4 +1,71 @@
 {
-  "note": "真实动物录音清单。只有登记在此且文件存在的 slug 才会被播放；其余使用 WebAudio 合成近似音。",
-  "files": []
+  "note": "真实动物录音清单：files 内登记且文件存在的 slug 播放真实录音；未登记的用 WebAudio 合成近似音。B 档（仅个人使用）文件放在 personal/ 子目录，不随公开仓库分发。",
+  "files": [
+    {
+      "slug": "dog",
+      "file": "dog.mp3",
+      "src": "real",
+      "license": "Mixkit License（免署名，可用于商业项目）",
+      "source": "https://mixkit.co/free-sound-effects/dog/",
+      "author": "Mixkit",
+      "item": "Dog",
+      "bytes": 5094,
+      "duration": 1.02
+    },
+    {
+      "slug": "cat",
+      "file": "cat.mp3",
+      "src": "real",
+      "license": "Mixkit License（免署名，可用于商业项目）",
+      "source": "https://mixkit.co/free-sound-effects/cat/",
+      "author": "Mixkit",
+      "item": "Cat",
+      "bytes": 3004,
+      "duration": 0.6
+    },
+    {
+      "slug": "cow",
+      "file": "cow.mp3",
+      "src": "real",
+      "license": "Mixkit License（免署名，可用于商业项目）",
+      "source": "https://mixkit.co/free-sound-effects/cow/",
+      "author": "Mixkit",
+      "item": "Cow",
+      "bytes": 8751,
+      "duration": 1.75
+    },
+    {
+      "slug": "horse",
+      "file": "horse.mp3",
+      "src": "real",
+      "license": "Mixkit License（免署名，可用于商业项目）",
+      "source": "https://mixkit.co/free-sound-effects/horse/",
+      "author": "Mixkit",
+      "item": "Horse",
+      "bytes": 8490,
+      "duration": 1.7
+    },
+    {
+      "slug": "monkey",
+      "file": "monkey.mp3",
+      "src": "real",
+      "license": "Mixkit License（免署名，可用于商业项目）",
+      "source": "https://mixkit.co/free-sound-effects/monkey/",
+      "author": "Mixkit",
+      "item": "Monkey",
+      "bytes": 8490,
+      "duration": 1.7
+    },
+    {
+      "slug": "bird",
+      "file": "bird.mp3",
+      "src": "real",
+      "license": "Mixkit License（免署名，可用于商业项目）",
+      "source": "https://mixkit.co/free-sound-effects/bird/",
+      "author": "Mixkit",
+      "item": "Bird",
+      "bytes": 12147,
+      "duration": 2.43
+    }
+  ]
 }

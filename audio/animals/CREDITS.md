@@ -1,28 +1,30 @@
 # 动物叫声来源与许可
 
-本目录用于存放**真实动物录音**（`<slug>.mp3`，0.8~1.5 秒、单声道、64~96 kbps）。
+本目录存放**真实动物录音** `<slug>.mp3`：单声道、44.1 kHz、MP3 40 kbps、已裁掉首尾静音、时长 0.5~3 秒、单条 ≤ 40 KB。
 
-当前状态：**暂无真实录音文件**。`index.json` 的 `files` 为空，因此三个动物页面全部使用
-WebAudio 合成近似音（已在页面底部明示「合成近似音，非真实录音」）。
+## A 档：可随包分发（已进公开仓库与离线包）
 
-## 放入真实录音的方法
+| # | 文件 | 动物 | 站点条目 | 来源页面 | 作者 | 许可 | 字节 | 时长 | 抓取日期 | 处理 |
+|---|------|------|----------|----------|------|------|------|------|----------|------|
+| 1 | `dog.mp3` | 狗 | Dog | https://mixkit.co/free-sound-effects/dog/ | Mixkit | Mixkit License（免署名，可用于商业项目） | 5094 | 1.02s | 2026-11-05 | 裁首尾静音 + 截断至 ≤2.4s + 转单声道 44.1kHz 40kbps MP3 |
+| 2 | `cat.mp3` | 猫 | Cat | https://mixkit.co/free-sound-effects/cat/ | Mixkit | Mixkit License（免署名，可用于商业项目） | 3004 | 0.6s | 2026-11-05 | 裁首尾静音 + 截断至 ≤2.4s + 转单声道 44.1kHz 40kbps MP3 |
+| 3 | `cow.mp3` | 奶牛 | Cow | https://mixkit.co/free-sound-effects/cow/ | Mixkit | Mixkit License（免署名，可用于商业项目） | 8751 | 1.75s | 2026-11-05 | 裁首尾静音 + 截断至 ≤2.4s + 转单声道 44.1kHz 40kbps MP3 |
+| 4 | `horse.mp3` | 马 | Horse | https://mixkit.co/free-sound-effects/horse/ | Mixkit | Mixkit License（免署名，可用于商业项目） | 8490 | 1.7s | 2026-11-05 | 裁首尾静音 + 截断至 ≤2.4s + 转单声道 44.1kHz 40kbps MP3 |
+| 5 | `monkey.mp3` | 猴子 | Monkey | https://mixkit.co/free-sound-effects/monkey/ | Mixkit | Mixkit License（免署名，可用于商业项目） | 8490 | 1.7s | 2026-11-05 | 裁首尾静音 + 截断至 ≤2.4s + 转单声道 44.1kHz 40kbps MP3 |
+| 6 | `bird.mp3` | 小鸟 | Bird | https://mixkit.co/free-sound-effects/bird/ | Mixkit | Mixkit License（免署名，可用于商业项目） | 12147 | 2.43s | 2026-11-05 | 裁首尾静音 + 截断至 ≤2.4s + 转单声道 44.1kHz 40kbps MP3 |
 
-1. 取得 CC0 / 公共领域 / CC-BY 等可自由使用的短录音，截取 0.8~1.5 秒。
-2. 按下面的 slug 命名，放入本目录：`<slug>.mp3`。
-3. 在 `index.json` 的 `files` 数组里登记对应 slug，例如：
-   ```json
-   { "files": ["dog", "cat", "cow"] }
-   ```
-4. 在下方表格登记来源与许可（CC-BY 必须署名）。
+A 档合计：6 条，45976 字节。Mixkit License 要求：可免费用於商业/非商业项目、无需署名；不得把音效本身作为独立素材再次分发或转售。本项目为随应用分发的用法。
 
-## 来源登记表（待补全）
+## B 档：仅个人使用（未上传公开仓库）
 
-| 文件 | 动物 | 来源 URL | 作者 | 许可 | 截取区间 |
-|------|------|----------|------|------|----------|
-| —    | —    | —        | —    | —    | —        |
+本批次 **0 条**：爱给网（403）、光厂（反爬页）、Sonilo（需登录）均未取得可合规随包分发的素材，因此没有 B 档文件，也没有新增 `personal/` 目录。
 
-## 需要覆盖的 36 种动物 slug
+## 未取得真实录音、仍用合成音的 slug（30 种）
 
-dog, cat, rabbit, elephant, lion, frog, pig, cow, sheep, monkey, tiger, panda, chick,
-duck, horse, mouse, bird, fish, bear, fox, koala, penguin, goose, squirrel, hedgehog,
-swallow, owl, turtle, crab, bee, ant, caterpillar, snail, giraffe, hamster, woodpecker
+sheep, panda, lion, tiger, bear, elephant, frog, chick, swallow, woodpecker, duck, goose, owl, pig, hamster, mouse, rabbit, squirrel, bee, crab, ant, caterpillar, snail, fish, turtle, fox, koala, penguin, hedgehog, giraffe
+
+## 复现方法
+
+1. 取 Mixkit 对应条目页 → 下载 `-preview.mp3`。
+2. `ffmpeg -i src.mp3 -af "silenceremove=start_periods=1:start_duration=0.05:start_threshold=-40dB,areverse,silenceremove=...,areverse" -t 2.4 -ac 1 -ar 44100 -codec:a libmp3lame -b:a 40k -id3v2_version 0 -write_xing 0 <slug>.mp3`。
+3. 在本文件与 `index.json` 登记。

@@ -421,7 +421,7 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
 <script>
 (function () {
   var d = document.createElement('div');
-  d.textContent = '🔈 本页动物叫声为合成近似音，非真实录音';
+  d.textContent = '🔈 有真实录音的动物优先播放真实录音，其余用合成近似音';
   d.style.cssText = 'margin:14px auto 8px;text-align:center;font-size:12px;color:#8899aa;';
   document.body.appendChild(d);
 })();
