@@ -37,9 +37,12 @@ h1{font-size:1.15rem;}
 .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
   min-height:0;overflow-y:auto;width:100%;}
 .fig{width:min(460px,100%);background:#fff;border:2px solid rgba(8,145,178,.16);border-radius:20px;
-  padding:12px;text-align:center;box-shadow:0 8px 22px rgba(36,59,83,.09);}
-.fig .art{display:block;font-size:6rem;line-height:1.15;letter-spacing:4px;}
-.fig .cap{display:block;font-size:.72rem;font-weight:800;color:#8aa0b8;margin-top:2px;}
+  padding:10px;text-align:center;box-shadow:0 8px 22px rgba(36,59,83,.09);}
+.fig .photo{position:relative;width:100%;aspect-ratio:4/3;min-height:260px;border-radius:14px;
+  overflow:hidden;background:#eef4f8;display:flex;align-items:center;justify-content:center;}
+.fig .photo img{width:100%;height:100%;object-fit:cover;display:block;}
+.fig .photo .fallback{font-size:.82rem;font-weight:800;color:#8aa0b8;padding:14px;line-height:1.5;}
+.fig .cap{display:block;font-size:.72rem;font-weight:800;color:#8aa0b8;margin-top:6px;}
 .prompt{font-size:1.3rem;font-weight:900;color:#4a6076;text-align:center;line-height:1.5;}
 .opts{display:flex;flex-direction:column;gap:9px;width:min(600px,100%);}
 .opt{min-height:56px;border:2px solid var(--line);border-radius:14px;background:#fff;padding:8px 14px;
@@ -64,7 +67,7 @@ h1{font-size:1.15rem;}
 .tip{font-size:.7rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
 @media (max-height:430px){
   body{padding:8px;gap:6px;} h1{font-size:1rem;}
-  .fig{padding:7px;} .fig .art{font-size:2.8rem;} .opt{min-height:46px;font-size:.88rem;}
+  .fig{padding:7px;} .fig .photo{min-height:0;max-height:210px;} .opt{min-height:46px;font-size:.88rem;}
   .stage{gap:7px;} .prompt{font-size:.84rem;}
 }
 </style>
@@ -84,117 +87,117 @@ h1{font-size:1.15rem;}
 <div class="chipbar" id="gradeBar"></div>
 <div class="stage">
   <div class="fig">
-    <span class="art" id="art">👦🏫</span>
+    <div class="photo" id="photo"><span class="fallback">图片加载中…</span></div>
     <span class="cap">看这幅图，哪句英文说得对？</span>
   </div>
   <div class="prompt" id="prompt">点一点句子就能听它怎么读</div>
   <div class="opts" id="opts"></div>
   <div class="feedback" id="feedback"></div>
   <div class="summary" id="summary"></div>
-  <div class="tip">选错可以再试，不扣分 · 点选项会朗读英文</div>
+  <div class="tip">选错可以再试，不扣分 · 点选项会朗读英文<br>图为实景照片（Unsplash），版权信息见 games/img/sentences/CREDITS.md</div>
 </div>
 
 <script>
 /* ============ 90 题看图选句：3/4/5 年级各 30 题 ============ */
 var Q = [
 /* ---------- 三年级 30 题 ---------- */
-{g:3,img:'👦🏫',ok:'This is a boy. He is at school.',bad:['This is a girl. She is at school.','This is a boy. He is at the zoo.']},
-{g:3,img:'🐱🛏️',ok:'The cat is on the bed.',bad:['The cat is under the bed.','The dog is on the bed.']},
-{g:3,img:'🍎🔴',ok:'This is a red apple.',bad:['This is a green apple.','This is a red banana.']},
-{g:3,img:'👧📖',ok:'The girl is reading a book.',bad:['The boy is reading a book.','The girl is writing a book.']},
-{g:3,img:'🐶🏃',ok:'The dog is running.',bad:['The dog is sleeping.','The cat is running.']},
-{g:3,img:'🚌🧒',ok:'I go to school by bus.',bad:['I go to school by bike.','I go to the park by bus.']},
-{g:3,img:'☀️🌳',ok:'It is sunny today.',bad:['It is rainy today.','It is cold today.']},
-{g:3,img:'👨🍳',ok:'My father is a cook.',bad:['My mother is a cook.','My father is a driver.']},
-{g:3,img:'🍌🍽️',ok:'I like bananas.',bad:['I like apples.','I do not like bananas.']},
-{g:3,img:'🐟🌊',ok:'The fish is in the water.',bad:['The fish is on the tree.','The bird is in the water.']},
-{g:3,img:'👦⚽',ok:'The boy is playing football.',bad:['The boy is playing basketball.','The girl is playing football.']},
-{g:3,img:'🎒📚',ok:'My bag is on the desk.',bad:['My bag is under the desk.','My book is on the desk.']},
-{g:3,img:'🐘🎪',ok:'The elephant is at the zoo.',bad:['The elephant is at the park.','The lion is at the zoo.']},
-{g:3,img:'👩‍🏫🧑‍🎓',ok:'The teacher is with the students.',bad:['The doctor is with the students.','The teacher is with the babies.']},
-{g:3,img:'🍰🎂',ok:'This is a birthday cake.',bad:['This is a birthday card.','This is a birthday hat.']},
-{g:3,img:'🚗🔵',ok:'The car is blue.',bad:['The car is red.','The bus is blue.']},
-{g:3,img:'👦✏️',ok:'The boy has a pencil.',bad:['The boy has a ruler.','The girl has a pencil.']},
-{g:3,img:'🐰🥕',ok:'The rabbit is eating a carrot.',bad:['The rabbit is eating a banana.','The cat is eating a carrot.']},
-{g:3,img:'🌧️☂️',ok:'It is raining. I have an umbrella.',bad:['It is snowing. I have an umbrella.','It is raining. I have a hat.']},
-{g:3,img:'👵🏠',ok:'My grandma is at home.',bad:['My grandpa is at home.','My grandma is at school.']},
-{g:3,img:'🍦👧',ok:'The girl is eating ice cream.',bad:['The boy is eating ice cream.','The girl is eating a hamburger.']},
-{g:3,img:'🐦🌳',ok:'The bird is in the tree.',bad:['The bird is in the sky.','The cat is in the tree.']},
-{g:3,img:'🖐️5️⃣',ok:'I have five fingers on one hand.',bad:['I have four fingers on one hand.','I have five toes on one hand.']},
-{g:3,img:'🐷🌸',ok:'The pig is on the farm.',bad:['The pig is at the zoo.','The cow is on the farm.']},
-{g:3,img:'☕🍞',ok:'I have milk and bread for breakfast.',bad:['I have milk and rice for breakfast.','I have juice and bread for breakfast.']},
-{g:3,img:'👦😴',ok:'The boy is sleeping.',bad:['The boy is running.','The girl is sleeping.']},
-{g:3,img:'🚲🌳',ok:'The bike is under the tree.',bad:['The bike is on the tree.','The bus is under the tree.']},
-{g:3,img:'👩🍎',ok:'The woman is holding an apple.',bad:['The man is holding an apple.','The woman is holding an orange.']},
-{g:3,img:'🎵👧',ok:'The girl is singing.',bad:['The girl is dancing.','The boy is singing.']},
-{g:3,img:'🐔🥚',ok:'The hen has an egg.',bad:['The hen has a duck.','The hen has two eggs.']},
+{g:3,img:'img/sentences/q01.webp',ok:'A cat is on the bed.',bad:['A cat is under the bed.','A dog is on the bed.']},
+{g:3,img:'img/sentences/q02.webp',ok:'A dog is running.',bad:['A dog is sleeping.','A cat is running.']},
+{g:3,img:'img/sentences/q03.webp',ok:'This is a red apple.',bad:['This is a green apple.','This is a red banana.']},
+{g:3,img:'img/sentences/q04.webp',ok:'A girl is reading a book.',bad:['A boy is reading a book.','A girl is writing a book.']},
+{g:3,img:'img/sentences/q05.webp',ok:'A boy is riding a bike.',bad:['A boy is walking.','A girl is riding a bike.']},
+{g:3,img:'img/sentences/q06.webp',ok:'This is a school bus.',bad:['This is a school car.','This is a school train.']},
+{g:3,img:'img/sentences/q07.webp',ok:'There are trees near the water.',bad:['There are trees near the road.','There are houses near the water.']},
+{g:3,img:'img/sentences/q08.webp',ok:'A chef is cooking.',bad:['A chef is sleeping.','A driver is cooking.']},
+{g:3,img:'img/sentences/q09.webp',ok:'This is a banana.',bad:['This is an apple.','This is an orange.']},
+{g:3,img:'img/sentences/q10.webp',ok:'A fish is swimming in the water.',bad:['A fish is on the tree.','A bird is swimming in the water.']},
+{g:3,img:'img/sentences/q11.webp',ok:'Two boys are playing football.',bad:['Two boys are playing basketball.','Two girls are playing football.']},
+{g:3,img:'img/sentences/q12.webp',ok:'A book is on the table.',bad:['A book is under the table.','A pencil is on the table.']},
+{g:3,img:'img/sentences/q13.webp',ok:'An elephant is next to a tree.',bad:['An elephant is behind a tree.','An elephant is in a tree.']},
+{g:3,img:'img/sentences/q14.webp',ok:'A teacher is talking to students.',bad:['A teacher is talking to parents.','A student is talking to teachers.']},
+{g:3,img:'img/sentences/q15.webp',ok:'This is a birthday cake.',bad:['This is a birthday card.','This is a birthday hat.']},
+{g:3,img:'img/sentences/q16.webp',ok:'This is a blue car.',bad:['This is a red car.','This is a blue bus.']},
+{g:3,img:'img/sentences/q17.webp',ok:'A boy has a pencil.',bad:['A boy has a book.','A girl has a pencil.']},
+{g:3,img:'img/sentences/q18.webp',ok:'A rabbit is eating a carrot.',bad:['A rabbit is eating a banana.','A cat is eating a carrot.']},
+{g:3,img:'img/sentences/q19.webp',ok:'It is raining and a child has an umbrella.',bad:['It is snowing and a child has an umbrella.','It is raining and a child has no umbrella.']},
+{g:3,img:'img/sentences/q20.webp',ok:'A grandmother is hugging a child.',bad:['A grandfather is hugging a child.','A grandmother is hugging a dog.']},
+{g:3,img:'img/sentences/q21.webp',ok:'A girl is eating ice cream.',bad:['A girl is eating a hamburger.','A boy is eating ice cream.']},
+{g:3,img:'img/sentences/q22.webp',ok:'A bird is in the tree.',bad:['A bird is in the sky.','A cat is in the tree.']},
+{g:3,img:'img/sentences/q23.webp',ok:'This is a hand.',bad:['This is a foot.','This is a head.']},
+{g:3,img:'img/sentences/q24.webp',ok:'This is a pig.',bad:['This is a cow.','This is a sheep.']},
+{g:3,img:'img/sentences/q25.webp',ok:'I have milk and bread for breakfast.',bad:['I have milk and rice for breakfast.','I have juice and bread for breakfast.']},
+{g:3,img:'img/sentences/q26.webp',ok:'A child is sleeping.',bad:['A child is running.','A child is eating.']},
+{g:3,img:'img/sentences/q27.webp',ok:'A cat is under the table.',bad:['A cat is on the table.','A dog is under the table.']},
+{g:3,img:'img/sentences/q28.webp',ok:'A woman is holding an apple.',bad:['A man is holding an apple.','A woman is holding an orange.']},
+{g:3,img:'img/sentences/q29.webp',ok:'A woman is singing.',bad:['A woman is dancing.','A man is singing.']},
+{g:3,img:'img/sentences/q30.webp',ok:'This is a hen.',bad:['This is a duck.','This is a chick.']},
 /* ---------- 四年级 30 题 ---------- */
-{g:4,img:'🐶🐱🛏️',ok:'There are two cats on the bed.',bad:['There is one cat on the bed.','There are two dogs on the bed.']},
-{g:4,img:'🏫🌳',ok:'There is a big tree in front of the school.',bad:['There is a big tree behind the school.','There is a small tree in front of the school.']},
-{g:4,img:'👦🚲',ok:'The boy can ride a bike.',bad:['The boy cannot ride a bike.','The girl can ride a bike.']},
-{g:4,img:'🕖🌅',ok:'I get up at seven in the morning.',bad:['I get up at seven in the evening.','I get up at six in the morning.']},
-{g:4,img:'🧑‍🍳🍳',ok:'My mother is cooking in the kitchen.',bad:['My father is cooking in the kitchen.','My mother is cooking in the living room.']},
-{g:4,img:'🌧️🏫',ok:'It is rainy, so we stay in the classroom.',bad:['It is sunny, so we stay in the classroom.','It is rainy, so we play in the park.']},
-{g:4,img:'🐘🐘',ok:'There are two elephants at the zoo.',bad:['There are three elephants at the zoo.','There are two tigers at the zoo.']},
-{g:4,img:'👧👟',ok:"The girl's shoes are white.",bad:["The girl's shoes are black.","The boy's shoes are white."]},
-{g:4,img:'📚🛋️',ok:'The books are on the sofa.',bad:['The books are under the sofa.','The pencils are on the sofa.']},
-{g:4,img:'🍽️🥢',ok:'We eat with chopsticks.',bad:['We eat with a knife and fork.','We sleep with chopsticks.']},
-{g:4,img:'👨🏥',ok:'My father is a doctor. He works in a hospital.',bad:['My father is a doctor. He works in a school.','My mother is a doctor. She works in a hospital.']},
-{g:4,img:'🏃‍♂️🏫',ok:'The boy runs to school every day.',bad:['The boy walks to school every day.','The boy runs to the park every day.']},
-{g:4,img:'🍎🍎🍎',ok:'There are three apples in the basket.',bad:['There are two apples in the basket.','There are three bananas in the basket.']},
-{g:4,img:'🐦🎶',ok:'The bird is singing in the tree.',bad:['The bird is sleeping in the tree.','The dog is singing in the tree.']},
-{g:4,img:'👦🧥',ok:'The boy is wearing a coat.',bad:['The boy is wearing a T-shirt.','The girl is wearing a coat.']},
-{g:4,img:'⏰📖',ok:"I read English at eight o'clock.",bad:["I read English at nine o'clock.","I read Chinese at eight o'clock."]},
-{g:4,img:'☁️🌧️',ok:'There are many clouds. It is going to rain.',bad:['There are many clouds. It is going to snow.','There are no clouds. It is going to rain.']},
-{g:4,img:'👩🌷',ok:'My aunt likes flowers.',bad:['My uncle likes flowers.','My aunt likes football.']},
-{g:4,img:'🐟🏞️',ok:'There is a fish in the river.',bad:['There is a fish in the tree.','There are two fish in the river.']},
-{g:4,img:'👦🎹',ok:'The boy can play the piano.',bad:['The boy can play the guitar.','The girl can play the piano.']},
-{g:4,img:'🧒🍼',ok:'The baby is drinking milk.',bad:['The baby is eating bread.','The boy is drinking milk.']},
-{g:4,img:'🏠🔴',ok:'The house has a red door.',bad:['The house has a blue door.','The house has a red roof.']},
-{g:4,img:'🐑🌿',ok:'The sheep are eating grass on the hill.',bad:['The sheep are sleeping on the hill.','The cows are eating grass on the hill.']},
-{g:4,img:'👦📝',ok:'The boy is writing on the blackboard.',bad:['The boy is reading on the blackboard.','The girl is writing on the blackboard.']},
-{g:4,img:'🚌🕗',ok:'The school bus comes at eight.',bad:['The school bus comes at nine.','The school bus leaves at eight.']},
-{g:4,img:'🍉🔪',ok:'Mother is cutting a watermelon.',bad:['Father is cutting a watermelon.','Mother is cutting an orange.']},
-{g:4,img:'👧🛏️',ok:'The girl is making her bed.',bad:['The girl is making her bag.','The boy is making his bed.']},
-{g:4,img:'🐱🐟',ok:'The cat is looking at the fish.',bad:['The cat is looking at the bird.','The dog is looking at the fish.']},
-{g:4,img:'🌞🧢',ok:'It is hot. The boy is wearing a cap.',bad:['It is cold. The boy is wearing a cap.','It is hot. The boy is wearing a coat.']},
-{g:4,img:'👪🚗',ok:'The family is going to the park by car.',bad:['The family is going to the zoo by car.','The family is going to the park by bus.']},
+{g:4,img:'img/sentences/q31.webp',ok:'Two cats are sleeping on the bed.',bad:['Two dogs are sleeping on the bed.','One cat is sleeping on the bed.']},
+{g:4,img:'img/sentences/q32.webp',ok:'A big tree stands in front of the building.',bad:['A big tree stands behind the building.','A small tree stands in front of the building.']},
+{g:4,img:'img/sentences/q33.webp',ok:'A boy in a helmet is riding his bike in the park.',bad:['A girl in a helmet is riding her bike in the park.','A boy in a helmet is pushing his bike in the park.']},
+{g:4,img:'img/sentences/q34.webp',ok:'The bright sun is low in the sky.',bad:['The bright moon is low in the sky.','The bright sun is high in the sky.']},
+{g:4,img:'img/sentences/q35.webp',ok:'A woman is cooking dinner in the kitchen.',bad:['A man is cooking dinner in the kitchen.','A woman is washing dishes in the kitchen.']},
+{g:4,img:'img/sentences/q36.webp',ok:'Heavy rain is falling outside the window.',bad:['Light snow is falling outside the window.','Heavy rain is falling inside the window.']},
+{g:4,img:'img/sentences/q37.webp',ok:'There are two big elephants in the field.',bad:['There are three big elephants in the field.','There are two big tigers in the field.']},
+{g:4,img:'img/sentences/q38.webp',ok:'The new white shoes are lying on the floor.',bad:['The new black shoes are lying on the floor.','The new white shoes are hanging on the wall.']},
+{g:4,img:'img/sentences/q39.webp',ok:'There are some books on the old sofa.',bad:['There are some books under the old sofa.','There are some magazines on the old sofa.']},
+{g:4,img:'img/sentences/q40.webp',ok:'Two girls are eating noodles with chopsticks.',bad:['Two boys are eating noodles with chopsticks.','Two girls are eating noodles with spoons.']},
+{g:4,img:'img/sentences/q41.webp',ok:'A doctor in a white coat is holding a stethoscope.',bad:['A doctor in a black coat is holding a stethoscope.','A nurse in a white coat is holding a stethoscope.']},
+{g:4,img:'img/sentences/q42.webp',ok:'A boy is running fast on the grass.',bad:['A girl is running fast on the grass.','A boy is walking slowly on the grass.']},
+{g:4,img:'img/sentences/q43.webp',ok:'There are three green apples in the basket.',bad:['There are two green apples in the basket.','There are three green apples in the box.']},
+{g:4,img:'img/sentences/q44.webp',ok:'Several birds are flying across the bright sky.',bad:['Several planes are flying across the bright sky.','Several birds are flying across the dark sky.']},
+{g:4,img:'img/sentences/q45.webp',ok:'A child in a white coat is standing outside.',bad:['A child in a red coat is standing outside.','A child in a white coat is sitting outside.']},
+{g:4,img:'img/sentences/q46.webp',ok:'A boy is writing his homework at the desk.',bad:['A girl is writing her homework at the desk.','A boy is reading his homework at the desk.']},
+{g:4,img:'img/sentences/q47.webp',ok:'There are thick dark clouds in the sky.',bad:['There are a few thick dark clouds in the sky.','There are thick dark clouds on the ground.']},
+{g:4,img:'img/sentences/q48.webp',ok:'A woman is watering the flowers in the garden.',bad:['A man is watering the flowers in the garden.','A woman is picking the flowers in the garden.']},
+{g:4,img:'img/sentences/q49.webp',ok:'Someone is fishing quietly in the river.',bad:['Someone is swimming quietly in the river.','Someone is fishing quietly in the field.']},
+{g:4,img:'img/sentences/q50.webp',ok:'A boy is playing the piano in the room.',bad:['A girl is playing the piano in the room.','A boy is playing the guitar in the room.']},
+{g:4,img:'img/sentences/q51.webp',ok:'A mother is feeding her baby with milk.',bad:['A father is feeding his baby with milk.','A mother is feeding her baby with bread.']},
+{g:4,img:'img/sentences/q52.webp',ok:'The forest is full of tall green trees.',bad:['The forest is full of short green trees.','The city is full of tall green trees.']},
+{g:4,img:'img/sentences/q53.webp',ok:'A white sheep is eating grass in the field.',bad:['A black sheep is eating grass in the field.','A white sheep is sleeping in the field.']},
+{g:4,img:'img/sentences/q54.webp',ok:'A boy is writing some words on the blackboard.',bad:['A girl is writing some words on the blackboard.','A boy is drawing some pictures on the blackboard.']},
+{g:4,img:'img/sentences/q55.webp',ok:'The big yellow school bus is on the road.',bad:['The big red school bus is on the road.','The small yellow school bus is on the road.']},
+{g:4,img:'img/sentences/q56.webp',ok:'A person is cutting a big watermelon with a knife.',bad:['A person is cutting a big watermelon with a spoon.','A person is eating a big watermelon with a knife.']},
+{g:4,img:'img/sentences/q57.webp',ok:'A girl is standing on the top bed.',bad:['A boy is standing on the top bed.','A girl is sitting on the top bed.']},
+{g:4,img:'img/sentences/q58.webp',ok:'A cat is watching the fish in the bowl.',bad:['A dog is watching the fish in the bowl.','A cat is watching the bird in the bowl.']},
+{g:4,img:'img/sentences/q59.webp',ok:'A boy in a red cap is smiling at us.',bad:['A boy in a blue cap is smiling at us.','A girl in a red cap is smiling at us.']},
+{g:4,img:'img/sentences/q60.webp',ok:'Two women are sitting in the open car.',bad:['Two men are sitting in the open car.','Two women are standing in the open car.']},
 /* ---------- 五年级 30 题 ---------- */
-{g:5,img:'👧📖🛏️',ok:'The girl is reading a book in her bedroom.',bad:['The girl is reading a book in the classroom.','The boy is reading a book in his bedroom.']},
-{g:5,img:'🏃‍♂️🏞️',ok:'He often runs in the park after school.',bad:['He never runs in the park after school.','He often runs in the park before school.']},
-{g:5,img:'🐱🌳',ok:'The cat is climbing the tree.',bad:['The cat is sleeping under the tree.','The dog is climbing the tree.']},
-{g:5,img:'👨💻',ok:'My father is working on the computer.',bad:['My mother is working on the computer.','My father is playing on the computer.']},
-{g:5,img:'🍜🥢',ok:'They are eating noodles with chopsticks.',bad:['They are eating rice with chopsticks.','They are cooking noodles with chopsticks.']},
-{g:5,img:'🐘🌊',ok:'The elephant is drinking water by the river.',bad:['The elephant is drinking water by the sea.','The elephant is washing water by the river.']},
-{g:5,img:'👦🧹',ok:'The boy is cleaning the classroom.',bad:['The boy is cleaning the bedroom.','The girl is cleaning the classroom.']},
-{g:5,img:'🌧️🚶',ok:'It is raining, but she is walking to school.',bad:['It is snowing, but she is walking to school.','It is raining, but she is driving to school.']},
-{g:5,img:'🍎🛒',ok:'We usually buy fruit in the supermarket.',bad:['We usually buy fruit in the library.','We sometimes buy fruit in the supermarket.']},
-{g:5,img:'👧🎻',ok:'The girl is playing the violin.',bad:['The girl is playing the piano.','The boy is playing the violin.']},
-{g:5,img:'🐶🍖',ok:'The dog is eating meat.',bad:['The dog is eating grass.','The cat is eating meat.']},
-{g:5,img:'👨‍🏫🧑‍🎓',ok:'The teacher is talking to the students.',bad:['The teacher is talking to the parents.','The student is talking to the teachers.']},
-{g:5,img:'🚲🔧',ok:'My brother is fixing his bike.',bad:['My sister is fixing her bike.','My brother is riding his bike.']},
-{g:5,img:'🎂🥳',ok:'They are having a birthday party.',bad:['They are having a picnic.','She is having a birthday party.']},
-{g:5,img:'🌞🕶️',ok:'The sun is shining. He is wearing sunglasses.',bad:['The moon is shining. He is wearing sunglasses.','The sun is shining. He is wearing a scarf.']},
-{g:5,img:'👵🍵',ok:'My grandma is drinking tea.',bad:['My grandpa is drinking tea.','My grandma is drinking milk.']},
-{g:5,img:'🐟🎣',ok:'The man is fishing by the lake.',bad:['The man is swimming in the lake.','The woman is fishing by the lake.']},
-{g:5,img:'👦🏊',ok:'The boy is swimming in the pool.',bad:['The boy is playing in the pool.','The girl is swimming in the pool.']},
-{g:5,img:'🛏️🧸',ok:'There is a teddy bear on the bed.',bad:['There is a teddy bear under the bed.','There are two teddy bears on the bed.']},
-{g:5,img:'👧📱',ok:'The girl is calling her mother.',bad:['The girl is calling her father.','The boy is calling his mother.']},
-{g:5,img:'🍳🥚',ok:'She is cooking eggs in the kitchen.',bad:['She is cooking eggs in the bathroom.','He is cooking eggs in the kitchen.']},
-{g:5,img:'🐦🌅',ok:'The birds are flying in the morning sky.',bad:['The birds are flying in the night sky.','The fish are flying in the morning sky.']},
-{g:5,img:'👦📚',ok:'He often reads books on weekends.',bad:['He seldom reads books on weekends.','He often reads books at night.']},
-{g:5,img:'🎒🏫',ok:'The students are going to school.',bad:['The students are going home.','The teachers are going to school.']},
-{g:5,img:'🧑‍🍳🍲',ok:'The cook is making soup.',bad:['The cook is making bread.','The driver is making soup.']},
-{g:5,img:'🌳🪁',ok:'The children are flying a kite in the park.',bad:['The children are flying a kite in the classroom.','The children are making a kite in the park.']},
-{g:5,img:'🐑☀️',ok:'The sheep is sleeping in the sun.',bad:['The sheep is sleeping in the rain.','The horse is sleeping in the sun.']},
-{g:5,img:'👩‍🎨🖼️',ok:'The woman is painting a picture.',bad:['The woman is buying a picture.','The man is painting a picture.']},
-{g:5,img:'🚉⏰',ok:'They are waiting for the train at the station.',bad:['They are waiting for the bus at the station.','They are waiting for the train at the airport.']},
-{g:5,img:'🐻🍯',ok:'The bear is eating honey.',bad:['The bear is eating fish.','The monkey is eating honey.']},
+{g:5,img:'img/sentences/q61.webp',ok:'A person is reading a book in bed because it is quiet.',bad:['A person is sleeping in bed because it is quiet.','A person is reading a book at a desk because it is quiet.']},
+{g:5,img:'img/sentences/q62.webp',ok:'A boy is playing in the water because it is hot.',bad:['A girl is playing in the water because it is hot.','A boy is playing in the sand because it is hot.']},
+{g:5,img:'img/sentences/q63.webp',ok:'A cat is climbing up the tree because it is scared.',bad:['A dog is climbing up the tree because it is scared.','A cat is jumping down the tree because it is scared.']},
+{g:5,img:'img/sentences/q64.webp',ok:'A man is working on his laptop at the table.',bad:['A woman is working on her laptop at the table.','A man is working on his phone at the table.']},
+{g:5,img:'img/sentences/q65.webp',ok:'A woman is eating hot noodles with chopsticks.',bad:['A man is eating hot noodles with chopsticks.','A woman is cooking hot noodles with chopsticks.']},
+{g:5,img:'img/sentences/q66.webp',ok:'A lot of elephants are drinking by the river.',bad:['A lot of elephants are sleeping by the river.','A lot of elephants are drinking by the tree.']},
+{g:5,img:'img/sentences/q67.webp',ok:'A boy must sit quietly at his desk in class.',bad:['A girl must sit quietly at her desk in class.','A boy must stand quietly at his desk in class.']},
+{g:5,img:'img/sentences/q68.webp',ok:'A person with an umbrella is walking in the rain.',bad:['A person without an umbrella is walking in the rain.','A person with an umbrella is running in the rain.']},
+{g:5,img:'img/sentences/q69.webp',ok:'We can buy fresh fruit at the supermarket.',bad:['We can buy fresh books at the supermarket.','We can buy fresh fruit at the library.']},
+{g:5,img:'img/sentences/q70.webp',ok:'A young woman is playing the violin on stage.',bad:['A young man is playing the violin on stage.','A young woman is playing the guitar on stage.']},
+{g:5,img:'img/sentences/q71.webp',ok:'A big dog is lying quietly on the floor.',bad:['A small dog is lying quietly on the floor.','A big cat is lying quietly on the floor.']},
+{g:5,img:'img/sentences/q72.webp',ok:'The students must listen to the teacher carefully.',bad:['The students must listen to the doctor carefully.','The teacher must listen to the students carefully.']},
+{g:5,img:'img/sentences/q73.webp',ok:'Someone is fixing an old bike because it is broken.',bad:['Someone is riding an old bike because it is broken.','Someone is fixing a new bike because it is broken.']},
+{g:5,img:'img/sentences/q74.webp',ok:'Some girls are celebrating a birthday with balloons.',bad:['Some boys are celebrating a birthday with balloons.','Some girls are celebrating a birthday with flowers.']},
+{g:5,img:'img/sentences/q75.webp',ok:'A boy is wearing black sunglasses and smiling.',bad:['A girl is wearing black sunglasses and smiling.','A boy is wearing a black hat and smiling.']},
+{g:5,img:'img/sentences/q76.webp',ok:'The old woman is drinking tea from a cup.',bad:['The old man is drinking tea from a cup.','The old woman is eating soup from a bowl.']},
+{g:5,img:'img/sentences/q77.webp',ok:'A person is fishing quietly by the lake.',bad:['A person is swimming quietly by the lake.','A person is fishing quietly on the grass.']},
+{g:5,img:'img/sentences/q78.webp',ok:'Two boys are swimming in the pool because it is hot.',bad:['Two girls are swimming in the pool because it is hot.','Two boys are sitting by the pool because it is hot.']},
+{g:5,img:'img/sentences/q79.webp',ok:'A soft teddy bear is going to sleep on the bed.',bad:['A soft teddy bear is going to sleep under the bed.','A soft teddy bear is going to sleep on the sofa.']},
+{g:5,img:'img/sentences/q80.webp',ok:'A girl is holding a phone to her ear.',bad:['A boy is holding a phone to his ear.','A girl is holding a book to her ear.']},
+{g:5,img:'img/sentences/q81.webp',ok:'A woman is cooking dinner because her family is hungry.',bad:['A man is cooking dinner because his family is hungry.','A woman is eating dinner because her family is hungry.']},
+{g:5,img:'img/sentences/q82.webp',ok:'Several birds are flying above the tall tree.',bad:['Several birds are flying below the tall tree.','Several birds are sitting in the tall tree.']},
+{g:5,img:'img/sentences/q83.webp',ok:'A person is reading a book on a pile of books.',bad:['A person is reading a book on a pile of boxes.','A person is sleeping on a pile of books.']},
+{g:5,img:'img/sentences/q84.webp',ok:'The teacher is standing with the students in class.',bad:['The driver is standing with the students in class.','The teacher is sitting with the students in class.']},
+{g:5,img:'img/sentences/q85.webp',ok:'A chef is cooking food because many guests are coming.',bad:['A chef is sleeping in the kitchen because many guests are coming.','A driver is cooking food because many guests are coming.']},
+{g:5,img:'img/sentences/q86.webp',ok:'Two children are flying a kite when the wind is strong.',bad:['Two children are making a kite when the wind is strong.','Two children are flying a plane when the wind is strong.']},
+{g:5,img:'img/sentences/q87.webp',ok:'A white sheep is lying asleep on the grass.',bad:['A black sheep is lying asleep on the grass.','A white sheep is running quickly on the grass.']},
+{g:5,img:'img/sentences/q88.webp',ok:'A woman is painting a picture in the open air.',bad:['A man is painting a picture in the open air.','A woman is painting a picture in the classroom.']},
+{g:5,img:'img/sentences/q89.webp',ok:'Many people are waiting at the train station because the train is late.',bad:['Many people are waiting at the bus station because the train is late.','Many people are working at the train station because the train is late.']},
+{g:5,img:'img/sentences/q90.webp',ok:'A big brown bear is looking at the camera.',bad:['A big black bear is looking at the camera.','A small brown bear is looking at the camera.']},
 ];
 
 var state = { grade: 3, deck: [], pos: 0, cur: null, correct: 0, attempts: 0, locked: false, timer: null };
 var elBar = document.getElementById('gradeBar');
-var elArt = document.getElementById('art');
+var elPhoto = document.getElementById('photo');
 var elOpts = document.getElementById('opts');
 var elFb = document.getElementById('feedback');
 var elRight = document.getElementById('rightChip');
@@ -253,8 +256,16 @@ function renderQuestion() {
   var q = state.deck.next();
   var opts = shuffle([{ t: q.ok, ok: true }, { t: q.bad[0], ok: false }, { t: q.bad[1], ok: false }]);
   state.cur = { q: q, opts: opts };
-  elArt.textContent = q.img;
-  elArt.style.letterSpacing = '4px';
+  elPhoto.innerHTML = '';
+  var pic = document.createElement('img');
+  pic.setAttribute('loading', 'lazy');
+  pic.setAttribute('decoding', 'async');
+  pic.alt = '看图题图片';
+  pic.onerror = function () {
+    elPhoto.innerHTML = '<span class="fallback">图片加载失败<br>请检查网络后刷新</span>';
+  };
+  pic.src = q.img;
+  elPhoto.appendChild(pic);
   elProg.textContent = String(state.pos + 1);
   elOpts.innerHTML = '';
   opts.forEach(function (o, i) {

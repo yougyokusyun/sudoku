@@ -37,8 +37,15 @@
  * v36 变化：首页语速滑杆改为常显（0.5~2.0，步进 0.05）；每次朗读前重读 xnly_speed，
  *           讲解模式语速统一走滑杆值（取消 iOS/安卓两档）；voice.js / index.html / sudoku-ui.js 更新。
  *           打地鼠 whack-word 改为「命中即换词」（去掉 3 周期才换的 gate，同词第二只不重复计分）。
+ * v37 变化：看图选句 90 题全部重做——emoji 拼贴改为 Unsplash 实景照片
+ *           （games/img/sentences/q01~q90.webp，512×384，单张 ≤80 KB，总量 1.6 MB），
+ *           图片不进预缓存，走运行时缓存；题目改为「图能唯一决定答案」。
+ * v38 变化：看图选句四/五年级句子难度回调到年级水平——四年级由 5.6 词升至 8.5 词
+ *           （现进时动作+状语 / there be / 情态），五年级由 5.8 词升至 9.6 词
+ *           （because / when 从句、频率副词、be going to），四五年级 A1 裸指认句归零；
+ *           图片与三年级题目不变，页面无新增文件。
  */
-var CACHE = 'xnly-v36';
+var CACHE = 'xnly-v38';
 
 var PRECACHE = [
   './',
