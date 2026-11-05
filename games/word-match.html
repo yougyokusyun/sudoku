@@ -91,7 +91,6 @@ h1{font-size:1.1rem;}
 </div>
 <div class="feedback" id="feedback">先点英文气泡，再点对应的图片或中文</div>
 <div class="controls">
-  <button class="btn" id="hear" type="button">🔊 听一听</button>
   <button class="btn" id="reset" type="button">🔁 重玩这一关</button>
 </div>
 <script>
@@ -331,10 +330,6 @@ elAnim.addEventListener('click', function () {
   elAnim.textContent = state.anim ? '✨ 动效开' : '⏸️ 动效关';
   elStage.classList.toggle('noanim', !state.anim);
 });
-document.getElementById('hear').addEventListener('click', function () {
-  var lv = LEVELS[state.lv - 1];
-  say('第' + state.lv + '关，' + lv.name + '。点英文，再点配对的气泡。');
-});
 document.getElementById('reset').addEventListener('click', function () { renderLevel(); });
 
 initPrefs();
@@ -349,5 +344,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

@@ -70,6 +70,7 @@ h1{font-size:1.15rem;}
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
 <script src="../deck.js"></script>
+<script src="../kidseq.js"></script>
 </head>
 <body>
 <header>
@@ -81,13 +82,13 @@ h1{font-size:1.15rem;}
   <span class="pill">✅ 排对 <b id="right">0</b></span>
 </div>
 <div class="stage">
-  <div class="qtext" id="qtext">按顺序点一点，先做什么？</div>
-  <div class="steps" id="steps"></div>
+  <div class="qtext" id="qtext">按顺序点一点：先做什么？</div>
+  <div class="kidseq-pool" id="pool"></div>
+  <div class="kidseq-slots" id="slots"></div>
   <div class="sentence" id="sentence"></div>
   <div class="feedback" id="feedback"></div>
 </div>
 <div class="controls">
-  <button class="btn" id="hear" type="button">🔊 读一读</button>
   <button class="btn primary" id="next" type="button">➡️ 下一组</button>
 </div>
 <script>
@@ -130,90 +131,53 @@ var GROUPS = [
   [['🚶','排队'],['🚌','上车'],['💺','找座位'],'先排队，再上车，然后找座位。']
 ];
 
-var state = { no: 0, right: 0, next: 0, locked: false, cur: null };
-var groupDeck = XNLY.deck.make(GROUPS.map(function (g, i) { return i; }), 'daily-order', { head: 5 });
+var SHORT = { '放进垃圾桶': '倒垃圾' };
+var ROUNDS = GROUPS.map(function (g) {
+  return {
+    items: g.slice(0, 3).map(function (s) {
+      return { emoji: s[0], text: s[1], short: SHORT[s[1]] || s[1] };
+    }),
+    sentence: g[3]
+  };
+});
+
+var state = { no: 0, right: 0 };
 var elQno = document.getElementById('qno');
 var elRight = document.getElementById('right');
-var elSteps = document.getElementById('steps');
+var elQ = document.getElementById('qtext');
+var elPool = document.getElementById('pool');
+var elSlots = document.getElementById('slots');
 var elSentence = document.getElementById('sentence');
 var elFb = document.getElementById('feedback');
-var elQ = document.getElementById('qtext');
 
-function current() { return state.cur; }
-
-function render() {
-  if (state.no >= GROUPS.length) state.no = 0;
-  state.no++;
-  var g = state.cur = GROUPS[groupDeck.next()];
-  state.next = 0; state.locked = false;
-  elQno.textContent = state.no;
-  elRight.textContent = state.right;
-  elQ.textContent = '按顺序点一点，先做什么？';
-  elSentence.className = 'sentence'; elSentence.textContent = '';
-  elFb.className = 'feedback'; elFb.textContent = '';
-  elSteps.innerHTML = '';
-  shuffle(g.slice(0, 3)).forEach(function (s) {
-    var b = document.createElement('button');
-    b.type = 'button'; b.className = 'step';
-    b.innerHTML = '<span class="e">' + s[0] + '</span><span>' + s[1] + '</span><span class="n">?</span>';
-    b.addEventListener('click', function () { tap(b, s, g); });
-    elSteps.appendChild(b);
-  });
-  say('按顺序点一点，先做什么？');
-}
-
-function tap(btn, s, g) {
-  if (state.locked) return;
-  var want = g[state.next];
-  if (s[1] === want[1]) {
-    btn.classList.add('good');
-    btn.querySelector('.n').textContent = state.next + 1;
-    btn.disabled = true;
-    state.next++;
-    if (state.next >= 3) {
-      state.locked = true;
-      state.right++; elRight.textContent = state.right;
-      mark('right');
-      elFb.className = 'feedback ok'; elFb.textContent = '✅ 顺序排对啦！';
-      elSentence.textContent = '📝 ' + g[3];
-      elSentence.className = 'sentence show';
-      say(g[3]);
-    } else {
-      elFb.className = 'feedback ok'; elFb.textContent = '👍 对，接下来呢？';
-    }
-  } else {
-    btn.classList.add('bad');
-    setTimeout(function () { btn.classList.remove('bad'); }, 500);
-    mark('wrong');
-    elFb.className = 'feedback bad'; elFb.textContent = '❌ 先想一想，前面还有一步';
-    say('先想一想，前面还有一步。');
-    setTimeout(function () {
-      var okBtn = null;
-      Array.prototype.forEach.call(elSteps.children, function (b) {
-        if (b.textContent.indexOf(want[1]) >= 0) okBtn = b;
-      });
-      if (okBtn) { okBtn.classList.add('bad'); setTimeout(function () { okBtn.classList.remove('bad'); }, 500); }
-    }, 200);
+var game = XNLY.kidseq.mount({
+  pool: elPool,
+  slots: elSlots,
+  prompt: elQ,
+  feedback: elFb,
+  sentence: elSentence,
+  key: 'daily-order',
+  rounds: ROUNDS,
+  onStart: function () {
+    state.no = (state.no % ROUNDS.length) + 1;
+    elQno.textContent = state.no;
+    elRight.textContent = state.right;
+  },
+  onComplete: function () {
+    state.right++;
+    elRight.textContent = state.right;
   }
-}
-
-function nextG() {
-  render();
-}
-document.getElementById('hear').addEventListener('click', function () {
-  var g = current();
-  say('按顺序点一点。' + g[3]);
 });
-document.getElementById('next').addEventListener('click', nextG);
 
-/* 开局顺序由 groupDeck 洗牌决定，state.idx 已不再使用 */
-render();
-window.__daily = { list: GROUPS, state: state, next: nextG };
+document.getElementById('next').addEventListener('click', function () { game.start(); });
+
+window.__daily = { list: GROUPS, state: state, game: game };
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

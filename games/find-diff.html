@@ -37,9 +37,6 @@ h1{font-size:1.15rem;}
 .top{display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;}
 .scene{font-size:.95rem;font-weight:900;text-align:center;}
 .scene span{display:block;font-size:.74rem;font-weight:700;color:#8aa0b8;margin-top:2px;}
-.replay{min-height:38px;padding:0 14px;border-radius:999px;border:2px solid rgba(124,92,255,.25);
-  background:#fff;color:#5b3fd6;font-family:inherit;font-weight:900;font-size:.82rem;cursor:pointer;
-  box-shadow:0 4px 12px rgba(36,59,83,.08);}
 .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;min-height:0;}
 .panels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(1040px,100%);}
 .fig{background:#fff;border:2px solid var(--line);border-radius:16px;padding:6px;
@@ -90,7 +87,6 @@ h1{font-size:1.15rem;}
 <div class="chipbar" id="tierBar"></div>
 <div class="top">
   <div class="scene" id="scene">客厅 · 清晨<span>点一点右图不同之处，也可以点左图</span></div>
-  <button class="replay" id="replay" type="button">🔊 再听一遍</button>
 </div>
 <div class="stage">
   <div class="panels">
@@ -458,7 +454,6 @@ function useHint() {
 svgL.addEventListener('click', function (e) { onScene(e, svgL); });
 svgR.addEventListener('click', function (e) { onScene(e, svgR); });
 elHint.addEventListener('click', useHint);
-document.getElementById('replay').addEventListener('click', function () { say(instruction()); });
 document.addEventListener('pointerdown', function () {
   if (firstTap) return;
   firstTap = true;
@@ -494,5 +489,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

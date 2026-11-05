@@ -26,18 +26,27 @@ h1{font-size:1.15rem;}
 .scene{width:100%;max-width:760px;background:#fff;border-radius:24px;padding:14px 16px;
   box-shadow:0 10px 26px rgba(36,59,83,.12);text-align:center;}
 .scene .emo{font-size:clamp(2.6rem,10vw,4rem);line-height:1.2;}
-.qtext{font-size:clamp(1rem,2.6vw,1.25rem);font-weight:900;margin-top:4px;line-height:1.45;}
+.qtext{font-size:clamp(1.05rem,2.8vw,1.35rem);font-weight:900;margin-top:4px;line-height:1.4;}
+.qfull{font-size:.92rem;font-weight:700;color:#6b7f95;margin-top:2px;line-height:1.35;}
 .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;width:100%;max-width:760px;}
 .opt{min-height:70px;border:2px solid rgba(36,59,83,.10);border-radius:18px;background:#fff;
   font-family:inherit;font-weight:900;font-size:clamp(.9rem,2.4vw,1.05rem);color:var(--ink);
   cursor:pointer;padding:8px 10px;box-shadow:0 5px 14px rgba(36,59,83,.10);line-height:1.35;}
 .opt:active{transform:scale(.97);}
 .opt.good{border-color:var(--ok);background:#eaf8ee;color:#1b7c33;animation:pop .45s ease;}
-.opt.bad{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+.opt.bad{border-color:#e6b800;background:#fff8e1;animation:shake .45s ease;}
 .opt.faded{opacity:.45;}
 .feedback{min-height:30px;font-size:1.05rem;font-weight:900;text-align:center;}
 .feedback.ok{color:var(--ok);}
-.feedback.bad{color:var(--bad);}
+.feedback.bad{color:#b7791f;}
+.breath{position:fixed;inset:0;background:rgba(255,255,255,.95);display:none;align-items:center;
+  justify-content:center;flex-direction:column;gap:18px;z-index:60;padding:20px;}
+.breath.show{display:flex;}
+.bcircle{width:64px;height:64px;border-radius:50%;
+  background:radial-gradient(circle,#c9ecff,#7cc4f5);
+  box-shadow:0 0 0 12px rgba(124,196,245,.16);animation:breathe 10s ease-in-out infinite;}
+@keyframes breathe{0%{transform:scale(.55)}40%{transform:scale(1.6)}100%{transform:scale(.55)}}
+.btext{font-size:1.5rem;font-weight:900;color:#243b53;}
 .exp{display:none;width:100%;max-width:760px;background:#fffdf3;border:2px solid #ffe4a3;border-radius:16px;
   padding:10px 14px;font-size:clamp(.88rem,2.2vw,1rem);font-weight:700;line-height:1.5;color:#7a5a00;}
 .exp.show{display:block;}
@@ -51,9 +60,9 @@ h1{font-size:1.15rem;}
 @media (min-width:700px){
   body{padding:18px 26px;gap:14px;}
   h1{font-size:1.4rem;}
-  .qtext{font-size:1.4rem;}
-  .opt{min-height:84px;font-size:1.15rem;}
-  .scene .emo{font-size:4.4rem;}
+  .qtext{font-size:1.45rem;}
+  .opt{min-height:84px;font-size:1.4rem;}
+  .scene .emo{font-size:6.2rem;}
 }
 @media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .opt{min-height:56px;} }
 </style>
@@ -68,6 +77,7 @@ h1{font-size:1.15rem;}
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
 <script src="../deck.js"></script>
+<script src="../kidopt.js"></script>
 </head>
 <body>
 <header>
@@ -82,19 +92,26 @@ h1{font-size:1.15rem;}
   <div class="scene">
     <div class="emo" id="emo">😀</div>
     <div class="qtext" id="qtext"></div>
+    <div class="qfull" id="qfull"></div>
   </div>
   <div class="opts" id="opts"></div>
   <div class="feedback" id="feedback"></div>
   <div class="exp" id="exp"></div>
 </div>
 <div class="controls">
-  <button class="btn" id="hear" type="button">🔊 再读一遍</button>
+  <button class="btn" id="breath" type="button">😮‍💨 深呼吸</button>
   <button class="btn primary" id="next" type="button">➡️ 下一题</button>
+</div>
+<div class="breath" id="breathBox">
+  <div class="bcircle"></div>
+  <div class="btext" id="btext">吸气…</div>
+  <button class="btn primary" id="breathClose" type="button">好了</button>
 </div>
 <script>
 var CAN = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
 function say(t) {
   if (!t) return;
+  window.__lastSayTime = Date.now();
   try {
     if (window.XNLY && XNLY.voice && XNLY.voice.speak) { XNLY.voice.speak(String(t)); return; }
     if (!CAN) return;
@@ -139,12 +156,25 @@ var Q = [
   ['social','😔','小朋友很难过，你会？',['安慰他，陪陪他','笑他','走开不管'],'安慰他，陪陪他','一句安慰的话能让别人好受一些。']
 ];
 
+/* 每题 ≤10 字短问句（屏幕显示短句，朗读上面完整题干） */
+var SHORTQ = [
+  '这个表情是什么感觉？','这个表情是什么感觉？','这个表情是什么感觉？','这个表情是什么感觉？',
+  '这个表情是什么感觉？','这个表情是什么感觉？','这个表情是什么感觉？','这个表情是什么感觉？',
+  '这个表情是什么感觉？','这个表情是什么感觉？','这个表情是什么感觉？','这个表情是什么感觉？',
+  '想玩别人玩具怎么办？','想吃你饼干怎么办？','撞倒小朋友怎么办？','想加入游戏怎么办？',
+  '收到礼物说什么？','别人帮忙说什么？','想借过怎么说？','玩完玩具怎么做？',
+  '吃饭要怎么做？','小朋友摔倒怎么做？','别人说话时怎么做？','晚上睡觉要怎样？',
+  '一盒蜡笔怎么用？','排队要怎么做？','想摸小狗怎么做？','小朋友难过怎么做？'
+];
+Q.forEach(function (row, i) { row.short = SHORTQ[i] || row[2]; });
+
 var state = { no: 0, right: 0, locked: false, cur: null };
 var qDeck = XNLY.deck.make(Q, 'emotions', { head: 5 });
 var elQno = document.getElementById('qno');
 var elRight = document.getElementById('right');
 var elEmo = document.getElementById('emo');
 var elQ = document.getElementById('qtext');
+var elQF = document.getElementById('qfull');
 var elOpts = document.getElementById('opts');
 var elFb = document.getElementById('feedback');
 var elExp = document.getElementById('exp');
@@ -158,16 +188,14 @@ function render() {
   elQno.textContent = state.no + 1;
   elRight.textContent = state.right;
   elEmo.textContent = it[1];
-  elQ.textContent = it[2];
+  elQ.textContent = it.short || it[2];
+  elQF.textContent = it[2];
   elFb.className = 'feedback'; elFb.textContent = '';
   elExp.className = 'exp'; elExp.textContent = '';
   elOpts.innerHTML = '';
-  shuffle(it[3]).forEach(function (o) {
-    var b = document.createElement('button');
-    b.type = 'button'; b.className = 'opt'; b.textContent = o;
-    b.addEventListener('click', function () { choose(b, o, it); });
-    elOpts.appendChild(b);
-  });
+  var face = it[0] === 'face';
+  XNLY.kid.build(elOpts, shuffle(it[3]), function (b, o) { choose(b, o, it); },
+    { noLabel: face, desc: !face });
   say(it[2]);
 }
 
@@ -181,14 +209,14 @@ function choose(btn, o, it) {
     mark('right');
     elFb.className = 'feedback ok'; elFb.textContent = '✅ 答对啦！';
     elExp.textContent = '💡 ' + it[5]; elExp.className = 'exp show';
-    say('答对啦。' + it[5]);
+    say('真棒！' + it[5]);
   } else {
     btn.classList.add('bad');
     setTimeout(function () { btn.classList.remove('bad'); }, 500);
     mark('wrong');
-    elFb.className = 'feedback bad'; elFb.textContent = '❌ 再想一想～';
+    elFb.className = 'feedback bad'; elFb.textContent = '💛 再试一试';
     elExp.textContent = '💡 ' + it[5]; elExp.className = 'exp show';
-    say('再想一想。' + it[5]);
+    say('没关系，再试一试。正确的做法是：' + it[4] + '。');
   }
 }
 
@@ -198,11 +226,58 @@ function nextQ() {
   render();
 }
 
-document.getElementById('hear').addEventListener('click', function () { say(current()[2]); });
 document.getElementById('next').addEventListener('click', nextQ);
 
 /* 开局顺序由 qDeck 洗牌决定 */
 render();
+/* 浏览器首次手势前可能拦截自动朗读：第一次触摸时补读题干 */
+var firstTouch = false;
+document.addEventListener('pointerdown', function () {
+  if (firstTouch) return;
+  firstTouch = true;
+  setTimeout(function () {
+    if (Date.now() - (window.__lastSayTime || 0) < 900) return;
+    try {
+      if (window.speechSynthesis && (speechSynthesis.speaking || speechSynthesis.pending)) return;
+    } catch (e) { }
+    say(current()[2]);
+  }, 320);
+}, true);
+
+/* 深呼吸引导：4 秒吸 / 6 秒呼，做 2 轮 */
+var bBox = document.getElementById('breathBox');
+var bText = document.getElementById('btext');
+var bTimers = [];
+function bClear() { bTimers.forEach(clearTimeout); bTimers = []; }
+function bOpen() {
+  bBox.classList.add('show');
+  bClear();
+  var n = 0;
+  function cycle() {
+    if (!bBox.classList.contains('show')) return;
+    bText.textContent = '吸气…';
+    say('吸气，慢慢吸气。');
+    bTimers.push(setTimeout(function () {
+      if (!bBox.classList.contains('show')) return;
+      bText.textContent = '呼气…';
+      say('呼气，慢慢呼气。');
+    }, 4000));
+    bTimers.push(setTimeout(function () {
+      n++;
+      if (n >= 2) { bClose(true); return; }
+      cycle();
+    }, 10000));
+  }
+  cycle();
+}
+function bClose(done) {
+  bBox.classList.remove('show');
+  bClear();
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  if (done) say('真棒，我们平静下来了。');
+}
+document.getElementById('breath').addEventListener('click', bOpen);
+document.getElementById('breathClose').addEventListener('click', function () { bClose(false); });
 window.__emotions = { list: Q, state: state };
 </script>
 <script>
@@ -210,5 +285,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

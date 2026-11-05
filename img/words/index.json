@@ -1,0 +1,1127 @@
+{
+ "dog": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/dog.jpg"
+ },
+ "cat": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/cat.jpg"
+ },
+ "pig": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/pig.jpg"
+ },
+ "cow": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/cow.jpg"
+ },
+ "sheep": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/sheep.jpg"
+ },
+ "horse": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/horse.jpg"
+ },
+ "rabbit": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/rabbit.jpg"
+ },
+ "mouse": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/mouse.jpg"
+ },
+ "bird": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/bird.jpg"
+ },
+ "duck": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/duck.jpg"
+ },
+ "chicken": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/chick.jpg"
+ },
+ "fish": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/fish.jpg"
+ },
+ "tiger": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/tiger.jpg"
+ },
+ "lion": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/lion.jpg"
+ },
+ "elephant": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/elephant.jpg"
+ },
+ "monkey": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/monkey.jpg"
+ },
+ "panda": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/panda.jpg"
+ },
+ "bear": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/bear.jpg"
+ },
+ "wolf": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "fox": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/fox.jpg"
+ },
+ "frog": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/frog.jpg"
+ },
+ "turtle": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/turtle.jpg"
+ },
+ "snake": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "bee": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/bee.jpg"
+ },
+ "butterfly": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/butterfly.jpg"
+ },
+ "ant": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/ant.jpg"
+ },
+ "spider": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "dolphin": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "whale": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "penguin": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/penguin.jpg"
+ },
+ "owl": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/owl.jpg"
+ },
+ "goat": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "camel": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "giraffe": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/giraffe.jpg"
+ },
+ "zebra": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "deer": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/deer.jpg"
+ },
+ "squirrel": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/squirrel.jpg"
+ },
+ "snail": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/snail.jpg"
+ },
+ "crab": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/crab.jpg"
+ },
+ "shark": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "apple": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/apple.jpg"
+ },
+ "banana": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/banana.jpg"
+ },
+ "orange": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/orange.jpg"
+ },
+ "grape": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/grape.jpg"
+ },
+ "watermelon": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/watermelon.jpg"
+ },
+ "strawberry": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/strawberry.jpg"
+ },
+ "pear": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "peach": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/peach.jpg"
+ },
+ "lemon": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "pineapple": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "cherry": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "mango": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "coconut": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "tomato": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "potato": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "carrot": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/carrot.jpg"
+ },
+ "corn": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "bread": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/bread.jpg"
+ },
+ "cake": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "cookie": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "candy": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/candy.jpg"
+ },
+ "chocolate": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "egg": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "milk": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/milk.jpg"
+ },
+ "water": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "juice": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "rice": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/rice.jpg"
+ },
+ "noodle": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "hamburger": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "pizza": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "sandwich": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "ice-cream": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/icecream.jpg"
+ },
+ "honey": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/honey.jpg"
+ },
+ "cheese": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/cheese.jpg"
+ },
+ "red": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "blue": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "yellow": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "green": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "black": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "white": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "brown": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "purple": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "pink": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "face": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "eye": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "ear": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "nose": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "mouth": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "tooth": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "tongue": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "hand": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "foot": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "leg": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "arm": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "heart": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "body": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "finger": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "thumb": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "bone": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/bone.jpg"
+ },
+ "book": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "pen": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "pencil": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "ruler": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "notebook": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "bag": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "school": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "teacher": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "student": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "chair": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/chair.jpg"
+ },
+ "computer": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "phone": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "clock": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "map": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "ball": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/soccer.jpg"
+ },
+ "paper": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "scissors": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "crayon": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "bed": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "door": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/door.jpg"
+ },
+ "window": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "house": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/house.jpg"
+ },
+ "room": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "table": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "sofa": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/sofa.jpg"
+ },
+ "lamp": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/lamp.jpg"
+ },
+ "key": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "cup": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "spoon": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "fork": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "knife": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "bowl": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "bottle": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "towel": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "soap": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "brush": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "mirror": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "basket": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "car": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/car.jpg"
+ },
+ "bus": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "bike": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/bicycle.jpg"
+ },
+ "train": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "plane": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "ship": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/sailboat.jpg"
+ },
+ "boat": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/sailboat.jpg"
+ },
+ "taxi": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "truck": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "rocket": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "sun": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/sun.jpg"
+ },
+ "moon": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "star": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "cloud": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/cloud.jpg"
+ },
+ "rain": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "snow": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "wind": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "tree": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/tree.jpg"
+ },
+ "flower": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/flower.jpg"
+ },
+ "grass": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/grass.jpg"
+ },
+ "leaf": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/leaves.jpg"
+ },
+ "mountain": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "river": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "sea": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/waves.jpg"
+ },
+ "sky": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "beach": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "forest": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "garden": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "seed": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "hot": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "cold": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "rainbow": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/rainbow.jpg"
+ },
+ "morning": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "night": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "day": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "week": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "year": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "park": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "zoo": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "hospital": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "bank": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "library": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "museum": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "supermarket": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "restaurant": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "farm": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/tractor.jpg"
+ },
+ "factory": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "hat": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/hat.jpg"
+ },
+ "shirt": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/shirt.jpg"
+ },
+ "dress": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/dress.jpg"
+ },
+ "shoe": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "sock": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/socks.jpg"
+ },
+ "coat": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/coat.jpg"
+ },
+ "glove": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/gloves.jpg"
+ },
+ "scarf": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "glasses": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "umbrella": {
+  "w": 512,
+  "h": 512,
+  "src": "games/img/umbrella.jpg"
+ },
+ "run": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "swim": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "jump": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "sing": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "dance": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "sleep": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "one": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "two": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "three": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "four": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "five": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "six": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "seven": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "eight": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "nine": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "ten": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "mother": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "father": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "sister": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "brother": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "baby": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "grandma": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "grandpa": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "uncle": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "aunt": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "cousin": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "eat": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "drink": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "read": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "write": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ },
+ "walk": {
+  "w": 512,
+  "h": 512,
+  "src": null
+ }
+}

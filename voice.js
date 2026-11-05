@@ -3,7 +3,9 @@
  * 1) 语音（全站共用）
  *    - speak(text, {rate, queue, lang})：默认打断上一句；queue:true 时排队连播
  *    - 长句自动按「。！？；」拆成多句依次播报，避免 iOS 一次读不完被截断
- *    - 语速两档：1.0 / 1.3，存 localStorage('xnly_speed')
+ *    - 语速连续可调：0.5 ~ 2.0（步进 0.05），存 localStorage('xnly_speed')
+ *      兼容旧值：以前存的 1.0 / 1.3 直接当数值用
+ *    - makeSpeedUI()：全站统一的语速滑杆（家长页、首页、右键小面板复用）
  *    - 点击打断：手指按下时，如果上一句已经播了 400ms 以上就停掉它
  *    - iOS 手势解锁检测：isUnlocked()；任何一次 pointerdown 都会标记已解锁
  * 2) 降级：不支持 / getVoices() 一直为空时，播提示音 + 右上角「🔇」小图标，不静默失败
@@ -33,11 +35,45 @@
   var badgeShown = false;
   var silentTimer = null;
 
+  var SPEED_MIN = 0.5, SPEED_MAX = 2.0, SPEED_STEP = 0.05, SPEED_DEF = 1.0;
+
+  function clampSpeed(v) {
+    v = parseFloat(v);
+    if (!isFinite(v)) return SPEED_DEF;
+    v = Math.round(v / SPEED_STEP) * SPEED_STEP;
+    return Math.min(SPEED_MAX, Math.max(SPEED_MIN, v));
+  }
+  /* 连续语速；旧版本存的 1.0 / 1.3 直接当数值用 */
   function speed() {
     var v = parseFloat(lsGet('xnly_speed'));
-    return v === 1.3 ? 1.3 : 1.0;
+    return isFinite(v) ? clampSpeed(v) : SPEED_DEF;
   }
-  function setSpeed(v) { lsSet('xnly_speed', v === 1.3 ? '1.3' : '1.0'); }
+  function setSpeed(v) {
+    var s = clampSpeed(v);
+    lsSet('xnly_speed', s.toFixed(2));
+    return s;
+  }
+
+  /* 全站语速强制：不少页面自己 new SpeechSynthesisUtterance 并写死 rate。
+     这里把实例的 rate 改为只读的滑杆值，保证「滑杆优先于页面写死的 rate」，
+     页面本身不用逐页改代码；不支持的浏览器自动退回原生行为。 */
+  (function enforceRate() {
+    var Native = window.SpeechSynthesisUtterance;
+    if (!Native || !Object.defineProperty) return;
+    function Wrapped(text) {
+      var u = new Native(text);
+      try {
+        Object.defineProperty(u, 'rate', {
+          configurable: true,
+          get: function () { return speed(); },
+          set: function () { }
+        });
+      } catch (e) { }
+      return u;
+    }
+    Wrapped.prototype = Native.prototype;
+    window.SpeechSynthesisUtterance = Wrapped;
+  })();
 
   /* 纯英文句子用 en-US，其余用中文 */
   function langOf(text) {
@@ -53,13 +89,15 @@
       var c = text.charAt(i);
       buf += c;
       if ('。！？!?；;'.indexOf(c) >= 0) {
-        if (buf.trim()) out.push(buf.trim());
+        if (hasWord(buf)) out.push(buf.trim());
         buf = '';
       }
     }
-    if (buf.trim()) out.push(buf.trim());
+    if (hasWord(buf)) out.push(buf.trim());
     return out;
   }
+  /* 只有标点/空白的片段不单独播报（避免出现只读一个「。」） */
+  function hasWord(s) { return /[A-Za-z0-9\u4e00-\u9fff]/.test(s || ''); }
 
   function cancel() {
     queue.length = 0;
@@ -110,9 +148,11 @@
 
     if (!opts.queue) cancel();
 
-    var rate = opts.rate || speed();
+    /* 全站统一语速：以用户滑杆为准，忽略页面里写死的 rate */
+    var rate = speed();
     var lang = opts.lang || langOf(text);
-    var parts = splitSentences(text);
+    /* single:true → 整句一次 utterance（工具条重听用，保证 speak 只调用 1 次） */
+    var parts = opts.single ? [text] : splitSentences(text);
     for (var i = 0; i < parts.length; i++) {
       queue.push({ text: parts[i], rate: rate, lang: lang, pitch: opts.pitch || 1.12 });
     }
@@ -176,12 +216,94 @@
     }
   } catch (e) { }
 
+  /* ======================= 语速滑杆（全站共用） ======================= */
+
+  function speedCSS() {
+    if (document.getElementById('xnlySpeedStyle')) return;
+    var st = document.createElement('style');
+    st.id = 'xnlySpeedStyle';
+    st.textContent = [
+      '.xnly-speed{width:100%;max-width:100%;font-family:inherit;color:#243b53;}',
+      '.xnly-speed .xs-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:900;}',
+      '.xnly-speed .xs-title{font-size:1rem;}',
+      '.xnly-speed .xs-val{font-size:1.05rem;color:#7c5cff;font-variant-numeric:tabular-nums;}',
+      '.xnly-speed .xs-row{display:flex;align-items:center;gap:8px;margin:10px 0 4px;}',
+      '.xnly-speed .xs-end{font-size:.76rem;color:#7b8ea8;font-weight:800;white-space:nowrap;}',
+      '.xnly-speed .xs-range{flex:1 1 auto;min-width:0;width:100%;height:48px;margin:0;background:transparent;',
+      '-webkit-appearance:none;appearance:none;touch-action:pan-y;cursor:pointer;}',
+      '.xnly-speed .xs-range::-webkit-slider-runnable-track{height:8px;border-radius:999px;background:#e8eef7;}',
+      '.xnly-speed .xs-range::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:44px;height:44px;',
+      'margin-top:-18px;border-radius:50%;background:#7c5cff;border:4px solid #fff;box-shadow:0 4px 12px rgba(92,100,255,.35);}',
+      '.xnly-speed .xs-range::-moz-range-track{height:8px;border-radius:999px;background:#e8eef7;}',
+      '.xnly-speed .xs-range::-moz-range-thumb{width:36px;height:36px;border-radius:50%;background:#7c5cff;border:4px solid #fff;}',
+      '.xnly-speed .xs-foot{display:flex;gap:8px;margin-top:6px;flex-wrap:wrap;}',
+      '.xnly-speed .xs-btn{min-height:44px;padding:8px 14px;border-radius:12px;border:1px solid rgba(36,59,83,.12);',
+      'background:#fff;color:#3b5370;font-family:inherit;font-size:.88rem;font-weight:800;cursor:pointer;}',
+      '.xnly-speed .xs-btn.primary{background:#f2edff;border-color:#d9ccff;color:#5b3fd6;}'
+    ].join('');
+    document.head.appendChild(st);
+  }
+
+  function fmtSpeed(v) { return v.toFixed(2) + '×'; }
+
+  /* 生成一条语速滑杆；opts.onChange(v) 可选，用于外部按钮同步显示 */
+  function makeSpeedUI(opts) {
+    opts = opts || {};
+    speedCSS();
+    var box = document.createElement('div');
+    box.className = 'xnly-speed';
+    box.innerHTML =
+      '<div class="xs-head"><span class="xs-title">🔊 语速</span><span class="xs-val">' + fmtSpeed(speed()) + '</span></div>' +
+      '<div class="xs-row"><span class="xs-end">0.5 慢</span>' +
+      '<input class="xs-range" type="range" min="0.5" max="2" step="0.05" aria-label="朗读语速" value="' + speed() + '">' +
+      '<span class="xs-end">2.0 快</span></div>' +
+      '<div class="xs-foot"><button type="button" class="xs-btn primary xs-reset">恢复默认 1.0×</button>' +
+      '<button type="button" class="xs-btn xs-sample">试听</button></div>';
+    var input = box.querySelector('.xs-range');
+    var val = box.querySelector('.xs-val');
+    var lastCommit = 0;
+
+    function paint(v) {
+      val.textContent = fmtSpeed(v);
+      if (opts.onChange) { try { opts.onChange(v); } catch (e) { } }
+    }
+    function commit() {
+      var now = Date.now();
+      if (now - lastCommit < 400) return;   /* change 与 pointerup 去重 */
+      lastCommit = now;
+      var v = setSpeed(input.value);
+      input.value = v;
+      paint(v);
+      speak('这是现在的语速。');
+    }
+    /* 拖动中只更新数字，不朗读 */
+    input.addEventListener('input', function () { paint(clampSpeed(input.value)); });
+    input.addEventListener('change', commit);
+    input.addEventListener('pointerup', commit);
+    box.querySelector('.xs-reset').addEventListener('click', function () {
+      var v = setSpeed(SPEED_DEF);
+      input.value = v;
+      paint(v);
+      speak('这是现在的语速。');
+    });
+    box.querySelector('.xs-sample').addEventListener('click', function () {
+      speak('这是现在的语速。');
+    });
+    paint(speed());
+    return box;
+  }
+
   X.voice = {
     supported: supported,
     speak: speak,
     cancel: cancel,
     speed: speed,
     setSpeed: setSpeed,
+    makeSpeedUI: makeSpeedUI,
+    SPEED_MIN: SPEED_MIN,
+    SPEED_MAX: SPEED_MAX,
+    SPEED_STEP: SPEED_STEP,
+    SPEED_DEF: SPEED_DEF,
     langOf: langOf,
     isUnlocked: isUnlocked,
     unlock: onFirstGesture

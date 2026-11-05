@@ -53,9 +53,6 @@ h1{font-size:1.15rem;}
 .opt[disabled]{opacity:.45;cursor:default;}
 .feedback{min-height:34px;font-size:.95rem;font-weight:800;text-align:center;line-height:1.45;}
 .ok{color:var(--ok);} .bad{color:var(--bad);}
-.replay{min-height:44px;padding:0 18px;border-radius:999px;border:2px solid rgba(255,107,53,.28);
-  background:#fff;color:#d94a12;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;
-  box-shadow:0 4px 12px rgba(36,59,83,.08);}
 .summary{display:none;flex-direction:column;gap:10px;width:min(620px,100%);background:#fff;
   border:2px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:0 10px 26px rgba(36,59,83,.12);}
 .summary.show{display:flex;}
@@ -101,7 +98,6 @@ h1{font-size:1.15rem;}
     <span class="sub" id="subHint">选出正确的中文意思</span>
   </div>
   <div class="opts" id="opts"></div>
-  <button class="replay" id="replay" type="button">🔊 再听一遍</button>
   <div class="feedback" id="feedback"></div>
   <div class="summary" id="summary"></div>
   <div class="tip">没有排行榜、没有连胜，只和自己的 60 秒比一比</div>
@@ -162,7 +158,6 @@ var elOpts = document.getElementById('opts');
 var elFb = document.getElementById('feedback');
 var elRule = document.getElementById('rule');
 var elSummary = document.getElementById('summary');
-var elReplay = document.getElementById('replay');
 
 function rand(n) { return Math.floor(Math.random() * n); }
 function shuffle(a) {
@@ -346,8 +341,6 @@ function newGame() {
   nextQuestion();
 }
 
-elReplay.addEventListener('click', function () { speakQuestion(); });
-
 /* 第一次点击/触摸开始计时；之后的点击不再重复触发 */
 document.addEventListener('pointerdown', function (e) {
   if (state.ended) return;
@@ -368,5 +361,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

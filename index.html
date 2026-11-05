@@ -61,7 +61,7 @@
         .startsub { font-size: .82rem; font-weight: 700; color: #8a7d86; }
         .startcard.done { border-style: solid; background: #fff; padding: 10px; }
         .startcard.done .startbtn {
-            min-height: 60px; font-size: 1.15rem; letter-spacing: 1px;
+            min-height: 68px; font-size: 1.375rem; letter-spacing: 1px;
             background: linear-gradient(135deg, #8fe3b0, #4cc98a);
             box-shadow: 0 8px 18px rgba(76, 201, 138, .32);
         }
@@ -119,9 +119,13 @@
         @media (hover: hover) {
             .card:hover { transform: translateY(-4px); box-shadow: 0 14px 26px rgba(36, 59, 83, .16); }
         }
-        .card .ico { font-size: 2.6rem; line-height: 1.15; }
-        .card .name { font-size: 1.02rem; font-weight: 800; }
-        .card .desc { font-size: .76rem; color: #7b8ea8; text-align: center; line-height: 1.35; }
+        .card .ico { font-size: 4.4rem; line-height: 1.15; }
+        .card .name { font-size: 1.25rem; font-weight: 800; }
+        .card .desc { font-size: .9rem; color: #7b8ea8; text-align: center; line-height: 1.35; }
+        @media (min-width: 700px) {
+            .card .ico { font-size: 6rem; }
+            .card { min-height: 196px; }
+        }
 
         .card.sudoku {
             --c: #7c5cff;
@@ -142,29 +146,39 @@
 
         /* ---------- 年龄档 tab ---------- */
         .tabs {
-            display: flex; gap: 8px; margin: 0 0 12px; padding: 2px 2px 6px;
-            overflow-x: auto; scrollbar-width: none; -webkit-overflow-scrolling: touch;
+            display: flex; flex-wrap: nowrap; gap: 6px; margin: 0 0 12px; padding: 2px 2px 6px;
+            overflow: visible;
         }
-        .tabs::-webkit-scrollbar { display: none; }
         .tab {
-            flex: 0 0 auto; min-height: 52px; padding: 8px 16px;
+            flex: 1 1 0; min-width: 0; min-height: 52px; padding: 8px 6px;
             border-radius: 16px; border: 2px solid rgba(36, 59, 83, .10);
             background: #fff; color: #3b5370;
-            font-family: inherit; font-size: .92rem; font-weight: 800;
+            font-family: inherit; font-size: clamp(.7rem, 1.7vw, .92rem); font-weight: 800;
             box-shadow: 0 4px 12px rgba(36, 59, 83, .08);
             cursor: pointer; white-space: nowrap;
-            display: inline-flex; align-items: center; gap: 8px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 4px;
         }
         .tab.on {
             background: linear-gradient(135deg, #7c5cff, #5a7dff);
             border-color: #6a63ff; color: #fff;
             box-shadow: 0 8px 18px rgba(92, 100, 255, .28);
         }
+        .tab.setting.on {
+            background: #f2edff; border-color: #d9ccff; color: #5b3fd6;
+            box-shadow: 0 4px 12px rgba(124, 92, 255, .18);
+        }
+        .tab .tname { overflow: hidden; text-overflow: ellipsis; }
         .tab .tc {
-            font-size: .72rem; font-weight: 900; line-height: 1.6;
-            padding: 0 9px; border-radius: 999px; background: rgba(36, 59, 83, .08);
+            font-size: .68rem; font-weight: 900; line-height: 1.6;
+            padding: 0 7px; border-radius: 999px; background: rgba(36, 59, 83, .08);
         }
         .tab.on .tc { background: rgba(255, 255, 255, .28); }
+        @media (max-width: 900px) { .tab .tc { display: none; } }
+        .speedPanel {
+            background: #fff; border-radius: 20px; padding: 14px; margin: 0 0 12px;
+            box-shadow: 0 10px 26px rgba(36, 59, 83, .14);
+        }
+        .speedPanel[hidden] { display: none !important; }
         .card[hidden], .grid[hidden], .parentPanel[hidden] { display: none !important; }
         .parentPanel .phint { margin: 0 2px 12px; font-size: .82rem; font-weight: 700; color: #6b7f95; }
 
@@ -186,8 +200,8 @@
 
         @media (max-width: 380px) {
             .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .card { min-height: 132px; padding: 12px 8px; }
-            .card .ico { font-size: 2.1rem; }
+            .card { min-height: 168px; padding: 12px 8px; }
+            .card .ico { font-size: 3.6rem; }
             .startbtn { font-size: 1.4rem; min-height: 72px; }
         }
     </style>
@@ -209,11 +223,7 @@
     </div>
 
     <nav class="tabs" id="tabs" aria-label="年龄档切换"></nav>
-
-    <div class="tools">
-        <button class="tool" id="speedBtn" type="button">🔊 语速 1.0</button>
-        <a class="tool" href="parent.html">👨‍👩‍👧 家长面板</a>
-    </div>
+    <div class="speedPanel" id="speedPanel" hidden></div>
 
     <div class="storehint" id="storeHint" hidden>⚠️ 这次是用文件方式打开的，成绩只留在这一次，不影响玩</div>
 
@@ -590,7 +600,7 @@
   var tabs = document.getElementById('tabs');
   var grid = document.getElementById('grid');
   var parentPanel = document.getElementById('parentPanel');
-  var speedBtn = document.getElementById('speedBtn');
+  var speedPanel = document.getElementById('speedPanel');
   var note = document.getElementById('storeHint');
   var started = false;
   var navLock = false;
@@ -638,11 +648,33 @@
       });
       tabs.appendChild(b);
     });
+
+    /* 第 5 个：语速设置（不切换游戏网格） */
+    var sp = document.createElement('button');
+    sp.type = 'button';
+    sp.className = 'tab setting' + (speedPanel.hidden ? '' : ' on');
+    sp.setAttribute('aria-label', '语速设置');
+    sp.innerHTML = '<span class="tname">🔊 语速 ' + (V && V.speed ? V.speed().toFixed(2) : '1.00') + '×</span>';
+    sp.addEventListener('click', function () {
+      if (speedPanel.hidden) {
+        if (!speedPanel.dataset.mounted && V && V.makeSpeedUI) {
+          speedPanel.appendChild(V.makeSpeedUI({ onChange: renderTabs }));
+          speedPanel.dataset.mounted = '1';
+        }
+        speedPanel.hidden = false;
+      } else {
+        speedPanel.hidden = true;
+      }
+      renderTabs();
+    });
+    tabs.appendChild(sp);
   }
+  speedPanel.addEventListener('click', function (e) { e.stopPropagation(); });
 
   function applyStage(k, say) {
     stage = k;
     writeStage(k);
+    speedPanel.hidden = true;
     grid.hidden = (k === 'parent');
     parentPanel.hidden = (k !== 'parent');
     cards.forEach(function (c) { c.hidden = (c.dataset.stage !== k); });
@@ -685,23 +717,8 @@
     setTimeout(function () { location.href = href; }, 820);
   });
 
-  /* ---------- 语速 ---------- */
-  function renderSpeed() {
-    var v = (V && V.speed) ? V.speed() : 1.0;
-    speedBtn.textContent = '🔊 语速 ' + v.toFixed(1);
-    speedBtn.title = v === 1.3 ? '点一下变慢' : '点一下变快';
-  }
-  speedBtn.addEventListener('click', function () {
-    if (!V) return;
-    var next = V.speed() === 1.3 ? 1.0 : 1.3;
-    V.setSpeed(next);
-    renderSpeed();
-    V.speak(next === 1.3 ? '语速变快啦。' : '语速变慢啦。');
-  });
-
   if (X.canStore === false) note.hidden = false;
 
-  renderSpeed();
   applyStage(readStage(), false);
 
   /* 第一次点屏幕（不在卡片/入口上）也算「已开始」 */

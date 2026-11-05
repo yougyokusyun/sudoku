@@ -87,7 +87,6 @@ h1{font-size:1.15rem;}
   <div class="exp" id="exp"></div>
 </div>
 <div class="controls">
-  <button class="btn" id="hear" type="button">🔊 读一遍</button>
   <button class="btn primary" id="next" type="button">➡️ 下一题</button>
 </div>
 <script>
@@ -310,9 +309,6 @@ function nextQ() {
   state.cur = state.deck.next();
   render();
 }
-document.getElementById('hear').addEventListener('click', function () {
-  var q = cur(); if (q) say(q[2].replace(/（\s*）/g, '什么'));
-});
 document.getElementById('next').addEventListener('click', nextQ);
 
 buildChips();
@@ -327,5 +323,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

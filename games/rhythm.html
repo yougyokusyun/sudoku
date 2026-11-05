@@ -106,7 +106,6 @@ h1{font-size:1.15rem;}
   <div class="dots" id="dots"></div>
   <div class="feedback" id="feedback"></div>
   <div class="controls">
-    <button class="btn primary" id="replay" type="button">🔊 再听一遍</button>
     <button class="btn" id="restart" type="button">🔁 重新开始</button>
   </div>
 </div>
@@ -128,7 +127,6 @@ var elFb = document.getElementById('feedback');
 var elPrompt = document.getElementById('prompt');
 var elLevel = document.getElementById('level');
 var elBest = document.getElementById('best');
-var elReplay = document.getElementById('replay');
 var elRestart = document.getElementById('restart');
 
 function readNum(k) { var v = parseInt(localStorage.getItem(k), 10); return isNaN(v) ? 1 : v; }
@@ -276,12 +274,6 @@ Array.prototype.forEach.call(elPads.children, function (p, k) {
   p.addEventListener('click', function () { tap(k); });
 });
 
-elReplay.addEventListener('click', function () {
-  if (playing) return;
-  feedback('再听一遍～');
-  playSequence();
-});
-
 elRestart.addEventListener('click', function () {
   playToken++;              // 打断当前播放
   clearTimers();
@@ -355,5 +347,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

@@ -85,7 +85,6 @@ h1{font-size:1.15rem;}
   <div class="feedback" id="feedback"></div>
 </div>
 <div class="controls">
-  <button class="btn" id="hear" type="button">🔊 读一读</button>
   <button class="btn primary" id="again" type="button">🔁 重来一组</button>
 </div>
 <script>
@@ -236,9 +235,6 @@ function finishRound() {
   }, 900);
 }
 
-document.getElementById('hear').addEventListener('click', function () {
-  say('点两张牌，找出一对好朋友。配对成功会有声音，还会读出名字。');
-});
 document.getElementById('again').addEventListener('click', function () { buildCards(); });
 
 elPrompt.textContent = '点两张牌，找出一对好朋友';
@@ -250,5 +246,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

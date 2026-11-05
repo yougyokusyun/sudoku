@@ -42,15 +42,15 @@ h1{font-size:1.15rem;}
 .level-tag.basic{background:#eaf8ee;color:#2fb344;}
 .level-tag.challenge{background:#fff0e6;color:#ff7a1a;}
 .clues{list-style:none;display:flex;flex-direction:column;gap:5px;}
-.clues li{display:flex;gap:6px;align-items:flex-start;font-size:.95rem;font-weight:700;line-height:1.35;}
-.clue-num{flex:none;font-size:.75rem;font-weight:900;background:#f0edff;color:var(--accent);
-  border-radius:8px;padding:1px 6px;margin-top:2px;}
+.clues li{display:flex;gap:8px;align-items:flex-start;font-size:1.25rem;font-weight:800;line-height:1.45;}
+.clue-num{flex:none;min-width:26px;text-align:center;font-size:.95rem;font-weight:900;background:#f0edff;color:var(--accent);
+  border-radius:8px;padding:2px 6px;margin-top:2px;}
 .clues li.locked span:last-child{color:#9aa8ba;font-weight:700;}
 .clues li.pop span:last-child{animation:pop .45s ease;}
-.question{font-size:1.2rem;font-weight:900;text-align:center;}
+.question{font-size:1.3rem;font-weight:900;text-align:center;}
 .hint-btn{margin-top:2px;}
 .options{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;width:min(540px,100%);}
-.opt{min-height:50px;border:none;border-radius:16px;background:#fff;font-weight:900;font-size:1rem;
+.opt{min-height:50px;border:none;border-radius:16px;background:#fff;font-weight:900;font-size:1.4rem;
   color:var(--ink);box-shadow:0 5px 14px rgba(36,59,83,.12);cursor:pointer;padding:8px 6px;
   font-family:inherit;transition:transform .12s ease;}
 .opt:active{transform:scale(.97);}
@@ -63,6 +63,8 @@ h1{font-size:1.15rem;}
   box-shadow:0 4px 12px rgba(160,106,0,.16);}
 .solution{width:min(540px,100%);display:grid;grid-template-columns:repeat(2,1fr);gap:6px;}
 .sol-title{grid-column:1/-1;font-size:.86rem;font-weight:900;color:var(--accent);text-align:center;}
+.sol-why{grid-column:1/-1;font-size:1rem;font-weight:800;line-height:1.45;background:#f7f4ff;
+  border-radius:12px;padding:8px 10px;color:#4b3f78;}
 .sol-item{background:#eef7ff;border-radius:10px;padding:5px 8px;font-size:.9rem;font-weight:800;text-align:center;}
 #confetti{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:9;}
 .confetti-bit{position:absolute;top:-40px;animation:fall 1.8s linear forwards;}
@@ -111,9 +113,8 @@ h1{font-size:1.15rem;}
       <div class="theme" id="theme">主题：--</div>
       <ul class="clues" id="clues"></ul>
     </div>
-    <div class="question" id="question">--</div>
+    <div class="question" id="question" data-speak="--">--</div>
     <div class="options" id="options"></div>
-    <button class="hint-btn" id="hintBtn" type="button">💡 提示</button>
     <div class="solution hide" id="solution"></div>
     <div class="feedback" id="feedback"></div>
   </div>
@@ -316,10 +317,9 @@ var PUZZLES = [
  "solution":{"爷爷":"4号房间","奶奶":"2号房间","爸爸":"5号房间","妈妈":"1号房间","小满":"3号房间"}}
 ];
 var KEY_BEST='pclue.best';
-var state={correct:0,streak:0,best:0,wrong:0,locked:false,current:null,clueShown:0,timer:null,lastIdx:-1};
+var state={correct:0,streak:0,best:0,wrong:0,locked:false,current:null,timer:null,lastIdx:-1};
 var feedbackEl=document.getElementById('feedback');
 var optionsEl=document.getElementById('options');
-var hintBtn=document.getElementById('hintBtn');
 var solutionEl=document.getElementById('solution');
 
 function safeGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
@@ -362,21 +362,23 @@ function showSolution(p){
   var items=p.people.map(function(name){
     return '<div class="sol-item">'+esc(name)+' → '+esc(p.solution[name])+'</div>';
   }).join('');
-  solutionEl.innerHTML='<div class="sol-title">✅ 完整答案</div>'+items;
+  solutionEl.innerHTML='<div class="sol-title">✅ 完整答案</div>'+
+    '<div class="sol-why">推理：把 ' + p.clues.length + ' 条线索逐条对照，和线索矛盾的选项一个个排除，最后只有「' + esc(p.answer) + '」全部符合。</div>'+items;
   solutionEl.classList.remove('hide');
 }
 function renderPuzzle(){
   var p=state.current;
   document.getElementById('theme').innerHTML='🧩 主题：'+esc(p.theme)+' · 线索 '+p.clues.length+' 条'+'<span class="level-tag '+(p.level==='challenge'?'challenge':'basic')+'">'+(p.level==='challenge'?'挑战':'常规')+'</span>';
+  /* 所有线索一次性显示，不折叠、不逐条点开 */
   document.getElementById('clues').innerHTML=p.clues.map(function(c,i){
-    return '<li class="locked" data-i="'+i+'"><span class="clue-num">'+(i+1)+'</span><span>❓ 线索 '+(i+1)+' · 点「提示」查看</span></li>';
+    return '<li class="clue" data-i="'+i+'"><span class="clue-num">'+(i+1)+'</span><span>'+esc(c)+'</span></li>';
   }).join('');
-  document.getElementById('question').textContent=p.q;
+  var qEl=document.getElementById('question');
+  qEl.textContent=p.q;
+  qEl.setAttribute('data-speak', p.q+'。线索：'+p.clues.join('。'));
   optionsEl.innerHTML=p.options.map(function(o){
     return '<button class="opt" type="button" data-val="'+esc(o)+'">'+esc(o)+'</button>';
   }).join('');
-  state.clueShown=0;
-  updateHintBtn();
   solutionEl.classList.add('hide');
   clearFeedback();
 }
@@ -400,7 +402,6 @@ function initClues(){
   state.streak=0;
   renderStats();
   optionsEl.addEventListener('click',onOptionClick);
-  hintBtn.addEventListener('click',useHint);
   resetClues();
 }
 function onOptionClick(e){
@@ -426,42 +427,12 @@ function onOptionClick(e){
     void btn.offsetWidth;
     btn.classList.add('wrong','shake');
     btn.disabled=true;
-    feedback('❌ 不对哦，点「提示」看更多线索再试试',false);
+    feedback('❌ 再读一遍上面的线索，想一想哦',false);
     state.wrong++;
     state.streak=0;
     renderStats();
   }
 }
-function updateHintBtn(){
-  var total=state.current?state.current.clues.length:0;
-  var left=total-state.clueShown;
-  if(left<=0){
-    hintBtn.disabled=true;
-    hintBtn.textContent='🔍 线索都找齐啦，开始推理吧';
-  }else{
-    hintBtn.disabled=false;
-    hintBtn.textContent='💡 提示 · 看下一条线索（还剩 '+left+' 条）';
-  }
-}
-function useHint(){
-  if(state.locked)return;
-  var p=state.current;
-  if(state.clueShown>=p.clues.length)return;
-  var li=document.querySelector('#clues li[data-i="'+state.clueShown+'"]');
-  if(li){
-    li.classList.remove('locked','pop');
-    void li.offsetWidth;
-    li.classList.add('pop');
-    li.querySelector('span:last-child').innerHTML='💡 '+esc(p.clues[state.clueShown]);
-  }
-  state.clueShown++;
-  speak(p.clues[state.clueShown-1]);
-  if(state.clueShown>=p.clues.length){
-    feedback('线索全出来啦，想一想答案是什么？',true);
-  }
-  updateHintBtn();
-}
-
 initClues();
 </script>
 <script>
@@ -469,5 +440,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

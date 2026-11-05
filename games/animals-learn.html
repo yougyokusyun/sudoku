@@ -109,6 +109,7 @@ h1{font-size:1.15rem;}
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
 <script src="../deck.js"></script>
+<script src="../animal-voice.js"></script>
 </head>
 <body>
 <header>
@@ -238,7 +239,7 @@ function renderPage(dir, readAloud) {
   window.__index = idx;
   window.__animal = a.n;
 
-  if (readAloud && !quizMode) say(a.n + '，' + a.s + '！');
+  if (readAloud && !quizMode) XNLY.animalVoice.play(a.f, a.n, '，' + a.s + '！');
 }
 
 /* 左右切换上一只 / 下一只，循环往复 */
@@ -256,6 +257,7 @@ function newQuiz() {
   do { target = targetDeck.next(); guard++; }
   while (target.n === ANIMALS[idx].n && guard < 30);
   elPrompt.textContent = '找一找' + target.n + '👇';
+  XNLY.animalVoice.preload([target.f]);
   voiceSpeak(target.n + '在哪里呀？点一点它');
   feedback('');
   window.__target = target.n;
@@ -274,7 +276,7 @@ function tapAnimal() {
       streak++;
       if (streak > best) { best = streak; writeNum('panimal.best', best); }
       updateStats();
-      say('对啦，这是' + a.n + '，' + a.s + '！');
+      XNLY.animalVoice.play(a.f, a.n, '，' + a.s + '！');
       feedback('🎉 对啦，这是' + a.n + '，' + a.s + '！', 'ok');
       window.__last = a.n;
       timer = setTimeout(function () {
@@ -296,7 +298,7 @@ function tapAnimal() {
   void elPage.offsetWidth;
   elPage.classList.add('bounce');
   setTimeout(function () { elPage.classList.remove('bounce'); }, 560);
-  say(a.n + '，' + a.s + '！');
+  XNLY.animalVoice.play(a.f, a.n, '，' + a.s + '！');
   feedback(a.n + '，' + a.s + '！', 'ok');
   window.__last = a.n;
 }
@@ -416,5 +418,14 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script>
+(function () {
+  var d = document.createElement('div');
+  d.textContent = '🔈 本页动物叫声为合成近似音，非真实录音';
+  d.style.cssText = 'margin:14px auto 8px;text-align:center;font-size:12px;color:#8899aa;';
+  document.body.appendChild(d);
+})();
+</script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

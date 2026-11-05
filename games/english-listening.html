@@ -53,9 +53,6 @@ h1{font-size:1.15rem;}
 .feedback{min-height:40px;font-size:1rem;font-weight:800;text-align:center;line-height:1.45;}
 .ok{color:var(--ok);} .bad{color:var(--bad);}
 .feedback small{display:block;font-size:.78rem;font-weight:700;color:#7b8ea8;margin-top:3px;}
-.replay{min-height:44px;padding:0 18px;border-radius:999px;border:2px solid rgba(2,136,209,.25);
-  background:#fff;color:#0277bd;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;
-  box-shadow:0 4px 12px rgba(36,59,83,.08);}
 .hint{font-size:.72rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
 .summary{display:none;flex-direction:column;align-items:center;gap:8px;width:min(520px,100%);
   background:#fff;border:2px solid var(--line);border-radius:18px;padding:16px 18px;text-align:center;
@@ -97,9 +94,8 @@ h1{font-size:1.15rem;}
 <div class="chipbar" id="gradeBar"></div>
 
 <div class="stage">
-  <div class="prompt" id="prompt">🎧 听一听，选出正确的答案<span>没听清可以点下面的 🔊 再听一遍</span></div>
+  <div class="prompt" id="prompt">🎧 听一听，选出正确的答案<span>没听清可以点右上角 🔊 再听一遍</span></div>
   <div class="opts" id="opts"></div>
-  <button class="replay" id="replay" type="button">🔊 再听一遍</button>
   <div class="feedback" id="feedback"></div>
   <div class="summary" id="summary"></div>
   <div class="hint">没有声音时，请检查设备是否安装了英文语音包</div>
@@ -352,7 +348,6 @@ var elOpts = document.getElementById('opts');
 var elFb = document.getElementById('feedback');
 var elStreak = document.getElementById('streak');
 var elBest = document.getElementById('best');
-var elReplay = document.getElementById('replay');
 var elBar = document.getElementById('gradeBar');
 var elMode = document.getElementById('modeBar');
 var elSummary = document.getElementById('summary');
@@ -476,7 +471,6 @@ function hideSummary() {
   elSummary.classList.remove('show');
   elSummary.innerHTML = '';
   elOpts.style.display = '';
-  elReplay.style.display = '';
 }
 function showSummary() {
   clearTimeout(state.timer);
@@ -492,7 +486,6 @@ function showSummary() {
     '<button class="sumagain" id="sumAgain" type="button">🔁 再练一轮</button>';
   elSummary.classList.add('show');
   elOpts.style.display = 'none';
-  elReplay.style.display = 'none';
   elPrompt.innerHTML = '🎧 细节辨图完成<span>看看哪一档还需要多听几遍</span>';
   setFb('', null);
   speakZh('这一轮答对了' + s.right + '题，正确率百分之' + acc + '。');
@@ -576,8 +569,6 @@ function answer(v, btn) {
   }
 }
 
-elReplay.addEventListener('click', replayNow);
-
 (function init() {
   var b = parseInt(safeGet(KEY_BEST), 10);
   state.best = isNaN(b) || b < 0 ? 0 : b;
@@ -607,5 +598,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

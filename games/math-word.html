@@ -107,7 +107,6 @@ h1{font-size:1.15rem;}
   <div class="feedback" id="feedback"></div>
   <div class="exp" id="exp"></div>
   <div class="controls">
-    <button class="btn warn" id="hear" type="button">🔊 再听一遍</button>
     <button class="btn primary" id="next" type="button">➡️ 下一题</button>
   </div>
 </div>
@@ -315,9 +314,6 @@ function tap(btn, val) {
   }
 }
 
-document.getElementById('hear').addEventListener('click', function () {
-  if (state.cur) speak(state.cur.q);
-});
 document.getElementById('next').addEventListener('click', function () {
   state.streak = 0; elStreak.textContent = '0';
   newRound();
@@ -335,5 +331,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

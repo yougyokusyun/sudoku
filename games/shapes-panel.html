@@ -29,7 +29,7 @@ h1{font-size:1.15rem;}
 .prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a5f78;}
 
 /* 上方嵌板：虚线框里是形状凹槽 */
-.board{position:relative;width:min(34vh,190px);height:min(34vh,190px);border-radius:26px;
+.board{position:relative;width:min(38vh,260px);height:min(38vh,260px);border-radius:26px;
   background:repeating-linear-gradient(45deg,#f7f9fc,#f7f9fc 8px,#eef2f8 8px,#eef2f8 16px);
   border:3px dashed rgba(36,59,83,.22);display:flex;align-items:center;justify-content:center;
   box-shadow:inset 0 3px 10px rgba(36,59,83,.10);}
@@ -55,7 +55,7 @@ h1{font-size:1.15rem;}
 
 /* 下方 3 个形状块 */
 .blocks{display:flex;justify-content:center;align-items:center;gap:clamp(10px,2.6vw,20px);flex-wrap:wrap;}
-.block{width:96px;height:96px;border:0;background:transparent;padding:8px;cursor:pointer;
+.block{width:120px;height:120px;border:0;background:transparent;padding:8px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;border-radius:20px;
   filter:drop-shadow(0 6px 12px rgba(36,59,83,.18));
   transition:transform .14s ease,filter .18s ease;}
@@ -322,5 +322,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

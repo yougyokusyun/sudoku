@@ -96,7 +96,6 @@ h1{font-size:1.15rem;}
   <div class="exp" id="exp"></div>
 </div>
 <div class="controls">
-  <button class="btn" id="hear" type="button">🔊 再读一遍</button>
   <button class="btn primary" id="next" type="button">➡️ 下一题</button>
 </div>
 <script>
@@ -280,7 +279,6 @@ function nextQ() {
   if (state.no >= QS.length) { QS = buildQuestions(); qDeck = XNLY.deck.make(QS, 'spatial', { head: 5 }); state.no = 0; }
   render();
 }
-document.getElementById('hear').addEventListener('click', function () { say(state.cur.q); });
 document.getElementById('next').addEventListener('click', nextQ);
 
 render();
@@ -291,5 +289,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

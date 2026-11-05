@@ -28,8 +28,13 @@
  * v30 变化：首页改为幼儿园 / 低年级 / 高年级 / 家长 四 tab，parent.html 年龄档同步，页面无新增。
  * v31 变化：逻辑推理页扩到 40 道（30 常规 + 10 挑战），逐题唯一解已校验，页面无新增。
  * v32 变化：新增共享洗牌模块 deck.js 并加入预缓存；幼儿园 / 低年级题库型页面开局顺序随机且不连续重复。
+ * v33 变化：幼儿园档可用性改造——大图选项 kidopt.js、一次点一步排序 kidseq.js、
+ *           动物叫声 animal-voice.js、全站右上角回首页 homebtn.js，均加入预缓存。
+ * v34 变化：连续语速滑杆（0.5~2.0）、首页 5 入口单排、右上角统一工具条（🏠+🔊）、
+ *           形状页首题修复、天气页 SVG 场景、全站配图放大、单词图配照片兜底结构、
+ *           打地鼠放慢、逻辑推理线索全显；新增 img/words/index.json 入预缓存（照片不入）。
  */
-var CACHE = 'xnly-v32';
+var CACHE = 'xnly-v34';
 
 var PRECACHE = [
   './',
@@ -103,8 +108,14 @@ var PRECACHE = [
   'games/xiangxingzi.html',
   'games/yuwen-baike.html',
   'games/yuwen-data.js',
+  'animal-voice.js',
+  'audio/animals/index.json',
   'deck.js',
+  'homebtn.js',
+  'img/words/index.json',
   'index.html',
+  'kidopt.js',
+  'kidseq.js',
   'manifest.json',
   'parent.html',
   'puzzles.js',

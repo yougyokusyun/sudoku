@@ -67,8 +67,8 @@ h1{font-size:1.15rem;}
 
 /* iPad：场景里的实物图放大，方便点数与辨认 */
 @media (min-width:700px){
-  .thing .ph{width:clamp(88px,9vw,116px);height:clamp(88px,9vw,116px);border-width:4px;}
-  .thing .e{font-size:clamp(2.2rem,4.6vw,2.9rem);}
+  .thing .ph{width:clamp(120px,9vw,150px);height:clamp(120px,9vw,150px);border-width:4px;}
+  .thing .e{font-size:clamp(2.6rem,4.6vw,3.4rem);}
   .thing .lb{font-size:.8rem;}
 }
 
@@ -319,5 +319,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

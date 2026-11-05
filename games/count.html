@@ -30,16 +30,16 @@ h1{font-size:1.15rem;}
 
 /* 实物区：数量越多格子越小，保证 1~10 个都放得下 */
 .items{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:6px;
-  width:min(76vw,340px);min-height:120px;padding:8px;border-radius:20px;
+  width:min(76vw,420px);min-height:120px;padding:8px;border-radius:20px;
   background:rgba(255,236,205,.45);border:2px dashed rgba(224,138,0,.28);}
-.items .it{line-height:1;font-size:2.6rem;animation:popIn .25s ease;}
+.items .it{line-height:1;font-size:3.2rem;animation:popIn .25s ease;}
 .items[data-n="5"] .it,.items[data-n="6"] .it{font-size:2.3rem;}
 .items[data-n="7"] .it,.items[data-n="8"] .it{font-size:2rem;}
 .items[data-n="9"] .it,.items[data-n="10"] .it{font-size:1.75rem;}
 
 .nums{display:flex;justify-content:center;align-items:center;gap:clamp(10px,2.6vw,18px);flex-wrap:wrap;}
-.num{width:88px;height:88px;border-radius:22px;border:2px solid rgba(36,59,83,.10);background:#fff;
-  color:#3d5673;font-family:inherit;font-size:2.1rem;font-weight:900;cursor:pointer;
+.num{width:120px;height:120px;border-radius:22px;border:2px solid rgba(36,59,83,.10);background:#fff;
+  color:#3d5673;font-family:inherit;font-size:2.6rem;font-weight:900;cursor:pointer;
   box-shadow:0 6px 14px rgba(36,59,83,.10);transition:transform .14s ease,border-color .18s ease,background .18s ease;}
 .num:active{transform:scale(.95);}
 .num.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;animation:pop .45s ease;}
@@ -344,5 +344,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

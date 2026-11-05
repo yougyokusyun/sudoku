@@ -107,7 +107,6 @@ h1{font-size:1.15rem;}
   <div class="feedback" id="feedback"></div>
   <div class="exp" id="exp"></div>
   <div class="controls">
-    <button class="btn warn" id="hear" type="button">🔊 再听一遍</button>
     <button class="btn primary" id="next" type="button">➡️ 下一题</button>
   </div>
 </div>
@@ -389,9 +388,6 @@ function tap(btn, v) {
     state.timer = setTimeout(newRound, 3200);
   }
 }
-document.getElementById('hear').addEventListener('click', function () {
-  if (state.cur) speak(state.cur[0]);
-});
 document.getElementById('next').addEventListener('click', newRound);
 Array.prototype.forEach.call(document.querySelectorAll('.cbtn'), function (b) {
   b.addEventListener('click', function () { setCat(Number(b.dataset.c)); });
@@ -405,5 +401,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

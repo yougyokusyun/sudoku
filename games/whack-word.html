@@ -69,6 +69,10 @@ h1{font-size:1.15rem;}
 .again{min-height:46px;border-radius:999px;border:none;background:linear-gradient(135deg,#a1887f,#6d4c41);
   color:#fff;font-family:inherit;font-weight:900;font-size:.95rem;cursor:pointer;box-shadow:0 8px 18px rgba(93,64,55,.25);}
 .tip{font-size:.7rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
+.paces{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.pace{min-height:44px;padding:0 16px;border-radius:999px;border:2px solid rgba(141,110,99,.22);
+  background:#fff;color:#6d5145;font-family:inherit;font-weight:900;font-size:.86rem;cursor:pointer;}
+.pace.on{background:#6d4c41;border-color:#6d4c41;color:#fff;}
 .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:0;
   overflow-y:auto;width:100%;}
 @media (max-width:520px){ .board{gap:9px;} .hole .card{font-size:.9rem;} }
@@ -97,13 +101,17 @@ h1{font-size:1.15rem;}
     <span class="lab" id="goalLab">目标词</span>
     <span class="val" id="goalVal">狗</span>
   </div>
-  <button class="replay" id="replay" type="button">🔊 听目标词</button>
+</div>
+<div class="paces" id="paces">
+  <button class="pace on" type="button" data-p="slow">🐢 慢</button>
+  <button class="pace" type="button" data-p="mid">🚶 中</button>
+  <button class="pace" type="button" data-p="fast">🐇 快</button>
 </div>
 <div class="stage">
   <div class="board" id="board"></div>
   <div class="feedback" id="feedback"></div>
   <div class="summary" id="summary"></div>
-  <div class="tip">30 秒内点中 10 次就结束 · 速度会一点点变快</div>
+  <div class="tip">30 秒内点中 10 次就结束 · 三档速度，默认最慢 · 目标词会停留 3 个冒泡周期</div>
 </div>
 
 <script>
@@ -132,8 +140,20 @@ Object.keys(BANK).forEach(function (cat) {
 });
 
 var HITS_LIMIT = 10, TIME_LIMIT = 30, HOLES = 6;
+/* 三档固定节奏，默认最慢；没有任何“越玩越快”的加速逻辑 */
+var PACE = {
+  slow: { spawn: 1700, life: 2500, max: 2 },
+  mid:  { spawn: 1500, life: 2300, max: 2 },
+  fast: { spawn: 1400, life: 2200, max: 3 }
+};
+function readPace() {
+  try { var k = localStorage.getItem('xnly_whack_pace'); if (PACE[k]) return k; } catch (e) { }
+  return 'slow';
+}
 var state = { started: false, ended: false, hits: 0, taps: 0, target: null, targetIsCn: true,
-  fastest: 0, tick: null, wave: null, cards: [], lockUntil: 0 };
+  fastest: 0, tick: null, wave: null, cards: [], lockUntil: 0,
+  paceKey: readPace(), cycles: 0 };
+function paceInfo() { return PACE[state.paceKey] || PACE.slow; }
 
 var elBoard = document.getElementById('board');
 var elGoalLab = document.getElementById('goalLab');
@@ -185,7 +205,9 @@ var holes = [];
 var catDeck = XNLY.deck.make(Object.keys(CATS), 'whack-word.cats', { head: 3 });
 var catWordDecks = {};
 
-function newTarget() {
+function newTarget(force) {
+  if (!force && state.target && state.cycles < 3) return;   /* 目标词至少停留 3 个冒泡周期 */
+  state.cycles = 0;
   var cat = catDeck.next();
   if (!catWordDecks[cat]) {
     catWordDecks[cat] = XNLY.deck.make(CATS[cat], 'whack-word.cat.' + cat, { head: 5 });
@@ -199,11 +221,17 @@ function newTarget() {
 }
 
 function cardsForWave() {
+  (window.__whackSpawns = window.__whackSpawns || []).push(Date.now());
+  state.cycles++;
+  if (state.cycles > 3) {          /* 3 个周期后换目标，整轮重排 */
+    clearCards();
+    newTarget(true);
+  }
   var withCard = holes.filter(function (h) { return h.card._card; });
   var empty = holes.filter(function (h) { return !h.card._card; });
   if (!empty.length) return { empty: [], withCard: withCard };
   var needCorrect = !withCard.some(function (h) { return h.card._card && h.card._card.ok; });
-  var n = Math.min(empty.length, 2 + rand(2));
+  var n = Math.min(empty.length, paceInfo().max);
   var chosen = shuffle(empty).slice(0, n);
   var target = state.target;
   var pool = CATS[target.cat].filter(function (w) { return w.en !== target.en; });
@@ -230,7 +258,7 @@ function showCard(h, w, ok) {
   h.card._card = { word: w, ok: ok, born: Date.now() };
   h.card.textContent = text;
   h.card.className = 'card up ' + (state.targetIsCn ? 'en' : 'cn');
-  var life = Math.max(1050, 1800 - state.hits * 70);
+  var life = paceInfo().life;   /* 固定停留 2200~2500ms，不随得分缩短 */
   h.card._hideTimer = setTimeout(function () {
     if (!h.card._card) return;
     h.card._card = null;
@@ -270,9 +298,7 @@ function onHole(i, e) {
     elHit.textContent = state.hits;
     setTimeout(function () { h.card.className = 'card'; h.card.textContent = ''; }, 240);
     if (state.hits >= HITS_LIMIT) { endGame(); return; }
-    newTarget();
-    clearCards();
-    spawnSoon(260);
+    /* 答对后不立刻换目标词，也不提前补位：等下一个固定冒泡周期 */
   } else {
     h.card._card = null;
     h.card.className = 'card';
@@ -296,7 +322,7 @@ function waveLoop() {
   state.wave = setInterval(function () {
     if (!state.started || state.ended) return;
     cardsForWave();
-  }, Math.max(760, 1180 - state.hits * 55));
+  }, paceInfo().spawn);   /* 固定间隔，不随得分加速 */
 }
 
 function startGame() {
@@ -359,10 +385,24 @@ function newGame() {
   elSummary.classList.remove('show'); elSummary.innerHTML = '';
   elRule.innerHTML = '看上面的目标词，点中意思一样的卡片 · 点错只提示，不扣分 · 第一次点击开始';
   elRule.style.color = '#6d5145';
-  newTarget();
+  state.cycles = 0;
+  newTarget(true);
 }
 
-document.getElementById('replay').addEventListener('click', speakTarget);
+/* 三档速度：默认最慢，存 localStorage，切换后立即生效 */
+function setPace(k) {
+  if (!PACE[k]) return;
+  state.paceKey = k;
+  try { localStorage.setItem('xnly_whack_pace', k); } catch (e) { }
+  Array.prototype.forEach.call(document.querySelectorAll('.pace'), function (b) {
+    b.classList.toggle('on', b.dataset.p === k);
+  });
+  if (state.started && !state.ended) waveLoop();
+}
+Array.prototype.forEach.call(document.querySelectorAll('.pace'), function (b) {
+  b.addEventListener('click', function () { setPace(b.dataset.p); });
+});
+setPace(state.paceKey);
 
 document.addEventListener('pointerdown', function () {
   if (!state.ended && !state.started) startGame();
@@ -383,5 +423,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

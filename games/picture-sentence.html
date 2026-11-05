@@ -38,12 +38,12 @@ h1{font-size:1.15rem;}
   min-height:0;overflow-y:auto;width:100%;}
 .fig{width:min(460px,100%);background:#fff;border:2px solid rgba(8,145,178,.16);border-radius:20px;
   padding:12px;text-align:center;box-shadow:0 8px 22px rgba(36,59,83,.09);}
-.fig .art{display:block;font-size:4.2rem;line-height:1.15;letter-spacing:4px;}
+.fig .art{display:block;font-size:6rem;line-height:1.15;letter-spacing:4px;}
 .fig .cap{display:block;font-size:.72rem;font-weight:800;color:#8aa0b8;margin-top:2px;}
-.prompt{font-size:.95rem;font-weight:900;color:#4a6076;text-align:center;line-height:1.5;}
+.prompt{font-size:1.3rem;font-weight:900;color:#4a6076;text-align:center;line-height:1.5;}
 .opts{display:flex;flex-direction:column;gap:9px;width:min(600px,100%);}
 .opt{min-height:56px;border:2px solid var(--line);border-radius:14px;background:#fff;padding:8px 14px;
-  font-family:inherit;font-size:.98rem;font-weight:800;line-height:1.4;color:#26425c;text-align:left;cursor:pointer;
+  font-family:inherit;font-size:1.4rem;font-weight:800;line-height:1.4;color:#26425c;text-align:left;cursor:pointer;
   box-shadow:0 4px 12px rgba(36,59,83,.06);transition:transform .14s,border-color .18s,background .18s;}
 .opt:active{transform:scale(.985);}
 .opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
@@ -52,9 +52,6 @@ h1{font-size:1.15rem;}
 .feedback{min-height:36px;font-size:.95rem;font-weight:800;text-align:center;line-height:1.45;}
 .ok{color:var(--ok);} .bad{color:var(--bad);}
 .feedback small{display:block;font-size:.76rem;font-weight:700;color:#7b8ea8;margin-top:2px;}
-.replay{min-height:44px;padding:0 18px;border-radius:999px;border:2px solid rgba(8,145,178,.26);
-  background:#fff;color:#0277bd;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;
-  box-shadow:0 4px 12px rgba(36,59,83,.08);}
 .summary{display:none;flex-direction:column;gap:9px;width:min(520px,100%);background:#fff;
   border:2px solid var(--line);border-radius:18px;padding:14px 16px;text-align:center;
   box-shadow:0 10px 26px rgba(36,59,83,.12);}
@@ -92,7 +89,6 @@ h1{font-size:1.15rem;}
   </div>
   <div class="prompt" id="prompt">点一点句子就能听它怎么读</div>
   <div class="opts" id="opts"></div>
-  <button class="replay" id="replay" type="button">🔊 听三个句子</button>
   <div class="feedback" id="feedback"></div>
   <div class="summary" id="summary"></div>
   <div class="tip">选错可以再试，不扣分 · 点选项会朗读英文</div>
@@ -319,12 +315,6 @@ function finish() {
   say('太棒了，这个年级的看图题都练完啦。');
 }
 
-document.getElementById('replay').addEventListener('click', function () {
-  if (!state.cur) return;
-  say('看图，从这三个句子里选出正确的一句。');
-  state.cur.opts.forEach(function (o) { say(o.t, { lang: 'en-US', queue: true }); });
-});
-
 /* 首次点击补读 */
 var firstTap = false;
 document.addEventListener('pointerdown', function () {
@@ -344,5 +334,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

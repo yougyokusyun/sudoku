@@ -26,18 +26,19 @@ h1{font-size:1.15rem;}
 .scene{width:100%;max-width:760px;background:#fff;border-radius:24px;padding:14px 16px;
   box-shadow:0 10px 26px rgba(36,59,83,.12);text-align:center;}
 .scene .emo{font-size:clamp(2.4rem,9vw,3.4rem);line-height:1.2;}
-.qtext{font-size:clamp(1rem,2.6vw,1.25rem);font-weight:900;margin-top:4px;line-height:1.45;}
+.qtext{font-size:clamp(1.05rem,2.8vw,1.35rem);font-weight:900;margin-top:4px;line-height:1.4;}
+.qfull{font-size:.92rem;font-weight:700;color:#6b7f95;margin-top:2px;line-height:1.35;}
 .opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;width:100%;max-width:760px;}
 .opt{min-height:70px;border:2px solid rgba(36,59,83,.10);border-radius:18px;background:#fff;
   font-family:inherit;font-weight:900;font-size:clamp(.9rem,2.4vw,1.05rem);color:var(--ink);
   cursor:pointer;padding:8px 10px;box-shadow:0 5px 14px rgba(36,59,83,.10);line-height:1.35;}
 .opt:active{transform:scale(.97);}
 .opt.good{border-color:var(--ok);background:#eaf8ee;color:#1b7c33;animation:pop .45s ease;}
-.opt.bad{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
+.opt.bad{border-color:#e6b800;background:#fff8e1;animation:shake .45s ease;}
 .opt.faded{opacity:.45;}
 .feedback{min-height:30px;font-size:1.05rem;font-weight:900;text-align:center;}
 .feedback.ok{color:var(--ok);}
-.feedback.bad{color:var(--bad);}
+.feedback.bad{color:#b7791f;}
 .exp{display:none;width:100%;max-width:760px;background:#fffdf3;border:2px solid #ffe4a3;border-radius:16px;
   padding:10px 14px;font-size:clamp(.88rem,2.2vw,1rem);font-weight:700;line-height:1.5;color:#7a5a00;}
 .exp.show{display:block;}
@@ -51,9 +52,9 @@ h1{font-size:1.15rem;}
 @media (min-width:700px){
   body{padding:18px 26px;gap:14px;}
   h1{font-size:1.4rem;}
-  .qtext{font-size:1.4rem;}
-  .opt{min-height:84px;font-size:1.15rem;}
-  .scene .emo{font-size:4rem;}
+  .scene .emo{font-size:5.6rem;}
+  .opt{min-height:84px;font-size:1.4rem;}
+  .qtext{font-size:1.45rem;}
 }
 @media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .opt{min-height:56px;} }
 </style>
@@ -68,6 +69,7 @@ h1{font-size:1.15rem;}
 <script src="../voice.js"></script>
 <script src="../sound.js"></script>
 <script src="../deck.js"></script>
+<script src="../kidopt.js"></script>
 </head>
 <body>
 <header>
@@ -82,19 +84,20 @@ h1{font-size:1.15rem;}
   <div class="scene">
     <div class="emo" id="emo">🚦</div>
     <div class="qtext" id="qtext"></div>
+    <div class="qfull" id="qfull"></div>
   </div>
   <div class="opts" id="opts"></div>
   <div class="feedback" id="feedback"></div>
   <div class="exp" id="exp"></div>
 </div>
 <div class="controls">
-  <button class="btn" id="hear" type="button">🔊 再读一遍</button>
   <button class="btn primary" id="next" type="button">➡️ 下一题</button>
 </div>
 <script>
 var CAN = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
 function say(t) {
   if (!t) return;
+  window.__lastSayTime = Date.now();
   try {
     if (window.XNLY && XNLY.voice && XNLY.voice.speak) { XNLY.voice.speak(String(t)); return; }
     if (!CAN) return;
@@ -151,12 +154,26 @@ var Q = [
   ['🙋','遇到危险，最该做的是什么？',['大声呼救找大人','自己躲起来','谁也不告诉'],'大声呼救找大人','大声呼救，让大人来帮忙。']
 ];
 
+/* 每题 ≤10 字短问句（屏幕显示短句，朗读上面完整题干） */
+var SHORTQ = [
+  '过马路走哪里？','红灯亮了怎么办？','绿灯亮先做什么？','马路上能玩球吗？','陌生人给糖怎么办？',
+  '陌生人带你走？','陌生人敲门怎么办？','能戳插座孔吗？','手湿能按开关吗？','热水壶能摸吗？',
+  '药片能吃吗？','清洁剂能喝吗？','能玩打火机吗？','看到火柴怎么办？','超市走散怎么办？',
+  '公园走丢找谁？','要记住什么？','危险时找谁？','被困电梯怎么办？','家里着火先做什么？',
+  '楼道有烟怎么走？','火警电话是多少？','报警打哪个电话？','急救打哪个电话？','有人落水怎么办？',
+  '能去河边玩吗？','游泳应该怎么做？','怎么拔插头？','剪刀怎么递给别人？','小珠子能放嘴里吗？',
+  '噎住了怎么办？','扶梯上能跑吗？','能爬阳台栏杆吗？','能趴窗户探身吗？','陌生人要拍照怎么办？',
+  '陌生人请你带路怎么办？','坐汽车要怎么做？','骑车要戴什么？','着火跟什么标志走？','遇到危险最该做什么？'
+];
+Q.forEach(function (row, i) { row.short = SHORTQ[i] || row[1]; });
+
 var state = { no: 0, right: 0, locked: false, cur: null };
 var qDeck = XNLY.deck.make(Q, 'safety', { head: 5 });
 var elQno = document.getElementById('qno');
 var elRight = document.getElementById('right');
 var elEmo = document.getElementById('emo');
 var elQ = document.getElementById('qtext');
+var elQF = document.getElementById('qfull');
 var elOpts = document.getElementById('opts');
 var elFb = document.getElementById('feedback');
 var elExp = document.getElementById('exp');
@@ -169,16 +186,12 @@ function render() {
   elQno.textContent = state.no + 1;
   elRight.textContent = state.right;
   elEmo.textContent = it[0];
-  elQ.textContent = it[1];
+  elQ.textContent = it.short || it[1];
+  elQF.textContent = it[1];
   elFb.className = 'feedback'; elFb.textContent = '';
   elExp.className = 'exp'; elExp.textContent = '';
   elOpts.innerHTML = '';
-  shuffle(it[2]).forEach(function (o) {
-    var b = document.createElement('button');
-    b.type = 'button'; b.className = 'opt'; b.textContent = o;
-    b.addEventListener('click', function () { choose(b, o, it); });
-    elOpts.appendChild(b);
-  });
+  XNLY.kid.build(elOpts, shuffle(it[2]), function (b, o) { choose(b, o, it); });
   say(it[1]);
 }
 
@@ -192,14 +205,14 @@ function choose(btn, o, it) {
     mark('right');
     elFb.className = 'feedback ok'; elFb.textContent = '✅ 答对啦！';
     elExp.textContent = '💡 ' + it[4]; elExp.className = 'exp show';
-    say('答对啦。' + it[4]);
+    say('真棒！' + it[4]);
   } else {
     btn.classList.add('bad');
     setTimeout(function () { btn.classList.remove('bad'); }, 500);
     mark('wrong');
-    elFb.className = 'feedback bad'; elFb.textContent = '❌ 再想一想～';
-    say('再想一想。' + it[4]);
+    elFb.className = 'feedback bad'; elFb.textContent = '💛 再试一试';
     elExp.textContent = '💡 ' + it[4]; elExp.className = 'exp show';
+    say('没关系，再试一试。正确的做法是：' + it[3] + '。');
   }
 }
 
@@ -209,11 +222,23 @@ function nextQ() {
   render();
 }
 
-document.getElementById('hear').addEventListener('click', function () { say(current()[1]); });
 document.getElementById('next').addEventListener('click', nextQ);
 
 /* 开局顺序由 qDeck 洗牌决定 */
 render();
+/* 浏览器首次手势前可能拦截自动朗读：第一次触摸时补读题干 */
+var firstTouch = false;
+document.addEventListener('pointerdown', function () {
+  if (firstTouch) return;
+  firstTouch = true;
+  setTimeout(function () {
+    if (Date.now() - (window.__lastSayTime || 0) < 900) return;
+    try {
+      if (window.speechSynthesis && (speechSynthesis.speaking || speechSynthesis.pending)) return;
+    } catch (e) { }
+    say(current()[1]);
+  }, 320);
+}, true);
 window.__safety = { list: Q, state: state };
 </script>
 <script>
@@ -221,5 +246,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

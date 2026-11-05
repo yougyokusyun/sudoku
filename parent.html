@@ -76,6 +76,12 @@ footer{text-align:center;font-size:.74rem;color:#9fb1c6;margin-top:10px;line-hei
     <div class="hint">首页会按这里的选择显示游戏，和首页顶部的 tab 是同一个设置，改完回首页即可看到。</div>
   </div>
 
+  <div class="card" id="speed">
+    <h2>🔊 语速</h2>
+    <div id="speedUI"></div>
+    <div class="hint">0.5 最慢、2.0 最快。拖动时只更新数字，松手会试听一句「这是现在的语速」；设置对全站朗读生效。</div>
+  </div>
+
   <div class="card" id="stats">
     <h2>📊 最近 7 天</h2>
     <div class="kpis" id="kpis"></div>
@@ -215,6 +221,10 @@ footer{text-align:center;font-size:.74rem;color:#9fb1c6;margin-top:10px;line-hei
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
+  /* ---------- 语速滑杆（全站共用 xnly_speed） ---------- */
+  var sui = document.getElementById('speedUI');
+  if (sui && X.voice && X.voice.makeSpeedUI) sui.appendChild(X.voice.makeSpeedUI());
+
   renderStage();
   render();
   document.addEventListener('visibilitychange', function () {
@@ -227,5 +237,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () { }); });
 }
 </script>
+<script src="homebtn.js"></script>
 </body>
 </html>

@@ -31,7 +31,7 @@ h1{font-size:1.15rem;}
 .prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a5f78;}
 
 /* 上方目标：色块，或「红色」这样的名字 */
-.target{width:120px;height:120px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+.target{width:200px;height:200px;border-radius:50%;display:flex;align-items:center;justify-content:center;
   box-shadow:0 8px 20px rgba(36,59,83,.18),inset 0 -6px 14px rgba(0,0,0,.10);
   border:4px solid rgba(255,255,255,.85);animation:popIn .3s ease;}
 .target.word{width:auto;min-width:150px;height:auto;padding:14px 24px;border-radius:24px;background:#fff;
@@ -40,7 +40,7 @@ h1{font-size:1.15rem;}
 .target.win{animation:pop .5s ease;}
 
 .dots{display:flex;justify-content:center;align-items:center;gap:clamp(10px,2.4vw,18px);flex-wrap:wrap;max-width:100%;}
-.dot{width:96px;height:96px;border-radius:50%;border:4px solid rgba(255,255,255,.9);cursor:pointer;
+.dot{width:160px;height:160px;border-radius:50%;border:4px solid rgba(255,255,255,.9);cursor:pointer;
   box-shadow:0 6px 16px rgba(36,59,83,.16);
   transition:transform .15s ease,box-shadow .15s ease,outline-color .2s ease;}
 .dot:active{transform:scale(.94);}
@@ -303,5 +303,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

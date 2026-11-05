@@ -27,23 +27,26 @@ h1{font-size:1.15rem;}
 @media (max-height:430px){ body{padding:8px;gap:6px;} h1{font-size:1rem;} .prompt{font-size:.95rem;} .feedback{min-height:24px;font-size:1rem;} }
 /* 下面的样式按每个游戏自行补充，但请保持上面的变量与动画不变 */
 .choices{display:flex;flex-wrap:wrap;justify-content:center;gap:16px;}
-.choice{width:clamp(88px,30vw,132px);height:clamp(88px,30vw,132px);border:none;border-radius:24px;
+.choice{width:clamp(120px,26vw,180px);height:clamp(120px,26vw,180px);border:none;border-radius:24px;
   background:#fff;box-shadow:0 6px 18px rgba(36,59,83,.13);display:flex;align-items:center;
   justify-content:center;padding:0;cursor:pointer;overflow:hidden;}
 .shape{--s:100px;width:var(--s);height:var(--s);font-size:calc(var(--s)*.8);line-height:1;
   display:flex;align-items:center;justify-content:center;flex:none;}
-.choice .shape{--s:clamp(62px,21vw,100px);}
+.choice .shape{--s:clamp(72px,20vw,132px);}
 .target{background:#fff;border-radius:28px;padding:14px 22px;box-shadow:0 10px 26px rgba(36,59,83,.14);}
-.target .shape{--s:clamp(96px,22vh,150px);}
+.target .shape{--s:clamp(110px,24vh,190px);}
 .sh-circle{border-radius:50%;background:#e63946;}
 .sh-square{border-radius:12px;background:#1e6091;}
 .sh-triangle{clip-path:polygon(50% 0%,0% 100%,100% 100%);background:#f4d03f;}
 .sh-star{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);background:#9b5de5;}
 .sh-heart{background:none;}
-.sh-rect{border-radius:8%;width:100%;height:64%;background:linear-gradient(145deg,#8ee6a8,#22a06b);}
-.sh-ellipse{border-radius:50%;width:100%;height:64%;background:linear-gradient(145deg,#ffc07a,#ee8b1e);}
-.sh-semicircle{border-radius:999px 999px 0 0;width:100%;height:50%;background:linear-gradient(160deg,#8fd3ff,#2f7ed8);}
-.sh-diamond{clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);width:76%;height:76%;
+/* 关键：这些形状的宽高必须用 --s 计算，不能用百分比。
+   目标区和选项区的父容器尺寸不同，百分比会让目标形状算成 0×0（首题空白）
+   或比例与选项不一致，导致“看起来一样却判错”。 */
+.sh-rect{border-radius:8%;width:var(--s);height:calc(var(--s)*.64);background:linear-gradient(145deg,#8ee6a8,#22a06b);}
+.sh-ellipse{border-radius:50%;width:var(--s);height:calc(var(--s)*.64);background:linear-gradient(145deg,#ffc07a,#ee8b1e);}
+.sh-semicircle{border-radius:999px 999px 0 0;width:var(--s);height:calc(var(--s)*.5);background:linear-gradient(160deg,#8fd3ff,#2f7ed8);}
+.sh-diamond{clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);width:calc(var(--s)*.76);height:calc(var(--s)*.76);
   background:linear-gradient(160deg,#ffb3d1,#e0357b);}
 @media (max-height:430px){
   .choice{width:84px;height:84px;border-radius:18px;}
@@ -178,5 +181,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

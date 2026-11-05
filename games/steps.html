@@ -77,6 +77,7 @@ h1{font-size:1.15rem;}
 <link rel="icon" type="image/png" href="../games/img/icon-192.png"><script src="../voice.js"></script>
 <script src="../sound.js"></script>
 <script src="../deck.js"></script>
+<script src="../kidseq.js"></script>
 </head>
 <body>
 <header>
@@ -84,181 +85,51 @@ h1{font-size:1.15rem;}
   <a class="back" href="../index.html">🏠 首页</a>
 </header>
 <div class="stage">
-  <!-- 游戏内容 -->
-  <div class="prompt">按正确的顺序，把卡片放进 1、2、3、4、5 格子</div>
-  <div class="row" id="row"></div>
-  <div class="slots" id="slots"></div>
-  <div class="tools">
-    <button class="tbtn" type="button" id="hint">💡 提示</button>
-    <button class="tbtn" type="button" id="again" style="display:none">🔁 再玩一次</button>
-  </div>
+  <!-- 一次点一步：图卡在上，编号空槽在下 -->
+  <div class="prompt" id="qtext">按顺序点一点：先做什么？</div>
+  <div class="kidseq-pool" id="pool"></div>
+  <div class="kidseq-slots" id="slots"></div>
   <div class="feedback" id="feedback"></div>
 </div>
 <script>
-function pick(a){return a[Math.floor(Math.random()*a.length)];}
-function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}return a;}
-function feedback(text,good){var f=document.getElementById('feedback');f.className='feedback '+(good?'ok':'bad');f.textContent=text;}
-function replay(node,cls){node.classList.remove('pop','shake');void node.offsetWidth;node.classList.add(cls);}
-/* 游戏逻辑 */
-var STEPS=[
-  {order:1,emoji:'🚰',text:'开水龙头'},
-  {order:2,emoji:'🧼',text:'抹肥皂'},
-  {order:3,emoji:'🤲',text:'搓搓手'},
-  {order:4,emoji:'💧',text:'冲干净'},
-  {order:5,emoji:'🧻',text:'擦干手'}
+/* 5 个洗手步骤，分两轮：3 步 + 2 步（单轮不超过 4 步） */
+var STEPS = [
+  { order: 1, emoji: '🚰', text: '开水龙头' },
+  { order: 2, emoji: '🧼', text: '抹肥皂' },
+  { order: 3, emoji: '🤲', text: '搓搓手' },
+  { order: 4, emoji: '💧', text: '冲干净' },
+  { order: 5, emoji: '🧻', text: '擦干手' }
 ];
-function stepText(order){for(var i=0;i<STEPS.length;i++){if(STEPS[i].order===Number(order))return STEPS[i].text;}return '';}
-var row=document.getElementById('row');
-var slotsBox=document.getElementById('slots');
-var hintBtn=document.getElementById('hint');
-var againBtn=document.getElementById('again');
-var filled=0;
-let locked=false;
-var timers=[];
-function schedule(fn,ms){var id=setTimeout(fn,ms);timers.push(id);return id;}
-function clearTimers(){for(var i=0;i<timers.length;i++)clearTimeout(timers[i]);timers=[];}
 
-/* 发牌：固定 5 个洗手步骤（打乱后放上方待选） */
-var stepDeck=XNLY.deck.make(STEPS,'steps',{head:5});
+function itemOf(s) { return { emoji: s.emoji, text: s.text, short: s.text }; }
 
-function deal(){
-  clearTimers();
-  locked=false; filled=0;
-  againBtn.style.display='none';
-  row.innerHTML=''; slotsBox.innerHTML='';
-  for(var n=0;n<STEPS.length;n++){
-    var s=stepDeck.next();
-    var c=document.createElement('button');
-    c.type='button'; c.className='card'; c.dataset.order=s.order;
-    c.innerHTML='<span class="emoji">'+s.emoji+'</span><span class="txt">'+s.text+'</span>';
-    c.onclick=(function(card){return function(){place(card);};})(c);
-    row.appendChild(c);
+var ROUNDS = [
+  {
+    items: STEPS.slice(0, 3).map(itemOf),
+    sentence: '先开水龙头，再抹肥皂，然后搓搓手。'
+  },
+  {
+    items: STEPS.slice(3, 5).map(itemOf),
+    sentence: '先冲干净，再擦干手。'
   }
-  for(var i=1;i<=STEPS.length;i++){
-    var cell=document.createElement('div');
-    cell.className='cell'; cell.dataset.n=i;
-    cell.innerHTML='<span class="num">'+i+'</span>';
-    slotsBox.appendChild(cell);
-  }
-  feedback('按顺序把卡片放进格子吧～', true);
-}
+];
 
-/* 点卡片：尝试放进下一个空格 */
-function place(c){
-  if(locked || c.classList.contains('done')) return;
-  var cell=slotsBox.children[filled];
-  if(!cell) return;
-  if(Number(c.dataset.order)===Number(cell.dataset.n)){
-    cell.appendChild(c);
-    c.classList.add('incell','done');
-    replay(c,'pop');
-    filled++;
-    feedback('✅ 对啦！', true);
-    voiceSpeak('对啦，' + stepText(c.dataset.order));
-    if(filled===slotsBox.children.length) finish();
-  }else{
-    locked=true;
-    var home=Array.prototype.indexOf.call(row.children,c);
-    cell.appendChild(c);
-    c.classList.add('incell','miss');
-    cell.classList.add('flash');
-    feedback('顺序不对哦', false);
-    voiceSpeak(stepText(c.dataset.order) + '，放这里不对哦，再想想');
-    schedule(function(){
-      row.insertBefore(c,row.children[home]||null);
-      c.classList.remove('incell','miss');
-      cell.classList.remove('flash');
-      locked=false;
-    },620);
-  }
-}
+var game = XNLY.kidseq.mount({
+  pool: document.getElementById('pool'),
+  slots: document.getElementById('slots'),
+  prompt: document.getElementById('qtext'),
+  feedback: document.getElementById('feedback'),
+  key: 'steps',
+  rounds: ROUNDS
+});
 
-/* 全部完成 */
-function finish(){
-  locked=true;
-  feedback('🎉 洗手完成！', true);
-  voiceSpeak('全部放对啦，手洗干净了');
-  againBtn.style.display='';
-  celebrate();
-}
-
-/* 撒花 */
-function celebrate(){
-  var box=document.createElement('div');
-  box.className='confetti';
-  for(var i=0;i<14;i++){
-    var s=document.createElement('span');
-    s.textContent=pick(['✨','🎉','⭐','💧','🫧','🌈']);
-    s.style.left=(5+Math.random()*90)+'%';
-    s.style.animationDelay=(Math.random()*0.4)+'s';
-    s.style.fontSize=(0.9+Math.random()*1.1)+'rem';
-    s.style.setProperty('--dx',(Math.random()*90-45)+'px');
-    box.appendChild(s);
-  }
-  document.body.appendChild(box);
-  schedule(function(){box.remove();},1900);
-}
-
-/* 提示：脉冲下一张该放的卡片 */
-hintBtn.onclick=function(){
-  if(locked) return;
-  var target=null;
-  for(var i=0;i<row.children.length;i++){
-    if(Number(row.children[i].dataset.order)===filled+1) target=row.children[i];
-  }
-  if(!target) return;
-  voiceSpeak('下一步是' + stepText(filled+1));
-  target.classList.remove('pulse');
-  void target.offsetWidth;
-  target.classList.add('pulse');
-  schedule(function(){target.classList.remove('pulse');},1700);
-};
-
-againBtn.onclick=function(){ deal(); };
-
-deal();
-
-/* ===== 语音播报：进入先读玩法，右上角 🔊 可随时重听 ===== */
-var VOICE_TEXT = '步骤排序游戏。按洗手正确的顺序，把卡片放进一二三四五号格子。';
-var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
-function voiceSpeak(text) {
-  if (!CAN_VOICE || !text) return;
-  try {
-    window.speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(String(text));
-    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
-    window.speechSynthesis.speak(u);
-  } catch (e) { }
-}
-/* 进游戏自动朗读；若被浏览器拦截，孩子第一次碰屏幕时补读 */
-function voiceEntry() {
-  if (!CAN_VOICE) return;
-  try {
-    var u = new SpeechSynthesisUtterance(VOICE_TEXT);
-    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.12;
-    window.speechSynthesis.speak(u);   /* 不打断正在读的题目，排队播报玩法 */
-  } catch (e) { }
-  setTimeout(function () {
-    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) return;
-    var once = function () { document.removeEventListener('pointerdown', once); voiceSpeak(VOICE_TEXT); };
-    document.addEventListener('pointerdown', once);
-  }, 900);
-}
-(function () {
-  var b = document.createElement('button');
-  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
-  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.1);' +
-    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
-  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
-  var h = document.querySelector('header');
-  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
-})();
-voiceEntry();
+window.__steps = { rounds: ROUNDS, game: game };
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>

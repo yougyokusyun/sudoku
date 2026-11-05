@@ -26,11 +26,11 @@ h1{font-size:1.15rem;}
 .stage{flex:1;min-height:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
   background:rgba(255,255,255,.74);border:2px solid rgba(36,59,83,.08);border-radius:22px;padding:12px;
   box-shadow:0 10px 24px rgba(36,59,83,.08);}
-.prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a5f78;}
+.prompt{font-size:1.25rem;font-weight:800;text-align:center;color:#4a5f78;}
 
 /* 大形状：整块都可点 */
 .shape-btn{border:0;background:transparent;padding:0;cursor:pointer;display:flex;align-items:center;
-  justify-content:center;width:min(46vh,240px);height:min(46vh,240px);max-width:78vw;max-height:78vw;
+  justify-content:center;width:min(44vh,320px);height:min(44vh,320px);max-width:86vw;max-height:86vw;
   transition:transform .12s ease,filter .25s ease;filter:drop-shadow(0 8px 16px rgba(36,59,83,.18));}
 .shape-btn:active{transform:scale(.96);}
 .shape-btn.bounce{animation:bounce .55s ease;}
@@ -58,8 +58,8 @@ h1{font-size:1.15rem;}
 
 /* 认名称模式的 4 个选项 */
 .names{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;}
-.name{min-width:104px;min-height:64px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:18px;
-  background:#fff;color:var(--ink);font-family:inherit;font-weight:900;font-size:1.1rem;cursor:pointer;
+.name{min-width:112px;min-height:64px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:18px;
+  background:#fff;color:var(--ink);font-family:inherit;font-weight:900;font-size:1.25rem;cursor:pointer;
   box-shadow:0 6px 14px rgba(36,59,83,.10);transition:transform .14s ease,border-color .18s ease,background .18s ease;}
 .name:active{transform:scale(.96);}
 .name.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;animation:pop .45s ease;}
@@ -309,5 +309,6 @@ if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.
     navigator.serviceWorker.register('../sw.js').catch(function () { });
 }
 </script>
+<script src="../homebtn.js"></script>
 </body>
 </html>
