@@ -186,23 +186,6 @@
 
         footer { margin-top: 26px; text-align: center; font-size: .76rem; color: #9fb1c6; }
 
-        /* 分区标题 */
-        .sect {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin: 26px 4px 12px;
-            font-size: 1rem;
-            font-weight: 800;
-            color: #3b5370;
-            grid-column: 1 / -1;
-        }
-        .sect.first { margin-top: 0; }
-        .sect .ge { font-size: 1.15rem; line-height: 1; }
-        .sect[hidden] { display: none !important; }
-        .sect .line { flex: 1; height: 1px; background: rgba(36, 59, 83, .14); }
-        .sect .cnt { font-size: .72rem; font-weight: 700; color: #8aa0b8; }
-
         @media (max-width: 380px) {
             .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .card { min-height: 168px; padding: 12px 8px; }
@@ -707,24 +690,18 @@
     return n;
   }
 
-  /* 按科目重排当前 tab 的卡片，并插入分组标题 */
-  function buildGroups(k) {
+  /* 同一科目的卡片相邻：只排序，不插标题、不包容器，保持一整块连续网格 */
+  function orderCards(k) {
+    var SUBI = { chinese: 0, math: 1, english: 2, science: 3, game: 4 };
     var vis = cards.filter(function (c) { return inStage(c, k); });
-    var first = true;
-    SUBS.forEach(function (s) {
-      var arr = vis.filter(function (c) { return subOf(c) === s.k; });
-      if (!arr.length) return;
-      arr.sort(function (a, b) {
-        return (lvOf(a) - lvOf(b)) || (Number(a.dataset.oi) - Number(b.dataset.oi));
-      });
-      var head = document.createElement('div');
-      head.className = 'sect' + (first ? ' first' : '');
-      head.dataset.sub = s.k;
-      head.innerHTML = '<span class="ge" aria-hidden="true">' + s.emoji + '</span><span>' + s.name + '</span><span class="line"></span><span class="cnt">' + arr.length + ' 个</span>';
-      grid.appendChild(head);
-      arr.forEach(function (c) { grid.appendChild(c); });
-      first = false;
+    vis.sort(function (a, b) {
+      var sa = SUBI[subOf(a)];
+      var sb = SUBI[subOf(b)];
+      if (typeof sa !== 'number') sa = 4;
+      if (typeof sb !== 'number') sb = 4;
+      return (sa - sb) || (lvOf(a) - lvOf(b)) || (Number(a.dataset.oi) - Number(b.dataset.oi));
     });
+    vis.forEach(function (c) { grid.appendChild(c); });
   }
 
   function readStage() {
@@ -774,11 +751,8 @@
     writeStage(k);
     grid.hidden = (k === 'parent');
     parentPanel.hidden = (k !== 'parent');
-    Array.prototype.forEach.call(grid.querySelectorAll('.sect'), function (el) {
-      el.parentNode.removeChild(el);
-    });
     cards.forEach(function (c) { c.hidden = !inStage(c, k); });
-    if (k !== 'parent') buildGroups(k);
+    if (k !== 'parent') orderCards(k);
     renderTabs();
     if (say && V) {
       var s = STAGES.filter(function (x) { return x.k === k; })[0];
