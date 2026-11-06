@@ -68,8 +68,11 @@
  *           ② 删除看图写话 / 应用题小博士 / 形近字找家三个页面及首页卡片、预缓存条目；
  *           ③ 首页与各年级 tab 按科目分组（语文/数学/英语/认知与科学/综合游戏），
  *              组内按难度从易到难，组间加分组标题与间距。
+ * v42 变化：语文小百科新增「同类词语」14 组 210 条（词/读音/基本义/与同组词差别/例句），
+ *           覆盖水名、道路、量词、手/看/说/走、山部位、建筑、风雨、声音、颜色、时间、心情；
+ *           页面新增全站搜索框，可按词、读音、意思或例句检索。
  */
-var CACHE = 'xnly-v41';
+var CACHE = 'xnly-v42';
 
 var PRECACHE = [
   './',
@@ -141,6 +144,7 @@ var PRECACHE = [
   'games/xiangxingzi.html',
   'games/yuwen-baike.html',
   'games/yuwen-data.js',
+  'games/yuwen-similar.js',
   'animal-voice.js',
   'audio/animals/index.json',
   'deck.js',

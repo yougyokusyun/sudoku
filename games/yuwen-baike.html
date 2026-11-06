@@ -38,6 +38,12 @@ h1{font-size:1.15rem;}
 .cats button{flex:0 0 auto;min-height:34px;padding:0 14px;border-radius:999px;border:1px solid var(--line);
   background:#fff;color:#5a7290;font-family:inherit;font-weight:800;font-size:.76rem;cursor:pointer;}
 .cats button.on{background:#fff3e6;border-color:rgba(240,138,60,.55);color:#c26a00;}
+.search{display:flex;gap:6px;flex:0 0 auto;}
+.search input{flex:1;min-width:0;min-height:36px;border:2px solid rgba(240,138,60,.18);border-radius:12px;
+  background:#fff;padding:0 12px;font-family:inherit;font-size:.82rem;color:var(--ink);outline:none;}
+.search input:focus{border-color:rgba(240,138,60,.55);}
+.search button{flex:0 0 auto;min-height:36px;padding:0 12px;border-radius:12px;border:1px solid var(--line);
+  background:#fff;font-family:inherit;font-weight:800;font-size:.76rem;color:#8a7d86;cursor:pointer;}
 
 .topics{flex:1;min-height:0;overflow-y:auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
   gap:8px;align-content:start;padding:2px;}
@@ -157,6 +163,10 @@ h1{font-size:1.15rem;}
 <div class="stage">
   <!-- 浏览 -->
   <div id="paneBrowse" style="flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;">
+    <div class="search">
+      <input id="q" type="search" placeholder="搜词语、读音、意思或例句，如：河 / 看 / 量词" aria-label="搜索词语">
+      <button id="qclr" type="button">清空</button>
+    </div>
     <div class="cats" id="cats"></div>
     <div class="topics" id="topics"></div>
     <div class="detail" id="detail">
@@ -192,12 +202,15 @@ h1{font-size:1.15rem;}
 </div>
 
 <script src="yuwen-data.js"></script>
+<script src="yuwen-similar.js"></script>
 <script>
-var DATA = (window.YW_DATA || []).filter(function (t) { return t && t.items && t.items.length; });
+var DATA = (window.YW_DATA || []).concat(window.YW_SIMILAR || []).filter(function (t) { return t && t.items && t.items.length; });
 var state = { cat: 0, topic: null, picks: [], quiz: null, qIndex: 0, score: 0, answered: 0, streak: 0, best: 0 };
 
 var elCats = document.getElementById('cats');
 var elTopics = document.getElementById('topics');
+var elQ = document.getElementById('q');
+var elQclr = document.getElementById('qclr');
 var elDetail = document.getElementById('detail');
 var elDName = document.getElementById('dName');
 var elDIntro = document.getElementById('dIntro');
@@ -255,6 +268,7 @@ function buildCats() {
       state.cat = i;
       Array.prototype.forEach.call(elCats.children, function (x) { x.classList.remove('on'); });
       b.classList.add('on');
+      if (elQ.value) elQ.value = '';
       buildTopics();
       hideDetail();
     });
@@ -262,23 +276,49 @@ function buildCats() {
   });
   buildTopics();
 }
+function matchTopic(t, term) {
+  if (!term) return true;
+  if ((t.name + ' ' + (t.intro || '') + ' ' + t.cat).toLowerCase().indexOf(term) >= 0) return true;
+  return t.items.some(function (it) {
+    return (it.t + ' ' + (it.p || '') + ' ' + (it.d || '') + ' ' + (it.e || '') + ' ' + (it.k || '')).toLowerCase().indexOf(term) >= 0;
+  });
+}
 function buildTopics() {
+  var term = (elQ.value || '').trim().toLowerCase();
   var cats = [];
   DATA.forEach(function (t) { if (cats.indexOf(t.cat) < 0) cats.push(t.cat); });
   var cur = cats[state.cat] || cats[0];
   elTopics.innerHTML = '';
-  DATA.filter(function (t) { return t.cat === cur; }).forEach(function (t) {
+  var list = term ? DATA.filter(function (t) { return matchTopic(t, term); })
+                  : DATA.filter(function (t) { return t.cat === cur; });
+  list.forEach(function (t) {
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'topic';
     b.innerHTML = '<span class="ic">' + esc(t.icon || '📘') + '</span>' +
       '<span class="nm">' + esc(t.name) + '</span>' +
-      '<span class="cnt">' + t.items.length + ' 条</span>' +
+      '<span class="cnt">' + (term ? esc(t.cat) + ' · ' : '') + t.items.length + ' 条</span>' +
       '<span class="in">' + esc(t.intro || '') + '</span>';
     b.addEventListener('click', function () { openTopic(t); });
     elTopics.appendChild(b);
   });
+  if (!list.length) {
+    var empty = document.createElement('div');
+    empty.className = 'topic';
+    empty.innerHTML = '<span class="ic">🔍</span><span class="nm">没有找到</span>' +
+      '<span class="in">换个词试试，比如“河”“看”“量词”。</span>';
+    elTopics.appendChild(empty);
+  }
 }
+elQ.addEventListener('input', function () {
+  if (state.topic) hideDetail();
+  buildTopics();
+});
+elQclr.addEventListener('click', function () {
+  elQ.value = '';
+  buildTopics();
+  elQ.focus();
+});
 function openTopic(t) {
   state.topic = t;
   elTopics.style.display = 'none';
