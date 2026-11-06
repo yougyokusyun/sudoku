@@ -40,11 +40,16 @@ h1{font-size:1.12rem;}
   border:3px solid rgba(240,161,26,.28);background:linear-gradient(160deg,#fffbef,#fff1d8);}
 .sceneCard .s{font-size:clamp(2.1rem,9.5vh,4.4rem);line-height:1;}
 /* 猜一猜：真实插画卡（图片加载失败时自动回退到上面的 emoji 场景） */
-.sceneImgWrap{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;padding:6px;
+/* 竖屏：图片区固定按屏幕高度预留，加载/失败都不改变高度，题干不位移 */
+.sceneImgWrap{flex:0 0 auto;height:46vh;min-height:140px;display:flex;align-items:center;justify-content:center;padding:6px;
   border-radius:20px;border:3px solid rgba(240,161,26,.28);
   background:linear-gradient(160deg,#fffbef,#fff1d8);overflow:hidden;}
 .sceneImg{width:100%;height:100%;object-fit:contain;
   border-radius:16px;display:block;}
+/* 图片未加载 / 加载失败：容器仍按预留高度占位，文字不位移 */
+.imgPh{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;height:100%;
+  color:#b08a4a;font-weight:800;}
+.imgPh .s{font-size:clamp(1.6rem,6vh,2.8rem);line-height:1;}
 /* 填一填用紫色边框区分 */
 .sceneImgWrap.violet{border-color:rgba(106,75,255,.22);background:linear-gradient(160deg,#faf8ff,#f0ecff);}
 .riddle{font-size:clamp(.9rem,2.6vh,1.1rem);font-weight:800;text-align:center;color:#4a5f78;flex:none;
@@ -108,6 +113,18 @@ h1{font-size:1.12rem;}
   border:3px solid rgba(42,157,143,.25);background:linear-gradient(160deg,#f2fdfb,#e7faf6);
   font-size:clamp(.95rem,2.9vh,1.25rem);font-weight:800;color:#2c4a55;line-height:1.55;}
 
+/* 左右两栏用的内容列（竖屏时自然上下排，横屏时放右侧） */
+.side{display:flex;flex-direction:column;gap:8px;min-width:0;min-height:0;flex:1 1 auto;}
+
+/* 结果卡：一句话解释 + 出处。浮在舞台底部，不挤压题干和选项 */
+.stage{position:relative;}
+.infoCard{position:absolute;left:10px;right:10px;bottom:40px;z-index:30;display:none;
+  background:rgba(255,255,255,.97);border:2px solid rgba(106,75,255,.28);border-radius:16px;
+  padding:10px 12px;box-shadow:0 10px 26px rgba(36,59,83,.18);max-height:46%;overflow:auto;text-align:left;}
+.infoCard .ic-title{font-size:.9rem;font-weight:900;color:#5b3fd6;margin-bottom:4px;}
+.infoCard .ic-exp{font-size:.9rem;font-weight:800;color:#31465c;line-height:1.45;}
+.infoCard .ic-src{font-size:.78rem;font-weight:700;color:#7b8ea8;margin-top:4px;}
+
 .feedback{min-height:30px;font-size:.95rem;font-weight:900;text-align:center;color:var(--muted);flex:none;}
 .feedback.ok{color:var(--ok);}
 .feedback.bad{color:var(--bad);animation:shake .4s ease;}
@@ -134,6 +151,20 @@ h1{font-size:1.12rem;}
   .sceneText{min-height:56px;border-radius:14px;font-size:.82rem;}
   .mcard .back{font-size:1.1rem;}
   .feedback{min-height:20px;font-size:.8rem;}
+}
+
+/* iPad 横屏：改为左右两栏（左图 / 右题干+选项）。
+   图片素材是 1:1 正方形，用 aspect-ratio 先占位，加载前后高度一致，文字不位移。 */
+@media (orientation:landscape) and (min-width:900px){
+  .stage{overflow-y:auto;-webkit-overflow-scrolling:touch;}
+  .panel.guess,.panel.fill{flex:0 0 auto;flex-direction:row;align-items:center;gap:12px;min-height:0;}
+  .panel.guess>.sceneImgWrap,.panel.fill>.sceneImgWrap,
+  .panel.guess>.sceneCard{
+    flex:0 0 auto;width:min(46%,48vh);height:auto;aspect-ratio:1/1;min-height:0;align-self:center;}
+  .panel>.side{flex:1 1 0;align-self:stretch;min-width:0;}
+  .panel>.side .opts{flex:0 0 auto;}
+  .panel>.side .opt{min-height:62px;}
+  .sceneImg{width:100%;height:100%;object-fit:contain;}
 }
 </style>
 <link rel="manifest" href="../manifest.json">
@@ -322,6 +353,133 @@ var MEAN = {
   '嫦娥奔月': '嫦娥飞上月亮，住在广寒宫',
   '心急如焚': '心里急得像着了火一样',
   '如虎添翼': '本来就很厉害，再加上翅膀更厉害了'
+};
+
+/* 每条成语的「一句话解释 + 出处」，供答对后的结果卡展示。
+   explain 面向小学生，≤30 字；source 为典故出处。朗读答案时不念出处。 */
+var INFO = {
+  '画蛇添足': { e: '给蛇添上脚，多此一举，反而坏事。', s: '《战国策·齐策二》' },
+  '井底之蛙': { e: '井底的青蛙只看见井口大的天，见识少。', s: '《庄子·秋水》' },
+  '守株待兔': { e: '死守树桩等兔子，不知变通。', s: '《韩非子·五蠹》' },
+  '亡羊补牢': { e: '羊丢了就补羊圈，出错要及时补救。', s: '《战国策·楚策四》' },
+  '对牛弹琴': { e: '对着牛弹琴，牛听不懂，白费口舌。', s: '汉·牟融《理惑论》' },
+  '画龙点睛': { e: '画龙最后点眼睛，关键处一改就活。', s: '唐·张彦远《历代名画记》' },
+  '拔苗助长': { e: '把苗往上拔想让它长高，结果苗死了。', s: '《孟子·公孙丑上》' },
+  '掩耳盗铃': { e: '捂住自己耳朵偷铃，自己骗自己。', s: '《吕氏春秋·自知》' },
+  '狐假虎威': { e: '狐狸借老虎的威风吓唬别的动物。', s: '《战国策·楚策一》' },
+  '刻舟求剑': { e: '剑掉水里却在船上刻记号，情况变了还照老办法。', s: '《吕氏春秋·察今》' },
+  '自相矛盾': { e: '又夸盾最坚固又夸矛能刺穿一切，说法打架。', s: '《韩非子·难一》' },
+  '滥竽充数': { e: '不会吹竽也混在乐队里充数。', s: '《韩非子·内储说上》' },
+  '杯弓蛇影': { e: '把杯中弓影当成蛇，疑神疑鬼自己吓自己。', s: '汉·应劭《风俗通义》' },
+  '叶公好龙': { e: '嘴上说爱龙，真龙来了却吓跑。', s: '汉·刘向《新序·杂事》' },
+  '惊弓之鸟': { e: '受过箭伤的鸟听弓弦一响就害怕。', s: '《战国策·楚策四》' },
+  '三心二意': { e: '一会儿想这一会儿想那，不专心。', s: '元·关汉卿《救风尘》' },
+  '一鸣惊人': { e: '平时不出声，一出声就让人吃惊。', s: '《史记·滑稽列传》' },
+  '愚公移山': { e: '老人带全家挖山，不怕难，坚持到底。', s: '《列子·汤问》' },
+  '守口如瓶': { e: '嘴巴像瓶口塞紧，秘密一个字不说。', s: '宋·周密《癸辛杂识》' },
+  '七上八下': { e: '心里像吊桶上上下下，紧张不安。', s: '宋《大慧普觉禅师语录》' },
+  '未雨绸缪': { e: '还没下雨先修好门窗，事先准备好。', s: '《诗经·豳风·鸱鸮》' },
+  '各执一词': { e: '各说各的，谁也不让谁。', s: '明·冯梦龙《醒世恒言》' },
+  '兴高采烈': { e: '兴致很高，高兴得不得了。', s: '南朝·刘勰《文心雕龙》' },
+  '持之以恒': { e: '长期坚持，不半途而废。', s: '清·曾国藩《家书》' },
+  '不耻下问': { e: '向不如自己的人请教也不觉得丢脸。', s: '《论语·公冶长》' },
+  '南辕北辙': { e: '车往南走却想去北边，方向和目的相反。', s: '《战国策·魏策四》' },
+  '买椟还珠': { e: '留下漂亮盒子，把珍珠还回去。', s: '《韩非子·外储说左上》' },
+  '望梅止渴': { e: '想着酸梅子解渴，用希望安慰自己。', s: '南朝《世说新语·假谲》' },
+  '草木皆兵': { e: '把草和树都看成敌兵，疑神疑鬼。', s: '《晋书·苻坚载记》' },
+  '四面楚歌': { e: '四面都是楚歌，陷入孤立无援。', s: '《史记·项羽本纪》' },
+  '三顾茅庐': { e: '三次上门请诸葛亮，诚心诚意。', s: '诸葛亮《出师表》' },
+  '完璧归赵': { e: '把和氏璧完好地送回赵国。', s: '《史记·廉颇蔺相如列传》' },
+  '负荆请罪': { e: '背着荆条上门认错。', s: '《史记·廉颇蔺相如列传》' },
+  '纸上谈兵': { e: '只会说不会做，真做起来就不行。', s: '《史记·廉颇蔺相如列传》' },
+  '卧薪尝胆': { e: '睡柴草尝苦胆，忍辱负重刻苦自励。', s: '《史记·越王勾践世家》' },
+  '闻鸡起舞': { e: '听见鸡叫就起床练剑，刻苦努力。', s: '《晋书·祖逖传》' },
+  '悬梁刺股': { e: '头发吊在梁上、锥子扎腿，刻苦读书。', s: '《太平御览》' },
+  '凿壁偷光': { e: '在墙上凿洞借邻居灯光读书。', s: '《西京杂记》' },
+  '囊萤映雪': { e: '萤火虫装袋子、借雪光读书，很刻苦。', s: '《晋书·车胤传》' },
+  '程门立雪': { e: '站在雪地里等老师醒来，尊敬老师。', s: '《宋史·杨时传》' },
+  '手不释卷': { e: '手里总拿着书不放，爱读书。', s: '《三国志·吴书》' },
+  '废寝忘食': { e: '忘了睡觉和吃饭，非常专心。', s: '《论语·卫灵公》' },
+  '专心致志': { e: '一心一意，把心思全放在一件事上。', s: '《孟子·告子上》' },
+  '全神贯注': { e: '全部精神都集中在一件事上。', s: '现代常用成语' },
+  '聚精会神': { e: '集中精神，一点不分心。', s: '汉·王褒《圣主得贤臣颂》' },
+  '津津有味': { e: '吃得香、看得入迷，很有兴趣。', s: '汉·王褒《圣主得贤臣颂》' },
+  '眉飞色舞': { e: '眉毛飞舞脸上有光，非常得意。', s: '清·李宝嘉《官场现形记》' },
+  '目瞪口呆': { e: '眼睛睁大嘴巴合不上，非常吃惊。', s: '元·无名氏《看钱奴》' },
+  '垂头丧气': { e: '低着头没精神，很失望。', s: '唐·韩愈《送穷文》' },
+  '提心吊胆': { e: '心提着胆悬着，非常害怕。', s: '明·吴承恩《西游记》' },
+  '迫不及待': { e: '等不及了，非常着急。', s: '清·李宝嘉《官场现形记》' },
+  '争先恐后': { e: '争着往前，怕落在后面。', s: '宋《五灯会元》' },
+  '三长两短': { e: '指意外的灾祸和变故。', s: '明·范文若《鸳鸯棒》' },
+  '一箭双雕': { e: '一箭射中两只雕，一举两得。', s: '《北史·长孙晟传》' },
+  '一举两得': { e: '做一件事，得到两样收获。', s: '《晋书·束皙传》' },
+  '一诺千金': { e: '答应的话一定算数，比金子还珍贵。', s: '《史记·季布栾布列传》' },
+  '一叶知秋': { e: '看见一片落叶就知道秋天来了。', s: '《淮南子·说山训》' },
+  '一帆风顺': { e: '船张满帆顺风走，非常顺利。', s: '宋《景德传灯录》' },
+  '十全十美': { e: '十分完美，一点缺点也没有。', s: '清·陈朗《雪月梅》' },
+  '百发百中': { e: '射一百次中一百次，非常准。', s: '《战国策·西周策》' },
+  '千钧一发': { e: '千钧重物吊在一根头发上，非常危险。', s: '唐·韩愈《与孟尚书书》' },
+  '万紫千红': { e: '各种颜色的花都开了，非常美。', s: '宋·朱熹《春日》' },
+  '五光十色': { e: '颜色多又闪亮，光彩灿烂。', s: '南朝·江淹《丽色赋》' },
+  '六神无主': { e: '心里慌乱，不知道该怎么办。', s: '明·冯梦龙《醒世恒言》' },
+  '九牛一毛': { e: '九头牛身上的一根毛，少得可怜。', s: '司马迁《报任安书》' },
+  '水落石出': { e: '水退了石头露出来，真相大白。', s: '宋·苏轼《后赤壁赋》' },
+  '柳暗花明': { e: '柳暗处转个弯见到花，出现新希望。', s: '宋·陆游《游山西村》' },
+  '草长莺飞': { e: '青草长高黄莺飞，春天来了。', s: '南朝·丘迟《与陈伯之书》' },
+  '鹅毛大雪': { e: '雪花像鹅毛一样大，雪下得很大。', s: '民间俗语' },
+  '望洋兴叹': { e: '看到大海才知自己渺小，只能叹气。', s: '《庄子·秋水》' },
+  '坐井观天': { e: '坐在井里看天，只看到井口那么大。', s: '唐·韩愈《原道》' },
+  '盲人摸象': { e: '每人只摸到一点，就以为知道全貌。', s: '《大般涅槃经》' },
+  '缘木求鱼': { e: '爬到树上找鱼，方向错了白费力。', s: '《孟子·梁惠王上》' },
+  '水中捞月': { e: '到水里捞月亮，白费力气一场空。', s: '宋《景德传灯录》' },
+  '海市蜃楼': { e: '沙漠海边看到的幻影，不真实。', s: '《史记·天官书》' },
+  '破釜沉舟': { e: '砸锅沉船，只能向前没有退路。', s: '《史记·项羽本纪》' },
+  '背水一战': { e: '背靠大河作战，没有退路只能拼。', s: '《史记·淮阴侯列传》' },
+  '霸王别姬': { e: '项羽兵败，和虞姬告别，悲壮感人。', s: '《史记·项羽本纪》' },
+  '马到成功': { e: '战马一到就胜利，事情顺利办成。', s: '元·无名氏《小尉迟》' },
+  '心想事成': { e: '心里想的都能实现，美好的祝福。', s: '民间祝福语' },
+  '年年有余': { e: '年年都有富余，日子越过越好。', s: '民间年俗（谐音有鱼）' },
+  '扬眉吐气': { e: '受压后抬起头，心里很畅快。', s: '古代诗文常用语' },
+  '牛气冲天': { e: '气势很足，干劲冲上天。', s: '民间俗语' },
+  '鹤立鸡群': { e: '仙鹤站在鸡群里，特别突出。', s: '南朝《世说新语·容止》' },
+  '龟兔赛跑': { e: '兔子睡觉，乌龟不停爬，最后乌龟赢。', s: '《伊索寓言》' },
+  '狡兔三窟': { e: '兔子准备三个窝，留好退路。', s: '《战国策·齐策四》' },
+  '狼吞虎咽': { e: '像狼虎一样又急又猛地吃。', s: '明·凌濛初《初刻拍案惊奇》' },
+  '虎头蛇尾': { e: '开头很猛，后面没劲，有头无尾。', s: '元·康进之《李逵负荆》' },
+  '精卫填海': { e: '小鸟天天衔石子填海，意志坚定。', s: '《山海经·北山经》' },
+  '夸父逐日': { e: '追着太阳跑，不怕难，意志可嘉。', s: '《山海经·海外北经》' },
+  '女娲补天': { e: '炼五色石补好天上的窟窿，拯救大家。', s: '《淮南子·览冥训》' },
+  '后羿射日': { e: '射下九个多余的太阳，救了大伙。', s: '《淮南子·本经训》' },
+  '嫦娥奔月': { e: '嫦娥吃仙药飞上月亮，住在广寒宫。', s: '《淮南子·览冥训》' },
+  '心急如焚': { e: '心里急得像着了火一样。', s: '清·李汝珍《镜花缘》' },
+  '如虎添翼': { e: '本来就厉害，又添了翅膀，更强了。', s: '三国·诸葛亮《心书》' },
+  '一心一意': { e: '只有一个心思，非常专心。', s: '《三国志·魏书》' },
+  '临时抱佛脚': { e: '平时不准备，事到临头才着急。', s: '清·翟灏《通俗编》' },
+  '手舞足蹈': { e: '高兴得手脚都动起来。', s: '《诗经·周南·关雎序》' },
+  '人山人海': { e: '人多得像山和海，挤得满满的。', s: '明·冯梦龙《醒世恒言》' },
+  '火上浇油': { e: '火上再浇油，让事情更严重。', s: '元·关汉卿《金线池》' },
+  '雪上加霜': { e: '雪上又加霜，接连受到打击。', s: '宋《景德传灯录》' },
+  '锦上添花': { e: '好上加好，更加美好。', s: '宋·王安石《即事》' },
+  '鸡犬相闻': { e: '这边的鸡狗叫，那边都听得见。', s: '《老子》第八十章' },
+  '莺歌燕舞': { e: '黄莺唱歌燕子飞，春天欢乐景象。', s: '宋·苏轼《锦被亭》' },
+  '百花齐放': { e: '各种花一起开放，热闹好看。', s: '清·李汝珍《镜花缘》' },
+  '硕果累累': { e: '大果子一串串挂满枝头，丰收了。', s: '《周易·剥卦》' },
+  '五谷丰登': { e: '稻麦谷子都丰收，粮食满仓。', s: '《诗经·周颂·丰年》' },
+  '秋高气爽': { e: '秋天天空高远，空气清爽凉快。', s: '唐·杜甫《崔氏东山草堂》' },
+  '天高云淡': { e: '天空高远，云彩淡淡。', s: '民间常用语' },
+  '银装素裹': { e: '大雪后到处像裹上银色外衣。', s: '毛泽东《沁园春·雪》' },
+  '冰天雪地': { e: '到处是冰和雪，非常寒冷。', s: '清·李汝珍《镜花缘》' },
+  '滴水成冰': { e: '水一滴下就冻成冰，天气极冷。', s: '宋·钱易《南部新书》' },
+  '镜花水月': { e: '镜中花水中月，看得见摸不着。', s: '佛家语，喻虚幻' },
+  '口是心非': { e: '嘴上说的和心里想的不一样。', s: '汉·桓谭《新论》' },
+  '心口如一': { e: '心里想什么嘴上就说什么，很诚实。', s: '清·李宝嘉《官场现形记》' },
+  '前因后果': { e: '事情的起因和结果。', s: '清·李汝珍《镜花缘》' },
+  '千方百计': { e: '想尽一切办法去做。', s: '宋·朱熹《朱子语类》' },
+  '众星捧月': { e: '许多星星围着月亮转。', s: '《论语·为政》' },
+  '吉祥如意': { e: '吉利美好，事事顺心。', s: '宋《景德传灯录》' },
+  '龙马精神': { e: '像龙和马一样精神旺盛。', s: '唐·李郢《上裴晋公》' },
+  '鱼跃龙门': { e: '鲤鱼跳过龙门就变成龙，比喻成功。', s: '汉·辛氏《三秦记》' },
+  '心明眼亮': { e: '心里明白，眼睛雪亮，看得清。', s: '明·吴承恩《西游记》' }
 };
 
 /* 一、猜猜猜：真实插画 + 谜面（没有配图的题目自动用 emoji 画面） */
@@ -766,6 +924,15 @@ var SCENES = [
     o: ['心明眼亮', '眼疾手快', '明察秋毫', '火眼金睛'] }
 ];
 
+/* 把解释与出处挂到每道题上：GUESSES / FILLS / SCENES 每题都带 explain + source */
+[GUESSES, FILLS, SCENES].forEach(function (list) {
+  list.forEach(function (q) {
+    var info = INFO[q.a] || {};
+    q.explain = info.e || '';
+    q.source = info.s || '';
+  });
+});
+
 /* ===== 状态 ===== */
 var mode = 'guess';
 var streak = 0, best = readNum('pidiom.best');
@@ -810,13 +977,48 @@ function lockInput() {
 
 var canSpeak = typeof window.speechSynthesis !== 'undefined';
 function say(text) {
-  if (!canSpeak || !text) return;
+  if (!text) return;
+  if (window.XNLY && XNLY.voice && XNLY.voice.speak) {
+    try { XNLY.voice.speak(String(text)); return; } catch (e) { }
+  }
+  if (!canSpeak) return;
   try {
     window.speechSynthesis.cancel();
     var u = new SpeechSynthesisUtterance(String(text));
     u.lang = 'zh-CN'; u.rate = 0.92;
     window.speechSynthesis.speak(u);
   } catch (e) { }
+}
+/* 读完再跳：语音队列全部播完才执行 cb；onend 不触发时按「字数×220ms+1500ms」兜底 */
+function sayThen(text, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) {
+    try { return XNLY.voice.speakThen(String(text), cb); } catch (e) { }
+  }
+  say(text);
+  var ms = Math.max(1500, String(text || '').replace(/\s+/g, '').length * 220) + 1500;
+  var t = setTimeout(cb, ms);
+  return { cancel: function () { clearTimeout(t); } };
+}
+/* 答对后的结果卡：一句话解释 + 出处（朗读只念解释，不念出处） */
+function showInfo(name) {
+  var info = INFO[name];
+  var box = document.getElementById('infoCard');
+  if (!box) {
+    box = el('div', 'infoCard');
+    box.id = 'infoCard';
+    var stage = document.querySelector('.stage');
+    (stage || document.body).appendChild(box);
+  }
+  if (!info) { box.style.display = 'none'; return; }
+  box.innerHTML = '';
+  box.appendChild(el('div', 'ic-title', '📖 ' + name));
+  box.appendChild(el('div', 'ic-exp', '💡 ' + info.e));
+  box.appendChild(el('div', 'ic-src', '📜 出处：' + info.s));
+  box.style.display = 'block';
+}
+function hideInfo() {
+  var b = document.getElementById('infoCard');
+  if (b) b.style.display = 'none';
 }
 function pickWrong(pool, right, n) {
   var others = pool.filter(function (x) { return x !== right; });
@@ -845,7 +1047,11 @@ function guessImgCard(q) {
   img.decoding = 'async';
   img.src = q.img;
   img.addEventListener('error', function () {
-    if (wrap.parentNode) wrap.parentNode.replaceChild(guessEmojiCard(q), wrap);
+    /* 加载失败：容器保留原高度，换成 emoji 占位，文字位置不变 */
+    if (img.parentNode) img.parentNode.removeChild(img);
+    var ph = el('div', 'imgPh');
+    (q.sc || []).forEach(function (s) { ph.appendChild(el('span', 's', s)); });
+    wrap.appendChild(ph);
   });
   wrap.appendChild(img);
   return wrap;
@@ -867,21 +1073,24 @@ function deckTake(key, list, n) {
 }
 
 function newGuess() {
-  clearTimer(); lockInput();
+  clearTimer(); lockInput(); hideInfo();
   var q = deckTake('guess', GUESSES, 1)[0];
   var opts = shuffle([q.a].concat(pickWrong(GUESSES.map(function (g) { return g.a; }), q.a, 3)));
-  cur = { a: q.a, sc: q.sc, img: q.img, r: q.r, o: opts };
+  cur = { a: q.a, sc: q.sc, img: q.img, r: q.r, explain: q.explain, source: q.source, o: opts };
 
   elHint.textContent = '看看图，猜猜是哪个成语';
+  elPanel.className = 'panel guess';
   elPanel.innerHTML = '';
   elPanel.appendChild(q.img ? guessImgCard(q) : guessEmojiCard(q));
+
+  var side = el('div', 'side');
   /* 谜面默认隐藏，点「提示」或猜错后才显示 */
-  elPanel.appendChild(el('div', 'riddle dim', '💡 图片里藏着什么故事？点「提示」看线索'));
+  side.appendChild(el('div', 'riddle dim', '💡 图片里藏着什么故事？点「提示」看线索'));
 
   var hintBtn = el('button', 'hintBtn', '💡 提示 · 看看线索');
   hintBtn.type = 'button';
   hintBtn.onclick = function () { revealGuessRiddle(true); feedback(''); };
-  elPanel.appendChild(hintBtn);
+  side.appendChild(hintBtn);
 
   var optsBox = el('div', 'opts c2');
   opts.forEach(function (name) {
@@ -890,7 +1099,8 @@ function newGuess() {
     b.onclick = function () { answerGuess(name, b); };
     optsBox.appendChild(b);
   });
-  elPanel.appendChild(optsBox);
+  side.appendChild(optsBox);
+  elPanel.appendChild(side);
   feedback('');
   say('看看图，猜猜是哪个成语。');
   window.__answer = q.a;
@@ -915,13 +1125,14 @@ function answerGuess(name, btn) {
     lockQ = true;
     btn.classList.add('good');
     bumpStreak();
-    feedback('✅ 就是' + cur.a + '：' + (MEAN[cur.a] || ''), 'ok');
-    say('对啦，就是' + cur.a + '。' + (MEAN[cur.a] || ''));
+    feedback('✅ 就是' + cur.a, 'ok');
     revealGuessRiddle(false);
+    showInfo(cur.a);
     Array.prototype.forEach.call(elPanel.querySelectorAll('.opt'), function (b) {
       if (b !== btn) b.style.opacity = '.5';
     });
-    timer = setTimeout(newGuess, 2200);
+    /* 语音全部读完后才换下一题；onend 不触发时由兜底超时放行。朗读不念出处 */
+    sayThen('对啦，就是' + cur.a + '。' + (cur.explain || (MEAN[cur.a] || '')), newGuess);
   } else {
     /* 选错：按钮自己闪三下，同时亮出线索，孩子直接重新选就行 */
     btn.classList.add('wrongFlash');
@@ -932,7 +1143,7 @@ function answerGuess(name, btn) {
 }
 
 /* ===== 二、填一填 ===== */
-/* 填空配图：加载失败就整块隐藏，不影响填空答题 */
+/* 填空配图：加载失败显示占位块，容器高度不变 */
 function fillImgCard(src) {
   var wrap = el('div', 'sceneImgWrap violet');
   var img = document.createElement('img');
@@ -941,26 +1152,31 @@ function fillImgCard(src) {
   img.decoding = 'async';
   img.src = src;
   img.addEventListener('error', function () {
-    if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+    /* 加载失败：保留占位容器，避免下方成语卡和选项上跳 */
+    if (img.parentNode) img.parentNode.removeChild(img);
+    wrap.appendChild(el('div', 'imgPh', '🖼️ 图片暂时看不了'));
   });
   wrap.appendChild(img);
   return wrap;
 }
 
 function newFill() {
-  clearTimer(); lockInput();
+  clearTimer(); lockInput(); hideInfo();
   var q = deckTake('fill', FILLS, 1)[0];
-  cur = { a: q.a, i: q.i, img: q.img, o: shuffle(q.o.slice()) };
+  cur = { a: q.a, i: q.i, img: q.img, explain: q.explain, source: q.source, o: shuffle(q.o.slice()) };
 
   elHint.textContent = '看图，把成语缺的字选出来';
+  elPanel.className = 'panel fill';
   elPanel.innerHTML = '';
   if (q.img) elPanel.appendChild(fillImgCard(q.img));
+
+  var side = el('div', 'side');
   var card = el('div', 'fillCard');
   for (var i = 0; i < q.a.length; i++) {
     if (i === q.i) card.appendChild(el('span', 'blank', '？'));
     else card.appendChild(el('span', 'ch', q.a[i]));
   }
-  elPanel.appendChild(card);
+  side.appendChild(card);
 
   var optsBox = el('div', 'opts c3');
   cur.o.forEach(function (ch) {
@@ -969,7 +1185,8 @@ function newFill() {
     b.onclick = function () { answerFill(ch, b); };
     optsBox.appendChild(b);
   });
-  elPanel.appendChild(optsBox);
+  side.appendChild(optsBox);
+  elPanel.appendChild(side);
   feedback('');
   say('看看图，这个成语缺了一个字，把它选出来。');
   window.__answer = q.a[q.i];
@@ -983,12 +1200,12 @@ function answerFill(ch, btn) {
     lockQ = true;
     btn.classList.add('good');
     bumpStreak();
-    feedback('✅ 正是' + cur.a + '：' + (MEAN[cur.a] || ''), 'ok');
-    say('对啦，' + cur.a + '。' + (MEAN[cur.a] || ''));
+    feedback('✅ 正是' + cur.a, 'ok');
+    showInfo(cur.a);
     Array.prototype.forEach.call(elPanel.querySelectorAll('.opt'), function (b) {
       if (b !== btn) b.style.opacity = '.5';
     });
-    timer = setTimeout(newFill, 2200);
+    sayThen('对啦，' + cur.a + '。' + (cur.explain || (MEAN[cur.a] || '')), newFill);
   } else {
     btn.classList.add('bad');
     setTimeout(function () { btn.classList.remove('bad'); }, 430);
@@ -999,7 +1216,7 @@ function answerFill(ch, btn) {
 
 /* ===== 三、配一配 ===== */
 function newMatch() {
-  clearTimer();
+  clearTimer(); hideInfo();
   lockMatch = false;
   var picks = deckTake('pairs', PAIRS, 4);
   var cards = [];
@@ -1011,6 +1228,7 @@ function newMatch() {
   matchState = { cards: cards, open: [], done: 0, total: picks.length };
 
   elHint.textContent = '翻两张卡片，把成语和意思配成一对';
+  elPanel.className = 'panel match';
   elPanel.innerHTML = '';
   var grid = el('div', 'matchGrid');
   cards.forEach(function (c, i) {
@@ -1053,12 +1271,13 @@ function flipCard(i, btn) {
     st.done++;
     bumpStreak();
     feedback('✅ 配对成功：' + a.card.key + '——' + MEAN[a.card.key], 'ok');
+    showInfo(a.card.key);
     say('配对成功，' + a.card.key + '，' + MEAN[a.card.key]);
     lockMatch = false;
     if (st.done === st.total) {
       feedback('🎉 全部配对成功！', 'ok');
-      say('全部配好，真棒！');
-      timer = setTimeout(newMatch, 2000);
+      /* 整轮结束后也把最后一个成语的解释和出处留在屏幕上，读完语音再换新的一轮 */
+      sayThen('全部配好，真棒！' + (INFO[a.card.key] ? '最后记住：' + INFO[a.card.key].e : ''), newMatch);
     }
   } else {
     a.btn.classList.add('wrong'); b.btn.classList.add('wrong');
@@ -1074,11 +1293,12 @@ function flipCard(i, btn) {
 
 /* ===== 四、演一演 ===== */
 function newScene() {
-  clearTimer(); lockInput();
+  clearTimer(); lockInput(); hideInfo();
   var q = deckTake('scene', SCENES, 1)[0];
-  cur = { s: q.s, a: q.a, o: shuffle(q.o.slice()) };
+  cur = { s: q.s, a: q.a, explain: q.explain, source: q.source, o: shuffle(q.o.slice()) };
 
   elHint.textContent = '听一听小故事，选出最合适的成语';
+  elPanel.className = 'panel scene';
   elPanel.innerHTML = '';
   elPanel.appendChild(el('div', 'sceneText', q.s));
 
@@ -1102,12 +1322,12 @@ function answerScene(name, btn) {
     lockQ = true;
     btn.classList.add('good');
     bumpStreak();
-    feedback('✅ ' + cur.a + '：' + (MEAN[cur.a] || ''), 'ok');
-    say('对啦，' + cur.a + '。' + (MEAN[cur.a] || ''));
+    feedback('✅ ' + cur.a, 'ok');
+    showInfo(cur.a);
+    sayThen('对啦，' + cur.a + '。' + (cur.explain || (MEAN[cur.a] || '')), newScene);
     Array.prototype.forEach.call(elPanel.querySelectorAll('.opt'), function (b) {
       if (b !== btn) b.style.opacity = '.5';
     });
-    timer = setTimeout(newScene, 2400);
   } else {
     btn.classList.add('bad');
     setTimeout(function () { btn.classList.remove('bad'); }, 430);
@@ -1132,6 +1352,9 @@ var starts = {
 };
 
 function setMode(m, silent) {
+  /* 切模式 = 用户手动换题：作废正在等待的自动跳转 */
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+  hideInfo();
   mode = m;
   clearTimer();
   streak = 0;
@@ -1163,26 +1386,16 @@ document.addEventListener('keydown', function (e) {
 updateStats();
 setMode('guess', true);
 
-/* ===== 语音播报：进入游戏先读一遍玩法，右上角 🔊 可随时重听 ===== */
-var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+/* ===== 语音播报：进入游戏先读一遍玩法，右上角 homebtn 工具条的 🔊 可随时重听 ===== */
 function voiceSpeak(text) {
-  if (!CAN_VOICE || !text) return;
-  try {
-    window.speechSynthesis.cancel();
-    var u = new SpeechSynthesisUtterance(String(text));
-    u.lang = 'zh-CN'; u.rate = 0.95; u.pitch = 1.05;
-    window.speechSynthesis.speak(u);
-  } catch (e) { }
+  if (!text) return;
+  if (window.XNLY && XNLY.voice && XNLY.voice.speak) {
+    try { XNLY.voice.speak(String(text)); return; } catch (e) { }
+  }
+  say(text);
 }
-(function () {
-  var b = document.createElement('button');
-  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
-  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
-    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
-  b.onclick = function () { voiceSpeak(MODE_TEXT[mode]); };
-  var h = document.querySelector('header');
-  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
-})();
+/* 工具条 🔊 重听：读当前玩法说明（页面内不再保留第二个朗读按钮） */
+window.replayCurrent = function () { voiceSpeak(MODE_TEXT[mode]); };
 /* 进入时若自动播放被拦截，第一次碰屏幕补读当前模式说明 */
 (function () {
   var started = false;

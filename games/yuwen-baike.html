@@ -178,7 +178,7 @@ h1{font-size:1.15rem;}
       <span id="qno">第 0/0 题</span>
       <div class="bar"><i id="qbar"></i></div>
       <span id="qtopic"></span>
-      <button class="btn" id="btnSpeak" type="button" style="padding:3px 10px;font-size:.76rem;">🔊 重听</button>
+      <button class="btn" id="btnSpeak" type="button" style="padding:3px 10px;font-size:.76rem;" hidden>🔊 重听</button>
     </div>
     <div class="qbox" id="qbox">
       <div class="qprompt" id="qprompt">选一个专题，点「开始问答」👇</div>
@@ -293,11 +293,11 @@ function openTopic(t) {
     div.innerHTML =
       '<div class="top"><span class="t">' + esc(it.t) + '</span>' +
       (it.p ? '<span class="p">' + esc(it.p) + '</span>' : '') +
-      '<button class="sp" type="button" aria-label="朗读">🔊</button></div>' +
+      '</div>' +
       '<div class="d">' + esc(it.d) + '</div>' +
       (it.e ? '<div class="e">' + esc(it.e) + '</div>' : '') +
       (it.k ? '<div class="k">' + esc(it.k) + '</div>' : '');
-    div.querySelector('.sp').addEventListener('click', function () {
+    div.addEventListener('click', function () {
       say(it.t + '。' + it.d + (it.e ? '。' + it.e : ''));
     });
     elDItems.appendChild(div);
@@ -502,6 +502,11 @@ btnSpeak.addEventListener('click', function () {
   var q = state.quiz && state.quiz[state.qIndex];
   if (q) say(q.prompt.replace(/「/g, '').replace(/」/g, ''));
 });
+/* 页内朗读按钮已隐藏，重听题干走右上角工具条的 🔊 */
+window.replayCurrent = function () {
+  var q = state.quiz && state.quiz[state.qIndex];
+  if (q) say(q.prompt.replace(/「/g, '').replace(/」/g, ''));
+};
 /* iOS/平板音频解锁：首次任意点击补读当前题干 */
 var firstTapDone = false;
 document.addEventListener('pointerdown', function () {

@@ -403,13 +403,12 @@ function voiceEntry() {
   }, 900);
 }
 (function () {
-  var b = document.createElement('button');
-  b.type = 'button'; b.textContent = '🔊'; b.title = '再听一遍玩法';
-  b.style.cssText = 'flex:none;width:44px;height:44px;border-radius:999px;border:2px solid rgba(36,59,83,.10);' +
-    'background:#fff;font-size:1.2rem;line-height:1;box-shadow:0 4px 12px rgba(36,59,83,.12);cursor:pointer;';
-  b.onclick = function () { voiceSpeak(VOICE_TEXT); };
-  var h = document.querySelector('header');
-  if (h) { h.appendChild(b); } else { document.body.appendChild(b); }
+  /* 页内不再放第二个朗读按钮：重听走右上角 homebtn 工具条的 🔊 */
+  window.replayCurrent = function () {
+    var a = ANIMALS[idx];
+    if (a) voiceSpeak(a.n + '，' + a.s);
+    else voiceSpeak(VOICE_TEXT);
+  };
 })();
 voiceEntry();
 </script>

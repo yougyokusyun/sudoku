@@ -100,6 +100,8 @@ var patternDeck=XNLY.deck.make(PATTERNS,'pattern',{head:3});
 
 /* 出一题 */
 function newRound(){
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   clearTimers();
   locked=false;
   seqBox.innerHTML=''; optsBox.innerHTML=''; seqBox.className='seq';
@@ -143,8 +145,7 @@ function choose(btn,val){
     qcard.textContent=answer;
     qcard.classList.add('fill');
     feedback('✅ 规律找到啦！', true);
-    voiceSpeak('对啦，是' + (COLOR_NAMES[answer] || ''));
-    roundTimer=setTimeout(newRound,1100);
+    roundTimer = sayThen('对啦，是' + (COLOR_NAMES[answer] || ''), newRound);
   }else{
     btn.classList.add('miss');
     feedback('看看前面的规律哦', false);
@@ -180,6 +181,15 @@ newRound();
 /* ===== 语音播报：进入先读玩法，右上角 🔊 可随时重听 ===== */
 var VOICE_TEXT = '规律排序游戏。看看前面是什么颜色、怎么排的，再选出下一个。';
 var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function voiceSpeak(text) {
   if (!CAN_VOICE || !text) return;
   try {

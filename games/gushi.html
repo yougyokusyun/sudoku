@@ -97,7 +97,7 @@ h1{font-size:1.15rem;}
   <div class="opts" id="opts"></div>
   <div class="qfb" id="qfb"></div>
   <div class="controls">
-    <button class="btn" id="btnSpeak" type="button" title="重听题目">🔊 重听</button>
+    <button class="btn" id="btnSpeak" type="button" title="重听题目" hidden>🔊 重听</button>
     <button class="btn" id="btnNext" disabled>下一题 →</button>
   </div>
 </div>
@@ -272,6 +272,8 @@ function ansQ(btn,t){
   }
 }
 btnSpeak.addEventListener('click', function(){ unlockAudio(); replayQ(); });
+/* 页内不再放第二个朗读按钮：右上角工具条 🔊 重听当前题目 */
+window.replayCurrent = function(){ unlockAudio(); replayQ(); };
 btnNext.addEventListener('click', function(){
   if(state.done){ buildQuiz(); return; }
   state.idx++; if(state.idx>=state.quiz.length){ state.done=true;} renderQ();

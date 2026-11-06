@@ -111,7 +111,7 @@ h1{font-size:1.15rem;}
   <div class="feedback" id="feedback"></div>
   <div class="exp" id="exp"></div>
   <div class="controls">
-    <button class="btn warn" id="read" type="button">🔊 朗读原文</button>
+    <button class="btn warn" id="read" type="button" hidden style="display:none">🔊 朗读原文</button>
     <button class="btn" id="white" type="button">💬 白话对照</button>
     <button class="btn primary" id="next" type="button">➡️ 下一题</button>
   </div>
@@ -119,6 +119,15 @@ h1{font-size:1.15rem;}
 
 <script>
 var V = (window.XNLY && window.XNLY.voice) || null;
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function speak(t) {
   if (V && V.speak) { V.speak(t, { rate: 0.82 }); return; }
   if (!window.speechSynthesis) return;
@@ -328,8 +337,7 @@ function tap(btn, oi) {
     elFb.textContent = '✅ 答对啦！';
     elExp.textContent = '💡 ' + q.e;
     elExp.className = 'exp show';
-    speak('答对啦。' + q.e);
-    state.timer = setTimeout(nextStep, 3200);
+    state.timer = sayThen('答对啦。' + q.e, nextStep);
   } else {
     btn.classList.add('bad', 'faded');
     mark('wrong');
@@ -341,6 +349,8 @@ function tap(btn, oi) {
   }
 }
 function nextStep() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   var p = PIECES[state.p];
   if (state.qi < p.qs.length - 1) {
     state.qi++;
@@ -355,6 +365,7 @@ function nextStep() {
 document.getElementById('read').addEventListener('click', function () {
   speak(PIECES[state.p].txt);
 });
+window.replayCurrent = function () { speak(PIECES[state.p].txt); };
 document.getElementById('white').addEventListener('click', function () {
   var on = elPlain.classList.contains('show');
   elPlain.className = on ? 'plain' : 'plain show';

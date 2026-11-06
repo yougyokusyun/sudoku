@@ -121,6 +121,15 @@ var elStreak = document.getElementById('streak');
 var elQno = document.getElementById('qno');
 
 var V = (window.XNLY && window.XNLY.voice) || null;
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function speak(t) {
   if (V && V.speak) { V.speak(t, { rate: 0.92 }); return; }
   if (!window.speechSynthesis) return;
@@ -246,6 +255,8 @@ function setTier(t) {
 }
 
 function newRound() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   clearTimeout(state.timer);
   state.locked = false;
   var L = LEVELS[state.tier];
@@ -295,9 +306,9 @@ function tap(btn, val) {
     elFb.textContent = '✅ 答对啦！';
     elExp.textContent = '💡 ' + cur.e;
     elExp.className = 'exp show';
-    speak('答对啦。' + cur.e);
-    if (state.streak >= 3 && state.tier < 3) { setTimeout(function () { setTier(state.tier + 1); }, 2800); return; }
-    state.timer = setTimeout(newRound, 2800);
+    /* 等「答对啦 + 解析」读完后才进下一题 / 升级，避免语音被截断 */
+    if (state.streak >= 3 && state.tier < 3) { state.timer = sayThen('答对啦。' + cur.e, function () { setTier(state.tier + 1); }); return; }
+    state.timer = sayThen('答对啦。' + cur.e, newRound);
   } else {
     btn.classList.add('bad', 'faded');
     state.streak = 0;

@@ -180,6 +180,8 @@ function feedback(t, cls) {
 var shadowDeck = XNLY.deck.make(POOL, 'shadow', { head: 5 });
 
 function newRound() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
     clearTimeout(timer);
     locked = false;
 
@@ -221,8 +223,7 @@ function tap(el, o) {
         if (streak > best) { best = streak; writeNum('pshadow.best', best); }
         updateStats();
         feedback('✅ 找对啦！影子就是它', 'ok');
-        voiceSpeak('找对啦，影子就是它');
-        timer = setTimeout(newRound, 1200);
+        timer = sayThen('找对啦，影子就是它', newRound);
     } else {
         el.classList.add('badd');
         setTimeout(function () { el.classList.remove('badd'); }, 450);
@@ -252,6 +253,15 @@ initShadow();
 /* ===== 语音播报：进入先读玩法，右上角 🔊 可随时重听 ===== */
 var VOICE_TEXT = '影子配对游戏。上面有一个东西，下面的影子里，哪个是它的形状？点一下。';
 var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function voiceSpeak(text) {
   if (!CAN_VOICE || !text) return;
   try {

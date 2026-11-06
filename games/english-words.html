@@ -895,9 +895,9 @@ function answer(w, btn) {
     if (state.streak > state.best) { state.best = state.streak; safeSet(KEY_BEST, state.best); }
     if (window.XNLY && XNLY.mark) XNLY.mark('right');
     setFb('✅ ' + q.w.cn + ' — ' + q.w.en, true, '连对 ' + state.streak + ' 题');
-    speakWord(q.w);
     updateStats();
-    state.timer = setTimeout(nextQuestion, 1700);
+    /* 中文 + 英文读完再跳下一题 */
+    state.timer = XNLY.voice.speakThen('', nextQuestion, { parts: [{ text: q.w.cn, lang: 'zh-CN' }, { text: q.w.en, lang: 'en-US' }] });
   } else {
     state.locked = true;
     state.streak = 0;
@@ -908,9 +908,8 @@ function answer(w, btn) {
     });
     if (window.XNLY && XNLY.mark) XNLY.mark('wrong');
     setFb('❌ 正确答案是 ' + q.w.en + ' · ' + q.w.cn, false);
-    speakWord(q.w);
     updateStats();
-    state.timer = setTimeout(nextQuestion, 2000);
+    state.timer = XNLY.voice.speakThen('', nextQuestion, { parts: [{ text: q.w.cn, lang: 'zh-CN' }, { text: q.w.en, lang: 'en-US' }] });
   }
 }
 

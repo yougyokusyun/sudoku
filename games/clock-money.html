@@ -166,6 +166,15 @@ function shuffle(a) {
   for (var i = a.length - 1; i > 0; i--) { var j = rand(i + 1); var t = a[i]; a[i] = a[j]; a[j] = t; }
   return a;
 }
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function speak(t) { if (window.XNLY && XNLY.voice) XNLY.voice.speak(t); }
 
 /* ---------- 金额格式（单位：角） ---------- */
@@ -316,6 +325,8 @@ function clockDeckFor() {
 }
 
 function nextQuestion() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   clearTimeout(state.timer);
   state.locked = false;
   if (!state.deck || state.deckTier !== state.tier) {
@@ -382,9 +393,9 @@ function answer(val, btn, opts) {
     if (state.streak > state.best) { state.best = state.streak; safeSet(KEY_BEST, state.best); }
     if (window.XNLY && XNLY.mark) XNLY.mark('right');
     setFb('✅ 答对啦！' + right, true, '连对 ' + state.streak + ' 题');
-    speak('答对啦，' + right + '。');
+
     updateStats();
-    state.timer = setTimeout(nextQuestion, 1500);
+    state.timer = sayThen('答对啦，' + right + '。', nextQuestion);
   } else {
     state.locked = true;
     state.streak = 0;
@@ -395,9 +406,9 @@ function answer(val, btn, opts) {
     });
     if (window.XNLY && XNLY.mark) XNLY.mark('wrong');
     setFb('❌ 正确答案是 ' + right, false);
-    speak('再想一想。正确答案是' + right + '。');
+
     updateStats();
-    state.timer = setTimeout(nextQuestion, 2200);
+    state.timer = sayThen('再想一想。正确答案是' + right + '。', nextQuestion);
   }
 }
 

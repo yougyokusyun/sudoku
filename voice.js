@@ -35,6 +35,12 @@
   var badgeShown = false;
   var silentTimer = null;
 
+  /* 语音分组：speakThen() 用。同一组的多句全部读完才回调一次。
+     cancel() 会让整组作废（不回调）；用户手动点「下一题」走的就是 cancel。 */
+  var groups = {};
+  var gidSeq = 0;
+  var stickyBusy = false;      /* 当前播放属于「必须读完再跳」的组：点击不打断 */
+
   var SPEED_MIN = 0.5, SPEED_MAX = 2.0, SPEED_STEP = 0.05, SPEED_DEF = 1.0;
 
   function clampSpeed(v) {
@@ -103,7 +109,23 @@
     queue.length = 0;
     seq++;
     busy = false;
+    stickyBusy = false;
+    /* 整组作废：手动换题/切模式时不该再触发自动跳转 */
+    Object.keys(groups).forEach(function (id) {
+      var g = groups[id];
+      if (g) { g.dead = true; clearTimeout(g.timer); }
+      delete groups[id];
+    });
     try { if (synth) synth.cancel(); } catch (e) { }
+  }
+
+  function fireGroup(id) {
+    var g = groups[id];
+    if (!g || g.fired) return;
+    g.fired = true;
+    clearTimeout(g.timer);
+    delete groups[id];
+    try { if (g.cb) g.cb(); } catch (e) { }
   }
 
   function pump() {
@@ -112,12 +134,18 @@
     var mySeq = ++seq;
     busy = true;
     lastStart = Date.now();
+    stickyBusy = !!(job.gid && groups[job.gid] && groups[job.gid].sticky);
 
     var done = false;
     var finish = function () {
       if (done) return;
       done = true;
-      if (mySeq === seq) { busy = false; pump(); }
+      if (job.gid && groups[job.gid]) {
+        var g = groups[job.gid];
+        g.left--;
+        if (g.left <= 0) fireGroup(job.gid);
+      }
+      if (mySeq === seq) { busy = false; stickyBusy = false; pump(); }
     };
 
     /* 每次开口前重读 localStorage('xnly_speed')：首页改完滑杆，
@@ -163,6 +191,59 @@
     watchSilent();
   }
 
+  /* speakThen(text, cb, opts)
+   * 读完 text 的每一句之后才执行 cb（只执行一次），用于「答对后等语音播完再跳下一题」。
+   * - 多句拆开后全部读完才回调
+   * - 兜底：不再依赖 iOS 的 onend，字数 × 220ms + 1500ms 到点也会回调
+   * - 手动换题：调用返回句柄的 cancel() 或 XNLY.voice.cancel()，整组作废、不回调
+   * - 朗读期间点击屏幕不会打断（sticky），避免孩子乱点把语音掐断、提前跳题 */
+  function speakThen(text, cb, opts) {
+    opts = opts || {};
+    text = String(text == null ? '' : text).trim();
+    if (!text) { if (cb) setTimeout(function () { try { cb(); } catch (e) { } }, 0); return { cancel: cancel }; }
+
+    if (!supported) {
+      degrade();
+      setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, 300);
+      return { cancel: cancel };
+    }
+
+    if (!opts.queue) cancel();
+
+    var gid = ++gidSeq;
+    var lang = opts.lang || langOf(text);
+    var parts, chars;
+    if (opts.parts && opts.parts.length) {
+      /* 多语种分段：如「中文 + 英文单词」各用各的语音 */
+      parts = opts.parts.map(function (p) {
+        if (typeof p === 'string') return { text: p, lang: langOf(p) };
+        return { text: String(p.text || ''), lang: p.lang || langOf(p.text) };
+      });
+      chars = parts.map(function (p) { return p.text; }).join('').replace(/\s+/g, '').length;
+    } else {
+      parts = (opts.single ? [text] : splitSentences(text)).map(function (p) { return { text: p, lang: lang }; });
+      chars = text.replace(/\s+/g, '').length;
+    }
+    if (!parts.length) parts = [{ text: text, lang: lang }];
+
+    var g = groups[gid] = {
+      left: parts.length,
+      cb: cb,
+      fired: false,
+      dead: false,
+      sticky: opts.sticky !== false,
+      /* 兜底超时：按字数估算 + 余量，onend 不触发也能跳 */
+      timer: setTimeout(function () { fireGroup(gid); }, Math.max(1500, chars * 220) + 1500)
+    };
+
+    for (var i = 0; i < parts.length; i++) {
+      queue.push({ text: parts[i].text, lang: parts[i].lang, pitch: opts.pitch || 1.12, gid: gid });
+    }
+    pump();
+    watchSilent();
+    return { cancel: cancel };
+  }
+
   function isUnlocked() { return unlocked; }
 
   /* 读了却一点声音都没有 → 图标提示 + 提示音，不静默 */
@@ -202,8 +283,9 @@
 
   document.addEventListener('pointerdown', function () {
     if (!unlocked) onFirstGesture();
-    /* 点击打断：已经播了 400ms 以上的长句，按一下停掉 */
-    if (busy && Date.now() - lastStart > 400) cancel();
+    /* 点击打断：已经播了 400ms 以上的长句，按一下停掉。
+       「读完再跳下一题」的组不打断（stickyBusy），否则语音会半截停掉、提前跳题 */
+    if (busy && !stickyBusy && Date.now() - lastStart > 400) cancel();
   }, true);
   document.addEventListener('touchstart', function () {
     if (!unlocked) onFirstGesture();
@@ -305,6 +387,7 @@
   X.voice = {
     supported: supported,
     speak: speak,
+    speakThen: speakThen,
     cancel: cancel,
     speed: speed,
     setSpeed: setSpeed,

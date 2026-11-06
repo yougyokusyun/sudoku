@@ -44,8 +44,19 @@
  *           （现进时动作+状语 / there be / 情态），五年级由 5.8 词升至 9.6 词
  *           （because / when 从句、频率副词、be going to），四五年级 A1 裸指认句归零；
  *           图片与三年级题目不变，页面无新增文件。
+ * v39 变化：① 答对后等语音播完再跳题：voice.js 新增 speakThen（按朗读队列 onend 回调，
+ *              多句全部读完才触发；兜底 字数×220ms+1500ms；手动换题 cancel 不回调），
+ *              21 个游戏页的 setTimeout 跳转改为语音完成回调；
+ *           ② 成语页每题补 explain（≤30 字）与 source（出处），答对后弹出结果卡，
+ *              122 条答案并集 100% 覆盖，朗读不念出处；
+ *           ③ 全站朗读入口统一到右上角工具条一个 🔊，删除/隐藏 8 处页内重复按钮
+ *              （beat-clock / bingju / pic-write / wenyan / dialogue-choice / gushi /
+ *              yuwen-baike / english 等），点选项即朗读行为保留；
+ *           ④ idioms.html 横屏（≥900px 宽）改左图右题两栏，竖屏保持上下结构；
+ *              图片容器按 1:1 预留空间（固定高度 + aspect-ratio + 占位底色），
+ *              加载中/失败不塌陷、文字不下移，超高整体滚动不裁切。
  */
-var CACHE = 'xnly-v38';
+var CACHE = 'xnly-v39';
 
 var PRECACHE = [
   './',

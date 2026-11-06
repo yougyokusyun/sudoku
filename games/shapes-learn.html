@@ -160,6 +160,15 @@ function feedback(t, cls) {
 
 /* 语音朗读（不支持时静默跳过） */
 var canSpeak = typeof window.speechSynthesis !== 'undefined';
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function say(text) {
   if (!canSpeak) return;
   try {
@@ -179,6 +188,8 @@ function paint(shape) {
 var shapeDeck = XNLY.deck.make(SHAPES, 'shapes-learn', { head: 5 });
 
 function newRound() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   clearTimeout(timer);
   locked = false;
 
@@ -235,10 +246,10 @@ function guess(btn, s) {
     locked = true;
     btn.classList.add('good');
     elShapeBtn.classList.add('bounce', 'glow');
-    say('对啦，这是' + cur.name + '，像' + cur.items.join('、') + '。');
+
     feedback('✅ 对啦，这是' + cur.name + '！', 'ok');
     elExamples.textContent = cur.name + '：像 ' + cur.items.join('、') + '。';
-    timer = setTimeout(newRound, 1100);
+    timer = sayThen('对啦，这是' + cur.name + '，像' + cur.items.join('、') + '。', newRound);
   } else {
     btn.classList.add('badd');
     setTimeout(function () { btn.classList.remove('badd'); }, 450);

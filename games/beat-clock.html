@@ -177,6 +177,7 @@ function speakQuestion() {
     say(state.cur.w.cn);
   }
 }
+window.replayCurrent = function () { speakQuestion(); };
 
 function rebuildDeck() {
   state.deck = shuffle(WORDS);
@@ -302,8 +303,7 @@ function renderSummary() {
     html += '<div class="sumtitle" style="font-size:.86rem;text-align:left;color:#7a3b3b">📝 错题回顾（点一下重听）</div><div class="review">';
     state.wrongs.forEach(function (q) {
       html += '<div class="rv" data-en="' + q.w.en.replace(/"/g, '&quot;') + '">' +
-        '<span class="w">' + q.w.en + '<small>' + q.w.cn + '</small></span>' +
-        '<button type="button" aria-label="重听">🔊</button></div>';
+        '<span class="w">' + q.w.en + '<small>' + q.w.cn + '</small></span></div>';
     });
     html += '</div>';
   } else {

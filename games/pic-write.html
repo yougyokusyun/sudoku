@@ -97,7 +97,7 @@ h1{font-size:1.15rem;}
   <div class="slots" id="slots"></div>
   <div class="sentence empty" id="sentence">按顺序选一选，就能连成一句话 ✨</div>
   <div class="controls">
-    <button class="btn primary" id="read" type="button">🔊 读一读</button>
+    <button class="btn primary" id="read" type="button" hidden style="display:none">🔊 读一读</button>
     <button class="btn rec" id="rec" type="button">🎙️ 录一录</button>
     <button class="btn warn" id="next" type="button">🔄 换一张</button>
   </div>
@@ -249,6 +249,11 @@ document.getElementById('read').addEventListener('click', function () {
   var s = SCENES[state.i];
   speak('看看图，想一想：什么时候，谁，在哪里，做什么？');
 });
+window.replayCurrent = function () {
+  var t = sentenceText();
+  if (t) { speak(t); return; }
+  speak('看看图，想一想：什么时候，谁，在哪里，做什么？');
+};
 document.getElementById('next').addEventListener('click', function () {
   state.i = (state.i + 1) % SCENES.length;
   render();

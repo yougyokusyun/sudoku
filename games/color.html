@@ -145,6 +145,15 @@ function feedback(t, cls) {
 
 /* 语音朗读颜色名（系统不支持时静默跳过） */
 var canSpeak = typeof window.speechSynthesis !== 'undefined';
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function say(text) {
     if (!canSpeak) return;
     try {
@@ -169,6 +178,8 @@ function deckForColors() {
 }
 
 function newRound() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
     clearTimeout(timer);
     locked = false;
 
@@ -218,9 +229,9 @@ function tap(el, c) {
         streak++;
         if (streak > best) { best = streak; writeNum('pcolor.best', best); }
         updateStats();
-        say(cur.name);
+
         feedback('🎉 ' + cur.name + '！', 'ok');
-        timer = setTimeout(newRound, 1000);
+        timer = sayThen(cur.name, newRound);
     } else {
         el.classList.add('badd');
         setTimeout(function () { el.classList.remove('badd'); }, 460);

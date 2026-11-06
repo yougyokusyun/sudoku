@@ -116,6 +116,8 @@ var weatherDeck = XNLY.deck.make(WEATHERS, 'weather', { head: 3 });
 
 /* 出一题 */
 function newRound(){
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   clearTimeout(flyTimer); clearTimeout(missTimer); clearTimeout(entryTimer);
   locked=false;
   var wx=weatherDeck.next();
@@ -148,8 +150,7 @@ function choose(btn,c,wx){
     clearTimeout(entryTimer);
     entryTimer=setTimeout(function(){wemoji.classList.remove('pop');},500);
     feedback('✅ '+wx.label+'要带'+ITEMS[c].label+'！', true);
-    voiceSpeak('对啦，' + wx.label + '要带' + ITEMS[c].name + '。' + wx.tip);
-    flyTimer=setTimeout(newRound,1100);
+    flyTimer = sayThen('对啦，' + wx.label + '要带' + ITEMS[c].name + '。' + wx.tip, newRound);
   }else{
     btn.classList.add('miss');
     feedback('再想想', false);
@@ -163,6 +164,15 @@ newRound();
 /* ===== 语音播报：进入先读玩法，右上角 🔊 可随时重听 ===== */
 var VOICE_TEXT = '天气与穿衣游戏。看看今天是什么天气，再选出应该带出门的东西。';
 var CAN_VOICE = !!(window.speechSynthesis && window.SpeechSynthesisUtterance);
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function voiceSpeak(text) {
   if (!CAN_VOICE || !text) return;
   try {

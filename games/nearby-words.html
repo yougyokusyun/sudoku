@@ -212,10 +212,18 @@ function clickWord(btn, w){
     if(state.streak>state.best){state.best=state.streak;localStorage.setItem('wnh.best',state.best);elBest.textContent=state.best;}
     elStreak.textContent=state.streak;
     elFb.textContent = '🎉 太棒啦，这一组全送对啦！'; elFb.className='feedback ok';
-    setTimeout(function(){ nextRound(); }, 1000);
+    /* 读完「全送对啦」再换下一组 */
+    sayThen('太棒啦，这一组全送对啦！', nextRound);
   }
 }
-function nextRound(){ ri=(ri+1)%ROUNDS.length; build(); }
+function nextRound(){
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+  ri=(ri+1)%ROUNDS.length; build(); }
+function sayThen(t, cb){
+  if(window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t||''), cb);
+  speak(t);
+  return { cancel: function(){} };
+}
 
 btnNext.addEventListener('click', nextRound);
 build();

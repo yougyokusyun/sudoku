@@ -90,7 +90,7 @@ h1{font-size:1.15rem;}
   <div class="story">
     <div class="top">
       <div class="t" id="storyTitle"></div>
-      <button class="sp" id="spBtn" type="button" title="朗读短文">🔊</button>
+      <button class="sp" id="spBtn" type="button" title="朗读短文" hidden>🔊</button>
     </div>
     <div class="x" id="storyText"></div>
   </div>
@@ -719,6 +719,12 @@ function shuffle(a) {
   return a;
 }
 function speak(t, o) { if (window.XNLY && XNLY.voice) XNLY.voice.speak(t, o || {}); }
+/* 读完再跳：语音队列全部播完才执行 cb，onend 不触发时按字数兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  speak(t);
+  return { cancel: function () { } };
+}
 
 function updateStats() {
   elStreak.textContent = state.streak;
@@ -871,7 +877,6 @@ function answer(i, btn, q) {
     if (window.XNLY && XNLY.mark) XNLY.mark('right');
     elFb.className = 'feedback ok';
     elFb.innerHTML = '✅ 答对啦！<small>' + q[3] + '</small>';
-    speak('答对啦。' + q[3]);
   } else {
     btn.classList.add('bad', 'shake');
     state.streak = 0;
@@ -881,25 +886,27 @@ function answer(i, btn, q) {
     });
     elFb.className = 'feedback bad';
     elFb.innerHTML = '❌ 再读一读短文～正确答案是：' + q[1][q[2]] + '<small>' + q[3] + '</small>';
-    speak('再读一读。' + q[3]);
   }
   Array.prototype.forEach.call(elOpts.children, function (b) { b.disabled = true; });
   updateStats();
 
   state.qi++;
-  state.timer = setTimeout(function () {
+  /* 解析读完再进下一题，避免语音被打断 */
+  state.timer = sayThen((correct ? '答对啦。' : '再读一读。') + q[3], function () {
     if (state.qi >= state.cur.q.length) {
       state.pos++;
       renderPassage();
     } else {
       renderQuestion();
     }
-  }, correct ? 2000 : 2600);
+  });
 }
 
 document.getElementById('spBtn').addEventListener('click', function () {
   if (state.cur) speak(state.cur.x);
 });
+/* 页内朗读按钮已隐藏，重听短文走右上角工具条的 🔊 */
+window.replayCurrent = function () { if (state.cur) speak(state.cur.x); };
 
 /* 首点补读：进页面自动朗读可能被浏览器拦截，第一次点击/触摸时补读当前短文 */
 function firstTap() {

@@ -191,6 +191,15 @@ function feedback(t, cls) {
 }
 
 var canSpeak = typeof window.speechSynthesis !== 'undefined';
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function say(text) {
   if (!canSpeak) return;
   try {
@@ -216,6 +225,8 @@ function setPhoto(host, f, emoji) {
 var catDeck = XNLY.deck.make(CATS.map(function (c, i) { return i; }), 'sort-home', { head: 3 });
 
 function newRound() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   clearTimeout(timer);
   locked = false;
   feedback('');
@@ -267,8 +278,7 @@ function tapItem(p) {
       updateStats();
       feedback('🎉 「' + cur.name + '」的东西全找到啦！', 'ok');
       elPrompt.textContent = '🎉 全部找对啦！';
-      say('太棒了，全都找对啦！');
-      timer = setTimeout(newRound, 1600);
+      timer = sayThen('太棒了，全都找对啦！', newRound);
     }
   } else {
     p.el.classList.add('badd');

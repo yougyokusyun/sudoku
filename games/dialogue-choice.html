@@ -117,7 +117,7 @@ h1{font-size:1.15rem;}
     <div class="summary" id="summary"></div>
     <div class="actions">
       <button class="mini" id="backBtn" type="button">← 返回场景列表</button>
-      <button class="mini" id="replayBtn" type="button">🔊 再听一遍</button>
+      <button class="mini" id="replayBtn" type="button" hidden>🔊 再听一遍</button>
     </div>
   </div>
 </div>
@@ -802,13 +802,16 @@ function finishScene() {
 }
 
 document.getElementById('backBtn').addEventListener('click', renderList);
-document.getElementById('replayBtn').addEventListener('click', function () {
+/* 页内「再听一遍」已隐藏，重听走右上角工具条的 🔊 */
+function replayLine() {
   if (state.si < 0) return;
   var st = state.scene[3][state.step];
   if (!st) return;
   say(st[0], { lang: 'en-US' });
   say(st[1], { queue: true });
-});
+}
+window.replayCurrent = replayLine;
+document.getElementById('replayBtn').addEventListener('click', replayLine);
 
 var firstTap = false;
 document.addEventListener('pointerdown', function () {

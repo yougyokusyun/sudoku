@@ -156,6 +156,15 @@ function feedback(t, cls) {
 }
 
 var canSpeak = typeof window.speechSynthesis !== 'undefined';
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function say(text) {
   if (!canSpeak) return;
   try {
@@ -181,6 +190,8 @@ function targetDeckFor() {
 var fruitDeck = XNLY.deck.make(FRUITS, 'number-match.fruits', { head: 5 });
 
 function newRound() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   clearTimeout(timer);
   locked = true;                 /* 800ms 输入锁：题刚出来时朗读还没结束，防连点 */
   clearTimeout(lockTimer);
@@ -234,9 +245,9 @@ function tap(btn, c) {
     updateStats();
     okRun++; badRun = 0;
     if (okRun >= 3 && level < LEVELS.length) { okRun = 0; setLevel(level + 1); if (window.XNLY) XNLY.sound.win(); }
-    say('对啦，' + target + '个！');
+
     feedback('🎉 对啦，' + target + '个！', 'ok');
-    timer = setTimeout(newRound, 1200);
+    timer = sayThen('对啦，' + target + '个！', newRound);
   } else {
     btn.classList.add('badd');
     setTimeout(function () { btn.classList.remove('badd'); }, 450);

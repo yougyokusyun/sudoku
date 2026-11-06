@@ -187,6 +187,15 @@ function angDiff(a, b) {
 }
 
 var canSpeak = typeof window.speechSynthesis !== 'undefined';
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function say(text) {
   if (!canSpeak) return;
   try {
@@ -244,6 +253,8 @@ var levelDeck = XNLY.deck.make(LEVELS.map(function (l, i) { return i; }), 'shape
 
 /* ===== 出题 ===== */
 function newRound() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   clearTimeout(timer);
   locked = false;
   feedback('');
@@ -372,9 +383,9 @@ function trySnap(p) {
   updateStats();
   feedback('🎉 太棒了，「' + cur.name + '」拼好啦！', 'ok');
   elPrompt.innerHTML = '🎉 拼好啦！';
-  say('真棒，' + SHAPE_NAME[h.s] + '放对啦！');
+
   locked = true;
-  timer = setTimeout(newRound, 1500);
+  timer = sayThen('真棒，' + SHAPE_NAME[h.s] + '放对啦！', newRound);
 }
 
 /* 没放对就轻轻退回托盘原位 */

@@ -256,6 +256,15 @@ var tierBar = document.getElementById('tierBar');
 var curIdx = 1, level = LEVELS[0], found = [], hintUsed = false, solved = false, nextTimer = null;
 var firstTap = false;
 
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function say(t) { if (window.XNLY && XNLY.voice && XNLY.voice.speak) { try { XNLY.voice.speak(t); } catch (e) { } } }
 function sfx(n) { if (window.XNLY && XNLY.sound && XNLY.sound[n]) { try { XNLY.sound[n](); } catch (e) { } } }
 
@@ -404,9 +413,9 @@ function onScene(evt, svg) {
     elHint.disabled = true;
     sfx('win');
     setFb('🎉 太棒了！' + level.n + ' 处全找到啦', 'ok', '马上进入下一关');
-    say('太棒了，全部找齐！');
+
     saveState();
-    nextTimer = setTimeout(nextLevel, 1800);
+    nextTimer = sayThen('太棒了，全部找齐！', nextLevel);
   }
 }
 
@@ -421,6 +430,8 @@ function tierStart(t) {
 }
 
 function nextLevel() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   var t = tierOf(curIdx);
   var nxt = curIdx + 1;
   if (curIdx >= TIERS[t].end) nxt = tierStart(t);

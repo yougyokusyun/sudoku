@@ -159,6 +159,15 @@ function shuffle(a) {
   return a;
 }
 function pick(a) { return a[rand(a.length)]; }
+/* 读完语音再跳下一题：onend 不触发时按 字数×220ms+1500ms 兜底 */
+function sayThen(t, cb) {
+  if (window.XNLY && XNLY.voice && XNLY.voice.speakThen) return XNLY.voice.speakThen(String(t || ''), cb);
+  t = String(t || '');
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.speak) XNLY.voice.speak(t); } catch (e) { }
+  var ph = setTimeout(function () { try { if (cb) cb(); } catch (e) { } }, Math.max(1500, t.replace(/\s+/g, '').length * 220) + 1500);
+  return { cancel: function () { clearTimeout(ph); } };
+}
+
 function speak(t) { if (window.XNLY && XNLY.voice) XNLY.voice.speak(t); }
 
 /* 某一档里出现过的所有词，用来做干扰项 */
@@ -230,6 +239,8 @@ function setFb(text, good, sub) {
 }
 
 function nextQuestion() {
+  if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
+
   clearTimeout(state.timer);
   state.locked = false;
   state.cur = makeQuestion();
@@ -261,16 +272,17 @@ function answer(val, btn) {
     if (window.XNLY && XNLY.mark) XNLY.mark('right');
     setFb('✅ 对啦！' + q.ask + ' 和 ' + q.ans + ' 是' + (q.isSyn ? '近义词' : '反义词'),
       true, '连对 ' + state.streak + ' 题');
-    speak(q.ask + '，' + q.ans + '，是一对' + (q.isSyn ? '近义词' : '反义词') + '。');
-    if (state.streak >= 3 && state.tier < 3) {
+    var tierUp = state.streak >= 3 && state.tier < 3;
+    if (tierUp) {
       state.tier++; safeSet(KEY_TIER, state.tier);
       state.streak = 0;
       setFb('🎉 连对 3 题，升到第 ' + state.tier + ' 档！', true, LEVELS[state.tier].label);
-      speak('太棒了，升到第' + state.tier + '档。');
+
       renderTiers();
     }
     updateStats();
-    state.timer = setTimeout(nextQuestion, 1900);
+    state.timer = sayThen(q.ask + '，' + q.ans + '，是一对' + (q.isSyn ? '近义词' : '反义词') + '。' +
+      (tierUp ? '太棒了，升到第' + state.tier + '档。' : ''), nextQuestion);
   } else {
     btn.classList.add('bad');
     btn.classList.add('shake');
@@ -283,16 +295,17 @@ function answer(val, btn) {
     });
     if (window.XNLY && XNLY.mark) XNLY.mark('wrong');
     setFb('❌ 不对哦，正确答案是「' + q.ans + '」', false);
-    speak('不对哦。' + q.ask + ' 和 ' + q.ans + ' 是一对' + (q.isSyn ? '近义词' : '反义词') + '。');
-    if (state.wrongStreak <= -2 && state.tier > 1) {
+    var tierDown = state.wrongStreak <= -2 && state.tier > 1;
+    if (tierDown) {
       state.tier--; safeSet(KEY_TIER, state.tier);
       state.wrongStreak = 0;
       setFb('😊 连错 2 题，回到第 ' + state.tier + ' 档', false, LEVELS[state.tier].label);
-      speak('没关系，回到第' + state.tier + '档。');
+
       renderTiers();
     }
     updateStats();
-    state.timer = setTimeout(nextQuestion, 2200);
+    state.timer = sayThen('不对哦。' + q.ask + ' 和 ' + q.ans + ' 是一对' + (q.isSyn ? '近义词' : '反义词') + '。' +
+      (tierDown ? '没关系，回到第' + state.tier + '档。' : ''), nextQuestion);
   }
 }
 
