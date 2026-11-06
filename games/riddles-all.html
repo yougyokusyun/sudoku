@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>🧩 谜语大全 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--accent:#6a4bff;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff1f6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef7ff,transparent 55%),
+             linear-gradient(160deg,#fffafe,#f4f8ff);
+  min-height:100dvh;padding:12px 14px 30px;user-select:none;}
+.wrap{max-width:980px;margin:0 auto;}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+h1{font-size:clamp(1.05rem,2.4vw,1.35rem);letter-spacing:.5px;}
+.chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid var(--line);color:#4b2fd0;font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+.hint{margin:10px 2px 8px;font-size:.76rem;line-height:1.55;color:#7b8ea8;}
+.tools{display:flex;gap:8px;align-items:center;margin:0 0 10px;}
+.q{flex:1;min-width:0;min-height:44px;border:2px solid rgba(106,75,255,.18);border-radius:14px;
+  background:#fff;padding:0 14px;font-family:inherit;font-size:.92rem;color:var(--ink);outline:none;}
+.q:focus{border-color:rgba(106,75,255,.55);}
+.clr{flex:0 0 auto;min-height:44px;padding:0 14px;border-radius:14px;border:1px solid var(--line);
+  background:#fff;font-family:inherit;font-weight:800;font-size:.82rem;color:#7d7a90;cursor:pointer;}
+.found{margin:0 2px 6px;font-size:.74rem;font-weight:800;color:#8a86a5;}
+.cats{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px;}
+.cat{min-height:36px;padding:2px 11px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  font-family:inherit;font-weight:800;font-size:.76rem;color:#6b7f95;cursor:pointer;}
+.cat.on{background:#ffeef5;border-color:rgba(224,85,155,.45);color:#b0306a;}
+.ghead{display:flex;align-items:center;gap:8px;margin:20px 2px 8px;}
+.ghead .ge{font-size:.86rem;font-weight:900;color:#b0306a;background:#ffeef5;border-radius:10px;
+  min-width:34px;height:34px;display:flex;align-items:center;justify-content:center;padding:0 8px;}
+.ghead .gc{font-size:.7rem;font-weight:800;color:#7b8ea8;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:2px 8px;}
+.line{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);
+  border-radius:16px;padding:11px 12px;margin-bottom:8px;box-shadow:0 4px 10px rgba(36,59,83,.05);}
+.body{flex:1;min-width:0;}
+.face{font-size:clamp(.95rem,2.2vw,1.08rem);font-weight:800;line-height:1.55;word-break:break-word;}
+.ans{margin-top:6px;font-size:.9rem;font-weight:900;color:#0b7a75;word-break:break-word;}
+.meta{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;}
+.tag{background:#f2f0ff;border-radius:999px;padding:2px 9px;font-size:.7rem;font-weight:800;color:#5b46c9;}
+.tag.catx{background:#ffeef5;color:#b0306a;}
+.tag.diff{background:#fff6e6;color:#a96a00;}
+.tag.grade{background:#eaf7ee;color:#227a44;}
+.tag.var{background:#eef3ff;color:#3a5bb5;}
+.tgl{margin-top:7px;border:1px solid rgba(106,75,255,.25);background:#f4f2ff;color:#5b46c9;
+  border-radius:999px;padding:4px 11px;font-family:inherit;font-size:.72rem;font-weight:800;cursor:pointer;}
+.det{margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);font-size:.8rem;line-height:1.7;
+  color:#3c5169;word-break:break-word;}
+.det b{color:#4b2fd0;}
+.spk{flex:0 0 auto;min-width:40px;min-height:40px;border-radius:50%;border:1px solid rgba(106,75,255,.25);
+  background:#f6f4ff;font-size:1rem;cursor:pointer;line-height:1;}
+.more{width:100%;min-height:46px;margin-top:12px;border-radius:14px;border:1px dashed rgba(106,75,255,.35);
+  background:#faf9ff;font-family:inherit;font-weight:900;font-size:.85rem;color:#4b2fd0;cursor:pointer;}
+.empty{margin:18px 0;padding:16px;border-radius:14px;background:#fff;border:1px solid var(--line);
+  text-align:center;font-size:.84rem;color:#7b8ea8;}
+[hidden]{display:none!important;}
+footer{margin-top:24px;text-align:center;font-size:.72rem;line-height:1.6;color:#9fb1c6;}
+@media (max-width:380px){.chips{margin-left:0;width:100%;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🧩 谜语大全</h1>
+  <div class="chips">
+    <span class="chip">共 <b id="totalChip">0</b> 条</span>
+    <span class="chip">解析 <b id="expChip">0</b>%</span>
+    <span class="chip"><b id="catChip">0</b> 类</span>
+  </div>
+</header>
+
+<div class="hint">和「猜谜语」游戏共用同一份谜语库。按类别浏览或搜谜面、谜底；点「看解析」会逐句告诉你怎么从谜面想到谜底，点 🔊 可以朗读。</div>
+
+<div class="tools">
+  <input class="q" id="q" type="search" placeholder="搜谜面或谜底，如：耳朵 / 兔子 / 西瓜" aria-label="搜索谜语">
+  <button class="clr" id="clr" type="button">清空</button>
+</div>
+<div class="found" id="found">正在加载…</div>
+<div class="cats" id="cats"></div>
+<div id="list"></div>
+<button class="more" id="more" type="button" hidden>加载更多</button>
+
+<footer>谜底与解析逐条对应 · 同一谜底的多条谜面标注为变体 · 与游戏共用 data/riddles.json</footer>
+</div>
+
+<script src="../voice.js"></script>
+<script src="../homebtn.js"></script>
+<script>
+var V = (window.XNLY && window.XNLY.voice) || null;
+function say(t) {
+  if (!t) return;
+  try { if (V && V.speak) { V.speak(String(t)); return; } } catch (e) { }
+  try { if (window.XNLY && XNLY.speak) { XNLY.speak(String(t)); return; } } catch (e) { }
+  try {
+    if (!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = 'zh-CN'; u.rate = 1;
+    speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+var ORDER = ['动物', '植物', '水果食物', '日常用品', '文具', '人体', '自然现象', '天气季节', '字谜', '成语谜', '交通', '建筑', '玩具', '其他'];
+var ALL = [];
+var sel = 'all';
+var term = '';
+var shown = 0;
+var PAGE = 35;
+
+var elList = document.getElementById('list');
+var elCats = document.getElementById('cats');
+var elFound = document.getElementById('found');
+var elMore = document.getElementById('more');
+var elQ = document.getElementById('q');
+
+function norm(s) { return (s || '').toLowerCase().replace(/\s+/g, ''); }
+
+function cats() {
+  var set = {}, arr = [];
+  ALL.forEach(function (it) { if (!set[it.cat]) { set[it.cat] = 1; arr.push(it.cat); } });
+  return arr.sort(function (a, b) { return ORDER.indexOf(a) - ORDER.indexOf(b); });
+}
+
+function paintCats() {
+  elCats.textContent = '';
+  var arr = ['all'].concat(cats());
+  arr.forEach(function (k) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cat' + (sel === k ? ' on' : '');
+    b.textContent = k === 'all' ? '全部' : k;
+    b.addEventListener('click', function () { sel = k; shown = 0; paintCats(); render(); });
+    elCats.appendChild(b);
+  });
+}
+
+function filtered() {
+  var t = norm(term);
+  return ALL.filter(function (it) {
+    if (sel !== 'all' && it.cat !== sel) return false;
+    if (!t) return true;
+    return norm(it.face).indexOf(t) >= 0 || norm(it.ans).indexOf(t) >= 0 || norm(it.exp).indexOf(t) >= 0;
+  });
+}
+
+function makeCard(it) {
+  var row = document.createElement('div');
+  row.className = 'line';
+  row.setAttribute('role', 'button');
+  row.setAttribute('tabindex', '0');
+
+  var body = document.createElement('div'); body.className = 'body';
+  var face = document.createElement('div'); face.className = 'face'; face.textContent = '❓ ' + it.face;
+  var ans = document.createElement('div'); ans.className = 'ans'; ans.textContent = '谜底：' + it.ans;
+  body.appendChild(face); body.appendChild(ans);
+
+  var meta = document.createElement('div'); meta.className = 'meta';
+  function tag(cls, txt) { var t = document.createElement('span'); t.className = 'tag ' + cls; t.textContent = txt; meta.appendChild(t); }
+  tag('catx', it.cat);
+  if (it.diff) tag('diff', it.diff);
+  if (it.grade) tag('grade', it.grade);
+  if (it.varN > 1) tag('var', '同底变体 ' + it.varN);
+  body.appendChild(meta);
+
+  var det = document.createElement('div'); det.className = 'det'; det.hidden = true;
+  det.innerHTML = '<b>解析：</b>';
+  det.appendChild(document.createTextNode(it.exp || '暂无解析。'));
+  body.appendChild(det);
+
+  var tgl = document.createElement('button');
+  tgl.type = 'button'; tgl.className = 'tgl'; tgl.textContent = '看解析';
+  tgl.setAttribute('aria-expanded', 'false');
+  tgl.addEventListener('click', function (e) {
+    e.stopPropagation();
+    det.hidden = !det.hidden;
+    tgl.textContent = det.hidden ? '看解析' : '收起解析';
+    tgl.setAttribute('aria-expanded', det.hidden ? 'false' : 'true');
+  });
+  body.appendChild(tgl);
+
+  var spk = document.createElement('button');
+  spk.type = 'button'; spk.className = 'spk'; spk.textContent = '🔊';
+  spk.setAttribute('aria-label', '朗读 ' + it.ans);
+  spk.addEventListener('click', function (e) {
+    e.stopPropagation();
+    say('谜面：' + it.face + '。谜底：' + it.ans + '。' + (it.exp || ''));
+  });
+
+  function go() { say('谜面：' + it.face + '。谜底：' + it.ans + '。'); }
+  row.addEventListener('click', go);
+  row.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+  });
+
+  row.appendChild(body); row.appendChild(spk);
+  return row;
+}
+
+function render(reset) {
+  if (reset !== false) { shown = 0; elList.textContent = ''; }
+  var list = filtered();
+  var start = shown;
+  var end = Math.min(shown + PAGE, list.length);
+  var lastCat = null;
+  if (shown > 0) {
+    var prev = elList.lastChild;
+    if (prev && prev.dataset && prev.dataset.cat) lastCat = prev.dataset.cat;
+  }
+  for (var i = start; i < end; i++) {
+    var it = list[i];
+    if (sel === 'all' && !norm(term) && it.cat !== lastCat) {
+      var h = document.createElement('div'); h.className = 'ghead';
+      var ge = document.createElement('span'); ge.className = 'ge'; ge.textContent = it.cat;
+      var gc = document.createElement('span'); gc.className = 'gc';
+      gc.textContent = list.filter(function (x) { return x.cat === it.cat; }).length + ' 条';
+      h.appendChild(ge); h.appendChild(gc);
+      elList.appendChild(h);
+      lastCat = it.cat;
+    }
+    var card = makeCard(it);
+    card.dataset.cat = it.cat;
+    elList.appendChild(card);
+  }
+  shown = end;
+  elFound.textContent = '共 ' + list.length + ' 条 · 已显示 ' + shown + ' 条';
+  elMore.hidden = shown >= list.length;
+  if (!list.length) {
+    var em = document.createElement('div');
+    em.className = 'empty';
+    em.textContent = '没有找到匹配的谜语，换个词试试。';
+    elList.appendChild(em);
+    elMore.hidden = true;
+  }
+}
+
+function load() {
+  fetch('../data/riddles.json', { cache: 'no-cache' })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (d) {
+      var raw = d.items || [];
+      var cnt = {};
+      raw.forEach(function (x) { cnt[x.ans] = (cnt[x.ans] || 0) + 1; });
+      ALL = raw.slice();
+      ALL.forEach(function (x) { x.varN = cnt[x.ans] || 1; });
+      ALL.sort(function (a, b) {
+        return ORDER.indexOf(a.cat) - ORDER.indexOf(b.cat) || a.ans.localeCompare(b.ans, 'zh');
+      });
+      var filled = ALL.filter(function (x) { return x.exp && x.exp.length >= 40; }).length;
+      document.getElementById('totalChip').textContent = ALL.length;
+      document.getElementById('expChip').textContent = Math.round(filled / ALL.length * 100);
+      document.getElementById('catChip').textContent = cats().length;
+      paintCats();
+      render();
+    })
+    .catch(function () {
+      elFound.textContent = '数据加载失败：请通过网站（http）打开本页。';
+    });
+}
+
+elMore.addEventListener('click', function () { render(false); });
+
+var timer = null;
+elQ.addEventListener('input', function () {
+  clearTimeout(timer);
+  timer = setTimeout(function () {
+    term = elQ.value.trim();
+    sel = 'all';
+    paintCats();
+    render();
+  }, 180);
+});
+
+document.getElementById('clr').addEventListener('click', function () {
+  elQ.value = ''; term = ''; sel = 'all'; shown = 0;
+  paintCats(); render(); elQ.focus();
+});
+
+load();
+</script>
+</body>
+</html>

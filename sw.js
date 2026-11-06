@@ -86,8 +86,10 @@
  *           近反义 / 来历 / 演变字段，卡片可点击「展开详解」；首字母索引与搜索覆盖新数据。
  * v47 变化：成语大全补至 380 条（新增 R–Z 115 条），字段与展示方式同上一批；
  *           去重后无重复，首字母索引与搜索随数据自动覆盖。
+ * v48 变化：新增「谜语大全」页（games/riddles-all.html）；谜语数据抽成共享
+ *           data/riddles.json（507 条，含谜目/解析/难度/年级），猜谜语游戏改为读同一份数据。
  */
-var CACHE = 'xnly-v47';
+var CACHE = 'xnly-v48';
 
 var PRECACHE = [
   './',
@@ -114,12 +116,14 @@ var PRECACHE = [
   'games/whack-word.html',
   'games/writing-showcase.html',
   'games/idioms-all.html',
+  'games/riddles-all.html',
   'games/dialogue-choice.html',
   'games/gomoku.html',
   'games/guess-number.html',
   'games/gushi.html',
   'games/idioms.html',
   'data/idioms-all.json',
+  'data/riddles.json',
   'games/img/icon-180.png',
   'games/img/icon-192.png',
   'games/img/icon-512.png',
