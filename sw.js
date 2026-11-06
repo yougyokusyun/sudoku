@@ -80,8 +80,10 @@
  * v44 变化：新增「成语大全」页（idioms-all.html）：数据放 data/idioms-all.json，
  *           首批 145 条（计划 500 条），拼音首字母索引 + 搜索 + 分页懒加载；
  *           释义为小学生可读短句，出处仅标注可核查者（17 条），其余不标。
+ * v45 变化：删除「军棋 · 翻开版」页（games/junqi.html），同步移除首页卡片、科目映射
+ *           与预缓存条目；其它页面无变化。
  */
-var CACHE = 'xnly-v44';
+var CACHE = 'xnly-v45';
 
 var PRECACHE = [
   './',
@@ -117,7 +119,6 @@ var PRECACHE = [
   'games/img/icon-180.png',
   'games/img/icon-192.png',
   'games/img/icon-512.png',
-  'games/junqi.html',
   'games/klondike.html',
   'games/links.html',
   'games/logic-clues.html',
