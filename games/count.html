@@ -12,8 +12,8 @@ body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(
   background:radial-gradient(900px 500px at 0% 0%,#fff6e6,transparent 60%),
              radial-gradient(900px 500px at 100% 0%,#eafaf0,transparent 55%),
              linear-gradient(160deg,#fffdf6,#f2fbf6);
-  min-height:100dvh;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
-header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+  height:100vh;height:100dvh;min-height:0;overflow:hidden;display:flex;flex-direction:column;padding:10px 12px 12px;gap:8px;user-select:none;}
+header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex:0 0 auto;}
 h1{font-size:1.15rem;}
 .chips{margin-left:auto;display:flex;gap:6px;}
 .chip{background:#fff;border:1px solid rgba(36,59,83,.10);border-radius:999px;padding:4px 10px;
@@ -28,16 +28,14 @@ h1{font-size:1.15rem;}
   box-shadow:0 10px 24px rgba(36,59,83,.08);}
 .prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a5f78;}
 
-/* 实物区：数量越多格子越小，保证 1~10 个都放得下 */
-.items{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:9px;
-  width:min(86vw,560px);min-height:150px;padding:10px;border-radius:20px;
+/* 实物区：按剩余空间自适应，图尽量大且不出滚动 */
+.items{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  flex:1;min-height:0;width:100%;max-width:none;padding:8px;border-radius:20px;
   background:rgba(255,236,205,.45);border:2px dashed rgba(224,138,0,.28);}
-.items .it{line-height:1;font-size:4.8rem;animation:popIn .25s ease;}
-.items[data-n="5"] .it,.items[data-n="6"] .it{font-size:3.45rem;}
-.items[data-n="7"] .it,.items[data-n="8"] .it{font-size:3rem;}
-.items[data-n="9"] .it,.items[data-n="10"] .it{font-size:2.625rem;}
+.it-row{display:flex;gap:6px;justify-content:center;}
+.items .it{line-height:1;flex:0 0 auto;animation:popIn .25s ease;}
 
-.nums{display:flex;justify-content:center;align-items:center;gap:clamp(10px,2.6vw,18px);flex-wrap:wrap;}
+.nums{display:flex;justify-content:center;align-items:center;gap:clamp(10px,2.6vw,18px);flex-wrap:wrap;flex:0 0 auto;}
 .num{width:120px;height:120px;border-radius:22px;border:2px solid rgba(36,59,83,.10);background:#fff;
   color:#3d5673;font-family:inherit;font-size:2.6rem;font-weight:900;cursor:pointer;
   box-shadow:0 6px 14px rgba(36,59,83,.10);transition:transform .14s ease,border-color .18s ease,background .18s ease;}
@@ -45,11 +43,11 @@ h1{font-size:1.15rem;}
 .num.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;animation:pop .45s ease;}
 .num.badd{border-color:var(--bad);background:#ffeded;animation:shake .45s ease;}
 
-.feedback{min-height:30px;font-size:1.05rem;font-weight:800;text-align:center;color:var(--muted);}
+.feedback{min-height:30px;font-size:1.05rem;font-weight:800;text-align:center;color:var(--muted);flex:0 0 auto;}
 .feedback.ok{color:var(--ok);}
 .feedback.bad{color:var(--bad);animation:shake .45s ease;}
 
-.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;}
+.controls{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;width:100%;flex:0 0 auto;}
 .btn{min-height:46px;padding:0 18px;border:2px solid rgba(36,59,83,.10);border-radius:999px;
   background:#fff;color:var(--ink);font-family:inherit;font-weight:800;font-size:.9rem;cursor:pointer;
   box-shadow:0 4px 12px rgba(36,59,83,.10);}
@@ -64,16 +62,11 @@ h1{font-size:1.15rem;}
   body{padding:6px 10px;gap:5px;}
   h1{font-size:.95rem;}
   .chip{padding:2px 8px;font-size:.68rem;}
-  .stage{gap:7px;padding:8px;border-radius:16px;flex-direction:row;flex-wrap:wrap;}
-  .prompt{flex:1 0 100%;font-size:.82rem;}
-  .items{width:min(46vw,220px);min-height:80px;padding:6px;gap:4px;}
-  .items .it{font-size:1.7rem;}
-  .items[data-n="5"] .it,.items[data-n="6"] .it{font-size:1.5rem;}
-  .items[data-n="7"] .it,.items[data-n="8"] .it{font-size:1.35rem;}
-  .items[data-n="9"] .it,.items[data-n="10"] .it{font-size:1.2rem;}
+  .stage{gap:7px;padding:8px;border-radius:16px;}
+  .prompt{font-size:.82rem;}
+  .items{padding:6px;gap:4px;}
   .num{width:62px;height:62px;font-size:1.5rem;border-radius:16px;}
-  .feedback{flex:1 0 100%;min-height:18px;font-size:.88rem;}
-  .controls{flex:1 0 100%;}
+  .feedback{min-height:18px;font-size:.88rem;}
   .btn{min-height:34px;font-size:.78rem;padding:0 12px;}
 }
 </style>
@@ -193,6 +186,40 @@ function countDeckFor() {
   return countDeck;
 }
 
+/* 按实物区剩余空间算最大字号：枚举列数，取宽高都不溢出的最大值 */
+function layoutItems() {
+  if (!elItems) return;
+  var n = count;
+  var w = elItems.clientWidth - 16, h = elItems.clientHeight - 16;  /* 扣掉 padding 8*2 */
+  var best = 0, bestC = 1, gap = 6, uw = 1.38, uh = 1.0;  /* 表情实际字宽≈1.373em */
+  if (w > 0 && h > 0) {
+    for (var c = 1; c <= n; c++) {
+      var r = Math.ceil(n / c);
+      var size = Math.min((w - (c - 1) * gap) / (c * uw), (h - (r - 1) * gap) / (r * uh));
+      if (size > best) { best = size; bestC = c; }
+    }
+  }
+  var fs = best > 0 ? Math.max(14, Math.floor(best)) : 48;
+  var cols = best > 0 ? bestC : 3;
+  elItems.innerHTML = '';
+  for (var i = 0; i < n; i += cols) {
+    var row = document.createElement('div');
+    row.className = 'it-row';
+    for (var k = i; k < Math.min(i + cols, n); k++) {
+      var s = document.createElement('span');
+      s.className = 'it';
+      s.textContent = thing.e;
+      s.style.fontSize = fs + 'px';
+      row.appendChild(s);
+    }
+    elItems.appendChild(row);
+  }
+}
+var fitTimer = null;
+function fitLater() { clearTimeout(fitTimer); fitTimer = setTimeout(layoutItems, 60); }
+window.addEventListener('resize', fitLater);
+window.addEventListener('orientationchange', fitLater);
+
 function newRound() {
   if (window.XNLY && XNLY.voice) { try { XNLY.voice.cancel(); } catch (e) { } }
 
@@ -206,13 +233,7 @@ function newRound() {
   thing = q.thing;
 
   elItems.setAttribute('data-n', count);
-  elItems.innerHTML = '';
-  for (var i = 0; i < count; i++) {
-    var s = document.createElement('span');
-    s.className = 'it';
-    s.textContent = thing.e;
-    elItems.appendChild(s);
-  }
+  layoutItems();
 
   /* 4 个数字选项：答案 + 3 个不同的干扰（都在 1~maxN 内） */
   var opts = [count];
