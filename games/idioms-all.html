@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>📖 成语大全 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--accent:#6a4bff;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#f1efff,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef7ff,transparent 55%),
+             linear-gradient(160deg,#fbfaff,#f4f8ff);
+  min-height:100dvh;padding:12px 14px 30px;user-select:none;}
+.wrap{max-width:980px;margin:0 auto;}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+h1{font-size:clamp(1.05rem,2.4vw,1.35rem);letter-spacing:.5px;}
+.chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid var(--line);color:#4b2fd0;font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+.hint{margin:10px 2px 8px;font-size:.76rem;line-height:1.55;color:#7b8ea8;}
+.tools{display:flex;gap:8px;align-items:center;margin:0 0 10px;}
+.q{flex:1;min-width:0;min-height:44px;border:2px solid rgba(106,75,255,.18);border-radius:14px;
+  background:#fff;padding:0 14px;font-family:inherit;font-size:.92rem;color:var(--ink);outline:none;}
+.q:focus{border-color:rgba(106,75,255,.55);}
+.clr{flex:0 0 auto;min-height:44px;padding:0 14px;border-radius:14px;border:1px solid var(--line);
+  background:#fff;font-family:inherit;font-weight:800;font-size:.82rem;color:#7d7a90;cursor:pointer;}
+.found{margin:0 2px 6px;font-size:.74rem;font-weight:800;color:#8a86a5;}
+.cats{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px;}
+.cat{min-width:36px;min-height:36px;padding:2px 10px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  font-family:inherit;font-weight:800;font-size:.78rem;color:#6b7f95;cursor:pointer;}
+.cat.on{background:#eeebff;border-color:rgba(106,75,255,.5);color:#4b2fd0;}
+.ghead{display:flex;align-items:center;gap:8px;margin:22px 2px 8px;}
+.ghead .ge{font-size:1.1rem;font-weight:900;color:#4b2fd0;background:#eeebff;border-radius:10px;
+  min-width:34px;height:34px;display:flex;align-items:center;justify-content:center;}
+.ghead .gc{font-size:.7rem;font-weight:800;color:#7b8ea8;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:2px 8px;}
+.line{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);
+  border-radius:16px;padding:11px 12px;margin-bottom:8px;box-shadow:0 4px 10px rgba(36,59,83,.05);
+  transition:transform .12s ease,box-shadow .16s ease;}
+@media (hover:hover){.line:hover{box-shadow:0 8px 18px rgba(36,59,83,.10);}}
+.body{flex:1;min-width:0;}
+.w{font-size:clamp(1.02rem,2.4vw,1.2rem);font-weight:900;letter-spacing:.5px;word-break:break-word;}
+.py{margin-top:2px;font-size:.76rem;font-weight:700;color:#6a4bff;letter-spacing:.4px;word-break:break-word;}
+.m{margin-top:5px;font-size:.84rem;line-height:1.65;color:#31465c;word-break:break-word;}
+.src{display:block;margin-top:5px;font-size:.7rem;color:#8a9aad;}
+.spk{flex:0 0 auto;min-width:40px;min-height:40px;border-radius:50%;border:1px solid rgba(106,75,255,.25);
+  background:#f6f4ff;font-size:1rem;cursor:pointer;line-height:1;}
+.more{width:100%;min-height:46px;margin-top:12px;border-radius:14px;border:1px dashed rgba(106,75,255,.35);
+  background:#faf9ff;font-family:inherit;font-weight:900;font-size:.85rem;color:#4b2fd0;cursor:pointer;}
+.empty{margin:18px 0;padding:16px;border-radius:14px;background:#fff;border:1px solid var(--line);
+  text-align:center;font-size:.84rem;color:#7b8ea8;}
+[hidden]{display:none!important;}
+footer{margin-top:24px;text-align:center;font-size:.72rem;line-height:1.6;color:#9fb1c6;}
+@media (max-width:380px){.chips{margin-left:0;width:100%;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>📖 成语大全</h1>
+  <div class="chips">
+    <span class="chip">首批 <b id="totalChip">0</b> 条</span>
+    <span class="chip">计划 <b>500</b> 条</span>
+    <span class="chip">拼音首字母索引</span>
+  </div>
+</header>
+
+<div class="hint">按拼音首字母或输入成语、拼音、意思来查。点小喇叭可以听成语和解释；标有出处的都可核查，没有出处的不乱标。</div>
+
+<div class="tools">
+  <input class="q" id="q" type="search" placeholder="搜成语、拼音或意思，如：守株 / shou / 坚持" aria-label="搜索成语">
+  <button class="clr" id="clr" type="button">清空</button>
+</div>
+<div class="found" id="found">正在加载…</div>
+<div class="cats" id="cats"></div>
+<div id="list"></div>
+<button class="more" id="more" type="button" hidden>加载更多</button>
+
+<footer>首批 145 条，之后分批补足到 500 条 · 释义为小学生可读的简短解释 · 出处仅标注可查证者</footer>
+</div>
+
+<script src="../voice.js"></script>
+<script src="../homebtn.js"></script>
+<script>
+var V = (window.XNLY && window.XNLY.voice) || null;
+function say(t) {
+  if (!t) return;
+  try { if (V && V.speak) { V.speak(String(t)); return; } } catch (e) { }
+  try { if (window.XNLY && XNLY.speak) { XNLY.speak(String(t)); return; } } catch (e) { }
+  try {
+    if (!('speechSynthesis' in window)) return;
+    speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = 'zh-CN'; u.rate = 1;
+    speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+var ALL = [];
+var sel = 'all';
+var term = '';
+var shown = 0;
+var PAGE = 40;
+
+var elList = document.getElementById('list');
+var elCats = document.getElementById('cats');
+var elFound = document.getElementById('found');
+var elMore = document.getElementById('more');
+var elQ = document.getElementById('q');
+var elTotal = document.getElementById('totalChip');
+
+function norm(s) { return (s || '').toLowerCase().replace(/\s+/g, ''); }
+
+function inits() {
+  var set = {}, arr = [];
+  ALL.forEach(function (it) { if (!set[it.ini]) { set[it.ini] = 1; arr.push(it.ini); } });
+  return arr.sort();
+}
+
+function paintCats() {
+  elCats.textContent = '';
+  var arr = ['all'].concat(inits());
+  arr.forEach(function (k) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'cat' + (sel === k ? ' on' : '');
+    b.textContent = k === 'all' ? '全部' : k;
+    b.addEventListener('click', function () {
+      sel = k; shown = 0; paintCats(); render();
+    });
+    elCats.appendChild(b);
+  });
+}
+
+function filtered() {
+  var t = norm(term);
+  return ALL.filter(function (it) {
+    if (sel !== 'all' && it.ini !== sel) return false;
+    if (!t) return true;
+    return norm(it.w).indexOf(t) >= 0 || norm(it.py).indexOf(t) >= 0 || norm(it.m).indexOf(t) >= 0;
+  });
+}
+
+function makeCard(it) {
+  var row = document.createElement('div');
+  row.className = 'line';
+  row.setAttribute('role', 'button');
+  row.setAttribute('tabindex', '0');
+
+  var body = document.createElement('div');
+  body.className = 'body';
+
+  var w = document.createElement('div'); w.className = 'w'; w.textContent = it.w;
+  var py = document.createElement('div'); py.className = 'py'; py.textContent = it.py;
+  var m = document.createElement('div'); m.className = 'm'; m.textContent = it.m;
+  body.appendChild(w); body.appendChild(py); body.appendChild(m);
+  if (it.src) {
+    var s = document.createElement('span'); s.className = 'src'; s.textContent = '出处：' + it.src;
+    body.appendChild(s);
+  }
+
+  var spk = document.createElement('button');
+  spk.type = 'button'; spk.className = 'spk'; spk.textContent = '🔊';
+  spk.setAttribute('aria-label', '朗读 ' + it.w);
+  spk.addEventListener('click', function (e) { e.stopPropagation(); say(it.w + '。' + it.m); });
+
+  function go() { say(it.w + '。' + it.m); }
+  row.addEventListener('click', go);
+  row.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); }
+  });
+
+  row.appendChild(body); row.appendChild(spk);
+  return row;
+}
+
+function render(reset) {
+  if (reset !== false) { shown = 0; elList.textContent = ''; }
+  var list = filtered();
+  var start = shown;
+  var end = Math.min(shown + PAGE, list.length);
+  var lastIni = null;
+  if (shown > 0) {
+    var prev = elList.lastChild;
+    if (prev && prev.dataset && prev.dataset.ini) lastIni = prev.dataset.ini;
+  }
+  for (var i = start; i < end; i++) {
+    var it = list[i];
+    if (sel === 'all' && !norm(term) && it.ini !== lastIni) {
+      var h = document.createElement('div');
+      h.className = 'ghead';
+      var ge = document.createElement('span'); ge.className = 'ge'; ge.textContent = it.ini;
+      var gc = document.createElement('span'); gc.className = 'gc';
+      gc.textContent = list.filter(function (x) { return x.ini === it.ini; }).length + ' 条';
+      h.appendChild(ge); h.appendChild(gc);
+      elList.appendChild(h);
+      lastIni = it.ini;
+    }
+    var card = makeCard(it);
+    card.dataset.ini = it.ini;
+    elList.appendChild(card);
+  }
+  shown = end;
+  elFound.textContent = '共 ' + list.length + ' 条 · 已显示 ' + shown + ' 条';
+  elMore.hidden = shown >= list.length;
+  if (!list.length) {
+    var em = document.createElement('div');
+    em.className = 'empty';
+    em.textContent = '没有找到匹配的成语，换个词试试。';
+    elList.appendChild(em);
+    elMore.hidden = true;
+  }
+}
+
+function load() {
+  fetch('../data/idioms-all.json', { cache: 'no-cache' })
+    .then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function (d) {
+      ALL = (d.items || []).slice().sort(function (a, b) {
+        return a.py.localeCompare(b.py, 'en') || a.w.localeCompare(b.w, 'zh');
+      });
+      elTotal.textContent = ALL.length;
+      paintCats();
+      render();
+    })
+    .catch(function () {
+      elFound.textContent = '数据加载失败：请通过网站（http）打开本页。';
+      elTotal.textContent = '0';
+    });
+}
+
+elMore.addEventListener('click', function () { render(false); });
+
+var timer = null;
+elQ.addEventListener('input', function () {
+  clearTimeout(timer);
+  timer = setTimeout(function () {
+    term = elQ.value.trim();
+    sel = 'all';
+    paintCats();
+    render();
+  }, 180);
+});
+
+document.getElementById('clr').addEventListener('click', function () {
+  elQ.value = ''; term = ''; sel = 'all'; shown = 0;
+  paintCats(); render(); elQ.focus();
+});
+
+load();
+</script>
+</body>
+</html>

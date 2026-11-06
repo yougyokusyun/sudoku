@@ -77,8 +77,11 @@
  *           ② 成语闯关删除「配一配」「演一演」两种题型（数据、样式、模式入口、键盘 3/4 一并移除），
  *              只保留「猜一猜」「填一填」；24 张成语配图全部重做为统一儿童水彩绘本风，
  *              900×900，画面只表现字面情节、无文字无水印。
+ * v44 变化：新增「成语大全」页（idioms-all.html）：数据放 data/idioms-all.json，
+ *           首批 145 条（计划 500 条），拼音首字母索引 + 搜索 + 分页懒加载；
+ *           释义为小学生可读短句，出处仅标注可核查者（17 条），其余不标。
  */
-var CACHE = 'xnly-v43';
+var CACHE = 'xnly-v44';
 
 var PRECACHE = [
   './',
@@ -104,11 +107,13 @@ var PRECACHE = [
   'games/picture-sentence.html',
   'games/whack-word.html',
   'games/writing-showcase.html',
+  'games/idioms-all.html',
   'games/dialogue-choice.html',
   'games/gomoku.html',
   'games/guess-number.html',
   'games/gushi.html',
   'games/idioms.html',
+  'data/idioms-all.json',
   'games/img/icon-180.png',
   'games/img/icon-192.png',
   'games/img/icon-512.png',
