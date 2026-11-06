@@ -62,7 +62,7 @@ h1{font-size:1.15rem;}
   border:2px solid var(--line);border-radius:18px;padding:14px 16px;box-shadow:0 10px 26px rgba(36,59,83,.12);}
 .summary.show{display:flex;}
 .sumtitle{font-size:1.02rem;font-weight:900;text-align:center;color:#5d4037;}
-.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;}
 .stat{background:#fffaf2;border:1px solid rgba(141,110,99,.16);border-radius:12px;padding:8px 6px;text-align:center;}
 .stat b{display:block;font-size:1.2rem;color:#5d4037;}
 .stat span{font-size:.68rem;font-weight:800;color:#9b8276;}
@@ -75,7 +75,7 @@ h1{font-size:1.15rem;}
 .pace.on{background:#6d4c41;border-color:#6d4c41;color:#fff;}
 .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:0;
   overflow-y:auto;width:100%;}
-@media (max-width:520px){ .board{gap:9px;} .hole .card{font-size:.9rem;} }
+@media (max-width:520px){ .board{gap:9px;} .hole .card{font-size:.9rem;} .stats{grid-template-columns:repeat(2,minmax(0,1fr));} }
 @media (max-height:430px){
   body{padding:8px;gap:6px;} h1{font-size:1rem;}
   .hole{min-height:66px;} .hole .card{font-size:.82rem;} .stage{gap:6px;}
@@ -91,11 +91,12 @@ h1{font-size:1.15rem;}
   <a class="back" href="../index.html">🏠 首页</a>
   <h1>🔨 打地鼠认单词</h1>
   <div class="chips">
-    <span class="chip">🎯 命中 <b id="hitChip">0</b>/10</span>
-    <span class="chip">⏱ <b id="timeChip">30</b> 秒</span>
+    <span class="chip">✅ 正确 <b id="hitChip">0</b></span>
+    <span class="chip">❌ 错误 <b id="wrongChip">0</b></span>
+    <span class="chip">⏱ <b id="timeChip">60</b> 秒</span>
   </div>
 </header>
-<div class="rule" id="rule">看上面的目标词，点中意思一样的卡片 · 点错只提示，不扣分 · 第一次点击开始</div>
+<div class="rule" id="rule">看上面的目标词，点中意思一样的卡片 · 60 秒一局 · 点错只提示，不扣分</div>
 <div class="goal">
   <div class="goaltxt">
     <span class="lab" id="goalLab">目标词</span>
@@ -111,24 +112,24 @@ h1{font-size:1.15rem;}
   <div class="board" id="board"></div>
   <div class="feedback" id="feedback"></div>
   <div class="summary" id="summary"></div>
-  <div class="tip">30 秒内点中 10 次就结束 · 三档速度，默认最慢 · 点中正确卡片立即换下一个词</div>
+  <div class="tip">60 秒一局 · 三档速度，默认最慢 · 点中正确卡片立即换下一个词</div>
 </div>
 
 <script>
-/* ============ 112 个小学常见词：英文|中文|emoji ============ */
+/* ============ 146 个小学低中年级高频词：英文|中文|emoji，按 12 个主题分组 ============ */
 var BANK = {
   animals: ['dog|狗|🐶','cat|猫|🐱','pig|猪|🐷','cow|奶牛|🐮','sheep|绵羊|🐑','horse|马|🐴','rabbit|兔子|🐰','mouse|老鼠|🐭','bird|鸟|🐦','duck|鸭子|🦆','chicken|鸡|🐔','fish|鱼|🐟','tiger|老虎|🐯','lion|狮子|🦁','elephant|大象|🐘','monkey|猴子|🐒','panda|熊猫|🐼','bear|熊|🐻','frog|青蛙|🐸','bee|蜜蜂|🐝'],
-  food: ['apple|苹果|🍎','banana|香蕉|🍌','orange|橙子|🍊','grape|葡萄|🍇','watermelon|西瓜|🍉','strawberry|草莓|🍓','pear|梨|🍐','peach|桃子|🍑','lemon|柠檬|🍋','bread|面包|🍞','cake|蛋糕|🍰','cookie|饼干|🍪','candy|糖果|🍬','egg|鸡蛋|🥚','milk|牛奶|🥛','water|水|💧','juice|果汁|🧃','rice|米饭|🍚','noodle|面条|🍜','ice cream|冰淇淋|🍦'],
   colors: ['red|红色|🔴','blue|蓝色|🔵','yellow|黄色|🟡','green|绿色|🟢','black|黑色|⚫','white|白色|⚪','brown|棕色|🟤','pink|粉色|🩷'],
+  numbers: ['zero|零|0️⃣','one|一|1️⃣','two|二|2️⃣','three|三|3️⃣','four|四|4️⃣','five|五|5️⃣','six|六|6️⃣','seven|七|7️⃣','eight|八|8️⃣','nine|九|9️⃣','ten|十|🔟'],
+  food: ['bread|面包|🍞','cake|蛋糕|🍰','cookie|饼干|🍪','candy|糖果|🍬','egg|鸡蛋|🥚','milk|牛奶|🥛','water|水|💧','juice|果汁|🧃','rice|米饭|🍚','noodle|面条|🍜','ice cream|冰淇淋|🍦','hamburger|汉堡|🍔','pizza|披萨|🍕','sandwich|三明治|🥪'],
+  fruit: ['apple|苹果|🍎','banana|香蕉|🍌','orange|橙子|🍊','grape|葡萄|🍇','watermelon|西瓜|🍉','strawberry|草莓|🍓','pear|梨|🍐','peach|桃子|🍑','lemon|柠檬|🍋','mango|芒果|🥭','cherry|樱桃|🍒','pineapple|菠萝|🍍'],
   body: ['face|脸|😊','eye|眼睛|👁️','ear|耳朵|👂','nose|鼻子|👃','mouth|嘴|👄','hand|手|✋','foot|脚|🦶','leg|腿|🦵','arm|手臂|💪','finger|手指|☝️'],
-  school: ['book|书|📖','pen|钢笔|🖊️','pencil|铅笔|✏️','ruler|尺子|📏','notebook|笔记本|📓','bag|书包|🎒','school|学校|🏫','teacher|老师|🧑‍🏫','student|学生|🧑‍🎓','chair|椅子|🪑','computer|电脑|💻','clock|钟|🕐','ball|球|⚽','paper|纸|📄'],
-  home: ['bed|床|🛏️','door|门|🚪','window|窗户|🪟','house|房子|🏠','room|房间|🏘️','table|桌子|🍽️','sofa|沙发|🛋️','lamp|台灯|💡','key|钥匙|🔑','cup|杯子|☕','spoon|勺子|🥄','fork|叉子|🍴','bowl|碗|🥣','mirror|镜子|🪞'],
+  stationery: ['book|书|📖','pen|钢笔|🖊️','pencil|铅笔|✏️','ruler|尺子|📏','notebook|笔记本|📓','bag|书包|🎒','eraser|橡皮|🧽','crayon|蜡笔|🖍️','scissors|剪刀|✂️','paper|纸|📄','glue|胶水|🧴','marker|记号笔|🖍️','pencil case|文具盒|🧰'],
+  family: ['mother|妈妈|👩','father|爸爸|👨','sister|姐妹|👧','brother|兄弟|👦','baby|宝宝|👶','grandma|奶奶|👵','grandpa|爷爷|👴','uncle|叔叔|🧔','aunt|阿姨|👩‍🦰','cousin|表亲|🧑‍🤝‍🧑'],
+  actions: ['run|跑|🏃','swim|游泳|🏊','jump|跳|🤸','sing|唱歌|🎤','dance|跳舞|💃','sleep|睡觉|😴','eat|吃|🍽️','drink|喝|🥤','read|读|📚','write|写|✍️','play|玩|🎮','walk|走|🚶','fly|飞|🕊️','cook|做饭|🍳'],
   transport: ['car|小汽车|🚗','bus|公交车|🚌','bike|自行车|🚲','train|火车|🚂','plane|飞机|✈️','ship|轮船|🚢','boat|小船|⛵','taxi|出租车|🚕','truck|卡车|🚚','rocket|火箭|🚀'],
-  nature: ['sun|太阳|☀️','moon|月亮|🌙','star|星星|⭐','cloud|云|☁️','rain|雨|🌧️','snow|雪|❄️','tree|树|🌳','flower|花|🌸','grass|草|🌿','sea|大海|🌊','sky|天空|🌤️','rainbow|彩虹|🌈'],
-  people: ['mother|妈妈|👩','father|爸爸|👨','sister|姐妹|👧','brother|兄弟|👦','baby|宝宝|👶','grandma|奶奶|👵','grandpa|爷爷|👴','uncle|叔叔|🧔'],
-  actions: ['run|跑|🏃','swim|游泳|🏊','jump|跳|🤸','sing|唱歌|🎤','dance|跳舞|💃','sleep|睡觉|😴','eat|吃|🍽️','drink|喝|🥤'],
-  clothes: ['hat|帽子|👒','shirt|衬衫|👕','dress|连衣裙|👗','shoe|鞋|👟','sock|袜子|🧦','coat|外套|🧥'],
-  weather: ['hot|热|🔥','cold|冷|🧊']
+  clothes: ['hat|帽子|👒','shirt|衬衫|👕','dress|连衣裙|👗','shoe|鞋|👟','sock|袜子|🧦','coat|外套|🧥','sweater|毛衣|🧶','pants|裤子|👖','gloves|手套|🧤','scarf|围巾|🧣'],
+  home: ['bed|床|🛏️','door|门|🚪','window|窗户|🪟','house|房子|🏠','room|房间|🏘️','table|桌子|🍽️','sofa|沙发|🛋️','lamp|台灯|💡','key|钥匙|🔑','cup|杯子|☕','spoon|勺子|🥄','fork|叉子|🍴','bowl|碗|🥣','mirror|镜子|🪞']
 };
 var WORDS = [], CATS = {};
 Object.keys(BANK).forEach(function (cat) {
@@ -139,7 +140,7 @@ Object.keys(BANK).forEach(function (cat) {
   WORDS = WORDS.concat(CATS[cat]);
 });
 
-var HITS_LIMIT = 10, TIME_LIMIT = 30, HOLES = 6;
+var TIME_LIMIT = 60, HOLES = 6;
 /* 三档固定节奏，默认最慢；没有任何“越玩越快”的加速逻辑 */
 var PACE = {
   slow: { spawn: 1700, life: 2500, max: 2 },
@@ -150,8 +151,8 @@ function readPace() {
   try { var k = localStorage.getItem('xnly_whack_pace'); if (PACE[k]) return k; } catch (e) { }
   return 'slow';
 }
-var state = { started: false, ended: false, hits: 0, taps: 0, target: null, targetIsCn: true,
-  fastest: 0, tick: null, wave: null, cards: [], lockUntil: 0,
+var state = { started: false, ended: false, hits: 0, wrongs: 0, taps: 0, target: null, targetIsCn: true,
+  tick: null, wave: null, cards: [], lockUntil: 0, startAt: 0, endTimer: null,
   paceKey: readPace() };
 function paceInfo() { return PACE[state.paceKey] || PACE.slow; }
 
@@ -159,6 +160,7 @@ var elBoard = document.getElementById('board');
 var elGoalLab = document.getElementById('goalLab');
 var elGoalVal = document.getElementById('goalVal');
 var elHit = document.getElementById('hitChip');
+var elWrong = document.getElementById('wrongChip');
 var elTime = document.getElementById('timeChip');
 var elFb = document.getElementById('feedback');
 var elRule = document.getElementById('rule');
@@ -202,15 +204,16 @@ var holes = [];
   for (var i = 0; i < HOLES; i++) bind(i);
 })();
 
-var catDeck = XNLY.deck.make(Object.keys(CATS), 'whack-word.cats', { head: 3 });
-var catWordDecks = {};
+/* 目标词：一局内把 146 个词全部走完一遍才会重洗，期间绝不重复 */
+var wordDeck = [], wordPos = 0;
+function resetWordDeck() { wordDeck = shuffle(WORDS); wordPos = 0; }
+function nextTargetWord() {
+  if (wordPos >= wordDeck.length) resetWordDeck();
+  return wordDeck[wordPos++];
+}
 
 function newTarget() {
-  var cat = catDeck.next();
-  if (!catWordDecks[cat]) {
-    catWordDecks[cat] = XNLY.deck.make(CATS[cat], 'whack-word.cat.' + cat, { head: 5 });
-  }
-  state.target = catWordDecks[cat].next();
+  state.target = nextTargetWord();
   state.targetHit = false;   /* 同一目标词只算第一次命中 */
   state.targetIsCn = Math.random() < 0.5;
   elGoalLab.textContent = state.targetIsCn ? '目标词（中文）· 点英文卡' : '目标词（英文）· 点中文卡';
@@ -229,19 +232,19 @@ function cardsForWave() {
   var chosen = shuffle(empty).slice(0, n);
   var target = state.target;
   var pool = CATS[target.cat].filter(function (w) { return w.en !== target.en; });
+  var taken = {};   /* 同波卡片互不重复：先占住已经在洞里的词 */
+  holes.forEach(function (h) { if (h.card._card) taken[h.card._card.word.en] = 1; });
   for (var i = 0; i < chosen.length; i++) {
-    var ok = false;
-    if (needCorrect && i === 0) ok = true;
+    var ok = needCorrect && i === 0;
     var w;
     if (ok) {
       w = target;
     } else {
-      var cand = pool.filter(function (x) {
-        var shown = chosen.slice(0, i).some(function (h) { return h.card._card && h.card._card.word.en === x.en; });
-        return !shown && (!target || x.en !== target.en);
-      });
-      w = cand.length ? cand[rand(cand.length)] : pool[rand(pool.length)];
+      var cand = pool.filter(function (x) { return !taken[x.en]; });
+      if (!cand.length) cand = pool.slice();
+      w = cand[rand(cand.length)];
     }
+    taken[w.en] = 1;
     showCard(chosen[i], w, ok);
   }
   return { empty: empty, withCard: withCard };
@@ -290,8 +293,6 @@ function onHole(i, e) {
   if (c.ok) {
     state.targetHit = true;
     state.hits++;
-    var ms = Date.now() - c.born;
-    if (!state.fastest || ms < state.fastest) state.fastest = ms;
     h.card.className = 'card up hit ' + (state.targetIsCn ? 'en' : 'cn');
     h.card._card = null;
     mark('right'); sfx('correct');
@@ -299,7 +300,6 @@ function onHole(i, e) {
     elFb.textContent = '✅ 找到啦：' + c.word.en + ' 是「' + c.word.cn + '」';
     elHit.textContent = state.hits;
     setTimeout(function () { h.card.className = 'card'; h.card.textContent = ''; }, 240);
-    if (state.hits >= HITS_LIMIT) { endGame(); return; }
     /* 命中即换词：等对勾动画放完（260ms）就清掉旧目标的所有卡片，换下一个词并重排山洞 */
     clearTimeout(state.switchTimer);
     state.switchTimer = setTimeout(function () {
@@ -312,6 +312,8 @@ function onHole(i, e) {
     h.card._card = null;
     h.card.className = 'card';
     h.card.textContent = '';
+    state.wrongs++;
+    elWrong.textContent = state.wrongs;
     mark('wrong'); sfx('wrong');
     elFb.className = 'feedback bad';
     elFb.textContent = '❌ 再找找，这一张不是「' + (state.targetIsCn ? state.target.cn : state.target.en) + '」';
@@ -337,16 +339,18 @@ function waveLoop() {
 function startGame() {
   if (state.started || state.ended) return;
   state.started = true;
-  elRule.innerHTML = '⏱ 计时开始！30 秒内点中 10 次就完成 · 点错只提示，不扣分';
+  state.startAt = Date.now();
+  elRule.innerHTML = '⏱ 计时开始！60 秒一局 · 点错只提示，不扣分';
   elRule.style.color = '#5d4037';
   cardsForWave();
   waveLoop();
   say('看上面的目标词，点中意思一样的卡片。');
-  var began = Date.now();
+  clearTimeout(state.endTimer);
+  state.endTimer = setTimeout(endGame, TIME_LIMIT * 1000);   /* 60 秒一到立即结算，不多不少 */
   state.tick = setInterval(function () {
-    var left = TIME_LIMIT - (Date.now() - began) / 1000;
+    var left = TIME_LIMIT - (Date.now() - state.startAt) / 1000;
     if (left < 0) left = 0;
-    elTime.textContent = left >= 10 ? Math.ceil(left) : left.toFixed(1);
+    elTime.textContent = Math.ceil(left);
     if (left <= 0) endGame();
   }, 100);
 }
@@ -358,6 +362,7 @@ function endGame() {
   clearInterval(state.wave);
   clearTimeout(state.spawnTimer);
   clearTimeout(state.switchTimer);
+  clearTimeout(state.endTimer);
   clearCards();
   elTime.textContent = '0';
   elGoalLab.textContent = '本轮结束';
@@ -367,14 +372,15 @@ function endGame() {
   elFb.textContent = '';
   sfx('win');
   var acc = state.taps ? Math.round(state.hits / state.taps * 100) : 0;
-  var fast = state.fastest ? (state.fastest / 1000).toFixed(2) + ' 秒' : '—';
-  elSummary.innerHTML = '<div class="sumtitle">🔨 这一轮的小结</div>' +
+  var score = state.hits * 10;
+  elSummary.innerHTML = '<div class="sumtitle">🔨 60 秒小结</div>' +
     '<div class="stats">' +
-    '<div class="stat"><b>' + state.hits + '</b><span>点中</span></div>' +
+    '<div class="stat"><b>' + score + '</b><span>得分</span></div>' +
+    '<div class="stat"><b>' + state.hits + '</b><span>正确</span></div>' +
+    '<div class="stat"><b>' + state.wrongs + '</b><span>错误</span></div>' +
     '<div class="stat"><b>' + acc + '%</b><span>命中率</span></div>' +
-    '<div class="stat"><b>' + fast + '</b><span>最快反应</span></div>' +
     '</div>' +
-    '<button class="again" id="againBtn" type="button">🔄 再玩一轮（30 秒）</button>';
+    '<button class="again" id="againBtn" type="button">🔄 再玩一轮（60 秒）</button>';
   elSummary.classList.add('show');
   document.getElementById('againBtn').addEventListener('click', function () {
     newGame();
@@ -385,15 +391,18 @@ function endGame() {
 
 function newGame() {
   clearInterval(state.tick); clearInterval(state.wave); clearTimeout(state.spawnTimer);
-  clearTimeout(state.switchTimer);
-  state.started = false; state.ended = false; state.hits = 0; state.taps = 0; state.fastest = 0;
-  state.lockUntil = 0;
+  clearTimeout(state.switchTimer); clearTimeout(state.endTimer);
+  state.started = false; state.ended = false;
+  state.hits = 0; state.wrongs = 0; state.taps = 0;
+  state.lockUntil = 0; state.startAt = 0;
   clearCards();
+  resetWordDeck();                       /* 每局重新洗牌，局内 146 词走完一遍才重复 */
   elHit.textContent = '0';
-  elTime.textContent = '30';
+  elWrong.textContent = '0';
+  elTime.textContent = String(TIME_LIMIT);
   elFb.className = 'feedback'; elFb.textContent = '';
   elSummary.classList.remove('show'); elSummary.innerHTML = '';
-  elRule.innerHTML = '看上面的目标词，点中意思一样的卡片 · 点错只提示，不扣分 · 第一次点击开始';
+  elRule.innerHTML = '看上面的目标词，点中意思一样的卡片 · 60 秒一局 · 点错只提示，不扣分';
   elRule.style.color = '#6d5145';
   newTarget();
 }
@@ -413,19 +422,24 @@ Array.prototype.forEach.call(document.querySelectorAll('.pace'), function (b) {
 });
 setPace(state.paceKey);
 
-document.addEventListener('pointerdown', function () {
+document.addEventListener('pointerdown', function (e) {
+  /* 点难度按钮 / 结算区 / 返回首页时不开始计时，留给按钮自己的点击处理 */
+  if (e.target && e.target.closest && e.target.closest('.paces,.summary,.back')) return;
   if (!state.ended && !state.started) startGame();
 }, true);
 if (!window.PointerEvent) {
-  document.addEventListener('touchstart', function () {
+  document.addEventListener('touchstart', function (e) {
+    if (e.target && e.target.closest && e.target.closest('.paces,.summary,.back')) return;
     if (!state.ended && !state.started) startGame();
   }, { passive: true, capture: true });
 }
 
 newGame();
 
-window.WW = { WORDS: WORDS, get state() { return state; }, startGame: startGame, endGame: endGame,
-  onHole: onHole, holes: holes };
+window.WW = { WORDS: WORDS, BANK: BANK, CATS: CATS, TIME_LIMIT: TIME_LIMIT,
+  get state() { return state; }, startGame: startGame, endGame: endGame,
+  onHole: onHole, holes: holes, newTarget: newTarget, nextTargetWord: nextTargetWord,
+  resetWordDeck: resetWordDeck };
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

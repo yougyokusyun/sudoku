@@ -55,8 +55,15 @@
  *           ④ idioms.html 横屏（≥900px 宽）改左图右题两栏，竖屏保持上下结构；
  *              图片容器按 1:1 预留空间（固定高度 + aspect-ratio + 占位底色），
  *              加载中/失败不塌陷、文字不下移，超高整体滚动不裁切。
+ * v40 变化：① 四页图标放大到约 1.5 倍（count / big-small / more-less / number-match），
+ *              1024×768 与 768×1024 均一屏放下；② shape-insert 改为触屏拖拽填空
+ *              （Pointer Events + setPointerCapture，吸附/回弹，60px 容差，保留点选兜底）；
+ *           ③ whack-word 改 60 秒一局，词库扩到 146 个小学常见词（12 主题，去重），
+ *              同主题不重复干扰项、局内目标词不重复，结算显示得分/正确/错误；
+ *           ④ animal-chess 更名「斗兽棋」，棋盘宽度铺满可视区（横屏≥88%、竖屏≥92%），
+ *              横竖间距独立计算，棋子/文字同步放大且不裁边。
  */
-var CACHE = 'xnly-v39';
+var CACHE = 'xnly-v40';
 
 var PRECACHE = [
   './',

@@ -36,11 +36,13 @@ h1{font-size:1.15rem;}
   background:linear-gradient(180deg,#fdfcff,#f4f0ff);}
 
 /* 可拖拽的形状块 */
+body.dragging{touch-action:none;}
 .piece{position:absolute;left:0;top:0;touch-action:none;cursor:grab;
   filter:drop-shadow(0 5px 8px rgba(36,59,83,.20));
   transition:left .25s ease,top .25s ease,transform .25s ease;}
 .piece.drag{transition:none;cursor:grabbing;}
 .piece.done{cursor:default;filter:none;}
+.piece.sel{filter:drop-shadow(0 0 5px rgba(124,92,255,.85)) drop-shadow(0 5px 8px rgba(36,59,83,.20));}
 .piece.badd{animation:shake .45s ease;}
 .piece svg{display:block;width:100%;height:100%;pointer-events:none;}
 
@@ -208,7 +210,7 @@ function say(text) {
 
 /* ===== 缺口：虚线框画得比形状略大，孩子不用对得很准 ===== */
 var HOLE_PAD = 1.28;      // 虚线框放大倍数
-var SNAP_DIST = 105;      // 逻辑坐标容差：约一个形状宽度，放到大概位置就成功
+var SNAP_TOL_PX = 60;     // 屏幕像素容差：形状中心离缺口中心 60px 内即吸附（手指不精准也能放进去）
 var SNAP_ANGLE = 30;      // 三角形方向容差
 
 function holeSVG(s, c) {
@@ -275,6 +277,7 @@ function newRound() {
   var turnAway = [315, 270, 225];   // 正确三角形只差 1~3 次点按就能转正
 
   elPieces.innerHTML = '';
+  selected = null;
   pieces = trayList.map(function (o, i) {
     var r0;
     if (!o.right) {
@@ -307,7 +310,21 @@ function newRound() {
     : '把' + SHAPE_NAME[cur.hole.s] + '拖进虚线框里，放到大概位置就成功');
 }
 
-/* ===== 拖拽 + 点按旋转 ===== */
+/* ===== 拖拽 + 点按旋转 + 点选兜底 ===== */
+var selected = null;
+function selectPiece(p) {
+  if (selected && selected.el) selected.el.classList.remove('sel');
+  selected = p;
+  p.el.classList.add('sel');
+  feedback('已选中「' + SHAPE_NAME[p.s] + '」，再点上面的虚线框就能放进去');
+}
+elBoardWrap.addEventListener('pointerup', function (e) {
+  if (locked || !selected || selected.done) return;
+  if (e.target && e.target.closest && e.target.closest('.piece')) return;
+  var p = selected;
+  trySnap(p, true);
+});
+
 function bindDrag(p) {
   var dragging = false, moved = 0, sx = 0, sy = 0, ox = 0, oy = 0;
   p.el.addEventListener('pointerdown', function (e) {
@@ -315,7 +332,8 @@ function bindDrag(p) {
     dragging = true; moved = 0;
     sx = e.clientX; sy = e.clientY; ox = p.x; oy = p.y;
     p.el.classList.add('drag');
-    p.el.setPointerCapture(e.pointerId);
+    document.body.classList.add('dragging');
+    try { p.el.setPointerCapture(e.pointerId); } catch (err) { }
     e.preventDefault();
   });
   p.el.addEventListener('pointermove', function (e) {
@@ -330,10 +348,11 @@ function bindDrag(p) {
     if (!dragging) return;
     dragging = false;
     p.el.classList.remove('drag');
+    document.body.classList.remove('dragging');
     if (locked || p.done) return;
-    if (moved < 8) {                     // 没怎么动 → 当作点按，转 45°
-      p.r = (p.r + 45) % 360;
-      placePiece(p);
+    if (moved < 8) {                     // 没怎么动 → 选中 + 三角形转 45°
+      selectPiece(p);
+      if (p.s === 'triangle') { p.r = (p.r + 45) % 360; placePiece(p); }
       return;
     }
     trySnap(p);
@@ -341,14 +360,15 @@ function bindDrag(p) {
   p.el.addEventListener('pointercancel', function () {
     dragging = false;
     p.el.classList.remove('drag');
+    document.body.classList.remove('dragging');
   });
 }
 
 /* 判定：形状对 + 大概位置 + （三角形）方向对 → 直接塞进去 */
-function trySnap(p) {
+function trySnap(p, force) {
   var h = cur.hole;
-  var dist = Math.hypot(p.x - h.x, p.y - h.y);
-  if (dist > SNAP_DIST) {
+  var distPx = Math.hypot(p.x - h.x, p.y - h.y) * scale;   // 换算成屏幕像素
+  if (!force && distPx > SNAP_TOL_PX) {
     feedback('再往虚线框靠近一点，放到大概位置就行');
     sendHome(p);
     return;
@@ -372,6 +392,8 @@ function trySnap(p) {
   }
   /* 成功：吸附到缺口 */
   p.done = true;
+  if (selected === p) selected = null;
+  p.el.classList.remove('sel');
   p.el.classList.add('done');
   p.x = h.x; p.y = h.y; p.r = h.r;
   p.el.style.transition = 'left .25s ease,top .25s ease,transform .25s ease';

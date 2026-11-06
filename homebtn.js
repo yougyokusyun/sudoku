@@ -69,7 +69,7 @@
   }
   /* 纯操作类页面（没有可朗读内容）：只保留 🏠，不渲染 🔊 */
   function noSpeechPage() {
-    return /\/bubble\.html$|\/music-pad\.html$|\/parent\.html$|\/sudoku\.html$|\/links\.html$|\/opposites\.html$|\/animal-chess\.html$|\/blackjack\.html$|\/gomoku\.html$|\/junqi\.html$|\/klondike\.html$|\/xiangqi\.html$/i.test(location.pathname);
+    return /\/bubble\.html$|\/music-pad\.html$|\/parent\.html$|\/sudoku\.html$|\/links\.html$|\/opposites\.html$|\/animal-chess\.html$|\/blackjack\.html$|\/gomoku\.html$|\/klondike\.html$|\/xiangqi\.html$/i.test(location.pathname);
   }
   /* 兜底：读内容区里当前可见的文字（跳过导航、按钮、状态条） */
   function fallbackSpeech() {

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-<title>🐘 动物棋 · 翻翻棋 · 小脑袋乐园</title>
+<title>🐘 斗兽棋 · 翻翻棋 · 小脑袋乐园</title>
 <style>
 :root{--ink:#243b53;--muted:#6b7f95;--accent:#1f8a5f;--red:#d33a3a;--blue:#2f5bd6;}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
@@ -130,7 +130,7 @@ h1{font-size:1.08rem;white-space:nowrap;}
 <body>
 <header>
   <a class="back" href="../index.html">🏠 首页</a>
-  <h1>🐘 动物棋 · 翻翻棋</h1>
+  <h1>🐘 斗兽棋 · 翻翻棋</h1>
   <div class="spacer"></div>
   <div class="seg" id="seg">
     <button type="button" data-mode="pve" class="on">🤖 人机</button>
@@ -159,7 +159,7 @@ h1{font-size:1.08rem;white-space:nowrap;}
 </div>
 
 <script>
-/* ================= 动物棋 · 翻翻棋（4×4 交叉点，16 枚棋子） ================= */
+/* ================= 斗兽棋 · 翻翻棋（4×4 交叉点，16 枚棋子） ================= */
 var COLS = 4, ROWS = 4, TOTAL = COLS * ROWS;
 var HUMAN = 1, AI = 2;
 
@@ -431,7 +431,7 @@ function buildNodes() {
   }
 }
 
-function drawLines(w) {
+function drawLines() {
   while (elLines.firstChild) elLines.removeChild(elLines.firstChild);
   function ln(x1, y1, x2, y2, width) {
     var l = document.createElementNS(SVGNS, 'line');
@@ -442,36 +442,50 @@ function drawLines(w) {
     l.setAttribute('stroke-linecap', 'round');
     elLines.appendChild(l);
   }
-  var end = PAD + (COLS - 1) * S;
+  var endX = PADX + (COLS - 1) * SX;
+  var endY = PADY + (ROWS - 1) * SY;
   for (var k = 0; k < COLS; k++) {
-    var p = PAD + k * S;
-    ln(PAD, p, end, p, 2.2);
-    ln(p, PAD, p, end, 2.2);
+    var x = PADX + k * SX;
+    ln(x, PADY, x, endY, 2.2);
+  }
+  for (var r = 0; r < ROWS; r++) {
+    var y = PADY + r * SY;
+    ln(PADX, y, endX, y, 2.2);
   }
 }
 
 function layoutBoard() {
   var rect = elWrap.getBoundingClientRect();
-  var availW = Math.max(120, rect.width - 4);
-  var availH = Math.max(120, rect.height - 4);
-  S = Math.min(availW / 4.3, availH / 4.3);
-  S = Math.max(34, Math.min(S, 118));
-  PAD = S * 0.62;
-  D = S * 0.76;
-  var W = Math.round((COLS - 1) * S + 2 * PAD);
+  var availW = Math.max(160, rect.width - 6);
+  var availH = Math.max(160, rect.height - 6);
+  var contentW = availW - 6, contentH = availH - 6;   /* 棋盘有 3px 边框，节点坐标按内容盒计算 */
+  /* 棋盘宽度铺满可视区；横竖间距各自计算，保证横屏也能占满宽度且不裁边 */
+  PADX = 10; PADY = 10;
+  for (var it = 0; it < 3; it++) {
+    SX = (contentW - 2 * PADX) / (COLS - 1);
+    SY = (contentH - 2 * PADY) / (ROWS - 1);
+    D = Math.min(SX, SY) * 0.94;
+    PADX = Math.max(10, D / 2 + 4);   /* 最外圈棋子不能超出棋盘 */
+    PADY = Math.max(10, D / 2 + 4);
+  }
+  SX = (contentW - 2 * PADX) / (COLS - 1);
+  SY = (contentH - 2 * PADY) / (ROWS - 1);
+  D = Math.min(SX, SY) * 0.94;
+  var W = Math.round(availW);
+  var H = Math.round(availH);
 
   elBoard.style.width = W + 'px';
-  elBoard.style.height = W + 'px';
+  elBoard.style.height = H + 'px';
   elBoard.style.setProperty('--d', D + 'px');
-  elLines.setAttribute('width', W);
-  elLines.setAttribute('height', W);
+  elLines.setAttribute('width', W - 6);
+  elLines.setAttribute('height', H - 6);
 
   for (var i = 0; i < TOTAL; i++) {
     var el = nodes[i];
-    el.style.left = Math.round(PAD + colOf(i) * S) + 'px';
-    el.style.top = Math.round(PAD + rowOf(i) * S) + 'px';
+    el.style.left = Math.round(PADX + colOf(i) * SX) + 'px';
+    el.style.top = Math.round(PADY + rowOf(i) * SY) + 'px';
   }
-  drawLines(W);
+  drawLines();
 }
 
 function render() {
@@ -676,7 +690,7 @@ window.__animal = {
   actions: function () { return genActions(state, state.turn).length; },
   outcome: fight,
   setState: function (st) { state = st; selected = -1; targets = []; lastAction = null; render(); },
-  board: function () { return { cols: COLS, rows: ROWS, total: TOTAL, s: S, d: D }; }
+  board: function () { return { cols: COLS, rows: ROWS, total: TOTAL, sx: SX, sy: SY, d: D }; }
 };
 </script>
 <script>
