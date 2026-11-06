@@ -702,6 +702,14 @@
       return (sa - sb) || (lvOf(a) - lvOf(b)) || (Number(a.dataset.oi) - Number(b.dataset.oi));
     });
     vis.forEach(function (c) { grid.appendChild(c); });
+    /* 猜谜语 → 谜语大全 强制相邻（仅当同一 tab 同时出现） */
+    var ra = null, rb = null;
+    vis.forEach(function (c) {
+      var h = c.getAttribute('href');
+      if (h === 'games/riddle.html') ra = c;
+      if (h === 'games/riddles-all.html') rb = c;
+    });
+    if (ra && rb) grid.insertBefore(rb, ra.nextSibling);
   }
 
   function readStage() {
