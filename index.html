@@ -126,6 +126,9 @@
             .card .ico { font-size: 6rem; }
             .card { min-height: 196px; }
         }
+        @media (min-width: 700px) and (max-width: 900px) {
+            .card .ico { font-size: 5rem; }
+        }
 
         .card.sudoku {
             --c: #7c5cff;
@@ -192,8 +195,11 @@
             font-size: 1rem;
             font-weight: 800;
             color: #3b5370;
+            grid-column: 1 / -1;
         }
         .sect.first { margin-top: 0; }
+        .sect .ge { font-size: 1.15rem; line-height: 1; }
+        .sect[hidden] { display: none !important; }
         .sect .line { flex: 1; height: 1px; background: rgba(36, 59, 83, .14); }
         .sect .cnt { font-size: .72rem; font-weight: 700; color: #8aa0b8; }
 
@@ -493,10 +499,11 @@
                 <span class="name">语文小百科</span>
                 <span class="desc">30 个专题 · 看百科 / 专题问答</span>
             </a>
-        <a class="card" style="--c:#f08a3c" data-stage="high" data-name="形近字找家" href="games/nearby-words.html">
-                <span class="ico">🏠</span>
-                <span class="name">形近字找家</span>
-                <span class="desc">把字送回相同偏旁的家</span>
+        <a class="card" style="--c:#e0559b" data-stage="low high" data-name="写作赏析" href="games/writing-showcase.html">
+                <span class="tag">语文</span>
+                <span class="ico">✍️📖</span>
+                <span class="name">写作赏析</span>
+                <span class="desc">264 句好句 · 12 类场景 · 适合 2~6 年级</span>
             </a>
         <a class="card" style="--c:#7c5cff" data-stage="high" data-name="古诗闯关" href="games/gushi.html">
                 <span class="ico">📖</span>
@@ -527,16 +534,6 @@
                 <span class="ico">🎯</span>
                 <span class="name">猜谜语</span>
                 <span class="desc">495 条谜语 · 提示可用</span>
-            </a>
-        <a class="card" style="--c:#e08a00" data-stage="high" data-name="应用题小博士" href="games/math-word.html">
-                <span class="ico">🧮</span>
-                <span class="name">应用题小博士</span>
-                <span class="desc">60 道 · 三档难度 · 读题 + 讲解</span>
-            </a>
-        <a class="card" style="--c:#e0559b" data-stage="high" data-name="看图写话" href="games/pic-write.html">
-                <span class="ico">🖼️</span>
-                <span class="name">看图写话</span>
-                <span class="desc">40 张图 · 选词成句 · 可录音</span>
             </a>
         <a class="card" style="--c:#2a9d8f" data-stage="high" data-name="自然科学小百科" href="games/science-nature.html">
                 <span class="ico">🌱</span>
@@ -613,12 +610,115 @@
   ];
   var cards = Array.prototype.slice.call(grid.querySelectorAll('.card'));
   var parentCards = Array.prototype.slice.call(parentPanel.querySelectorAll('.card'));
+  cards.forEach(function (c, i) { c.dataset.oi = i; });
+
+  /* 科目分组：语文 / 数学 / 英语 / 认知与科学 / 综合游戏 */
+  var SUBS = [
+    { k: 'chinese', name: '语文', emoji: '📖' },
+    { k: 'math', name: '数学', emoji: '🔢' },
+    { k: 'english', name: '英语', emoji: '🔤' },
+    { k: 'science', name: '认知与科学', emoji: '🔬' },
+    { k: 'game', name: '综合游戏', emoji: '🎲' }
+  ];
+  var SMAP = {
+    'games/safety.html': ['science', 1],
+    'games/find-diff.html': ['science', 1],
+    'games/picture-sentence.html': ['english', 2],
+    'games/emotions.html': ['science', 1],
+    'games/pairs.html': ['science', 1],
+    'games/daily-order.html': ['science', 2],
+    'games/shapes-learn.html': ['science', 1],
+    'games/shapes.html': ['science', 1],
+    'games/count.html': ['math', 1],
+    'games/animals-learn.html': ['science', 1],
+    'games/color.html': ['science', 1],
+    'games/big-small.html': ['math', 1],
+    'games/more-less.html': ['math', 1],
+    'games/music-pad.html': ['game', 1],
+    'games/spatial.html': ['science', 2],
+    'games/shapes-panel.html': ['science', 2],
+    'games/shape-insert.html': ['science', 2],
+    'games/number-match.html': ['math', 1],
+    'games/animals-mom.html': ['science', 2],
+    'games/sort-home.html': ['science', 2],
+    'games/scene-words.html': ['chinese', 1],
+    'games/rhythm.html': ['game', 1],
+    'games/odd-one.html': ['science', 1],
+    'games/shadow.html': ['science', 1],
+    'games/bubble.html': ['game', 1],
+    'games/animal-feed.html': ['science', 2],
+    'games/pattern.html': ['science', 2],
+    'games/weather.html': ['science', 1],
+    'games/steps.html': ['science', 2],
+    'games/memory-match.html': ['game', 1],
+    'games/path-connect.html': ['science', 1],
+    'games/reaction.html': ['game', 1],
+    'games/guess-number.html': ['math', 1],
+    'games/xiangxingzi.html': ['chinese', 1],
+    'games/near-syn.html': ['chinese', 1],
+    'games/english-words.html': ['english', 1],
+    'games/clock-money.html': ['math', 2],
+    'games/word-match.html': ['english', 1],
+    'games/whack-word.html': ['english', 1],
+    'sudoku.html': ['math', 3],
+    'games/gomoku.html': ['game', 2],
+    'games/xiangqi.html': ['game', 3],
+    'games/junqi.html': ['game', 3],
+    'games/animal-chess.html': ['game', 2],
+    'games/blackjack.html': ['game', 2],
+    'games/klondike.html': ['game', 2],
+    'games/24point.html': ['math', 2],
+    'games/slide15.html': ['math', 2],
+    'games/sequence.html': ['math', 2],
+    'games/logic-clues.html': ['science', 2],
+    'games/idioms.html': ['chinese', 2],
+    'games/bingju.html': ['chinese', 2],
+    'games/yuwen-baike.html': ['chinese', 1],
+    'games/writing-showcase.html': ['chinese', 2],
+    'games/gushi.html': ['chinese', 2],
+    'games/english.html': ['english', 1],
+    'games/english-listening.html': ['english', 2],
+    'games/beat-clock.html': ['english', 2],
+    'games/dialogue-choice.html': ['english', 2],
+    'games/riddle.html': ['chinese', 1],
+    'games/science-nature.html': ['science', 2],
+    'games/wenyan.html': ['chinese', 3],
+    'games/read-comp.html': ['chinese', 3],
+    'games/chinese-basics.html': ['chinese', 2],
+    'games/links.html': ['game', 1]
+  };
+
+  function hrefKey(c) { return (c.getAttribute('href') || '').replace(/^\.\//, ''); }
+  function subOf(c) { return SMAP[hrefKey(c)] ? SMAP[hrefKey(c)][0] : 'game'; }
+  function lvOf(c) { return SMAP[hrefKey(c)] ? SMAP[hrefKey(c)][1] : 2; }
+  function stagesOf(c) { return (c.dataset.stage || '').split(/\s+/); }
+  function inStage(c, k) { return stagesOf(c).indexOf(k) >= 0; }
 
   function countStage(k) {
     if (k === 'parent') return parentCards.length;
     var n = 0;
-    cards.forEach(function (c) { if (c.dataset.stage === k) n++; });
+    cards.forEach(function (c) { if (inStage(c, k)) n++; });
     return n;
+  }
+
+  /* 按科目重排当前 tab 的卡片，并插入分组标题 */
+  function buildGroups(k) {
+    var vis = cards.filter(function (c) { return inStage(c, k); });
+    var first = true;
+    SUBS.forEach(function (s) {
+      var arr = vis.filter(function (c) { return subOf(c) === s.k; });
+      if (!arr.length) return;
+      arr.sort(function (a, b) {
+        return (lvOf(a) - lvOf(b)) || (Number(a.dataset.oi) - Number(b.dataset.oi));
+      });
+      var head = document.createElement('div');
+      head.className = 'sect' + (first ? ' first' : '');
+      head.dataset.sub = s.k;
+      head.innerHTML = '<span class="ge" aria-hidden="true">' + s.emoji + '</span><span>' + s.name + '</span><span class="line"></span><span class="cnt">' + arr.length + ' 个</span>';
+      grid.appendChild(head);
+      arr.forEach(function (c) { grid.appendChild(c); });
+      first = false;
+    });
   }
 
   function readStage() {
@@ -668,7 +768,11 @@
     writeStage(k);
     grid.hidden = (k === 'parent');
     parentPanel.hidden = (k !== 'parent');
-    cards.forEach(function (c) { c.hidden = (c.dataset.stage !== k); });
+    Array.prototype.forEach.call(grid.querySelectorAll('.sect'), function (el) {
+      el.parentNode.removeChild(el);
+    });
+    cards.forEach(function (c) { c.hidden = !inStage(c, k); });
+    if (k !== 'parent') buildGroups(k);
     renderTabs();
     if (say && V) {
       var s = STAGES.filter(function (x) { return x.k === k; })[0];

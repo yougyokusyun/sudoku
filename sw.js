@@ -50,7 +50,7 @@
  *           ② 成语页每题补 explain（≤30 字）与 source（出处），答对后弹出结果卡，
  *              122 条答案并集 100% 覆盖，朗读不念出处；
  *           ③ 全站朗读入口统一到右上角工具条一个 🔊，删除/隐藏 8 处页内重复按钮
- *              （beat-clock / bingju / pic-write / wenyan / dialogue-choice / gushi /
+ *              （beat-clock / bingju / wenyan / dialogue-choice / gushi /
  *              yuwen-baike / english 等），点选项即朗读行为保留；
  *           ④ idioms.html 横屏（≥900px 宽）改左图右题两栏，竖屏保持上下结构；
  *              图片容器按 1:1 预留空间（固定高度 + aspect-ratio + 占位底色），
@@ -62,8 +62,14 @@
  *              同主题不重复干扰项、局内目标词不重复，结算显示得分/正确/错误；
  *           ④ animal-chess 更名「斗兽棋」，棋盘宽度铺满可视区（横屏≥88%、竖屏≥92%），
  *              横竖间距独立计算，棋子/文字同步放大且不裁边。
+ * v41 变化：① 新增「写作赏析 · 好句积累」页（writing-showcase.html）：12 类场景 264 句，
+ *              每句含原句/场景标签/适用题目提示，支持分组浏览 + 搜索 + 统一语音朗读，
+ *              并迁移保留原看图写话的 40 组场景词库；
+ *           ② 删除看图写话 / 应用题小博士 / 形近字找家三个页面及首页卡片、预缓存条目；
+ *           ③ 首页与各年级 tab 按科目分组（语文/数学/英语/认知与科学/综合游戏），
+ *              组内按难度从易到难，组间加分组标题与间距。
  */
-var CACHE = 'xnly-v40';
+var CACHE = 'xnly-v41';
 
 var PRECACHE = [
   './',
@@ -88,6 +94,7 @@ var PRECACHE = [
   'games/beat-clock.html',
   'games/picture-sentence.html',
   'games/whack-word.html',
+  'games/writing-showcase.html',
   'games/dialogue-choice.html',
   'games/gomoku.html',
   'games/guess-number.html',
@@ -101,10 +108,8 @@ var PRECACHE = [
   'games/links.html',
   'games/logic-clues.html',
   'games/memory-match.html',
-  'games/math-word.html',
   'games/more-less.html',
   'games/music-pad.html',
-  'games/nearby-words.html',
   'games/near-syn.html',
   'games/number-match.html',
   'games/odd-one.html',
@@ -112,7 +117,6 @@ var PRECACHE = [
   'games/pairs.html',
   'games/path-connect.html',
   'games/pattern.html',
-  'games/pic-write.html',
   'games/reaction.html',
   'games/rhythm.html',
   'games/read-comp.html',

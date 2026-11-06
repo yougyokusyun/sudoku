@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>✍️ 写作赏析 · 好句积累 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--muted:#6b7f95;--accent:#e0559b;--line:rgba(36,59,83,.10);}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#fff0f6,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef4ff,transparent 55%),
+             linear-gradient(160deg,#fffafd,#f5f9ff);
+  min-height:100dvh;padding:12px 14px 30px;user-select:none;}
+.wrap{max-width:980px;margin:0 auto;}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+h1{font-size:clamp(1.05rem,2.4vw,1.35rem);letter-spacing:.5px;}
+.chips{margin-left:auto;display:flex;gap:6px;flex-wrap:wrap;}
+.chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+  font-size:.74rem;font-weight:700;color:var(--muted);box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+.chip b{color:var(--accent);font-size:.86rem;}
+.back{display:inline-flex;align-items:center;gap:4px;min-height:40px;padding:4px 12px;border-radius:999px;
+  background:#fff;border:1px solid var(--line);color:#c2185b;font-weight:700;font-size:.8rem;
+  text-decoration:none;box-shadow:0 4px 12px rgba(36,59,83,.08);order:-1;}
+.hint{margin:10px 2px 8px;font-size:.76rem;line-height:1.55;color:#7b8ea8;}
+.tools{display:flex;gap:8px;align-items:center;margin:0 0 10px;}
+.q{flex:1;min-width:0;min-height:44px;border:2px solid rgba(224,85,155,.18);border-radius:14px;
+  background:#fff;padding:0 14px;font-family:inherit;font-size:.92rem;color:var(--ink);outline:none;}
+.q:focus{border-color:rgba(224,85,155,.55);}
+.clr{flex:0 0 auto;min-height:44px;padding:0 14px;border-radius:14px;border:1px solid var(--line);
+  background:#fff;font-family:inherit;font-weight:800;font-size:.82rem;color:#8a7d86;cursor:pointer;}
+.found{margin:0 2px 6px;font-size:.74rem;font-weight:800;color:#9a8aa8;}
+.cats{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 6px;}
+.cat{min-height:36px;padding:2px 12px;border-radius:999px;border:1px solid var(--line);background:#fff;
+  font-family:inherit;font-weight:800;font-size:.78rem;color:#6b7f95;cursor:pointer;}
+.cat.on{background:#ffeaf4;border-color:rgba(224,85,155,.5);color:#c2185b;}
+.ghead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:24px 2px 8px;}
+.ghead .ge{font-size:1.35rem;line-height:1;}
+.ghead .gn{font-size:1.02rem;font-weight:900;}
+.ghead .gc{font-size:.7rem;font-weight:800;color:#7b8ea8;background:#fff;border:1px solid var(--line);
+  border-radius:999px;padding:2px 8px;}
+.ghead .gf{margin-left:auto;font-size:.7rem;font-weight:800;color:#a06b1f;background:#fff7e3;
+  border:1px solid #ffe1a8;border-radius:999px;padding:3px 9px;}
+.gtip{margin:0 2px 8px;font-size:.74rem;line-height:1.55;color:#8a9aad;}
+.line{display:flex;gap:10px;align-items:flex-start;background:#fff;border:1px solid var(--line);
+  border-radius:16px;padding:10px 12px;margin-bottom:8px;box-shadow:0 4px 10px rgba(36,59,83,.05);
+  cursor:pointer;transition:transform .12s ease,box-shadow .16s ease;}
+.line:active{transform:scale(.992);}
+@media (hover:hover){.line:hover{box-shadow:0 8px 18px rgba(36,59,83,.10);}}
+.no{flex:0 0 auto;min-width:26px;height:26px;border-radius:50%;background:#ffeaf4;color:#c2185b;
+  font-size:.7rem;font-weight:900;display:flex;align-items:center;justify-content:center;}
+.body{flex:1;min-width:0;}
+.t{font-size:clamp(.95rem,2.2vw,1.08rem);line-height:1.8;font-weight:700;word-break:break-word;overflow-wrap:anywhere;}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:5px;}
+.tag{font-size:.68rem;font-weight:800;color:#c2185b;background:#ffeaf4;border-radius:8px;padding:2px 8px;}
+.use{font-size:.7rem;line-height:1.5;color:#8a6d3b;background:#fff8ee;border-radius:8px;padding:2px 8px;}
+.src{display:block;margin-top:5px;font-size:.7rem;color:#8a9aad;}
+.spk{flex:0 0 auto;min-width:38px;min-height:38px;border-radius:50%;border:1px solid rgba(224,85,155,.25);
+  background:#fff7fb;font-size:1rem;cursor:pointer;line-height:1;}
+.scenes{margin-top:28px;border-top:1px dashed var(--line);padding-top:16px;}
+.sceneHead{width:100%;min-height:48px;border-radius:14px;border:1px solid rgba(42,157,143,.3);
+  background:#f6fffc;font-family:inherit;font-weight:900;font-size:.9rem;color:#1c7a6f;cursor:pointer;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 14px;text-align:left;}
+.sceneHead .st{font-size:.74rem;font-weight:700;color:#4c7a72;}
+.sceneBody{margin-top:10px;display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:8px;}
+.sitem{border:1px solid rgba(42,157,143,.25);background:#fff;border-radius:14px;padding:9px 11px;
+  cursor:pointer;box-shadow:0 4px 10px rgba(36,59,83,.04);}
+.sitem:active{transform:scale(.99);}
+.sitem .sico{font-size:1.15rem;margin-right:4px;}
+.sitem .stt{font-size:.86rem;font-weight:900;}
+.sitem .ssen{font-size:.78rem;line-height:1.55;color:#31465c;margin-top:4px;}
+.sitem .swords{font-size:.68rem;line-height:1.5;color:#6b8f88;margin-top:4px;}
+[hidden]{display:none!important;}
+footer{margin-top:24px;text-align:center;font-size:.72rem;line-height:1.6;color:#9fb1c6;}
+@media (max-width:380px){
+  .sceneBody{grid-template-columns:1fr;}
+  .ghead .gf{margin-left:0;}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>✍️ 写作赏析 · 好句积累</h1>
+  <div class="chips">
+    <span class="chip">好句 <b id="totalChip">0</b> 句</span>
+    <span class="chip">场景 <b id="groupChip">0</b> 类</span>
+    <span class="chip">适合 <b>2~6 年级</b></span>
+  </div>
+</header>
+
+<div class="hint">点一行就能听；每句下面的小提示，告诉你写哪类作文时可以仿写。标有出处的句子按课文原文引用，其余为示范仿写句。</div>
+
+<div class="tools">
+  <input class="q" id="q" type="search" placeholder="搜句子、场景或作文题目，如：妈妈 / 春天 / 写景" aria-label="搜索好句">
+  <button class="clr" id="clr" type="button">清空</button>
+</div>
+<div class="found" id="found"></div>
+<div class="cats" id="cats"></div>
+<div id="list"></div>
+
+<div class="scenes">
+  <button class="sceneHead" id="sceneToggle" type="button">
+    <span>🧩 看图写话 · 场景词库（原“看图写话”40 组，已迁移）</span>
+    <span class="st" id="sceneState">展开</span>
+  </button>
+  <div class="sceneBody" id="sceneBody" hidden></div>
+</div>
+
+<footer>好句用于仿写练习，不要求背诵 · 出处仅标注可查证的课文名篇 · 图片玩法已停用，词库保留在这里</footer>
+</div>
+
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+<script>
+/* ========== 12 类场景 · 264 句 ========== */
+var GROUP_DATA = [
+['appearance','人物外貌','👩','写人','写《我的妈妈》《我的同桌》这类写人的作文，可以借这里的句子写样子。',[
+['她的头发黑得像墨，扎成两条小辫子，走起路来一甩一甩的。','写《我的妈妈》可仿这句写头发'],
+['爷爷的胡子白花花的，像落了一层薄薄的雪。','写《我的爷爷》可仿这句写胡子'],
+['弟弟的脸圆圆的，红扑扑的，像刚摘下来的苹果。','写《我的弟弟》可仿这句写脸'],
+['妈妈的眉毛弯弯的，像两片细细的柳叶。','写《我的妈妈》可仿这句写眉毛'],
+['他的眼睛亮亮的，像两颗黑葡萄，笑起来弯成两道小月牙。','写《我的同桌》可仿这句写眼睛'],
+['姐姐的皮肤白白的，一晒太阳就泛出淡淡的红。','写《我的姐姐》可仿这句写皮肤'],
+['爸爸的手又大又厚，掌心上有一层硬硬的茧。','写《我的爸爸》可仿这句写手'],
+['奶奶的背有点弯，走起路来慢慢的，像一棵老树。','写《我的奶奶》可仿这句写背影'],
+['他的耳朵圆圆的，像两片小小的贝壳。','写《我的好朋友》可仿这句写耳朵'],
+['小妹妹的牙齿白白齐齐的，一笑就露出两个小酒窝。','写《我的妹妹》可仿这句写笑容'],
+['哥哥个子高高的，站在我旁边，像一堵会走路的墙。','写《我的哥哥》可仿这句写个子'],
+['她的鼻子小小的，鼻尖上有一颗芝麻大的小痣。','写《我的同桌》可仿这句写鼻子'],
+['老师穿着一件浅蓝色的衬衫，袖口卷到胳膊肘，显得干净又精神。','写《我的老师》可仿这句写衣着'],
+['那位叔叔戴着一副黑框眼镜，镜片后面的眼睛总是笑眯眯的。','写《一位难忘的陌生人》可仿这句写眼镜'],
+['外婆的手背上有几道细细的皱纹，像被风吹皱的水面。','写《我的外婆》可仿这句写皱纹'],
+['小男孩的脸被太阳晒得黑黑的，只有牙齿白得发亮。','写《一个农村孩子》可仿这句写肤色'],
+['她的头发里别着一只红色的蝴蝶发卡，一动就闪一下。','写《我的好朋友》可仿这句写发饰'],
+['爷爷穿着一件洗得发白的蓝布褂子，扣子扣得整整齐齐。','写《我的爷爷》可仿这句写穿着'],
+['他的下巴尖尖的，说话时总爱微微抬起来。','写《我的爸爸》可仿这句写下巴和神态'],
+['小姑娘穿着一双小红靴，靴子上沾着几星泥点。','写《雨中》可仿这句写鞋'],
+['她的脸蛋被风吹得红红的，像抹了一层淡淡的胭脂。','写《冬天的早晨》可仿这句写脸'],
+['那个老爷爷的眉毛又长又白，垂下来，像两小缕棉絮。','写《一位老人》可仿这句写眉毛']
+]],
+['action','人物动作','🏃','写人','写事的时候，把动作拆成一步一步，读者就像看见了。',[
+['妈妈把围裙一系，双手一挽袖子，走进厨房忙了起来。','写《我的妈妈》可仿这句写做饭'],
+['爸爸弯下腰，双手一撑，把我稳稳地抱了起来。','写《我的爸爸》可仿这句写抱'],
+['弟弟踮起脚尖，伸长脖子，伸手去够柜子上的糖罐。','写《我的弟弟》可仿这句写够东西'],
+['奶奶慢慢地弯下腰，用手帕把地上的米粒一颗一颗捡起来。','写《我的奶奶》可仿这句写捡'],
+['老师推开门，抱着书走到讲台前，把书轻轻放下。','写《我的老师》可仿这句写进教室'],
+['小明三步并作两步跑下楼，书包在背后一颠一颠的。','写《放学路上》可仿这句写跑'],
+['她两只手捧着碗，低着头，小口小口地喝着粥。','写《早餐》可仿这句写喝粥'],
+['爷爷一手扶着栏杆，一手拄着拐杖，慢慢地下楼梯。','写《我的爷爷》可仿这句写下楼'],
+['妹妹把脸埋在妈妈怀里，两只小手紧紧抓着妈妈的衣角。','写《我的妹妹》可仿这句写撒娇'],
+['他抓起书包往肩上一甩，转身就冲出了教室。','写《放学了》可仿这句写离开'],
+['妈妈轻轻地撩起我的刘海，用手背试了试我额头的温度。','写《我生病了》可仿这句写关心'],
+['我把手伸进冰凉的水里，搅了搅，水花一圈一圈荡开。','写《玩水》可仿这句写手的动作'],
+['哥哥蹲在门口，一手托着下巴，一手在地上画来画去。','写《我的哥哥》可仿这句写蹲'],
+['外婆坐在小板凳上，一针一线地缝着我的衣服。','写《我的外婆》可仿这句写缝衣'],
+['小姑娘提起裙角，轻轻一转，裙摆像一朵花似的开了。','写《跳舞》可仿这句写转圈'],
+['他咬着笔头，皱着眉头，在草稿纸上改了又改。','写《考试》可仿这句写思考'],
+['爸爸把车钥匙往桌上一放，脱下外套挂在门后。','写《爸爸回家》可仿这句写回家'],
+['我趴在窗台上，下巴抵着手臂，看着雨点打在玻璃上。','写《下雨了》可仿这句写趴窗'],
+['她一边走一边跳，脚尖点着地上的方砖，一格也不肯踩错。','写《放学路上》可仿这句写走路'],
+['工人叔叔抹了一把汗，把肩上的袋子往上提了提，继续往前走。','写《劳动者》可仿这句写干活'],
+['弟弟抢过皮球，抱在怀里，扭头就跑。','写《我的弟弟》可仿这句写抢'],
+['妈妈把被子抖开，铺平，四个角一一掖好。','写《我的妈妈》可仿这句写铺床']
+]],
+['speech','人物语言','💬','写人','写对话时，把话和说话的样子一起写，人物就活了。',[
+['“别怕，有我在呢。”妈妈拍拍我的后背，声音轻轻的。','写《我的妈妈》可仿这句写安慰'],
+['“快看，下雨啦！”弟弟趴在窗边，兴奋地喊。','写《下雨了》可仿这句写喊'],
+['“路上小心，早点回来。”奶奶站在门口，一遍又一遍地叮嘱。','写《我的奶奶》可仿这句写叮嘱'],
+['“这道题再想一想，你一定能做出来。”老师弯下腰，笑着对我说。','写《我的老师》可仿这句写鼓励'],
+['“我们一起去吧！”同桌拉拉我的袖子，眼睛亮亮的。','写《我的好朋友》可仿这句写邀请'],
+['爸爸把碗一推，说：“慢点吃，没人跟你抢。”','写《我的爸爸》可仿这句写吃饭'],
+['“对不起，是我不好。”她低着头，声音小得像蚊子叫。','写《一件小事》可仿这句写道歉'],
+['“没关系，我们一起想办法。”我拍拍他的肩膀说。','写《我的好朋友》可仿这句写安慰'],
+['“爷爷，您慢点走！”我一边喊，一边跑过去扶住他。','写《我的爷爷》可仿这句写关心'],
+['“今天的菜真香啊！”妈妈一进门就吸了吸鼻子。','写《我的妈妈》可仿这句写夸赞'],
+['“再坚持一下，就快到了。”哥哥回头朝我招手。','写《爬山》可仿这句写鼓励'],
+['“你画的画真好看！”我认真地竖起大拇指。','写《我的好朋友》可仿这句写夸奖'],
+['“嘘——小声点，妹妹在睡觉。”妈妈把手指放在嘴边。','写《我的妹妹》可仿这句写提醒'],
+['“我来帮你拿吧。”我伸手接过她手里的书。','写《一件好事》可仿这句写帮忙'],
+['“天黑了，我们回家吧。”妈妈抬头看了看天，轻声说。','写《傍晚》可仿这句写回家'],
+['“别急，慢慢说。”老师给我倒了一杯水。','写《我的老师》可仿这句写安慰'],
+['“真的吗？太好了！”他一下子跳了起来。','写《一件高兴的事》可仿这句写惊喜'],
+['“没关系，摔一下不算什么。”爸爸把我扶起来，笑着说。','写《我的爸爸》可仿这句写鼓励'],
+['“谢谢你！”小姑娘接过气球，甜甜地说。','写《一件小事》可仿这句写道谢'],
+['“小声点，别吵醒它。”我压低声音，指了指窝里的小猫。','写《小猫》可仿这句写轻声'],
+['“奶奶，我给您捶捶背吧。”我说着，就绕到她身后。','写《我的奶奶》可仿这句写孝顺'],
+['“加油！加油！”同学们站在跑道边，挥着手大喊。','写《运动会》可仿这句写加油']
+]],
+['mind','人物心理','😊','写人','心里怎么想，可以写出来，也可以从动作和表情里看出来。',[
+['我的心像揣着一只小兔子，怦怦地跳个不停。','写《第一次上台》可仿这句写紧张'],
+['听到这个消息，我心里像开了花一样，甜丝丝的。','写《一件高兴的事》可仿这句写开心'],
+['我低着头，脸一直红到耳朵根，恨不得找个地缝钻进去。','写《一件后悔的事》可仿这句写难为情'],
+['他嘴上说不在乎，眼睛却一直盯着那张试卷。','写《我的同桌》可仿这句写口是心非'],
+['我攥紧了拳头，手心全是汗，心想：一定要成功。','写《比赛》可仿这句写紧张'],
+['望着妈妈离去的背影，我的鼻子忽然一酸。','写《我的妈妈》可仿这句写不舍'],
+['等了半天也没等到，我的心里像压了一块石头。','写《等待》可仿这句写着急'],
+['他把奖状贴在胸口，笑得嘴都合不拢。','写《得奖》可仿这句写高兴'],
+['我一遍又一遍地告诉自己：别怕，别怕。','写《第一次》可仿这句写自我鼓励'],
+['听到脚步声，我的心一下子提到了嗓子眼。','写《夜晚》可仿这句写害怕'],
+['看着满地的碎玻璃，我又害怕又后悔，手脚都不知道往哪里放。','写《一件错事》可仿这句写后悔'],
+['她表面上安安静静，心里却像有一条小鱼在乱蹦。','写《我的同桌》可仿这句写心里活动'],
+['我一个人坐在空荡荡的教室里，觉得时间过得特别慢。','写《等待》可仿这句写孤单'],
+['想到明天要去春游，我翻来覆去怎么也睡不着。','写《春游前夜》可仿这句写期待'],
+['老师表扬我的时候，我心里美滋滋的，像喝了蜜。','写《表扬》可仿这句写得意'],
+['我悄悄松了一口气，肩膀一下子垮了下来。','写《考完试》可仿这句写放松'],
+['他咬着嘴唇，眼圈慢慢红了，却硬是不肯让眼泪掉下来。','写《我的同学》可仿这句写忍住眼泪'],
+['看着小伙伴们都跑远了，我又着急又委屈。','写《一件委屈的事》可仿这句写委屈'],
+['我捧着那本旧书，心里暖暖的，像有一盏小灯亮着。','写《一件礼物》可仿这句写温暖'],
+['站在台上，我的腿有点发抖，声音也变了调。','写《第一次上台》可仿这句写紧张'],
+['我把信读了又读，心里又甜又酸，说不清是什么滋味。','写《一封信》可仿这句写复杂心情'],
+['听到爸爸的咳嗽声，我心里一紧，赶紧端起了水杯。','写《我的爸爸》可仿这句写担心']
+]],
+['animal','动物','🐾','状物','写动物要抓住样子、动作和叫声，让读者一眼认出它。',[
+['小白兔竖着两只长耳朵，红宝石似的眼睛一眨一眨。','写《小白兔》可仿这句写样子'],
+['小猫把身子蜷成一团，尾巴绕过来盖住鼻尖，睡得正香。','写《小猫》可仿这句写睡觉'],
+['小狗摇着尾巴跑过来，围着我的腿转了一圈又一圈。','写《小狗》可仿这句写动作'],
+['大熊猫抱着竹子，坐在地上，慢悠悠地啃着。','写《大熊猫》可仿这句写吃'],
+['小猴子一只手抓着树枝，另一只手去摘香蕉，机灵得很。','写《小猴子》可仿这句写动作'],
+['小鸭子排成一队，摇摇摆摆地走进池塘，扑通扑通跳下水。','写《小鸭子》可仿这句写下水'],
+['小鸡一身黄绒毛，像一团会跑的小绒球。','写《小鸡》可仿这句写样子'],
+['小鱼在水里游来游去，尾巴一摆一摆，像一片会动的叶子。','写《小鱼》可仿这句写游'],
+['小乌龟把头缩进壳里，过了好一会儿才慢慢探出来。','写《小乌龟》可仿这句写动作'],
+['蜜蜂嗡嗡地飞，停在花心里，腿上沾满了金黄的花粉。','写《蜜蜂》可仿这句写采蜜'],
+['蝴蝶落在花瓣上，翅膀一开一合，像两片彩色的纸。','写《蝴蝶》可仿这句写样子'],
+['小鸟站在枝头，歪着脑袋，清清脆脆地唱起了歌。','写《小鸟》可仿这句写叫'],
+['青蛙蹲在荷叶上，鼓着大眼睛，呱呱地叫个不停。','写《青蛙》可仿这句写叫'],
+['小马撒开四蹄，在草原上跑起来，鬃毛迎风飘动。','写《小马》可仿这句写奔跑'],
+['奶牛慢吞吞地嚼着草，尾巴不时甩一下，赶走身边的苍蝇。','写《奶牛》可仿这句写吃草'],
+['小猪在泥地里打了个滚，浑身糊满了泥，还哼哼地叫着。','写《小猪》可仿这句写打滚'],
+['小羊羔跟在妈妈身后，咩咩地叫，毛茸茸的像一团棉花。','写《小羊》可仿这句写样子'],
+['狮子趴在树荫下，金色的鬃毛铺了一地，懒洋洋地眯着眼。','写《狮子》可仿这句写休息'],
+['狐狸拖着火红的大尾巴，在雪地上留下一串脚印。','写《狐狸》可仿这句写尾巴'],
+['小鹿轻轻地走到溪边，低下头，一口一口地喝水。','写《小鹿》可仿这句写喝水'],
+['企鹅挺着白肚皮，一摇一摆地走着，像穿了件小礼服。','写《企鹅》可仿这句写走路'],
+['松鼠抱着松果，蹲在树杈上，尾巴翘得高高的。','写《松鼠》可仿这句写抱松果']
+]],
+['plant','植物','🌿','状物','写植物可以写颜色、形状、香味，还可以写它随风动的样子。',[
+['小草偷偷地从土里钻出来，嫩嫩的，绿绿的。','写《春天来了》可仿这句写小草','朱自清《春》'],
+['桃树、杏树、梨树，你不让我，我不让你，都开满了花赶趟儿。','写《春天》可仿这句写花开','朱自清《春》'],
+['荷叶挨挨挤挤的，像一个个碧绿的大圆盘。','写《荷花》可仿这句写荷叶','叶圣陶《荷花》'],
+['柳条细细长长的，风一吹，就轻轻地摇起来，像小姑娘的长辫子。','写《春天》可仿这句写柳条'],
+['向日葵仰着脸，追着太阳转，花盘上结满了黑黑的籽。','写《向日葵》可仿这句写样子'],
+['蒲公英撑着一把把小伞，风一来，就飘飘悠悠地飞走了。','写《蒲公英》可仿这句写飞'],
+['院子里的桂花开了，一小朵一小朵，香气却能飘出老远。','写《桂花》可仿这句写香味'],
+['老槐树的枝干粗粗的，皮上裂开一道一道的口子。','写《老树》可仿这句写树干'],
+['竹笋从泥土里冒出来，尖尖的，裹着一层褐色的外衣。','写《竹笋》可仿这句写样子'],
+['秋风吹过，银杏叶一片一片落下来，像一把把金黄的小扇子。','写《秋天》可仿这句写落叶'],
+['枫叶红得像一团火，把半边山坡都染红了。','写《秋天》可仿这句写枫叶'],
+['松树一年四季都是绿油油的，针一样的叶子密密麻麻。','写《松树》可仿这句写叶子'],
+['草莓躲在叶子底下，红红的小脸只露出一半。','写《草莓》可仿这句写果子'],
+['南瓜藤爬满了地，叶子大大的，像一把把小伞。','写《菜园》可仿这句写藤'],
+['牵牛花顺着竹竿往上爬，吹起一个个紫色的小喇叭。','写《牵牛花》可仿这句写花'],
+['树上的柿子熟透了，红彤彤的，像挂了一树小灯笼。','写《秋天的果园》可仿这句写柿子'],
+['麦苗齐齐地站在田里，绿得发亮，风一吹就翻起细浪。','写《田野》可仿这句写麦苗'],
+['桃花开了，粉粉的一大片，走近了才闻见淡淡的香。','写《桃花》可仿这句写花'],
+['含羞草被轻轻一碰，叶子就一片片合拢，像害羞的小姑娘。','写《含羞草》可仿这句写变化'],
+['仙人掌胖乎乎的，身上长满了小刺，一朵黄花开在头顶。','写《仙人掌》可仿这句写样子'],
+['芦苇站在水边，穗子白白的，风一吹就沙沙地响。','写《河边》可仿这句写芦苇'],
+['石榴咧开了嘴，露出一颗颗红亮亮的籽儿。','写《石榴》可仿这句写果子']
+]],
+['weather','天气','☁️','写景','写天气要写看到、听到、感觉到的，不只写“下雨了”。',[
+['最妙的是下点小雪呀。','写《雪》可仿这句起笔','老舍《济南的冬天》'],
+['雨点像断了线的珠子，噼里啪啦地往下落。','写《下雨了》可仿这句写雨点'],
+['细细的雨丝斜斜地飘着，落在脸上凉丝丝的。','写《小雨》可仿这句写雨丝'],
+['太阳像个大火球，烤得地面发烫，连风都是热的。','写《夏天》可仿这句写太阳'],
+['乌云压得很低，天一下子暗了下来，像谁拉上了一块灰布。','写《雷雨》可仿这句写乌云'],
+['一道闪电划破天空，紧接着“轰隆”一声，雷响了。','写《雷雨》可仿这句写闪电'],
+['风呼呼地刮着，吹得树枝乱摆，吹得人睁不开眼。','写《大风》可仿这句写风'],
+['雪花一片一片飘下来，像撕碎的纸片，又像轻轻的羽毛。','写《下雪了》可仿这句写雪花'],
+['大雪过后，屋顶戴上了白帽子，树枝披上了白棉袄。','写《雪后》可仿这句写雪景'],
+['雾很大，远处的楼和树都看不清了，只剩下淡淡的影子。','写《雾》可仿这句写雾'],
+['早晨的露水挂在草叶上，一颗一颗，像透明的小珍珠。','写《早晨》可仿这句写露水'],
+['天边堆起了厚厚的云，一层一层，像叠起来的棉被。','写《多云》可仿这句写云'],
+['雨停了，太阳从云缝里钻出来，地上亮堂堂的。','写《雨停了》可仿这句写雨后'],
+['冰雹噼噼啪啪地打在窗上，像有人在敲小鼓。','写《冰雹》可仿这句写冰雹'],
+['秋风一起，天就高了，云也淡了，空气清清爽爽的。','写《秋天》可仿这句写秋风'],
+['天热得厉害，蝉在树上叫个不停，狗趴在阴凉处伸着舌头。','写《炎热的一天》可仿这句写热'],
+['傍晚的风带着一点凉意，吹在身上舒服极了。','写《傍晚》可仿这句写风'],
+['雨后的空气湿湿的，带着泥土和青草的味道。','写《雨后》可仿这句写气味'],
+['天色渐渐暗下来，西边的云被染成了淡淡的橘红色。','写《傍晚》可仿这句写天色'],
+['冰面亮晶晶的，一脚踩上去，发出“咯吱咯吱”的响声。','写《冬天》可仿这句写冰'],
+['霜落在瓦上、草上，白白的一层，像撒了一地细盐。','写《霜》可仿这句写霜'],
+['雨越下越大，屋檐下挂起了一道水帘。','写《大雨》可仿这句写雨势']
+]],
+['season','四季景色','🌸','写景','写四季，可以写一个季节里的草、花、果、风和人。',[
+['盼望着，盼望着，东风来了，春天的脚步近了。','写《春天来了》可仿这句开头','朱自清《春》'],
+['春天一到，小草绿了，花儿开了，连风里都带着甜味。','写《春天》可仿这句总写'],
+['夏天的太阳明晃晃的，树叶绿得发亮，蝉声一阵接一阵。','写《夏天》可仿这句总写'],
+['秋天来了，稻子黄了，果子红了，风里都是香香的味道。','写《秋天》可仿这句总写'],
+['冬天的手是凉的，可屋里的炉火是暖的。','写《冬天》可仿这句写冷暖'],
+['春风吹过田野，麦苗轻轻晃动，像一片绿色的海。','写《春天》可仿这句写田野'],
+['夏夜里，蛙声一片，萤火虫提着小灯笼在草丛里飞。','写《夏夜》可仿这句写夜晚'],
+['秋天的落叶铺满了小路，踩上去沙沙作响。','写《秋天的小路》可仿这句写落叶'],
+['冬日的阳光斜斜地照进来，落在桌上，暖得像一小块手帕。','写《冬天》可仿这句写阳光'],
+['春天的柳树抽出了新芽，嫩绿嫩绿的，一碰就软。','写《春天》可仿这句写柳芽'],
+['夏天的池塘里，荷花开了，粉的白的，挤挤挨挨站满一池。','写《夏天》可仿这句写荷花'],
+['秋天的果园里，苹果红了，梨子黄了，一串串葡萄紫得发亮。','写《秋天的果园》可仿这句写果子'],
+['冬天的树光秃秃的，枝丫伸向天空，像一幅简单的画。','写《冬天》可仿这句写树'],
+['春天的小路上，野花一朵挨着一朵，开得很热闹。','写《春天的小路》可仿这句写野花'],
+['夏天的傍晚，天慢慢凉下来，家家户户搬出小凳子乘凉。','写《夏夜》可仿这句写傍晚'],
+['秋天的天空又高又蓝，大雁排着队往南飞。','写《秋天》可仿这句写天空'],
+['冬天的雪地里，脚印一串串，像写给大地的一封信。','写《雪地》可仿这句写脚印'],
+['春天像刚睡醒的孩子，伸着懒腰，一点点长大。','写《春天》可仿这句用比喻'],
+['夏天像一盆泼出去的水，热烈、明亮，说下就下。','写《夏天》可仿这句用比喻'],
+['秋天像一位老奶奶，慢慢地把果子装进兜里。','写《秋天》可仿这句用比喻'],
+['冬天像一位安静的画家，只用白色和灰色作画。','写《冬天》可仿这句用比喻'],
+['四季转了一圈又一圈，把大地画成了不同的颜色。','写《四季》可仿这句结尾']
+]],
+['nature','自然景物','⛰️','写景','写出、水、天空，可以按从远到近、从上到下的顺序看。',[
+['太阳像负着什么重担似的，慢慢儿，一纵一纵地，使劲儿向上升。','写《日出》可仿这句写太阳升起','巴金《海上日出》'],
+['远山一座连着一座，青灰色的，像一道起起伏伏的墙。','写《远山》可仿这句写山'],
+['小河水清得见底，石头上的花纹都看得清清楚楚。','写《小河》可仿这句写水清'],
+['湖水静静的，像一面大镜子，把天和云都装了进去。','写《湖水》可仿这句写湖'],
+['天空蓝得像水洗过一样，干净得没有一丝杂色。','写《天空》可仿这句写蓝天'],
+['一轮圆月挂在树梢，白白的，像一只刚洗过的瓷盘。','写《月亮》可仿这句写月'],
+['星星一颗一颗亮起来，稀稀疏疏，像撒在天上的碎银子。','写《星空》可仿这句写星星'],
+['山顶上飘着一层薄雾，山尖像藏在云里的一个梦。','写《山》可仿这句写云雾'],
+['瀑布从高处冲下来，白花花的一片，声音轰轰地响。','写《瀑布》可仿这句写瀑布'],
+['海浪一波接一波涌过来，拍在礁石上，碎成一朵白花。','写《海边》可仿这句写海浪'],
+['小溪弯弯曲曲地流着，遇到石头就溅起一朵朵小小的水花。','写《小溪》可仿这句写溪水'],
+['沙滩细细软软的，一脚踩上去，留下一个浅浅的坑。','写《沙滩》可仿这句写沙'],
+['田野一块连着一块，远远看去，像一块大格子布。','写《田野》可仿这句写田野'],
+['村口的那座石桥，弯弯的，像一道落在地上的月亮。','写《家乡》可仿这句写桥'],
+['夕阳把天染成了橘红色，云一层一层，像烧起来的棉花。','写《夕阳》可仿这句写晚霞'],
+['岸边的芦苇一丛一丛，影子落在水里，被波纹揉碎了。','写《河边》可仿这句写倒影'],
+['山间的小路窄窄的，一边是石壁，一边是深深的沟。','写《山路》可仿这句写小路'],
+['清晨的江面上浮着一层雾，船像在水面上滑行。','写《江边》可仿这句写晨雾'],
+['雪后的山顶亮得晃眼，太阳一照，像撒了一层碎钻。','写《雪山》可仿这句写雪顶'],
+['池塘边长满了青苔，绿茸茸的，踩上去软软的。','写《池塘》可仿这句写青苔'],
+['大榕树的影子铺了半条街，风一吹，碎影在地上晃。','写《家乡的老树》可仿这句写树影'],
+['天边的云慢慢散开，露出一小片一小片的蓝天。','写《云》可仿这句写云散']
+]],
+['scene','场面','🎪','写事','写场面，要写出人多、声音多、动作多，让读者像站在旁边。',[
+['运动会上，跑道两旁站满了人，加油声一浪高过一浪。','写《运动会》可仿这句写看台'],
+['发令枪一响，运动员们像离弦的箭一样冲了出去。','写《运动会》可仿这句写起跑'],
+['拔河比赛开始了，大家双脚蹬地，身子往后仰，脸都憋红了。','写《拔河》可仿这句写动作'],
+['教室里安安静静的，只听见笔尖在纸上沙沙地响。','写《考试》可仿这句写安静'],
+['老师提问的话音刚落，几十只小手“唰”地举了起来。','写《课堂》可仿这句写举手'],
+['集市上人挤人，吆喝声、叫卖声、讨价还价声混成一片。','写《集市》可仿这句写声音'],
+['菜市场里热气腾腾，青菜上还挂着水珠。','写《菜市场》可仿这句写样子'],
+['放学时，校门口挤满了家长，一双双眼睛都在往里找。','写《放学》可仿这句写家长'],
+['春节的街上挂满了红灯笼，人来人往，笑声不断。','写《春节》可仿这句写热闹'],
+['舞台上灯光一亮，台下立刻安静下来。','写《演出》可仿这句写舞台'],
+['孩子们围成一圈，蹲在地上看蚂蚁搬家，谁也不肯走。','写《课间》可仿这句写围观'],
+['篮球场上，球在手里传来传去，观众的心也跟着一起跳。','写《篮球赛》可仿这句写比赛'],
+['课间十分钟，走廊上跑满了人，笑声从这头传到那头。','写《课间》可仿这句写走廊'],
+['食堂里排起了长队，碗筷碰撞叮叮当当响成一片。','写《食堂》可仿这句写排队'],
+['广场上的音乐一响，跳舞的爷爷奶奶们就站成了整齐的几排。','写《广场》可仿这句写跳舞'],
+['开学第一天，校门口挂起了红横幅，同学们背着新书包走进校门。','写《开学第一天》可仿这句写校门'],
+['运动会接力赛时，棒子一递一接，场边的喊声几乎要把天掀起来。','写《接力赛》可仿这句写交接棒'],
+['图书角里，几个孩子捧着书，谁也不说话，只偶尔翻一页。','写《图书角》可仿这句写安静'],
+['雨天的公交站台上，人们挤在一起，伞挨着伞，像一片彩色的蘑菇。','写《等车》可仿这句写伞'],
+['大扫除时，教室里水声、笑声、挪桌子的声音响成一片。','写《大扫除》可仿这句写声音'],
+['礼堂里坐满了人，灯光暗下来，幕布缓缓拉开。','写《演出》可仿这句写开场'],
+['傍晚的操场上，跑步的、跳绳的、踢球的，热闹得像一锅开了的水。','写《操场》可仿这句写热闹']
+]],
+['object','物品','🎒','状物','写物品，可以写它的样子、颜色、声音，还可以写它和你的故事。',[
+['那只小布熊的耳朵磨得有些发白，可我走到哪里都带着它。','写《我的心爱之物》可仿这句写旧'],
+['书包的拉链头上挂着一个小铃铛，走一步，响一下。','写《我的书包》可仿这句写铃铛'],
+['铅笔盒里整整齐齐地躺着几支铅笔，橡皮被磨成了圆圆的一小块。','写《我的铅笔盒》可仿这句写摆放'],
+['奶奶的老花镜架在鼻梁上，镜腿用胶布缠了一圈。','写《我的奶奶》可仿这句写老花镜'],
+['那把旧雨伞是深蓝色的，伞骨断了一根，撑开时有点歪。','写《一把伞》可仿这句写旧伞'],
+['玩具小火车的轮子转得飞快，绕着桌子跑了一圈又一圈。','写《我的玩具》可仿这句写小火车'],
+['我折的纸飞机尖尖的，一松手就斜斜地飞出去。','写《纸飞机》可仿这句写飞'],
+['月饼圆圆的，上面印着花纹，掰开来是满满的豆沙。','写《中秋节》可仿这句写月饼'],
+['热腾腾的包子冒着白气，一口咬下去，汤汁流到了嘴角。','写《早餐》可仿这句写包子'],
+['冰淇淋上插着一把小木勺，还没吃就开始化了，顺着手指往下淌。','写《夏天》可仿这句写冰淇淋'],
+['那盏小台灯低着头，把一圈暖黄的光落在作业本上。','写《我的小台灯》可仿这句写灯光'],
+['妈妈的针线盒里，红的绿的线团挤在一起，像一盒彩色的小花。','写《我的妈妈》可仿这句写针线盒'],
+['爷爷的旧茶缸掉了漆，缸沿上还有一个小缺口。','写《我的爷爷》可仿这句写茶缸'],
+['新买的球鞋白白的，鞋带系成两个蝴蝶结。','写《新鞋》可仿这句写球鞋'],
+['风铃挂在窗前，风一吹，叮叮当当地响。','写《风铃》可仿这句写声音'],
+['那张全家福摆在柜子上，边角已经卷了起来。','写《一张照片》可仿这句写照片'],
+['冰糖葫芦一串串插在草把子上，红亮亮的，裹着一层透明的糖。','写《冰糖葫芦》可仿这句写样子'],
+['我的存钱罐是小猪形状的，投一枚硬币，它就“咚”地响一声。','写《我的存钱罐》可仿这句写声音'],
+['教室后面的黑板报五颜六色，画着太阳、小鸟和一排小树。','写《黑板报》可仿这句写黑板报'],
+['那把木梳的齿断了两根，可妈妈还是舍不得扔。','写《一把木梳》可仿这句写舍不得'],
+['小闹钟坐在床头，指针“滴答滴答”地走着，从不偷懒。','写《我的小闹钟》可仿这句写声音'],
+['一碗热汤面端上来，白白的面条上卧着一个金黄的荷包蛋。','写《一碗面》可仿这句写食物']
+]],
+['soundcolor','声音与颜色','🌈','写景','把声音写成“像什么”，把颜色写具体，画面就出来了。',[
+['雨打在瓦上，“滴滴答答”，像有人在轻轻敲着小鼓。','写《下雨》可仿这句写声音'],
+['风穿过树林，“呼呼”地响，叶子跟着“沙沙”作响。','写《风》可仿这句写风声'],
+['屋檐下的冰凌滴着水，“嗒、嗒、嗒”，一声一声很清脆。','写《化雪》可仿这句写滴水'],
+['自行车铃“叮铃铃”一响，路上的人纷纷让开。','写《上学路上》可仿这句写铃声'],
+['锅里的油“滋啦”一声，香味立刻飘满了厨房。','写《做饭》可仿这句写厨房'],
+['鞭炮“噼里啪啦”地炸开，红纸屑落了一地。','写《过年》可仿这句写鞭炮'],
+['小溪的水“哗哗”地流，碰到石头又“叮咚”一下。','写《小溪》可仿这句写水声'],
+['上课铃“叮——”地响了，走廊上立刻安静下来。','写《上课》可仿这句写铃声'],
+['老式挂钟“当、当、当”敲了七下，天刚蒙蒙亮。','写《早晨》可仿这句写钟声'],
+['蝉在树上“知了知了”地叫，叫得人心也跟着热起来。','写《夏天》可仿这句写蝉'],
+['小狗“汪汪”两声，摇着尾巴迎上来。','写《小狗》可仿这句写叫声'],
+['小猫“喵呜”一声，轻手轻脚地跳上窗台。','写《小猫》可仿这句写叫声'],
+['妈妈切菜的刀在案板上“笃笃笃”，节奏又稳又匀。','写《我的妈妈》可仿这句写切菜'],
+['雪地安静得出奇，只听得见脚下“咯吱咯吱”的声音。','写《雪地》可仿这句写安静'],
+['天边泛起鱼肚白，一点点亮起来。','写《早晨》可仿这句写颜色'],
+['傍晚的天空一层橘、一层粉、一层淡淡的紫，像谁把颜料盘打翻了。','写《晚霞》可仿这句写颜色'],
+['秋天的田野金灿灿的，稻穗一浪一浪，亮得耀眼。','写《秋天》可仿这句写金色'],
+['湖水绿得像一块玉，深的地方发蓝，浅的地方透亮。','写《湖水》可仿这句写绿色'],
+['她的红围巾在风里飘，像雪地里的一小团火。','写《冬天》可仿这句写红色'],
+['夜空黑得像墨，星星却亮得像撒了一把盐。','写《星空》可仿这句写黑白'],
+['雨后的天空洗得发白，云朵的边缘镶着一圈淡金色。','写《雨后》可仿这句写颜色'],
+['那棵老树的叶子一半绿一半黄，像被秋天轻轻咬了一口。','写《秋天》可仿这句写渐变']
+]]
+];
+
+/* ========== 原看图写话 40 组场景词库（迁移保留） ========== */
+var SCENES = [
+{kind:'动物',emoji:'🐰',when:['早上','傍晚'],who:['小白兔','小松鼠'],where:['草地上','大树下'],what:['吃萝卜','晒太阳'],more:['开心','静静地']},
+{kind:'动物',emoji:'🐱',when:['中午','晚上'],who:['小花猫','小姑娘'],where:['沙发上','窗台边'],what:['睡午觉','看小鸟'],more:['软软的','暖和']},
+{kind:'动物',emoji:'🐶',when:['下午','早上'],who:['小狗','哥哥'],where:['院子里','草地上'],what:['啃骨头','玩皮球'],more:['高兴','摇尾巴']},
+{kind:'动物',emoji:'🐼',when:['上午','中午'],who:['大熊猫','饲养员'],where:['竹林里','动物园'],what:['吃竹子','爬树'],more:['胖乎乎','慢悠悠']},
+{kind:'动物',emoji:'🐯',when:['清晨','夜晚'],who:['老虎','小鹿'],where:['森林里','小河边'],what:['散步','喝水'],more:['威风','悄悄']},
+{kind:'动物',emoji:'🐘',when:['夏天','中午'],who:['大象','小象'],where:['河边','水池里'],what:['洗澡','喷水'],more:['长长的鼻子','凉快']},
+{kind:'动物',emoji:'🐵',when:['早上','下午'],who:['小猴子','猴妈妈'],where:['树上','山坡上'],what:['摘香蕉','荡秋千'],more:['机灵','调皮']},
+{kind:'动物',emoji:'🦆',when:['春天','清晨'],who:['小鸭子','鸭妈妈'],where:['池塘里','小河里'],what:['游泳','捉小鱼'],more:['摇摇摆摆','嘎嘎叫']},
+{kind:'动物',emoji:'🐤',when:['早上','中午'],who:['小鸡','鸡妈妈'],where:['院子里','草地上'],what:['吃米','捉虫子'],more:['黄黄的','叽叽叫']},
+{kind:'动物',emoji:'🐟',when:['白天','夏天'],who:['小鱼','小虾'],where:['水里','池塘里'],what:['游来游去','吐泡泡'],more:['自由自在','闪亮']},
+{kind:'动物',emoji:'🐢',when:['早上','下午'],who:['小乌龟','小朋友'],where:['沙滩上','草地上'],what:['慢慢爬','晒太阳'],more:['慢吞吞','硬硬的壳']},
+{kind:'动物',emoji:'🐝',when:['春天','上午'],who:['小蜜蜂','蝴蝶'],where:['花园里','花丛中'],what:['采花蜜','跳舞'],more:['嗡嗡','忙碌']},
+{kind:'动物',emoji:'🦋',when:['春天','午后'],who:['蝴蝶','小女孩'],where:['花丛中','草地上'],what:['翩翩起舞','追蝴蝶'],more:['五颜六色','轻轻']},
+{kind:'动物',emoji:'🐦',when:['清晨','傍晚'],who:['小鸟','鸟妈妈'],where:['树枝上','屋檐下'],what:['唱歌','喂宝宝'],more:['清脆','快乐']},
+{kind:'动物',emoji:'🐸',when:['夏天','雨后'],who:['小青蛙','青蛙妈妈'],where:['荷叶上','池塘边'],what:['捉虫子','呱呱叫'],more:['碧绿','蹦蹦跳跳']},
+{kind:'动物',emoji:'🐴',when:['早上','下午'],who:['小马','牧羊人'],where:['草原上','山坡上'],what:['奔跑','吃草'],more:['飞快','自由']},
+{kind:'动物',emoji:'🐮',when:['清晨','中午'],who:['奶牛','小牛'],where:['草地上','农场里'],what:['吃草','挤奶'],more:['黑白花纹','悠闲']},
+{kind:'动物',emoji:'🐷',when:['中午','下午'],who:['小猪','农夫'],where:['泥地里','猪圈里'],what:['打滚','睡觉'],more:['圆滚滚','呼噜噜']},
+{kind:'动物',emoji:'🐑',when:['上午','傍晚'],who:['小羊','羊妈妈'],where:['山坡上','草地上'],what:['吃青草','晒太阳'],more:['毛茸茸','咩咩叫']},
+{kind:'动物',emoji:'🐭',when:['夜里','中午'],who:['小老鼠','猫'],where:['厨房里','洞口'],what:['偷吃奶酪','躲起来'],more:['悄悄地','小小的']},
+{kind:'动物',emoji:'🦁',when:['中午','黄昏'],who:['狮子','小狮子'],where:['树荫下','草原上'],what:['睡午觉','练习吼叫'],more:['金色的鬃毛','懒洋洋']},
+{kind:'动物',emoji:'🦊',when:['傍晚','清晨'],who:['狐狸','小兔子'],where:['森林里','雪地上'],what:['找食物','玩耍'],more:['火红的尾巴','机警']},
+{kind:'动物',emoji:'🦌',when:['清晨','傍晚'],who:['小鹿','鹿妈妈'],where:['小溪边','树林里'],what:['喝水','吃嫩叶'],more:['轻盈','安静']},
+{kind:'动物',emoji:'🐨',when:['白天','傍晚'],who:['考拉','小考拉'],where:['树上','桉树上'],what:['睡觉','抱树枝'],more:['毛茸茸','慢吞吞']},
+{kind:'动物',emoji:'🐧',when:['冬天','早上'],who:['企鹅','小企鹅'],where:['冰面上','海边'],what:['走路','排队'],more:['摇摇摆摆','黑白']},
+{kind:'动物',emoji:'🦉',when:['晚上','深夜'],who:['猫头鹰','小老鼠'],where:['树枝上','树林里'],what:['捉老鼠','睁大眼睛'],more:['圆眼睛','安静']},
+{kind:'动物',emoji:'🐌',when:['雨后','早上'],who:['小蜗牛','小蚂蚁'],where:['叶子上','石头上'],what:['慢慢爬','吃叶子'],more:['背着壳','慢吞吞']},
+{kind:'动物',emoji:'🦀',when:['夏天','傍晚'],who:['小螃蟹','小朋友'],where:['沙滩上','海边'],what:['横着走','挖沙子'],more:['大钳子','活泼']},
+{kind:'动物',emoji:'🐿️',when:['秋天','早上'],who:['小松鼠','松鼠妈妈'],where:['树洞里','树枝上'],what:['藏松果','吃坚果'],more:['大尾巴','忙碌']},
+{kind:'动物',emoji:'🦔',when:['傍晚','夜里'],who:['小刺猬','小兔'],where:['草地上','灌木丛里'],what:['找果子','缩成一团'],more:['尖尖的刺','轻轻']},
+{kind:'动物',emoji:'🦒',when:['早上','中午'],who:['长颈鹿','小长颈鹿'],where:['草原上','树下'],what:['吃树叶','散步'],more:['长长的脖子','高高']},
+{kind:'动物',emoji:'🐻',when:['秋天','下午'],who:['小熊','熊妈妈'],where:['森林里','蜂蜜旁'],what:['采蜂蜜','吃果子'],more:['圆圆的','馋嘴']},
+{kind:'食物水果',emoji:'🍎',when:['早上','中午'],who:['妹妹','奶奶'],where:['厨房里','餐桌旁'],what:['吃苹果','洗水果'],more:['红红的','甜甜的']},
+{kind:'食物水果',emoji:'🍌',when:['下午','早上'],who:['弟弟','妈妈'],where:['客厅里','餐桌旁'],what:['吃香蕉','剥香蕉'],more:['弯弯的','香香的']},
+{kind:'食物水果',emoji:'🍉',when:['夏天','中午'],who:['爷爷','哥哥'],where:['院子里','餐桌旁'],what:['切西瓜','吃西瓜'],more:['又甜又凉','大大的']},
+{kind:'食物水果',emoji:'🥕',when:['秋天','早上'],who:['小白兔','爷爷'],where:['菜地里','院子里'],what:['拔萝卜','吃萝卜'],more:['脆脆的','橙红色']},
+{kind:'食物水果',emoji:'🥛',when:['早上','睡前'],who:['妹妹','爸爸'],where:['餐桌旁','厨房里'],what:['喝牛奶','倒牛奶'],more:['热热的','白白的']},
+{kind:'食物水果',emoji:'🍞',when:['早上','中午'],who:['哥哥','妈妈'],where:['餐桌旁','厨房里'],what:['吃面包','抹果酱'],more:['香喷喷','松松软软']},
+{kind:'生活活动',emoji:'🚲',when:['周末','下午'],who:['小明','小红'],where:['公园里','小路上'],what:['骑自行车','按铃铛'],more:['飞快','开心']},
+{kind:'生活活动',emoji:'⚽',when:['放学后','周末'],who:['小朋友们','哥哥'],where:['操场上','草地上'],what:['踢足球','拍皮球'],more:['热闹','满头大汗']}
+];
+
+/* ========== 构建数据 ========== */
+var GROUPS = GROUP_DATA.map(function (g) {
+  return { k: g[0], name: g[1], emoji: g[2], focus: g[3], tip: g[4], lines: g[5] };
+});
+var TOTAL = 0;
+GROUPS.forEach(function (g) { TOTAL += g.lines.length; });
+var active = 'all';
+
+var V = (window.XNLY && window.XNLY.voice) || null;
+function say(t) {
+  if (!t) return;
+  try { if (V && V.speak) { V.speak(String(t)); return; } } catch (e) { }
+  try {
+    var u = new SpeechSynthesisUtterance(String(t));
+    u.lang = 'zh-CN';
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch (e) { }
+}
+
+var elList = document.getElementById('list');
+var elCats = document.getElementById('cats');
+var elQ = document.getElementById('q');
+var elFound = document.getElementById('found');
+var elTotal = document.getElementById('totalChip');
+var elGroup = document.getElementById('groupChip');
+
+elTotal.textContent = TOTAL;
+elGroup.textContent = GROUPS.length;
+
+/* 场景筛选 */
+var allBtn = document.createElement('button');
+allBtn.type = 'button';
+allBtn.className = 'cat on';
+allBtn.textContent = '全部 ' + TOTAL;
+allBtn.addEventListener('click', function () { active = 'all'; paintCats(); render(); });
+elCats.appendChild(allBtn);
+GROUPS.forEach(function (g) {
+  var b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'cat';
+  b.textContent = g.emoji + ' ' + g.name + ' ' + g.lines.length;
+  b.dataset.k = g.k;
+  b.addEventListener('click', function () { active = g.k; paintCats(); render(); });
+  elCats.appendChild(b);
+});
+function paintCats() {
+  Array.prototype.forEach.call(elCats.children, function (b) {
+    var on = (active === 'all') ? (b === allBtn) : (b.dataset.k === active);
+    b.className = 'cat' + (on ? ' on' : '');
+  });
+}
+
+/* 渲染好句 */
+function render() {
+  var term = (elQ.value || '').trim().toLowerCase();
+  elList.innerHTML = '';
+  var shown = 0;
+  var firstHead = true;
+
+  GROUPS.forEach(function (g) {
+    if (active !== 'all' && g.k !== active) return;
+    var picked = g.lines.filter(function (l) {
+      if (!term) return true;
+      return (l[0] + ' ' + l[1] + ' ' + g.name).toLowerCase().indexOf(term) >= 0;
+    });
+    if (!picked.length) return;
+
+    var head = document.createElement('div');
+    head.className = 'ghead';
+    var ge = document.createElement('span'); ge.className = 'ge'; ge.textContent = g.emoji;
+    var gn = document.createElement('span'); gn.className = 'gn'; gn.textContent = g.name;
+    var gc = document.createElement('span'); gc.className = 'gc'; gc.textContent = picked.length + ' 句';
+    var gf = document.createElement('span'); gf.className = 'gf'; gf.textContent = g.focus;
+    head.appendChild(ge); head.appendChild(gn); head.appendChild(gc); head.appendChild(gf);
+    elList.appendChild(head);
+
+    var tip = document.createElement('div');
+    tip.className = 'gtip';
+    tip.textContent = g.tip;
+    elList.appendChild(tip);
+
+    picked.forEach(function (l, i) {
+      shown++;
+      var row = document.createElement('div');
+      row.className = 'line';
+      row.setAttribute('role', 'button');
+      row.setAttribute('tabindex', '0');
+
+      var no = document.createElement('span'); no.className = 'no'; no.textContent = (i + 1);
+      var body = document.createElement('div'); body.className = 'body';
+      var t = document.createElement('div'); t.className = 't'; t.textContent = l[0];
+      var meta = document.createElement('div'); meta.className = 'meta';
+      var tag = document.createElement('span'); tag.className = 'tag'; tag.textContent = g.name;
+      var use = document.createElement('span'); use.className = 'use'; use.textContent = l[1];
+      meta.appendChild(tag); meta.appendChild(use);
+      body.appendChild(t); body.appendChild(meta);
+      if (l[2]) {
+        var src = document.createElement('span'); src.className = 'src';
+        src.textContent = '出处：' + l[2];
+        body.appendChild(src);
+      }
+      var spk = document.createElement('button');
+      spk.type = 'button'; spk.className = 'spk'; spk.textContent = '🔊';
+      spk.setAttribute('aria-label', '朗读这句');
+
+      function go(e) { if (e) { e.stopPropagation(); } say(l[0]); }
+      row.addEventListener('click', go);
+      row.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); say(l[0]); }
+      });
+      spk.addEventListener('click', go);
+
+      row.appendChild(no); row.appendChild(body); row.appendChild(spk);
+      elList.appendChild(row);
+    });
+    firstHead = false;
+  });
+
+  if (!firstHead && active === 'all' && !term) {
+    var first = elList.querySelector('.ghead');
+    if (first) {
+      /* 让第一组不额外留出上面的大间距 */
+      first.style.marginTop = '14px';
+    }
+  }
+  elFound.textContent = term ? ('找到 ' + shown + ' 句') : ('全部 ' + shown + ' 句 · 共 ' + GROUPS.length + ' 类');
+  if (!shown) {
+    var empty = document.createElement('div');
+    empty.className = 'gtip';
+    empty.textContent = '没有找到相关的句子，换个词试试？';
+    elList.appendChild(empty);
+  }
+}
+
+elQ.addEventListener('input', render);
+document.getElementById('clr').addEventListener('click', function () {
+  elQ.value = '';
+  active = 'all';
+  paintCats();
+  render();
+  elQ.focus();
+});
+
+/* 场景词库渲染 */
+var elSceneBody = document.getElementById('sceneBody');
+var elSceneState = document.getElementById('sceneState');
+SCENES.forEach(function (s) {
+  var item = document.createElement('div');
+  item.className = 'sitem';
+  item.setAttribute('role', 'button');
+  item.setAttribute('tabindex', '0');
+
+  var title = document.createElement('div');
+  title.className = 'stt';
+  title.textContent = s.emoji + ' ' + s.who[0];
+
+  var sen = document.createElement('div');
+  sen.className = 'ssen';
+  var sample = s.when[0] + '，' + s.who[0] + '在' + s.where[0] + s.what[0] + '。';
+  sen.textContent = sample;
+
+  var words = document.createElement('div');
+  words.className = 'swords';
+  words.textContent = '时间：' + s.when.join(' / ') + ' · 谁：' + s.who.join(' / ') + ' · 地点：' + s.where.join(' / ') + ' · 做什么：' + s.what.join(' / ') + ' · 怎么样：' + s.more.join(' / ');
+
+  item.appendChild(title); item.appendChild(sen); item.appendChild(words);
+  function go(e) { if (e) { e.stopPropagation(); } say(sample); }
+  item.addEventListener('click', go);
+  item.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); say(sample); }
+  });
+  elSceneBody.appendChild(item);
+});
+
+document.getElementById('sceneToggle').addEventListener('click', function () {
+  var open = elSceneBody.hidden;
+  elSceneBody.hidden = !open;
+  elSceneState.textContent = open ? '收起' : '展开';
+});
+
+paintCats();
+render();
+
+window.WS = { GROUPS: GROUPS, SCENES: SCENES, TOTAL: TOTAL };
+</script>
+<script src="../homebtn.js"></script>
+</body>
+</html>
