@@ -114,8 +114,13 @@
  * v60 变化：设置面板补上真实可用的音量滑杆（0–100%，默认 100 保持原有响度）——
  *           所有音效统一经一个主 GainNode 输出，滑杆直接改主增益并即时生效；
  *           新增持久化键 xnly_vol，跨页首次播放前读取；Web Speech 朗读同步使用 volume 参数。
+ * v61 变化：游戏页顶部改为单行通栏（52px）：🏠 → 标题（省略号）→ 统计 → 本页功能图标（40±2px）
+ *           → 🔊 → 全屏；页面 header 内的人机/双人、悔棋、重开、提示/线索等并入该行，原入口隐藏；
+ *           新增全屏切换（requestFullscreen / webkitRequestFullscreen），不支持或被拒时降级为
+ *           沉浸模式（隐藏顶栏、内容贴满视口），右上角半透明按钮或同一按钮退出，
+ *           fullscreenchange / webkitfullscreenchange 同步图标状态。
  */
-var CACHE = 'xnly-v60';
+var CACHE = 'xnly-v61';
 
 var PRECACHE = [
   './',

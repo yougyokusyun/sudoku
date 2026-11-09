@@ -1,10 +1,10 @@
-/* 小脑袋乐园 · homebtn.js —— 全站统一的右上角工具条
- *  - 固定定位 top:12px，🏠 在左、🔊 在右，88×88 可点区、8px 间距，全站坐标一致
- *  - 🏠：返回首页（aria-label="返回首页"）
- *  - 🔊：朗读当前屏幕内容（题干 + 当前选项）；页面上不再出现第二个语音或调速控件
- *  - 语速只在首页右上角 ⚙️ 全局设置里调，游戏页不放调速控件
- *  - 纯操作页（没有可朗读内容）只留 🏠，🔊 不渲染
- *  - 顶部预留 112px，避免遮挡标题
+/* 小脑袋乐园 · homebtn.js —— 全站统一的单行顶栏
+ *  - 固定一行 52px，不换行：🏠 → 标题（省略号）→ 统计 → 本页功能图标 → 🔊 → 全屏
+ *  - 本页功能（提示 / 看一下 / 显示线索 等）统一收进这一行，原按钮隐藏，点击行为不变
+ *  - 全屏：requestFullscreen / webkitRequestFullscreen；不支持或被拒绝时降级为「沉浸模式」
+ *    （隐藏顶栏、内容贴满视口），提供同一个全屏按钮或右上角半透明浮层按钮退出
+ *  - fullscreenchange / webkitfullscreenchange 同步按钮图标，Esc 退出后不会显示错状态
+ *  - 纯操作页（没有可朗读内容）只保留 🏠 与全屏，不渲染 🔊
  */
 (function () {
   'use strict';
@@ -14,16 +14,49 @@
   var inGames = /[\/\\]games[\/\\]/.test(location.pathname);
   var homeHref = inGames ? '../index.html' : 'index.html';
 
+  var BAR_H = 52;   /* 顶栏高度 */
+  var BTN = 42;     /* 图标按钮边长（40±2） */
+
   var CSS = [
-    '#xnlyTopTools{position:fixed;top:calc(12px + env(safe-area-inset-top,0px));',
-    'left:calc(100vw - 200px);right:auto;z-index:90;display:flex;align-items:center;gap:8px;}',
-    '.xnly-tool{width:88px;height:88px;border-radius:20px;border:0;background:rgba(255,255,255,.9);',
-    'backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);box-shadow:0 6px 18px rgba(36,59,83,.14);',
-    'display:flex;align-items:center;justify-content:center;font-size:40px;line-height:1;cursor:pointer;',
-    'color:#243b53;-webkit-tap-highlight-color:transparent;}',
-    '.xnly-tool:active{transform:scale(.96);}',
+    '#xnlyTopTools{position:fixed;top:0;left:0;right:0;z-index:95;box-sizing:border-box;',
+    'height:calc(' + BAR_H + 'px + env(safe-area-inset-top,0px));',
+    'padding:calc(5px + env(safe-area-inset-top,0px)) 8px 5px;',
+    'display:flex;align-items:center;gap:8px;flex-wrap:nowrap;',
+    'background:rgba(255,255,255,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);',
+    'border-bottom:1px solid rgba(36,59,83,.10);overflow:hidden;}',
+    '.xnly-tool{flex:0 0 auto;width:' + BTN + 'px;height:' + BTN + 'px;border-radius:12px;border:0;',
+    'background:rgba(244,247,251,.92);display:flex;align-items:center;justify-content:center;',
+    'font-size:20px;line-height:1;cursor:pointer;color:#243b53;padding:0;',
+    '-webkit-tap-highlight-color:transparent;}',
+    '.xnly-tool:active{transform:scale(.94);}',
+    '.xnly-tool:disabled{opacity:.4;}',
     '.xnly-tool.xnly-hidden{display:none !important;}',
-    'body{padding-top:112px !important;}'
+    '.xnly-tool.xnly-on{background:#ffe3ef;}',
+    '.xnly-title{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;',
+    'font-size:16px;font-weight:800;color:#243b53;letter-spacing:.2px;}',
+    '.xnly-stats{flex:0 1 auto;display:flex;align-items:center;gap:6px;overflow:hidden;max-width:42vw;}',
+    '.xnly-stats .chip,.xnly-stats .stat-pill,.xnly-stats>span{flex:0 0 auto;white-space:nowrap;font-size:12px;',
+    'line-height:1.5;padding:3px 8px;border-radius:999px;background:#f1f4f9;color:#43566b;}',
+    '.xnly-stats b{font-weight:800;color:#243b53;}',
+    '.xnly-funcs{flex:0 0 auto;display:flex;align-items:center;gap:8px;}',
+    '#xnlyTopTools .seg{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin:0;padding:0;background:none;border:0;}',
+    '#xnlyTopTools .seg button,#xnlyTopTools .iconbtn{width:' + BTN + 'px;height:' + BTN + 'px;min-width:0;',
+    'padding:0;margin:0 !important;border:0;border-radius:12px;background:rgba(244,247,251,.92);',
+    'display:flex;align-items:center;justify-content:center;font-size:20px;line-height:1;cursor:pointer;',
+    'color:#243b53;-webkit-tap-highlight-color:transparent;}',
+    '#xnlyTopTools .seg button.on{background:#ffe3ef;}',
+    '@media (max-width:700px){.xnly-stats{display:none;}}',
+    'body{padding-top:calc(' + (BAR_H + 8) + 'px + env(safe-area-inset-top,0px)) !important;}',
+    'header.xnly-hdr-off{display:none !important;}',
+    'button.xnly-src-hide{display:none !important;}',
+    'html.xnly-immersive #xnlyTopTools{display:none !important;}',
+    'html.xnly-immersive body{padding-top:0 !important;overflow-x:hidden;}',
+    'html.xnly-immersive #xnlyExitImm{display:flex;}',
+    '#xnlyExitImm{display:none;position:fixed;right:12px;top:calc(12px + env(safe-area-inset-top,0px));',
+    'width:' + BTN + 'px;height:' + BTN + 'px;border-radius:50%;border:0;z-index:99;align-items:center;',
+    'justify-content:center;font-size:20px;line-height:1;cursor:pointer;color:#243b53;',
+    'background:rgba(255,255,255,.55);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);',
+    'box-shadow:0 4px 14px rgba(36,59,83,.18);-webkit-tap-highlight-color:transparent;}'
   ].join('');
 
   function visible(el) {
@@ -124,14 +157,70 @@
     });
   }
 
+  /* 本页功能按钮：图标 + 匹配规则 + 无障碍名称 */
+  var FNS = [
+    { k: 'hint', icon: '💡', name: '提示', re: /💡|提示|看看线索|看看它像什么/ },
+    { k: 'look', icon: '👀', name: '看一下', re: /看一下|看一眼|显示线索|看线索/ },
+    { k: 'answer', icon: '🔑', name: '看答案', re: /看答案|显示答案|揭晓/ }
+  ];
+
+  function findFnCandidates() {
+    var list = document.querySelectorAll('button');
+    for (var i = 0; i < list.length; i++) {
+      var el = list[i];
+      if (el.closest('#xnlyTopTools')) continue;
+      if (el.getAttribute('data-xnly-fn')) continue;
+      var t = txt(el);
+      if (!t || t.length > 24) continue;
+      for (var j = 0; j < FNS.length; j++) {
+        if (FNS[j].re.test(t)) {
+          el.setAttribute('data-xnly-fn', FNS[j].k);
+          el.classList.add('xnly-src-hide');
+          el.setAttribute('aria-hidden', 'true');
+          break;
+        }
+      }
+    }
+  }
+  /* 取当前仍在文档里的同功能源按钮（动态重建的取最新的一个） */
+  function liveFn(k) {
+    var list = document.querySelectorAll('[data-xnly-fn="' + k + '"]');
+    var pick = null;
+    for (var i = 0; i < list.length; i++) {
+      if (!list[i].disabled) pick = list[i];
+    }
+    if (!pick && list.length) pick = list[list.length - 1];
+    return pick;
+  }
+
   function init() {
     if (document.getElementById('xnlyTopTools')) return;
     var st = document.createElement('style');
     st.id = 'xnlyTopStyle'; st.textContent = CSS;
     document.head.appendChild(st);
 
-    var tools = document.createElement('div');
-    tools.id = 'xnlyTopTools';
+    /* 页面自身的 header：标题进顶栏、统计移到顶栏，原 header 隐藏（顶部只保留一行） */
+    var hdr = document.querySelector('body > header');
+    if (!hdr) {
+      /* 列表页的 header 常包在 .wrap 里，同样收进单行顶栏 */
+      var any = document.querySelector('header');
+      if (any && any.querySelector('h1') && !any.closest('main,section,article,.modal,.card,.dialog')) hdr = any;
+    }
+    var title = '';
+    var statsSrc = null;
+    if (hdr) {
+      var h1 = hdr.querySelector('h1');
+      if (h1) title = txt(h1);
+      statsSrc = hdr.querySelector('.chips, .stats');
+    }
+    if (!title) {
+      var h1b = document.querySelector('h1');
+      if (h1b) title = txt(h1b);
+    }
+    if (!title) title = (document.title || '').split('·')[0].trim();
+
+    var bar = document.createElement('div');
+    bar.id = 'xnlyTopTools';
 
     var home = document.createElement('button');
     home.type = 'button';
@@ -139,7 +228,65 @@
     home.textContent = '🏠';
     home.setAttribute('aria-label', '返回首页');
     home.addEventListener('click', function () { location.href = homeHref; });
-    tools.appendChild(home);
+    bar.appendChild(home);
+
+    var titleEl = document.createElement('div');
+    titleEl.className = 'xnly-title';
+    titleEl.textContent = title || '游戏';
+    titleEl.title = title || '游戏';
+    bar.appendChild(titleEl);
+
+    var stats = document.createElement('div');
+    stats.className = 'xnly-stats';
+    if (statsSrc) stats.appendChild(statsSrc);   /* 移动而非复制：页面按 id 的实时更新仍然有效 */
+    bar.appendChild(stats);
+
+    var funcs = document.createElement('div');
+    funcs.className = 'xnly-funcs';
+
+    /* 页面 header 里的功能按钮（人机/双人、悔棋、重开、新局等）：并入顶栏并改成方形图标 */
+    function compactFn(el) {
+      if (el.getAttribute('data-xnly-compact')) return;
+      var label = txt(el);
+      var icon = label.split(' ')[0] || '⚙';
+      el.setAttribute('data-xnly-compact', '1');
+      el.setAttribute('aria-label', label);
+      el.title = label;
+      el.textContent = icon;
+      el.classList.add('xnly-tool');
+    }
+    if (hdr) {
+      Array.prototype.forEach.call(hdr.querySelectorAll('.seg'), function (seg) {
+        Array.prototype.forEach.call(seg.querySelectorAll('button'), compactFn);
+        funcs.appendChild(seg);
+      });
+      Array.prototype.forEach.call(hdr.querySelectorAll('button'), function (b) {
+        if (b.closest('.seg') || b.closest('#xnlyTopTools')) return;
+        var t = txt(b);
+        /* 提示/线索类交给下面的统一代理，避免重复入口 */
+        if (/💡|提示|看一下|看线索|看答案|揭晓/.test(t)) return;
+        compactFn(b);
+        funcs.appendChild(b);
+      });
+    }
+
+    /* 本页功能图标：点击转给仍留在原处的源按钮，逻辑完全不变 */
+    var proxies = {};
+    FNS.forEach(function (def) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'xnly-tool xnly-hidden';
+      b.textContent = def.icon;
+      b.setAttribute('aria-label', def.name);
+      b.title = def.name;
+      b.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var src = liveFn(def.k);
+        if (src) src.click();
+      });
+      proxies[def.k] = b;
+      funcs.appendChild(b);
+    });
 
     /* 先移除旧按钮，再判断本页有没有可读内容 */
     dropOldReplay(document);
@@ -152,7 +299,6 @@
     snd.setAttribute('aria-label', '再听一遍');
     if (!speech) snd.classList.add('xnly-hidden');   /* 纯操作页不显示 🔊 */
 
-    /* 手动重听：force 绕过「朗读语音已关闭」，保证仍能听一次 */
     function readNow() {
       try {
         if (typeof window.replayCurrent === 'function') {
@@ -172,10 +318,88 @@
       e.stopPropagation();
       readNow();
     });
-    tools.appendChild(snd);
-    document.body.appendChild(tools);
+    funcs.appendChild(snd);
 
-    /* 动态创建的旧重听按钮也要清掉；内容后置渲染时补显示 🔊 */
+    /* ---- 全屏 / 沉浸模式 ---- ---- ---- ---- ---- ---- ---- ---- ---- */
+    var fsBtn = document.createElement('button');
+    fsBtn.type = 'button';
+    fsBtn.className = 'xnly-tool';
+    funcs.appendChild(fsBtn);
+
+    var exitImm = document.createElement('button');
+    exitImm.id = 'xnlyExitImm';
+    exitImm.type = 'button';
+    exitImm.textContent = '⤡';
+    exitImm.setAttribute('aria-label', '退出沉浸模式');
+
+    function isFs() {
+      return document.fullscreenElement || document.webkitFullscreenElement || null;
+    }
+    function immersive() {
+      return document.documentElement.classList.contains('xnly-immersive');
+    }
+    function paintFs() {
+      var on = !!isFs() || immersive();
+      fsBtn.textContent = on ? '⤡' : '⤢';
+      fsBtn.setAttribute('aria-label', on ? '退出全屏' : '全屏');
+      fsBtn.title = on ? '退出全屏' : '全屏';
+      fsBtn.classList.toggle('xnly-on', on);
+    }
+    function setImmersive(on) {
+      document.documentElement.classList.toggle('xnly-immersive', !!on);
+      paintFs();
+    }
+    function enterFs() {
+      var el = document.documentElement;
+      var fn = el.requestFullscreen || el.webkitRequestFullscreen;
+      if (!fn) { setImmersive(true); return; }
+      try {
+        var p = fn.call(el);
+        if (p && p['catch']) p['catch'](function () { setImmersive(true); });
+      } catch (e) { setImmersive(true); }
+    }
+    function exitFs() {
+      var fn = document.exitFullscreen || document.webkitExitFullscreen;
+      try { if (fn) fn.call(document); } catch (e) { }
+    }
+    fsBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (isFs()) exitFs();
+      else if (immersive()) setImmersive(false);
+      else enterFs();
+    });
+    exitImm.addEventListener('click', function (e) {
+      e.stopPropagation();
+      setImmersive(false);
+    });
+    document.addEventListener('fullscreenchange', paintFs);
+    document.addEventListener('webkitfullscreenchange', paintFs);
+    document.addEventListener('keydown', function (e) {
+      if ((e.key === 'Escape' || e.key === 'Esc') && immersive()) setImmersive(false);
+    });
+    paintFs();
+
+    bar.appendChild(funcs);
+    document.body.appendChild(bar);
+    document.body.appendChild(exitImm);
+
+    if (hdr) hdr.classList.add('xnly-hdr-off');
+
+    /* 动态创建的本页功能按钮也收进顶栏 */
+    function syncFns() {
+      findFnCandidates();
+      FNS.forEach(function (def) {
+        var list = document.querySelectorAll('[data-xnly-fn="' + def.k + '"]');
+        var b = proxies[def.k];
+        if (!list.length) { b.classList.add('xnly-hidden'); return; }
+        b.classList.remove('xnly-hidden');
+        var any = false;
+        for (var i = 0; i < list.length; i++) { if (!list[i].disabled) any = true; }
+        b.disabled = !any;
+      });
+    }
+    syncFns();
+
     if (window.MutationObserver) {
       var mo = new MutationObserver(function (muts) {
         for (var i = 0; i < muts.length; i++) {
@@ -184,11 +408,12 @@
             if (n.nodeType === 1) dropOldReplay(n);
           }
         }
+        syncFns();
         if (snd.classList.contains('xnly-hidden') && currentSpeech()) {
           snd.classList.remove('xnly-hidden');
         }
       });
-      mo.observe(document.body, { childList: true, subtree: true });
+      mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'hidden'] });
     }
 
     /* 隐藏旧的回首页入口 */
