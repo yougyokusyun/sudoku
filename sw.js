@@ -119,8 +119,10 @@
  *           新增全屏切换（requestFullscreen / webkitRequestFullscreen），不支持或被拒时降级为
  *           沉浸模式（隐藏顶栏、内容贴满视口），右上角半透明按钮或同一按钮退出，
  *           fullscreenchange / webkitfullscreenchange 同步图标状态。
+ * v62 变化：顶栏合并前先移除页面自带的重听/朗读按钮，避免它被当作普通功能图标搬进顶栏，
+ *           造成同一行出现两个 🔊 入口。
  */
-var CACHE = 'xnly-v61';
+var CACHE = 'xnly-v62';
 
 var PRECACHE = [
   './',

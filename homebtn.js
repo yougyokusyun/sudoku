@@ -195,6 +195,8 @@
 
   function init() {
     if (document.getElementById('xnlyTopTools')) return;
+    /* 先清掉页面自己的重听/朗读按钮，避免它们被当成普通功能图标搬进顶栏后失去语义 */
+    dropOldReplay(document);
     var st = document.createElement('style');
     st.id = 'xnlyTopStyle'; st.textContent = CSS;
     document.head.appendChild(st);
