@@ -177,10 +177,50 @@
         }
         .tab.on .tc { background: rgba(255, 255, 255, .28); }
         @media (max-width: 900px) { .tab .tc { display: none; } }
-        .speedPanel {
-            background: #fff; border-radius: 20px; padding: 10px 14px 12px; margin: 0 0 12px;
-            box-shadow: 0 10px 26px rgba(36, 59, 83, .14);
+        /* ---------- 右上角齿轮（全局设置入口） + 底部设置面板 ---------- */
+        .tab.gear {
+            flex: 0 0 44px; min-width: 44px; max-width: 44px; height: 48px; min-height: 48px;
+            align-self: center; padding: 0; font-size: 1.3rem; line-height: 1;
         }
+        .xsMask {
+            position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center;
+            background: rgba(20, 32, 48, .45); opacity: 0; pointer-events: none; transition: opacity .16s;
+        }
+        .xsMask.show { opacity: 1; pointer-events: auto; }
+        .xsSheet {
+            width: min(560px, 100%); max-height: 86vh; max-height: 86dvh;
+            overflow-y: auto; overflow-x: hidden;
+            background: #fff; border-radius: 22px 22px 0 0;
+            padding: 14px 18px calc(14px + env(safe-area-inset-bottom, 0px));
+            box-shadow: 0 -12px 34px rgba(20, 32, 48, .24);
+            transform: translateY(14px); transition: transform .16s;
+        }
+        .xsMask.show .xsSheet { transform: none; }
+        .xsSHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+        .xsSTitle { font-size: 1.05rem; font-weight: 900; color: #243b53; }
+        .xsClose {
+            width: 44px; height: 44px; border: 0; border-radius: 12px; background: #f4f7fb;
+            font-family: inherit; font-size: 1.1rem; color: #3b5370; cursor: pointer;
+        }
+        .xsSec { margin: 4px 0 8px; }
+        .xsItem {
+            display: flex; align-items: center; justify-content: space-between; gap: 12px;
+            padding: 10px 0; border-top: 1px solid #eef3f9;
+        }
+        .xsTxt b { display: block; font-size: .98rem; color: #243b53; }
+        .xsTxt small { display: block; margin-top: 2px; font-size: .76rem; line-height: 1.4; color: #7b8ea8; }
+        .xsSw {
+            flex: 0 0 64px; width: 64px; height: 44px; border: 0; border-radius: 999px;
+            background: #e8eef7; position: relative; cursor: pointer; transition: background .16s;
+        }
+        .xsSw::after {
+            content: ''; position: absolute; top: 4px; left: 4px; width: 36px; height: 36px;
+            border-radius: 50%; background: #fff; box-shadow: 0 2px 6px rgba(36, 59, 83, .22);
+            transition: left .16s;
+        }
+        .xsSw.on { background: #7c5cff; }
+        .xsSw.on::after { left: 24px; }
+        .xsNote { margin-top: 8px; font-size: .74rem; line-height: 1.5; color: #9fb1c6; }
         .card[hidden], .grid[hidden], .parentPanel[hidden] { display: none !important; }
         .parentPanel .phint { margin: 0 2px 12px; font-size: .82rem; font-weight: 700; color: #6b7f95; }
 
@@ -211,7 +251,6 @@
     </div>
 
     <nav class="tabs" id="tabs" aria-label="年龄档切换"></nav>
-    <div class="speedPanel" id="speedPanel"></div>
 
     <div class="storehint" id="storeHint" hidden>⚠️ 这次是用文件方式打开的，成绩只留在这一次，不影响玩</div>
 
@@ -584,7 +623,6 @@
   var tabs = document.getElementById('tabs');
   var grid = document.getElementById('grid');
   var parentPanel = document.getElementById('parentPanel');
-  var speedPanel = document.getElementById('speedPanel');
   var note = document.getElementById('storeHint');
   var started = false;
   var navLock = false;
@@ -739,20 +777,20 @@
       tabs.appendChild(b);
     });
 
-    /* 第 5 个：语速设置（不切换游戏网格） */
-    var sp = document.createElement('button');
-    sp.type = 'button';
-    sp.className = 'tab setting' + (speedPanel.hidden ? '' : ' on');
-    sp.setAttribute('aria-label', '语速设置');
-    sp.innerHTML = '<span class="tname">🔊 语速 ' + (V && V.speed ? V.speed().toFixed(2) : '1.00') + '×</span>';
-    sp.addEventListener('click', function () {
-      /* 滑杆已改为 tab 下方常显：点这个入口只滚动过去，不再隐藏滑杆 */
-      try { if (speedPanel.scrollIntoView) speedPanel.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (e) { }
-      renderTabs();
+    /* 末尾：紧凑齿轮（全局设置入口），紧跟在「家长」之后、同一行同一视觉高度 */
+    var gear = document.createElement('button');
+    gear.type = 'button';
+    gear.className = 'tab gear';
+    gear.id = 'settingsBtn';
+    gear.setAttribute('aria-label', '设置');
+    gear.title = '设置';
+    gear.textContent = '⚙️';
+    gear.addEventListener('click', function (e) {
+      e.stopPropagation();
+      openSettings();
     });
-    tabs.appendChild(sp);
+    tabs.appendChild(gear);
   }
-  speedPanel.addEventListener('click', function (e) { e.stopPropagation(); });
 
   function applyStage(k, say) {
     stage = k;
@@ -802,12 +840,71 @@
 
   if (X.canStore === false) note.hidden = false;
 
-  /* 语速滑杆：首页常显，不点任何东西就能拖；四个 tab 仍是 4 个按钮 */
-  if (V && V.makeSpeedUI && !speedPanel.dataset.mounted) {
-    speedPanel.appendChild(V.makeSpeedUI());
-    speedPanel.dataset.mounted = '1';
+  /* ---------- 全局设置：底部弹出面板（语速 / 朗读语音 / 音效） ---------- */
+  var mask = null;
+  function buildSettings() {
+    if (mask) return mask;
+    mask = document.createElement('div');
+    mask.className = 'xsMask';
+    mask.id = 'settingsMask';
+    mask.innerHTML =
+      '<div class="xsSheet" role="dialog" aria-modal="true" aria-label="全局设置">' +
+        '<div class="xsSHead"><span class="xsSTitle">⚙️ 全局设置</span>' +
+        '<button type="button" class="xsClose" id="xsClose" aria-label="关闭设置">✕</button></div>' +
+        '<div class="xsSec" id="xsSpeed"></div>' +
+        '<div class="xsItem"><div class="xsTxt"><b>🔊 朗读语音</b>' +
+          '<small>关闭后全站不再自动朗读；手动点右上角 🔊 仍可听一次</small></div>' +
+          '<button type="button" class="xsSw" id="swVoice" aria-pressed="true" aria-label="朗读语音开关"></button></div>' +
+        '<div class="xsItem"><div class="xsTxt"><b>🔔 音效</b>' +
+          '<small>点击、答对、答错时的合成音效</small></div>' +
+          '<button type="button" class="xsSw" id="swSound" aria-pressed="true" aria-label="音效开关"></button></div>' +
+        '<div class="xsNote">音量：当前语音与音效都是固定音量，暂不支持单独调节。</div>' +
+      '</div>';
+    document.body.appendChild(mask);
+
+    /* 语速滑杆：沿用 voice.js 的 xnly_speed，跨页立即生效 */
+    var box = mask.querySelector('#xsSpeed');
+    if (V && V.makeSpeedUI) box.appendChild(V.makeSpeedUI());
+
+    var vSw = mask.querySelector('#swVoice');
+    var sSw = mask.querySelector('#swSound');
+    function paintSwitches() {
+      var vOn = !(V && V.muted && V.muted());
+      var sOn = !(S && S.muted && S.muted());
+      vSw.classList.toggle('on', vOn);
+      vSw.setAttribute('aria-pressed', vOn ? 'true' : 'false');
+      sSw.classList.toggle('on', sOn);
+      sSw.setAttribute('aria-pressed', sOn ? 'true' : 'false');
+    }
+    vSw.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (V && V.setMuted) V.setMuted(!V.muted());
+      if (V && V.muted && !V.muted()) V.speak('朗读语音已打开。', { force: true });
+      paintSwitches();
+    });
+    sSw.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (S && S.setMuted) S.setMuted(!S.muted());
+      if (S && S.muted && !S.muted() && S.correct) S.correct();
+      paintSwitches();
+    });
+    paintSwitches();
+
+    mask.addEventListener('click', function (e) {
+      if (e.target === mask || (e.target.closest && e.target.closest('#xsClose'))) closeSettings();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && mask.classList.contains('show')) closeSettings();
+    });
+    return mask;
   }
-  speedPanel.addEventListener('click', function (e) { e.stopPropagation(); });
+  function openSettings() {
+    buildSettings();
+    mask.classList.add('show');
+  }
+  function closeSettings() {
+    if (mask) mask.classList.remove('show');
+  }
 
   applyStage(readStage(), false);
 

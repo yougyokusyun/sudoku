@@ -77,9 +77,9 @@ footer{text-align:center;font-size:.74rem;color:#9fb1c6;margin-top:10px;line-hei
   </div>
 
   <div class="card" id="speed">
-    <h2>🔊 语速</h2>
-    <div id="speedUI"></div>
-    <div class="hint">0.5 最慢、2.0 最快。拖动时只更新数字，松手会试听一句「这是现在的语速」；设置对全站朗读生效。</div>
+    <h2>🔊 语音与音效</h2>
+    <div class="hint">朗读语速（0.5~2.0）、朗读语音开关、音效开关已统一到首页右上角 ⚙️ 全局设置；改完对全站立即生效。</div>
+    <div class="hint"><a href="index.html">回首页点右上角 ⚙️ 打开设置</a></div>
   </div>
 
   <div class="card" id="stats">
@@ -221,9 +221,7 @@ footer{text-align:center;font-size:.74rem;color:#9fb1c6;margin-top:10px;line-hei
       '</tr></thead><tbody>' + rows + '</tbody></table>';
   }
 
-  /* ---------- 语速滑杆（全站共用 xnly_speed） ---------- */
-  var sui = document.getElementById('speedUI');
-  if (sui && X.voice && X.voice.makeSpeedUI) sui.appendChild(X.voice.makeSpeedUI());
+  /* 语速已收进首页 ⚙️ 全局设置，本页不再放调速控件 */
 
   renderStage();
   render();

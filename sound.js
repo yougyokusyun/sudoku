@@ -18,6 +18,14 @@
   var AC = window.AudioContext || window.webkitAudioContext;
   var ctx = null;
 
+  /* 全局音效开关（localStorage: xnly_sound_off） */
+  function muted() {
+    try { return localStorage.getItem('xnly_sound_off') === '1'; } catch (e) { return false; }
+  }
+  function setMuted(off) {
+    try { localStorage.setItem('xnly_sound_off', off ? '1' : '0'); } catch (e) { }
+  }
+
   function unlock() {
     if (!AC) return null;
     if (!ctx) {
@@ -70,20 +78,26 @@
 
   var S = {
     unlock: unlock,
-    tap: function () { tone(1180, 0.045, 'sine', 0.055); },
+    muted: muted,
+    setMuted: setMuted,
+    tap: function () { if (muted()) return; tone(1180, 0.045, 'sine', 0.055); },
     correct: function () {
+      if (muted()) return;
       tone(880, 0.12, 'sine', 0.11);
       tone(1318, 0.16, 'sine', 0.1, 0.11);
     },
     wrong: function () {
+      if (muted()) return;
       noise(0.16, 2.6, 420, 0.16);
       tone(196, 0.12, 'sine', 0.05);
     },
     notice: function () {
+      if (muted()) return;
       tone(660, 0.09, 'triangle', 0.12);
       tone(880, 0.12, 'triangle', 0.09, 0.1);
     },
     win: function () {
+      if (muted()) return;
       tone(523, 0.13, 'triangle', 0.11);
       tone(659, 0.13, 'triangle', 0.1, 0.12);
       tone(784, 0.2, 'triangle', 0.1, 0.24);

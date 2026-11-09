@@ -1,8 +1,8 @@
 /* 小脑袋乐园 · homebtn.js —— 全站统一的右上角工具条
  *  - 固定定位 top:12px，🏠 在左、🔊 在右，88×88 可点区、8px 间距，全站坐标一致
  *  - 🏠：返回首页（aria-label="返回首页"）
- *  - 🔊：朗读当前屏幕内容（题干 + 当前选项），长按 600ms 弹出语速滑杆
- *  - 页面里散落的旧重听按钮（#hear / [data-hear] / 文字含「再听」）统一移除
+ *  - 🔊：朗读当前屏幕内容（题干 + 当前选项）；页面上不再出现第二个语音或调速控件
+ *  - 语速只在首页右上角 ⚙️ 全局设置里调，游戏页不放调速控件
  *  - 纯操作页（没有可朗读内容）只留 🏠，🔊 不渲染
  *  - 顶部预留 112px，避免遮挡标题
  */
@@ -23,11 +23,7 @@
     'color:#243b53;-webkit-tap-highlight-color:transparent;}',
     '.xnly-tool:active{transform:scale(.96);}',
     '.xnly-tool.xnly-hidden{display:none !important;}',
-    'body{padding-top:112px !important;}',
-    '#xnlySpeedPanel{position:fixed;top:calc(108px + env(safe-area-inset-top,0px));left:16px;right:16px;',
-    'max-width:360px;margin-left:auto;z-index:95;background:#fff;border-radius:18px;padding:14px;',
-    'box-shadow:0 14px 34px rgba(36,59,83,.22);display:none;}',
-    '#xnlySpeedPanel.show{display:block;}'
+    'body{padding-top:112px !important;}'
   ].join('');
 
   function visible(el) {
@@ -155,54 +151,27 @@
     snd.textContent = '🔊';
     snd.setAttribute('aria-label', '再听一遍');
     if (!speech) snd.classList.add('xnly-hidden');   /* 纯操作页不显示 🔊 */
-    var pressTimer = null, longPressed = false, panel = null;
 
-      function readNow() {
-        try {
-          if (typeof window.replayCurrent === 'function') { window.replayCurrent(); return; }
-          if (window.XNLY && XNLY.voice && XNLY.voice.speak) {
-            XNLY.voice.speak(currentSpeech(), { single: true });
-          }
-        } catch (e) { }
-        try {
-          if (window.XNLY && XNLY.sound && XNLY.sound.unlock) XNLY.sound.unlock();
-        } catch (e) { }
-      }
-      function buildPanel() {
-        if (panel) return panel;
-        panel = document.createElement('div');
-        panel.id = 'xnlySpeedPanel';
-        panel.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
-        if (window.XNLY && XNLY.voice && XNLY.voice.makeSpeedUI) {
-          panel.appendChild(XNLY.voice.makeSpeedUI());
-        }
-        document.body.appendChild(panel);
-        return panel;
-      }
-      snd.addEventListener('pointerdown', function () {
-        longPressed = false;
-        pressTimer = setTimeout(function () {
-          longPressed = true;
-          buildPanel().classList.add('show');
-        }, 600);
-      });
-      function endPress() { if (pressTimer) { clearTimeout(pressTimer); pressTimer = null; } }
-      snd.addEventListener('pointerup', endPress);
-      snd.addEventListener('pointercancel', endPress);
-      snd.addEventListener('pointerleave', endPress);
-      snd.addEventListener('click', function (e) {
-        if (longPressed) { longPressed = false; return; }
-        if (buildPanel().classList.contains('show')) {
-          /* 面板开着时，点 🔊 只收起面板，不叠加朗读 */
-          buildPanel().classList.remove('show');
+    /* 手动重听：force 绕过「朗读语音已关闭」，保证仍能听一次 */
+    function readNow() {
+      try {
+        if (typeof window.replayCurrent === 'function') {
+          if (window.XNLY && XNLY.voice && XNLY.voice.forceNext) XNLY.voice.forceNext();
+          window.replayCurrent();
           return;
         }
-        readNow();
-      });
-      document.addEventListener('pointerdown', function (e) {
-        var p = document.getElementById('xnlySpeedPanel');
-        if (p && p.classList.contains('show') && !snd.contains(e.target)) p.classList.remove('show');
-      });
+        if (window.XNLY && XNLY.voice && XNLY.voice.speak) {
+          XNLY.voice.speak(currentSpeech(), { single: true, force: true });
+        }
+      } catch (e) { }
+      try {
+        if (window.XNLY && XNLY.sound && XNLY.sound.unlock) XNLY.sound.unlock();
+      } catch (e) { }
+    }
+    snd.addEventListener('click', function (e) {
+      e.stopPropagation();
+      readNow();
+    });
     tools.appendChild(snd);
     document.body.appendChild(tools);
 

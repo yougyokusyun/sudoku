@@ -60,6 +60,14 @@
     return s;
   }
 
+  /* 全局朗读开关：关闭后不再自动朗读；手动「再听一遍」传 force:true 仍可播一次 */
+  function voiceMuted() { return lsGet('xnly_voice_off') === '1'; }
+  function setVoiceMuted(off) { lsSet('xnly_voice_off', off ? '1' : '0'); }
+
+  /* 下一次朗读强制放行（供各页自定义 replayCurrent 的「再听一遍」使用） */
+  var forceOnce = false;
+  function forceNext() { forceOnce = true; }
+
   /* 全站语速强制：不少页面自己 new SpeechSynthesisUtterance 并写死 rate。
      这里把实例的 rate 改为只读的滑杆值，保证「滑杆优先于页面写死的 rate」，
      页面本身不用逐页改代码；不支持的浏览器自动退回原生行为。 */
@@ -173,8 +181,10 @@
 
   function speak(text, opts) {
     opts = opts || {};
+    if (forceOnce) { opts.force = true; forceOnce = false; }
     text = String(text == null ? '' : text).trim();
     if (!text) return;
+    if (!opts.force && voiceMuted()) return;
     if (!supported) { degrade(); return; }
 
     if (!opts.queue) cancel();
@@ -201,6 +211,12 @@
     opts = opts || {};
     text = String(text == null ? '' : text).trim();
     if (!text) { if (cb) setTimeout(function () { try { cb(); } catch (e) { } }, 0); return { cancel: cancel }; }
+
+    /* 朗读关闭时：自动流程直接放行，不朗读也不阻塞跳题 */
+    if (!opts.force && voiceMuted()) {
+      if (cb) setTimeout(function () { try { cb(); } catch (e) { } }, 200);
+      return { cancel: cancel };
+    }
 
     if (!supported) {
       degrade();
@@ -378,7 +394,7 @@
       speak('这是现在的语速。');
     });
     box.querySelector('.xs-sample').addEventListener('click', function () {
-      speak('这是现在的语速。');
+      speak('这是现在的语速。', { force: true });
     });
     paint(speed());
     return box;
@@ -391,6 +407,9 @@
     cancel: cancel,
     speed: speed,
     setSpeed: setSpeed,
+    muted: voiceMuted,
+    setMuted: setVoiceMuted,
+    forceNext: forceNext,
     makeSpeedUI: makeSpeedUI,
     SPEED_MIN: SPEED_MIN,
     SPEED_MAX: SPEED_MAX,
