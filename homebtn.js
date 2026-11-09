@@ -418,10 +418,22 @@
       mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['disabled', 'hidden'] });
     }
 
-    /* 隐藏旧的回首页入口 */
-    Array.prototype.forEach.call(document.querySelectorAll('header a[href$="index.html"], a.back'), function (el) {
-      el.style.display = 'none';
-    });
+    /* 旧的回首页入口：统一移除，全站只留顶栏最左侧一个 🏠（含 .back / .home / .home-link 等写法） */
+    function dropOldHome() {
+      Array.prototype.forEach.call(document.querySelectorAll('a[href]'), function (el) {
+        if (el.closest && el.closest('#xnlyTopTools')) return;
+        var href = el.getAttribute('href') || '';
+        if (!/(^|\/)index\.html(?:$|[?#])/.test(href)) return;
+        var t = txt(el).replace(/\s+/g, '');
+        if (t.length <= 8 && /首页|返回/.test(t)) {
+          el.parentNode && el.parentNode.removeChild(el);
+        }
+      });
+      Array.prototype.forEach.call(document.querySelectorAll('header a[href$="index.html"]'), function (el) {
+        el.parentNode && el.parentNode.removeChild(el);
+      });
+    }
+    dropOldHome();
   }
 
   if (document.body) init();
