@@ -456,10 +456,10 @@ function drawLines() {
 
 function layoutBoard() {
   var rect = elWrap.getBoundingClientRect();
-  var availW = Math.max(160, rect.width - 6);
-  var availH = Math.max(160, rect.height - 6);
-  var contentW = availW - 6, contentH = availH - 6;   /* 棋盘有 3px 边框，节点坐标按内容盒计算 */
-  /* 棋盘宽度铺满可视区；横竖间距各自计算，保证横屏也能占满宽度且不裁边 */
+  /* 棋盘固定为正方形：边长取可用宽、高的较小值，由 .boardWrap 的 flex 水平/垂直居中 */
+  var S = Math.round(Math.min(rect.width, rect.height) - 6);
+  if (S < 80) S = 80;
+  var contentW = S - 6, contentH = S - 6;   /* 棋盘有 3px 边框，节点坐标按内容盒计算 */
   PADX = 10; PADY = 10;
   for (var it = 0; it < 3; it++) {
     SX = (contentW - 2 * PADX) / (COLS - 1);
@@ -471,8 +471,8 @@ function layoutBoard() {
   SX = (contentW - 2 * PADX) / (COLS - 1);
   SY = (contentH - 2 * PADY) / (ROWS - 1);
   D = Math.min(SX, SY) * 0.94;
-  var W = Math.round(availW);
-  var H = Math.round(availH);
+  var W = S;
+  var H = S;
 
   elBoard.style.width = W + 'px';
   elBoard.style.height = H + 'px';
