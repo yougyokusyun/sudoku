@@ -68,6 +68,17 @@
   var forceOnce = false;
   function forceNext() { forceOnce = true; }
 
+  /* TTS 音量：与音效共用 xnly_vol（0~100），Web Speech 的 volume 参数（0~1） */
+  function ttsVolume() {
+    try {
+      var raw = localStorage.getItem('xnly_vol');
+      if (raw == null) return 1;
+      var n = Number(raw);
+      if (!isFinite(n)) return 1;
+      return Math.max(0, Math.min(100, n)) / 100;
+    } catch (e) { return 1; }
+  }
+
   /* 全站语速强制：不少页面自己 new SpeechSynthesisUtterance 并写死 rate。
      这里把实例的 rate 改为只读的滑杆值，保证「滑杆优先于页面写死的 rate」，
      页面本身不用逐页改代码；不支持的浏览器自动退回原生行为。 */
@@ -163,7 +174,7 @@
     u.lang = job.lang;
     u.rate = rate;
     u.pitch = job.pitch;
-    u.volume = 1;
+    u.volume = ttsVolume();
     u.onend = finish;
     u.onerror = finish;
 

@@ -111,8 +111,11 @@
  *           底部弹出设置面板含语速滑杆（0.5–2.0 / 0.05，沿用 xnly_speed）、朗读语音开关（xnly_voice_off）、
  *           音效开关（xnly_sound_off），全部持久化并跨页生效；首页不再常显语速滑杆；
  *           游戏页只保留工具条一个 🔊（长按调速已移除），parent.html 语速滑杆改为设置入口说明。
+ * v60 变化：设置面板补上真实可用的音量滑杆（0–100%，默认 100 保持原有响度）——
+ *           所有音效统一经一个主 GainNode 输出，滑杆直接改主增益并即时生效；
+ *           新增持久化键 xnly_vol，跨页首次播放前读取；Web Speech 朗读同步使用 volume 参数。
  */
-var CACHE = 'xnly-v59';
+var CACHE = 'xnly-v60';
 
 var PRECACHE = [
   './',

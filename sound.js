@@ -17,6 +17,7 @@
 
   var AC = window.AudioContext || window.webkitAudioContext;
   var ctx = null;
+  var master = null;   /* 主增益：所有音效都经过它，音量滑杆直接改它的 gain */
 
   /* 全局音效开关（localStorage: xnly_sound_off） */
   function muted() {
@@ -24,6 +25,27 @@
   }
   function setMuted(off) {
     try { localStorage.setItem('xnly_sound_off', off ? '1' : '0'); } catch (e) { }
+  }
+
+  /* 全局音量 0~100（localStorage: xnly_vol），默认 100 = 与原来一样响 */
+  var VOL_KEY = 'xnly_vol';
+  function volPct() {
+    try {
+      var raw = localStorage.getItem(VOL_KEY);
+      if (raw == null) return 100;
+      var n = Number(raw);
+      if (!isFinite(n)) return 100;
+      return Math.max(0, Math.min(100, n));
+    } catch (e) { return 100; }
+  }
+  function level() { return volPct() / 100; }
+  function setVolume(pct) {
+    var n = Number(pct);
+    if (!isFinite(n)) n = 100;
+    n = Math.max(0, Math.min(100, Math.round(n)));
+    try { localStorage.setItem(VOL_KEY, String(n)); } catch (e) { }
+    if (master) { try { master.gain.value = n / 100; } catch (e) { } }
+    return n;
   }
 
   function unlock() {
@@ -34,8 +56,20 @@
     if (ctx && ctx.state === 'suspended') {
       try { ctx.resume(); } catch (e) { }
     }
+    if (ctx && !master) {
+      try {
+        master = ctx.createGain();
+        master.gain.value = level();
+        master.connect(ctx.destination);
+      } catch (e) { master = null; }
+    } else if (master) {
+      /* 每次播放前同步一次：跨页 / 其他标签页改了音量也能立即生效 */
+      try { master.gain.value = level(); } catch (e) { }
+    }
     return ctx;
   }
+
+  function out() { return master || (ctx ? ctx.destination : null); }
 
   function tone(freq, dur, type, gain, delay) {
     var ac = unlock();
@@ -48,7 +82,7 @@
     g.gain.exponentialRampToValueAtTime(gain || 0.12, t0 + Math.min(0.02, dur / 2));
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
     o.connect(g);
-    g.connect(ac.destination);
+    g.connect(out());
     o.start(t0);
     o.stop(t0 + dur + 0.01);
   }
@@ -71,7 +105,7 @@
       var g = ac.createGain();
       g.gain.setValueAtTime(gain || 0.18, ac.currentTime);
       g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + dur);
-      src.connect(lp); lp.connect(g); g.connect(ac.destination);
+      src.connect(lp); lp.connect(g); g.connect(out());
       src.start();
     } catch (e) { }
   }
@@ -80,6 +114,9 @@
     unlock: unlock,
     muted: muted,
     setMuted: setMuted,
+    volume: volPct,
+    setVolume: setVolume,
+    preview: function () { if (muted()) return; tone(990, 0.07, 'sine', 0.1); },
     tap: function () { if (muted()) return; tone(1180, 0.045, 'sine', 0.055); },
     correct: function () {
       if (muted()) return;
