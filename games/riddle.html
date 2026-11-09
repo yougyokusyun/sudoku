@@ -76,13 +76,13 @@ h1{font-size:1.15rem;}
 <body>
 <header>
   <h1>🧩 猜谜语</h1>
+  <div class="stats">
+    <span class="chip">✅ 答对 <b id="stat-score">0</b></span>
+    <span class="chip">🔥 连对 <b id="stat-streak">0</b></span>
+    <span class="chip">🏆 最佳连对 <b id="stat-best">0</b></span>
+  </div>
   <a class="back" href="../index.html">🏠 首页</a>
 </header>
-<div class="stats">
-  <span class="chip" id="stat-score">✅ 答对 0</span>
-  <span class="chip" id="stat-streak">🔥 连对 0</span>
-  <span class="chip" id="stat-best">🏆 最佳连对 0</span>
-</div>
 <div class="stage">
   <div class="card">
     <div class="tip">猜猜是什么？</div>
@@ -112,9 +112,9 @@ function shuffle(a){a=a.slice();for(var i=a.length-1;i>0;i--){var j=Math.floor(M
 function feedback(text,good){feedbackEl.className='feedback '+(good?'ok':'bad');feedbackEl.textContent=text;}
 function replay(node,cls){node.classList.remove('pop','shake');void node.offsetWidth;node.classList.add(cls);}
 function updateStats(){
-  $('stat-score').textContent='✅ 答对 '+score;
-  $('stat-streak').textContent='🔥 连对 '+streak;
-  $('stat-best').textContent='🏆 最佳连对 '+best;
+  $('stat-score').textContent=score;
+  $('stat-streak').textContent=streak;
+  $('stat-best').textContent=best;
 }
 function saveBest(){try{localStorage.setItem('priddle.best',String(best));}catch(e){}}
 function loadBest(){var v=0;try{v=parseInt(localStorage.getItem('priddle.best')||'0',10)||0;}catch(e){v=0;}return v;}

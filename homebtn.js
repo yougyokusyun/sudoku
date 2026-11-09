@@ -35,8 +35,12 @@
     '.xnly-title{flex:1 1 auto;min-width:0;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;',
     'font-size:16px;font-weight:800;color:#243b53;letter-spacing:.2px;}',
     '.xnly-stats{flex:0 1 auto;display:flex;align-items:center;gap:6px;overflow:hidden;max-width:42vw;}',
-    '.xnly-stats .chip,.xnly-stats .stat-pill,.xnly-stats>span{flex:0 0 auto;white-space:nowrap;font-size:12px;',
-    'line-height:1.5;padding:3px 8px;border-radius:999px;background:#f1f4f9;color:#43566b;}',
+    '.xnly-stats .chip,.xnly-stats .stat-pill,.xnly-stats .pill,.xnly-stats>span{flex:0 0 auto;white-space:nowrap;',
+    'font-size:12px !important;height:24px !important;min-height:24px !important;max-height:24px !important;',
+    'line-height:18px !important;box-sizing:border-box !important;',
+    'padding:3px 8px !important;border-radius:999px !important;background:#f1f4f9 !important;color:#43566b !important;}',
+    '.xnly-stats>*{flex:0 0 auto;display:flex;align-items:center;gap:6px;height:24px;padding:0;margin:0;',
+    'background:none;border:0;overflow:visible;white-space:nowrap;}',
     '.xnly-stats b{font-weight:800;color:#243b53;}',
     '.xnly-funcs{flex:0 0 auto;display:flex;align-items:center;gap:8px;}',
     '#xnlyTopTools .seg{display:flex;align-items:center;gap:8px;flex:0 0 auto;margin:0;padding:0;background:none;border:0;}',
@@ -209,11 +213,28 @@
       if (any && any.querySelector('h1') && !any.closest('main,section,article,.modal,.card,.dialog')) hdr = any;
     }
     var title = '';
-    var statsSrc = null;
+    var statsSrcs = [];
     if (hdr) {
       var h1 = hdr.querySelector('h1');
       if (h1) title = txt(h1);
-      statsSrc = hdr.querySelector('.chips, .stats');
+      var box = hdr.querySelector('.chips, .stats');
+      if (box) statsSrcs = [box];
+      else statsSrcs = Array.prototype.slice.call(hdr.querySelectorAll('.pill'));
+    }
+    /* 页面把答对/连对/最佳放在内容区第一行的，统一搬进顶栏（有交互控件的不搬，避免搬坏工具条） */
+    if (!statsSrcs.length) {
+      var STAT_RE = /答对|连对|最佳|最高|已猜|尝试|得分|进度|排对|配对|正确|完成|第\s*\d+\s*(题|篇|关|档|组)/;
+      var cands = document.querySelectorAll('.chips, .stats, .bar, .hud');
+      for (var ci = 0; ci < cands.length; ci++) {
+        var cand = cands[ci];
+        if (cand.closest('#xnlyTopTools, header, .modal')) continue;
+        if (cand.querySelector('button, a, input, select, textarea')) continue;
+        var cr = cand.getBoundingClientRect();
+        if (cr.top > innerHeight * 0.6 || cr.width < 40 || cr.height < 4) continue;
+        if (!STAT_RE.test(txt(cand))) continue;
+        statsSrcs = [cand];
+        break;
+      }
     }
     if (!title) {
       var h1b = document.querySelector('h1');
@@ -240,7 +261,8 @@
 
     var stats = document.createElement('div');
     stats.className = 'xnly-stats';
-    if (statsSrc) stats.appendChild(statsSrc);   /* 移动而非复制：页面按 id 的实时更新仍然有效 */
+    /* 移动而非复制：页面按 id 的实时更新仍然有效；内容区不会残留第二份 */
+    statsSrcs.forEach(function (n) { stats.appendChild(n); });
     bar.appendChild(stats);
 
     var funcs = document.createElement('div');
