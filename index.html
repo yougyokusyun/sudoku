@@ -32,38 +32,25 @@
         }
         .wrap { max-width: 1080px; margin: 0 auto; }
 
-        header { text-align: center; margin-bottom: 16px; }
+        header { text-align: center; margin-bottom: 16px; position: relative; }
         h1 { font-size: 1.7rem; letter-spacing: 1px; }
         .sub { margin-top: 6px; font-size: .92rem; color: #6b7f95; }
 
-        /* ---------- 点击开始 ---------- */
-        .startcard {
-            display: flex; flex-direction: column; align-items: center; gap: 8px;
-            margin: 0 0 16px;
-            padding: 14px;
-            border-radius: 24px;
-            background: linear-gradient(160deg, #fff, #fff3f8);
-            border: 2px dashed rgba(255, 143, 190, .55);
-        }
+        /* ---------- 开始：纯图标按钮，不占版面 ---------- */
         .startbtn {
-            display: flex; align-items: center; justify-content: center; gap: 12px;
-            width: min(420px, 100%);
-            min-height: 84px;
-            border: none; border-radius: 999px;
+            position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+            width: 42px; height: 42px; min-width: 0; min-height: 0; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+            border: none; border-radius: 12px; cursor: pointer;
             background: linear-gradient(135deg, #ff8fbe, #ff6f9c 55%, #ff5c81);
-            color: #fff; font-family: inherit;
-            font-size: 1.7rem; font-weight: 900; letter-spacing: 2px;
-            box-shadow: 0 12px 26px rgba(255, 92, 129, .38);
-            cursor: pointer;
+            color: #fff; font-family: inherit; font-size: 1.05rem; line-height: 1;
+            box-shadow: 0 6px 14px rgba(255, 92, 129, .35);
+            -webkit-tap-highlight-color: transparent;
         }
-        .startbtn:active { transform: scale(.97); }
-        .startico { font-size: 1.9rem; }
-        .startsub { font-size: .82rem; font-weight: 700; color: #8a7d86; }
-        .startcard.done { border-style: solid; background: #fff; padding: 10px; }
-        .startcard.done .startbtn {
-            min-height: 68px; font-size: 1.375rem; letter-spacing: 1px;
+        .startbtn:active { transform: translateY(-50%) scale(.94); }
+        .startbtn.done {
             background: linear-gradient(135deg, #8fe3b0, #4cc98a);
-            box-shadow: 0 8px 18px rgba(76, 201, 138, .32);
+            box-shadow: 0 6px 14px rgba(76, 201, 138, .32);
         }
 
         /* ---------- 工具条 ---------- */
@@ -233,7 +220,7 @@
             .grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
             .card { min-height: 168px; padding: 12px 8px; }
             .card .ico { font-size: 3.6rem; }
-            .startbtn { font-size: 1.4rem; min-height: 72px; }
+            .startbtn { width: 42px; height: 42px; }
         }
     </style>
 <script src="voice.js"></script>
@@ -244,14 +231,8 @@
     <header>
         <h1>🧸 小脑袋乐园</h1>
         <div class="sub">幼儿园到小学高年级 · 选一档，点一下就能开始</div>
+        <button class="startbtn" id="startBtn" type="button" aria-label="开始" title="开始">▶</button>
     </header>
-
-    <div class="startcard" id="startCard">
-        <button class="startbtn" id="startBtn" type="button">
-            <span class="startico">▶️</span><span class="starttxt">点我开始</span>
-        </button>
-        <div class="startsub" id="startSub">点一下就有声音 · 上面可以换年龄档</div>
-    </div>
 
     <nav class="tabs" id="tabs" aria-label="年龄档切换"></nav>
 
@@ -620,9 +601,7 @@
 (function () {
   var X = window.XNLY || {};
   var V = X.voice, S = X.sound;
-  var startCard = document.getElementById('startCard');
   var startBtn = document.getElementById('startBtn');
-  var startSub = document.getElementById('startSub');
   var tabs = document.getElementById('tabs');
   var grid = document.getElementById('grid');
   var parentPanel = document.getElementById('parentPanel');
@@ -815,10 +794,10 @@
     started = true;
     if (S && S.unlock) S.unlock();
     if (V && V.unlock) V.unlock();
-    startCard.classList.add('done');
-    startBtn.querySelector('.startico').textContent = '🔊';
-    startBtn.querySelector('.starttxt').textContent = '声音好啦';
-    startSub.textContent = '点一下图标就能玩 · 上面可以换年龄档';
+    startBtn.classList.add('done');
+    startBtn.textContent = '🔊';
+    startBtn.setAttribute('aria-label', '已开启声音');
+    startBtn.title = '已开启声音';
     if (V) V.speak('点一下图标就能玩。上面可以选择幼儿园、低年级和高年级。');
   }
   startBtn.addEventListener('click', function (e) {

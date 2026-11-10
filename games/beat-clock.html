@@ -342,6 +342,7 @@ function newGame() {
 }
 
 /* 第一次点击/触摸开始计时；之后的点击不再重复触发 */
+window.XNLY_START = startTimer;   /* 顶栏 ▶ 图标：计时起点仍是用户点击那一刻 */
 document.addEventListener('pointerdown', function (e) {
   if (state.ended) return;
   if (!state.started) startTimer();

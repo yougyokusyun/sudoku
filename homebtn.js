@@ -56,6 +56,9 @@
     'html.xnly-immersive #xnlyTopTools{display:none !important;}',
     'html.xnly-immersive body{padding-top:0 !important;overflow-x:hidden;}',
     'html.xnly-immersive #xnlyExitImm{display:flex;}',
+    'button.xnly-float{position:fixed !important;top:calc(12px + env(safe-area-inset-top,0px)) !important;',
+    'right:calc(62px + env(safe-area-inset-right,0px)) !important;z-index:99 !important;',
+    'box-shadow:0 4px 14px rgba(36,59,83,.18);}',
     '#xnlyExitImm{display:none;position:fixed;right:12px;top:calc(12px + env(safe-area-inset-top,0px));',
     'width:' + BTN + 'px;height:' + BTN + 'px;border-radius:50%;border:0;z-index:99;align-items:center;',
     'justify-content:center;font-size:20px;line-height:1;cursor:pointer;color:#243b53;',
@@ -344,6 +347,15 @@
     });
     funcs.appendChild(snd);
 
+    /* ---- 统一「开始」图标：纯图标、无文字、42×42，排在功能图标组 ---- */
+    var startBtn = document.createElement('button');
+    startBtn.type = 'button';
+    startBtn.className = 'xnly-tool xnly-start xnly-hidden';
+    startBtn.textContent = '▶';
+    startBtn.setAttribute('aria-label', '开始');
+    startBtn.title = '开始';
+    funcs.appendChild(startBtn);
+
     /* ---- 全屏 / 沉浸模式 ---- ---- ---- ---- ---- ---- ---- ---- ---- */
     var fsBtn = document.createElement('button');
     fsBtn.type = 'button';
@@ -371,6 +383,14 @@
     }
     function setImmersive(on) {
       document.documentElement.classList.toggle('xnly-immersive', !!on);
+      /* 沉浸模式整条顶栏被隐藏，开始图标要能独立浮出来，否则没开始就进沉浸会点不到 */
+      if (on && startBtn.parentNode !== document.body) {
+        document.body.appendChild(startBtn);
+        startBtn.classList.add('xnly-float');
+      } else if (!on && startBtn.classList.contains('xnly-float')) {
+        funcs.insertBefore(startBtn, fsBtn);
+        startBtn.classList.remove('xnly-float');
+      }
       paintFs();
     }
     function enterFs() {
@@ -406,6 +426,23 @@
     bar.appendChild(funcs);
     document.body.appendChild(bar);
     document.body.appendChild(exitImm);
+
+    /* ---- 开始图标接线：页面把「开始」函数挂到 window.XNLY_START 即可，图标自动出现 ---- */
+    var startFn = null;
+    function armStart() {
+      if (startFn) return;
+      if (typeof window.XNLY_START !== 'function') return;
+      startFn = window.XNLY_START;
+      startBtn.classList.remove('xnly-hidden');
+    }
+    startBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (!startFn) return;
+      try { startFn(); } catch (err) { }
+      startBtn.classList.add('xnly-hidden');   /* ▶ → 隐藏：这些开始都是单向的，没有“暂停”语义 */
+    });
+    armStart();
+    setTimeout(armStart, 400);   /* 少数页面的脚本在 homebtn 之后才定义开始函数 */
 
     if (hdr) hdr.classList.add('xnly-hdr-off');
 

@@ -355,6 +355,8 @@ function startGame() {
   }, 100);
 }
 
+window.XNLY_START = startGame;   /* 顶栏 ▶ 图标：计时起点仍是用户点击那一刻 */
+
 function endGame() {
   if (state.ended) return;
   state.ended = true;
