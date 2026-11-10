@@ -36,22 +36,34 @@
         h1 { font-size: 1.7rem; letter-spacing: 1px; }
         .sub { margin-top: 6px; font-size: .92rem; color: #6b7f95; }
 
-        /* ---------- 开始：纯图标按钮，不占版面 ---------- */
-        .startbtn {
+        /* ---------- 右上角两个 42×42 图标：▶ 开始 + ⚙️ 设置 ---------- */
+        .hdrTools {
             position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .startbtn, .gearbtn {
             width: 42px; height: 42px; min-width: 0; min-height: 0; padding: 0;
             display: flex; align-items: center; justify-content: center;
             border: none; border-radius: 12px; cursor: pointer;
-            background: linear-gradient(135deg, #ff8fbe, #ff6f9c 55%, #ff5c81);
-            color: #fff; font-family: inherit; font-size: 1.05rem; line-height: 1;
-            box-shadow: 0 6px 14px rgba(255, 92, 129, .35);
+            font-family: inherit; line-height: 1;
             -webkit-tap-highlight-color: transparent;
         }
-        .startbtn:active { transform: translateY(-50%) scale(.94); }
+        .startbtn {
+            background: linear-gradient(135deg, #ff8fbe, #ff6f9c 55%, #ff5c81);
+            color: #fff; font-size: 1.05rem;
+            box-shadow: 0 6px 14px rgba(255, 92, 129, .35);
+        }
+        .startbtn:active { transform: scale(.94); }
         .startbtn.done {
             background: linear-gradient(135deg, #8fe3b0, #4cc98a);
             box-shadow: 0 6px 14px rgba(76, 201, 138, .32);
         }
+        .gearbtn {
+            background: linear-gradient(160deg, #fff, #eef4fb);
+            border: 2px solid #dbe6f2; color: #4a6076; font-size: 1.15rem;
+            box-shadow: 0 4px 10px rgba(36, 59, 83, .10);
+        }
+        .gearbtn:active { transform: scale(.94); }
 
         /* ---------- 工具条 ---------- */
         .tools { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 6px; }
@@ -164,11 +176,7 @@
         }
         .tab.on .tc { background: rgba(255, 255, 255, .28); }
         @media (max-width: 900px) { .tab .tc { display: none; } }
-        /* ---------- 右上角齿轮（全局设置入口） + 底部设置面板 ---------- */
-        .tab.gear {
-            flex: 0 0 44px; min-width: 44px; max-width: 44px; height: 48px; min-height: 48px;
-            align-self: center; padding: 0; font-size: 1.3rem; line-height: 1;
-        }
+        /* ---------- 底部设置面板 ---------- */
         .xsMask {
             position: fixed; inset: 0; z-index: 1000; display: flex; align-items: flex-end; justify-content: center;
             background: rgba(20, 32, 48, .45); opacity: 0; pointer-events: none; transition: opacity .16s;
@@ -231,7 +239,10 @@
     <header>
         <h1>🧸 小脑袋乐园</h1>
         <div class="sub">幼儿园到小学高年级 · 选一档，点一下就能开始</div>
-        <button class="startbtn" id="startBtn" type="button" aria-label="开始" title="开始">▶</button>
+        <div class="hdrTools">
+            <button class="startbtn" id="startBtn" type="button" aria-label="开始" title="开始">▶</button>
+            <button class="gearbtn" id="settingsBtn" type="button" aria-label="设置" title="设置">⚙️</button>
+        </div>
     </header>
 
     <nav class="tabs" id="tabs" aria-label="年龄档切换"></nav>
@@ -759,19 +770,12 @@
       tabs.appendChild(b);
     });
 
-    /* 末尾：紧凑齿轮（全局设置入口），紧跟在「家长」之后、同一行同一视觉高度 */
-    var gear = document.createElement('button');
-    gear.type = 'button';
-    gear.className = 'tab gear';
-    gear.id = 'settingsBtn';
-    gear.setAttribute('aria-label', '设置');
-    gear.title = '设置';
-    gear.textContent = '⚙️';
+    /* 设置齿轮已迁到标题右侧（与 ▶ 同一行），这里只接线，不再往年龄档那一行插入 */
+    var gear = document.getElementById('settingsBtn');
     gear.addEventListener('click', function (e) {
       e.stopPropagation();
       openSettings();
     });
-    tabs.appendChild(gear);
   }
 
   function applyStage(k, say) {
@@ -925,7 +929,7 @@
   /* 第一次点屏幕（不在卡片/入口上）也算「已开始」 */
   document.addEventListener('pointerdown', function (e) {
     if (started) return;
-    if (e.target.closest && e.target.closest('a.card, #startBtn, .tab, .tool')) return;
+    if (e.target.closest && e.target.closest('a.card, #startBtn, #settingsBtn, .tab, .tool')) return;
     startAll();
   }, true);
 
