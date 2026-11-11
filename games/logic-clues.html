@@ -86,6 +86,44 @@ h1{font-size:1.15rem;}
   .sol-item{font-size:.76rem;padding:3px 4px;}
   .stage-inner{gap:6px;}
 }
+/* 模式切换 / 破译密码 */
+.modes{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.mode{min-height:40px;border:none;border-radius:999px;background:#fff;color:var(--ink);
+  font-weight:900;font-size:.88rem;padding:6px 16px;cursor:pointer;font-family:inherit;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);transition:transform .12s ease;}
+.mode:active{transform:scale(.97);}
+.mode.active{background:var(--accent);color:#fff;box-shadow:0 4px 12px rgba(124,92,255,.35);}
+.tiers{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;}
+.tier{min-height:32px;border:none;border-radius:999px;background:#fff;color:#6b7a90;
+  font-weight:900;font-size:.78rem;padding:4px 14px;cursor:pointer;font-family:inherit;}
+.tier.active{background:#f0edff;color:var(--accent);box-shadow:inset 0 0 0 2px var(--accent);}
+.pwd{display:flex;gap:10px;justify-content:center;}
+.slot{width:54px;height:62px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;
+  font-size:1.9rem;font-weight:900;color:#c9d3e0;box-shadow:0 4px 12px rgba(36,59,83,.12);
+  transition:box-shadow .15s ease,background .15s ease;}
+.slot.filled{background:#f7f4ff;color:var(--accent);}
+.slot.cur{box-shadow:inset 0 0 0 3px var(--accent),0 4px 12px rgba(36,59,83,.12);}
+.pwd.shake{animation:shake .45s ease;}
+.keypad{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;width:min(440px,100%);}
+.key{min-height:52px;border:none;border-radius:14px;background:#fff;color:var(--ink);
+  font-weight:900;font-size:1.35rem;cursor:pointer;font-family:inherit;
+  box-shadow:0 4px 12px rgba(36,59,83,.10);transition:transform .1s ease;}
+.key:active{transform:scale(.96);}
+.key.del{grid-column:1/-1;min-height:44px;font-size:1rem;color:#9a6b00;background:#fff7d6;
+  box-shadow:0 4px 12px rgba(160,106,0,.14);}
+.key:disabled{opacity:.45;cursor:default;}
+/* 破译密码模式下：密码框在最上，线索紧随其下，键盘在最底 */
+.stage-inner.code-mode .pwd{order:1;}
+.stage-inner.code-mode .card{order:2;}
+.stage-inner.code-mode .keypad{order:3;}
+@media (max-height:430px){
+  .modes{gap:5px;} .mode{min-height:32px;font-size:.76rem;padding:3px 10px;}
+  .tiers{gap:4px;} .tier{min-height:26px;font-size:.68rem;padding:2px 9px;}
+  .pwd{gap:6px;} .slot{width:38px;height:44px;font-size:1.3rem;border-radius:10px;}
+  .keypad{gap:5px;width:min(330px,100%);}
+  .key{min-height:38px;font-size:1rem;border-radius:10px;}
+  .key.del{min-height:34px;font-size:.82rem;}
+}
 </style>
 <link rel="manifest" href="../manifest.json">
 <meta name="theme-color" content="#ff8fbe">
@@ -109,12 +147,23 @@ h1{font-size:1.15rem;}
       <span class="stat-pill">🔥 连对 <b id="streakCount">0</b></span>
       <span class="stat-pill">🏆 最佳连对 <b id="bestCount">0</b></span>
     </div>
+    <div class="modes" id="modes">
+      <button class="mode active" type="button" data-mode="logic">🧩 线索破案</button>
+      <button class="mode" type="button" data-mode="code">🔐 破译密码</button>
+    </div>
+    <div class="tiers hide" id="tiers">
+      <button class="tier active" type="button" data-tier="basic">入门</button>
+      <button class="tier" type="button" data-tier="adv">进阶</button>
+      <button class="tier" type="button" data-tier="hard">挑战</button>
+    </div>
+    <div class="pwd hide" id="pwd"></div>
     <div class="card">
       <div class="theme" id="theme">主题：--</div>
       <ul class="clues" id="clues"></ul>
     </div>
     <div class="question" id="question" data-speak="--">--</div>
     <div class="options" id="options"></div>
+    <div class="keypad hide" id="keypad"></div>
     <div class="solution hide" id="solution"></div>
     <div class="feedback" id="feedback"></div>
   </div>
@@ -316,11 +365,47 @@ var PUZZLES = [
  "q":"爷爷住几号房间？","options":["4号房间","2号房间","5号房间","3号房间"],"answer":"4号房间",
  "solution":{"爷爷":"4号房间","奶奶":"2号房间","爸爸":"5号房间","妈妈":"1号房间","小满":"3号房间"}}
 ];
+/* 「破译密码」题库：23 题，全部经暴力枚举校验（5040 种排列）只有唯一解 */
+var CODE_PUZZLES = [
+{"tier":"basic","answer":"7354","clues":["8109：没有一个数字正确", "2354：3 个数字正确，位置都正确", "2436：2 个数字正确，位置都不正确", "3762：2 个数字正确，位置都不正确"]},
+{"tier":"basic","answer":"6754","clues":["1980：没有一个数字正确", "2754：3 个数字正确，位置都正确", "2345：2 个数字正确，位置都不正确", "3752：2 个数字正确，位置都正确"]},
+{"tier":"basic","answer":"5421","clues":["7098：没有一个数字正确", "1452：4 个数字正确，其中一个位置正确，其余位置不正确", "3421：3 个数字正确，位置都正确", "1524：4 个数字正确，其中一个位置正确，其余位置不正确"]},
+{"tier":"basic","answer":"5267","clues":["9801：没有一个数字正确", "2657：4 个数字正确，其中一个位置正确，其余位置不正确", "3247：2 个数字正确，位置都正确", "2673：3 个数字正确，位置都不正确"]},
+{"tier":"basic","answer":"5461","clues":["7089：没有一个数字正确", "1456：4 个数字正确，其中一个位置正确，其余位置不正确", "2361：2 个数字正确，位置都正确", "4125：3 个数字正确，位置都不正确"]},
+{"tier":"basic","answer":"2431","clues":["0987：没有一个数字正确", "1234：4 个数字正确，其中一个位置正确，其余位置不正确", "2435：3 个数字正确，位置都正确", "6132：3 个数字正确，其中一个位置正确，其余位置不正确"]},
+{"tier":"basic","answer":"4201","clues":["7698：没有一个数字正确", "0214：4 个数字正确，其中一个位置正确，其余位置不正确", "3201：3 个数字正确，位置都正确", "1320：3 个数字正确，位置都不正确"]},
+{"tier":"basic","answer":"4635","clues":["2019：没有一个数字正确", "3465：4 个数字正确，其中一个位置正确，其余位置不正确", "4637：3 个数字正确，位置都正确", "6574：3 个数字正确，位置都不正确"]},
+{"tier":"adv","answer":"2981","clues":["4581：2 个数字正确，位置都正确", "5947：1 个数字正确，位置都正确", "1278：3 个数字正确，位置都不正确"]},
+{"tier":"adv","answer":"9827","clues":["5837：2 个数字正确，位置都正确", "9526：2 个数字正确，位置都正确", "4572：2 个数字正确，位置都不正确"]},
+{"tier":"adv","answer":"7459","clues":["2469：2 个数字正确，位置都正确", "7251：2 个数字正确，位置都正确", "3619：1 个数字正确，位置都正确"]},
+{"tier":"adv","answer":"9432","clues":["9738：2 个数字正确，位置都正确", "4982：3 个数字正确，其中一个位置正确，其余位置不正确", "7542：2 个数字正确，其中一个位置正确，其余位置不正确"]},
+{"tier":"adv","answer":"9046","clues":["9013：2 个数字正确，位置都正确", "3541：1 个数字正确，位置都正确", "5694：3 个数字正确，位置都不正确"]},
+{"tier":"adv","answer":"2456","clues":["2471：2 个数字正确，位置都正确", "3654：3 个数字正确，其中一个位置正确，其余位置不正确", "1956：2 个数字正确，位置都正确"]},
+{"tier":"adv","answer":"5042","clues":["5192：2 个数字正确，位置都正确", "9018：1 个数字正确，位置都正确", "8940：2 个数字正确，其中一个位置正确，其余位置不正确"]},
+{"tier":"hard","answer":"5291","clues":["5341：2 个数字正确，位置都正确", "0294：2 个数字正确，位置都正确", "6382：1 个数字正确，位置都不正确"]},
+{"tier":"hard","answer":"8641","clues":["8042：2 个数字正确，位置都正确", "0651：2 个数字正确，位置都正确", "4961：3 个数字正确，其中一个位置正确，其余位置不正确"]},
+{"tier":"hard","answer":"1834","clues":["1806：2 个数字正确，位置都正确", "2834：3 个数字正确，位置都正确", "3817：3 个数字正确，其中一个位置正确，其余位置不正确"]},
+{"tier":"hard","answer":"9031","clues":["9067：2 个数字正确，位置都正确", "6831：2 个数字正确，位置都正确", "7924：1 个数字正确，位置都不正确"]},
+{"tier":"hard","answer":"8027","clues":["3067：2 个数字正确，位置都正确", "8126：2 个数字正确，位置都正确", "5826：2 个数字正确，其中一个位置正确，其余位置不正确"]},
+{"tier":"hard","answer":"4392","clues":["4791：2 个数字正确，位置都正确", "4302：3 个数字正确，位置都正确", "6147：1 个数字正确，位置都不正确"]},
+{"tier":"hard","answer":"0539","clues":["0546：2 个数字正确，位置都正确", "4869：1 个数字正确，位置都正确", "7934：2 个数字正确，其中一个位置正确，其余位置不正确"]},
+{"tier":"hard","answer":"6045","clues":["8041：2 个数字正确，位置都正确", "6875：2 个数字正确，位置都正确", "9728：没有一个数字正确"]},
+];
 var KEY_BEST='pclue.best';
-var state={correct:0,streak:0,best:0,wrong:0,locked:false,current:null,timer:null,lastIdx:-1};
+var state={correct:0,streak:0,best:0,wrong:0,locked:false,current:null,timer:null,
+  lastIdx:-1,lastCode:-1,mode:'logic',tier:'basic',input:''};
 var feedbackEl=document.getElementById('feedback');
 var optionsEl=document.getElementById('options');
 var solutionEl=document.getElementById('solution');
+var themeEl=document.getElementById('theme');
+var cluesEl=document.getElementById('clues');
+var questionEl=document.getElementById('question');
+var modesEl=document.getElementById('modes');
+var tiersEl=document.getElementById('tiers');
+var pwdEl=document.getElementById('pwd');
+var keypadEl=document.getElementById('keypad');
+var stageInner=document.querySelector('.stage-inner');
+var TIER_NAME={basic:'入门',adv:'进阶',hard:'挑战'};
 
 function safeGet(k){try{return localStorage.getItem(k);}catch(e){return null;}}
 function safeSet(k,v){try{localStorage.setItem(k,v);}catch(e){}}
@@ -366,34 +451,151 @@ function showSolution(p){
     '<div class="sol-why">推理：把 ' + p.clues.length + ' 条线索逐条对照，和线索矛盾的选项一个个排除，最后只有「' + esc(p.answer) + '」全部符合。</div>'+items;
   solutionEl.classList.remove('hide');
 }
-function renderPuzzle(){
+function renderLogicPuzzle(){
   var p=state.current;
-  document.getElementById('theme').innerHTML='🧩 主题：'+esc(p.theme)+' · 线索 '+p.clues.length+' 条'+'<span class="level-tag '+(p.level==='challenge'?'challenge':'basic')+'">'+(p.level==='challenge'?'挑战':'常规')+'</span>';
+  themeEl.innerHTML='🧩 主题：'+esc(p.theme)+' · 线索 '+p.clues.length+' 条'+'<span class="level-tag '+(p.level==='challenge'?'challenge':'basic')+'">'+(p.level==='challenge'?'挑战':'常规')+'</span>';
   /* 所有线索一次性显示，不折叠、不逐条点开 */
-  document.getElementById('clues').innerHTML=p.clues.map(function(c,i){
+  cluesEl.innerHTML=p.clues.map(function(c,i){
     return '<li class="clue" data-i="'+i+'"><span class="clue-num">'+(i+1)+'</span><span>'+esc(c)+'</span></li>';
   }).join('');
-  var qEl=document.getElementById('question');
-  qEl.textContent=p.q;
-  qEl.setAttribute('data-speak', p.q+'。线索：'+p.clues.join('。'));
+  questionEl.textContent=p.q;
+  questionEl.setAttribute('data-speak', p.q+'。线索：'+p.clues.join('。'));
   optionsEl.innerHTML=p.options.map(function(o){
     return '<button class="opt" type="button" data-val="'+esc(o)+'">'+esc(o)+'</button>';
   }).join('');
   solutionEl.classList.add('hide');
   clearFeedback();
 }
-function nextPuzzle(){
-  var idx=Math.floor(Math.random()*PUZZLES.length);
-  if(PUZZLES.length>1&&idx===state.lastIdx)idx=(idx+1)%PUZZLES.length;
-  state.lastIdx=idx;
-  state.current=PUZZLES[idx];
+function codePool(){
+  return CODE_PUZZLES.filter(function(p){return p.tier===state.tier;});
+}
+function pwdWhy(p){
+  var blank=null;
+  for(var i=0;i<p.clues.length;i++){
+    if(p.clues[i].indexOf('没有一个数字正确')>=0){blank=p.clues[i].split('：')[0];}
+  }
+  if(blank){
+    return '先用「'+blank+'」排除 '+blank.split('').join('、')+' 这四个数字，再按其余线索的位置提示逐位排除，最后只剩 '+p.answer+' 这一种排法。';
+  }
+  return '把 '+p.clues.length+' 条线索的「几个数字对、几个位置对」同时对照，互相矛盾的排法逐一排除，最后只剩 '+p.answer+' 这一种。';
+}
+function renderPwd(){
+  var html='';
+  for(var i=0;i<4;i++){
+    var d=state.input.charAt(i);
+    html+='<div class="slot'+(d?' filled':'')+(i===state.input.length&&!state.locked?' cur':'')+'">'+esc(d)+'</div>';
+  }
+  pwdEl.innerHTML=html;
+  var keys=keypadEl.querySelectorAll('.key');
+  for(var j=0;j<keys.length;j++){
+    keys[j].disabled=state.locked||(state.input.length>=4&&keys[j].dataset.k!=='del');
+  }
+}
+function renderCodePuzzle(){
+  var p=state.current;
+  themeEl.innerHTML='🔐 破译密码 · 4 位数字，数字不重复<span class="level-tag '+(p.tier==='basic'?'basic':'challenge')+'">'+TIER_NAME[p.tier]+'</span>';
+  cluesEl.innerHTML=p.clues.map(function(c,i){
+    return '<li class="clue" data-i="'+i+'"><span class="clue-num">'+(i+1)+'</span><span>'+esc(c)+'</span></li>';
+  }).join('');
+  questionEl.textContent='输入 4 位密码';
+  questionEl.setAttribute('data-speak','破译密码。'+p.clues.join('。'));
+  optionsEl.innerHTML='';
+  solutionEl.classList.add('hide');
+  state.input='';
+  renderPwd();
+  clearFeedback();
+}
+function showCodeSolution(p){
+  solutionEl.innerHTML='<div class="sol-title">✅ 正确密码 '+esc(p.answer)+'</div>'+
+    '<div class="sol-why">推理：'+esc(pwdWhy(p))+'</div>';
+  solutionEl.classList.remove('hide');
+}
+function nextRound(){
+  clearTimeout(state.timer);
   state.wrong=0;
   state.locked=false;
-  renderPuzzle();
+  if(state.mode==='code'){
+    var pool=codePool();
+    var ci=Math.floor(Math.random()*pool.length);
+    if(pool.length>1&&ci===state.lastCode)ci=(ci+1)%pool.length;
+    state.lastCode=ci;
+    state.current=pool[ci];
+    renderCodePuzzle();
+  }else{
+    var idx=Math.floor(Math.random()*PUZZLES.length);
+    if(PUZZLES.length>1&&idx===state.lastIdx)idx=(idx+1)%PUZZLES.length;
+    state.lastIdx=idx;
+    state.current=PUZZLES[idx];
+    renderLogicPuzzle();
+  }
 }
 function resetClues(){
+  nextRound();
+}
+function buildKeypad(){
+  var html='';
+  for(var d=1;d<=9;d++){html+='<button class="key" type="button" data-k="'+d+'">'+d+'</button>';}
+  html+='<button class="key" type="button" data-k="0">0</button>';
+  html+='<button class="key del" type="button" data-k="del">⌫ 删除</button>';
+  keypadEl.innerHTML=html;
+}
+function onKeyClick(e){
+  var btn=e.target.closest('.key');
+  if(!btn||state.locked||btn.disabled)return;
+  var k=btn.dataset.k;
+  if(k==='del'){
+    state.input=state.input.slice(0,-1);
+    renderPwd();
+    clearFeedback();
+    return;
+  }
+  if(state.input.length>=4)return;
+  state.input+=k;
+  renderPwd();
+  if(state.input.length===4){state.timer=setTimeout(checkCode,130);}
+}
+function checkCode(){
+  if(state.locked)return;
+  var p=state.current;
+  if(state.input===p.answer){
+    state.locked=true;
+    renderPwd();
+    feedback('✅ 密码正确！',true);
+    state.correct++;
+    state.streak++;
+    if(state.streak>state.best){
+      state.best=state.streak;
+      safeSet(KEY_BEST,String(state.best));
+    }
+    renderStats();
+    showCodeSolution(p);
+    confetti();
+    state.timer=setTimeout(nextRound,1900);
+  }else{
+    pwdEl.classList.remove('shake');
+    void pwdEl.offsetWidth;
+    pwdEl.classList.add('shake');
+    feedback('❌ 再试一次',false);
+    state.wrong++;
+    state.streak=0;
+    renderStats();
+    state.timer=setTimeout(function(){state.input='';renderPwd();},700);
+  }
+}
+function setMode(m){
+  state.mode=m;
   clearTimeout(state.timer);
-  nextPuzzle();
+  var btns=modesEl.querySelectorAll('.mode');
+  for(var i=0;i<btns.length;i++){btns[i].classList.toggle('active',btns[i].dataset.mode===m);}
+  var isCode=(m==='code');
+  tiersEl.classList.toggle('hide',!isCode);
+  pwdEl.classList.toggle('hide',!isCode);
+  keypadEl.classList.toggle('hide',!isCode);
+  questionEl.classList.toggle('hide',isCode);
+  optionsEl.classList.toggle('hide',isCode);
+  stageInner.classList.toggle('code-mode',isCode);
+  solutionEl.classList.add('hide');
+  nextRound();
 }
 function initClues(){
   var best=parseInt(safeGet(KEY_BEST),10);
@@ -402,7 +604,22 @@ function initClues(){
   state.streak=0;
   renderStats();
   optionsEl.addEventListener('click',onOptionClick);
-  resetClues();
+  buildKeypad();
+  keypadEl.addEventListener('click',onKeyClick);
+  modesEl.addEventListener('click',function(e){
+    var b=e.target.closest('.mode');
+    if(!b||b.dataset.mode===state.mode)return;
+    setMode(b.dataset.mode);
+  });
+  tiersEl.addEventListener('click',function(e){
+    var b=e.target.closest('.tier');
+    if(!b||b.dataset.tier===state.tier)return;
+    state.tier=b.dataset.tier;
+    var ts=tiersEl.querySelectorAll('.tier');
+    for(var i=0;i<ts.length;i++){ts[i].classList.toggle('active',ts[i].dataset.tier===state.tier);}
+    if(state.mode==='code')nextRound();
+  });
+  nextRound();
 }
 function onOptionClick(e){
   var btn=e.target.closest('.opt');
