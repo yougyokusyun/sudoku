@@ -148,6 +148,7 @@ var WORDS = RAW.map(function (s) {
 var TIME_LIMIT = 60;
 var state = { deck: [], pos: 0, cur: null, started: false, ended: false, locked: false,
   right: 0, attempts: 0, sumTime: 0, wrongs: [], qShown: 0, startedAt: 0, tick: null };
+var autoNext = null;
 
 var elTime = document.getElementById('timeChip');
 var elRight = document.getElementById('rightChip');
@@ -248,7 +249,8 @@ function choose(i, btn) {
   }
   Array.prototype.forEach.call(elOpts.children, function (b) { b.disabled = true; });
   elRight.textContent = state.right;
-  setTimeout(function () {
+  autoNext = setTimeout(function () {
+    autoNext = null;
     if (!state.ended) nextQuestion();
   }, ok ? 360 : 620);
 }
@@ -358,6 +360,7 @@ newGame();
 /* 顶栏「下一题」：直接换一题，不判当前题、不记错题、不加答对 */
 function skipQuestion() {
   if (state.ended) return;
+  if (autoNext) { clearTimeout(autoNext); autoNext = null; }
   state.locked = false;
   nextQuestion();
 }
