@@ -444,6 +444,13 @@ var VOICE_TEXT = '动物喂食游戏。看看上面是什么小动物，从下�
     document.addEventListener('pointerdown', once);
   }, 900);
 })();
+
+/* 顶栏「下一题」：跳过当前题，不判分、不显示答案、不清空连对 */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  newRound();
+};
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

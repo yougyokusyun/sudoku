@@ -494,6 +494,14 @@ window.FTD = { LEVELS: LEVELS, renderLevel: renderLevel, hitTest: hitTest,
   get state() { return { idx: curIdx, level: level, found: found.slice(), hintUsed: hintUsed, solved: solved }; } };
 
 renderLevel(loadState());
+
+/* 顶栏「下一题」：直接进下一关（本档末关回到档首），不判分、不提示答案 */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  clearTimeout(nextTimer);
+  nextLevel();
+};
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

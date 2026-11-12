@@ -585,6 +585,22 @@ document.getElementById('tabQuiz').addEventListener('click', function () {
   updateStats();
   startQuiz(true);   /* 首题预先渲染，切到「专题问答」即可作答 */
 })();
+
+/* 顶栏「下一题」：跳过当前题，不判分、不显示答案、不清空连对 */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  if (!state.quiz || !state.quiz.length) return;
+  state.finished = false;
+  var cur = state.quiz[state.qIndex];
+  if (cur) { cur.done = false; cur.missed = false; }
+  state.qIndex++;
+  if (state.qIndex >= state.quiz.length) {
+    state.quiz.forEach(function (q) { q.done = false; q.missed = false; });
+    state.qIndex = 0;
+  }
+  renderQuestion();
+};
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

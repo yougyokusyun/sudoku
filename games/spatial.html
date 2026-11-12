@@ -283,6 +283,19 @@ document.getElementById('next').addEventListener('click', nextQ);
 
 render();
 window.__spatial = { list: QS, state: state, rebuild: function () { QS = buildQuestions(); qDeck = XNLY.deck.make(QS, 'spatial', { head: 5 }); state.no = 0; render(); } };
+
+/* 顶栏「下一题」：跳过当前题，不判分、不显示答案、不清空连对 */
+(function () {
+  var busy = false;
+  window.XNLY_NEXT = function () {
+    if (busy) return;
+    busy = true;
+    try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+    try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+    try { nextQ(); } catch (e) { }   /* nextQ → render()：只换题面与选项，state.right 不动；30 题末自动重建题库 */
+    setTimeout(function () { busy = false; }, 0);
+  };
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

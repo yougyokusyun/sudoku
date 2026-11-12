@@ -932,6 +932,20 @@ if (!window.PointerEvent) document.addEventListener('touchstart', firstTap, { ca
   state.right = 0;
   startRound();
 })();
+
+/* 顶栏「下一题」：直接跳到下一篇短文，不判分、不显示答案、不清空连对 */
+function skipPassage() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  if (!state.total) return;
+  state.pos++;
+  if (state.pos >= state.total) {
+    state.pos = 0;
+    state.deck.reset();
+  }
+  renderPassage();
+}
+window.XNLY_NEXT = skipPassage;
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

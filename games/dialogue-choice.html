@@ -824,6 +824,24 @@ document.addEventListener('pointerdown', function () {
 
 renderList();
 
+/* 顶栏「下一题」：换到下一段对话，不判完成、不加统计、不清空已完成记录 */
+function skipDialogue() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  var list = scenesOf(state.grade);
+  if (!list.length) return;
+  var next = list[0].i;
+  if (state.si >= 0) {
+    var at = -1;
+    for (var i = 0; i < list.length; i++) { if (list[i].i === state.si) { at = i; break; } }
+    next = list[(at + 1) % list.length].i;
+  }
+  elSummary.classList.remove('show');
+  elSummary.innerHTML = '';
+  playScene(next);
+}
+window.XNLY_NEXT = skipDialogue;
+
 window.DG = { S: S, get state() { return state; }, scenesOf: scenesOf, playScene: playScene,
   choose: choose, finishScene: finishScene, completed: completed };
 </script>

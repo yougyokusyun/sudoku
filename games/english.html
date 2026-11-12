@@ -583,6 +583,21 @@ document.addEventListener('pointerdown', function(){
   if(window.XNLY&&XNLY.voice&&XNLY.voice.unlock){try{XNLY.voice.unlock();}catch(e){}}
   if(elSpeakBtn.style.display!=='none'&&elSpeakBtn.onclick){ try{ elSpeakBtn.onclick(); }catch(e){} }
 }, {passive:true});
+
+/* 顶栏「下一题」：跳过当前题，不判分、不显示答案、不清空连对 */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  if (!state.quiz || !state.quiz.length) return;
+  var cur = state.quiz[state.idx];
+  if (cur) { cur.done = false; cur.chosen = []; }
+  state.idx++;
+  if (state.idx >= state.quiz.length) {
+    state.quiz.forEach(function (it) { it.done = false; it.chosen = []; });
+    state.idx = 0;
+  }
+  renderQ();
+};
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

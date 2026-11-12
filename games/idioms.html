@@ -995,6 +995,14 @@ window.replayCurrent = function () { voiceSpeak(MODE_TEXT[mode]); };
     document.addEventListener('pointerdown', once);
   }, 900);
 })();
+
+/* 顶栏「下一题」：跳过当前题，不判分、不显示答案、不清空连对 */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  clearTimer(); hideInfo();
+  if (mode === 'fill') newFill(); else newGuess();
+};
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

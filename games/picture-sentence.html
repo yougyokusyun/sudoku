@@ -338,6 +338,23 @@ document.addEventListener('pointerdown', function () {
 
 startGrade();
 
+/* 顶栏「下一题」：跳过当前题，不判分、不显示答案、不清空答对数 */
+function skipQuestion() {
+  clearTimeout(state.timer);
+  state.locked = false;
+  if (!state.total) return;
+  state.pos++;
+  if (state.pos >= state.total) {
+    state.pos = 0;
+    state.deck.reset();
+  }
+  elSummary.classList.remove('show');
+  elSummary.innerHTML = '';
+  elPrompt.textContent = '点一点句子就能听它怎么读';
+  renderQuestion();
+}
+window.XNLY_NEXT = skipQuestion;
+
 window.PS = { Q: Q, get state() { return state; }, startGrade: startGrade, poolFor: poolFor };
 </script>
 <script>

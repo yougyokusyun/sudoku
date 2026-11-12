@@ -197,6 +197,19 @@ function voiceEntry() {
   }, 900);
 }
 voiceEntry();
+
+/* 顶栏「下一题」：跳过当前题，不判分、不显示答案、不清空连对 */
+(function () {
+  var busy = false;
+  window.XNLY_NEXT = function () {
+    if (busy) return;
+    busy = true;
+    try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+    try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+    try { newRound(); } catch (e) { }   /* 只换天气场景与三件衣物，不计分 */
+    setTimeout(function () { busy = false; }, 0);
+  };
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

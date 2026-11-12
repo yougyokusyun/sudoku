@@ -651,6 +651,13 @@ function onOptionClick(e){
   }
 }
 initClues();
+
+/* 顶栏「下一题」：只换一题，不判分、不显示完整答案、不改答对/连对 */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  nextRound();
+};
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

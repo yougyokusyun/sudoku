@@ -1,0 +1,5 @@
+# 其他工具（WorkBuddy）的本地记忆与缓存，不参与发布
+.workbuddy/
+
+# 每日生成的打印版 PDF，无页面引用，不进仓库
+puzzles/*.pdf

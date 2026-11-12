@@ -356,6 +356,15 @@
     startBtn.title = '开始';
     funcs.appendChild(startBtn);
 
+    /* ---- 统一「下一题」图标：页面把跳过函数挂到 window.XNLY_NEXT 即可，图标自动出现 ---- */
+    var skipBtn = document.createElement('button');
+    skipBtn.type = 'button';
+    skipBtn.className = 'xnly-tool xnly-next xnly-hidden';
+    skipBtn.textContent = '⏭';
+    skipBtn.setAttribute('aria-label', '下一题');
+    skipBtn.title = '下一题';
+    funcs.insertBefore(skipBtn, startBtn);
+
     /* ---- 全屏 / 沉浸模式 ---- ---- ---- ---- ---- ---- ---- ---- ---- */
     var fsBtn = document.createElement('button');
     fsBtn.type = 'button';
@@ -443,6 +452,40 @@
     });
     armStart();
     setTimeout(armStart, 400);   /* 少数页面的脚本在 homebtn 之后才定义开始函数 */
+
+    /* ---- 下一题接线：取消当前朗读组，再调用页面跳过函数；同一题不重复出现 ---- */
+    var nextFn = null;
+    function armNext() {
+      if (nextFn) return;
+      if (typeof window.XNLY_NEXT !== 'function') return;
+      nextFn = window.XNLY_NEXT;
+      skipBtn.classList.remove('xnly-hidden');
+    }
+    function qText() {
+      var el = document.querySelector('.question, #question, .prompt, #prompt, .stem, #stem, .quiz-q, .q-text');
+      return el ? el.textContent.replace(/\s+/g, '') : '';
+    }
+    function cancelSpeech() {
+      try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+      try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+      try { if (window.XNLY && XNLY.sound && XNLY.sound.stopAll) XNLY.sound.stopAll(); } catch (e) { }
+    }
+    skipBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (!nextFn) return;
+      cancelSpeech();
+      var before = qText();
+      var tries = 0;
+      try { nextFn(); } catch (err) { }
+      /* 题库随机抽题时可能抽到同一题：再跳，最多 6 次，避免死循环 */
+      while (before && qText() === before && tries < 6) {
+        tries++;
+        try { nextFn(); } catch (err) { break; }
+      }
+    });
+    armNext();
+    setTimeout(armNext, 400);
+    setTimeout(armNext, 1600);   /* 少数页面的脚本在 homebtn 之后才定义跳过函数 */
 
     if (hdr) hdr.classList.add('xnly-hdr-off');
 

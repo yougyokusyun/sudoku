@@ -411,6 +411,19 @@ function voiceEntry() {
   };
 })();
 voiceEntry();
+
+/* 顶栏「下一题」：跳过当前题，不判分、不显示答案、不清空连对
+   答题模式 → newQuiz() 只换目标不判分；自由探索模式 → 翻到下一只（不朗读） */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  clearTimeout(timer);
+  locked = false;
+  if (quizMode) { newQuiz(); return; }
+  idx = (idx + 1) % ANIMALS.length;
+  renderPage(1, false);
+  elPrompt.textContent = '这是' + ANIMALS[idx].n + '，点一点听听它怎么叫👇';
+};
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

@@ -172,6 +172,13 @@ var game = XNLY.kidseq.mount({
 document.getElementById('next').addEventListener('click', function () { game.start(); });
 
 window.__daily = { list: GROUPS, state: state, game: game };
+
+/* 顶栏「下一题」：换下一组（牌堆抽完自动重洗），不动「排对」计数 */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  if (game) game.start();
+};
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

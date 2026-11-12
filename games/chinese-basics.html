@@ -317,6 +317,19 @@ state.deck = XNLY.deck.make(state.pool, 'chinese-basics.all.all', { head: 5 });
 state.cur = state.deck.next();
 render();
 window.__chinese = { list: Q, state: state, cats: CATS, rebuild: rebuild };
+
+/* 顶栏「下一题」：跳过当前题，不判分、不显示答案、不清空连对 */
+(function () {
+  var busy = false;
+  window.XNLY_NEXT = function () {
+    if (busy) return;
+    busy = true;
+    try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+    try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+    try { nextQ(); } catch (e) { }   /* nextQ：只从牌堆取下一题并 render，state.right 不动；到末题 pos 归零回绕 */
+    setTimeout(function () { busy = false; }, 0);
+  };
+})();
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

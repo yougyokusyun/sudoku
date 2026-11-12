@@ -202,6 +202,13 @@ fetch('../data/riddles.json',{cache:'no-cache'}).then(function(r){
 }).catch(function(){
   riddleEl.textContent='谜语库加载失败，请通过网站（http）打开本页。';
 });
+
+/* 顶栏「下一题」：只重出一题，不判分、不改答对/连对 */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  resetRiddle();
+};
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

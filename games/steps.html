@@ -124,6 +124,13 @@ var game = XNLY.kidseq.mount({
 });
 
 window.__steps = { rounds: ROUNDS, game: game };
+
+/* 顶栏「下一题」：换下一组步骤（两轮循环，不卡死），不判分、不显示答案 */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  if (game) game.start();
+};
 </script>
 <script>
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {

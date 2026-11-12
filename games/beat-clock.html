@@ -355,6 +355,14 @@ if (!window.PointerEvent) {
 
 newGame();
 
+/* 顶栏「下一题」：直接换一题，不判当前题、不记错题、不加答对 */
+function skipQuestion() {
+  if (state.ended) return;
+  state.locked = false;
+  nextQuestion();
+}
+window.XNLY_NEXT = skipQuestion;
+
 window.BC = { WORDS: WORDS, get state() { return state; }, newGame: newGame, startTimer: startTimer, endGame: endGame };
 </script>
 <script>

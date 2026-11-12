@@ -402,6 +402,13 @@ Array.prototype.forEach.call(document.querySelectorAll('.cbtn'), function (b) {
   b.addEventListener('click', function () { setCat(Number(b.dataset.c)); });
 });
 
+/* 顶栏「下一题」：直接换一题，不判分、不显示答案、不清空连对 */
+window.XNLY_NEXT = function () {
+  try { if (window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); } catch (e) { }
+  try { if (window.speechSynthesis) window.speechSynthesis.cancel(); } catch (e) { }
+  newRound();
+};
+
 setCat(0);
 window.__science = CATS;
 </script>
