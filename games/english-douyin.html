@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>英语抖音 · 小脑袋乐园</title>
-<meta name="theme-color" content="#e0245e">
+<meta name="theme-color" content="#00897b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,12 +13,12 @@
 <link rel="icon" type="image/png" href="../games/img/icon-192.png">
 <link rel="manifest" href="../manifest.json">
 <style>
-:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#e0245e;--line:rgba(36,59,83,.10);}
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#00897b;--line:rgba(36,59,83,.10);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
-  background:radial-gradient(900px 500px at 0% 0%,#ffe9ef,transparent 60%),
-             radial-gradient(900px 500px at 100% 0%,#eef4ff,transparent 55%),
-             linear-gradient(160deg,#fff8fa,#f6fbff);
+  background:radial-gradient(900px 500px at 0% 0%,#e6f7f4,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#fff3e8,transparent 55%),
+             linear-gradient(160deg,#f7fcfb,#fffaf5);
   min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
 header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 h1{font-size:1.15rem;}
@@ -30,10 +30,10 @@ h1{font-size:1.15rem;}
   font-family:inherit;font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
 .chip b{color:var(--accent);font-size:.86rem;}
 .chipbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
-.tchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 14px;min-height:40px;
-  font-family:inherit;font-size:.78rem;font-weight:800;color:#4a6076;cursor:pointer;
+.tchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
+  font-family:inherit;font-size:.75rem;font-weight:800;color:#4a6076;cursor:pointer;
   box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
-.tchip.on{background:linear-gradient(135deg,#f0507f,#e0245e);color:#fff;border-color:transparent;}
+.tchip.on{background:linear-gradient(135deg,#00897b,#00695c);color:#fff;border-color:transparent;}
 .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
   min-height:0;overflow-y:auto;width:100%;}
 .prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a6076;line-height:1.5;}
@@ -54,13 +54,13 @@ h1{font-size:1.15rem;}
 .feedback{min-height:40px;font-size:1rem;font-weight:800;text-align:center;line-height:1.45;width:min(620px,100%);}
 .ok{color:var(--ok);} .bad{color:var(--bad);}
 .feedback small{display:block;font-size:.78rem;font-weight:700;color:#7b8ea8;margin-top:3px;}
-.textbox{width:min(620px,100%);background:#fff;border:2px solid rgba(224,36,94,.18);border-radius:14px;
+.textbox{width:min(620px,100%);background:#fff;border:2px solid rgba(0,137,123,.25);border-radius:14px;
   padding:12px 14px;text-align:left;box-shadow:0 6px 18px rgba(36,59,83,.08);display:none;}
 .textbox.show{display:block;}
 .textbox .lbl{font-size:.68rem;font-weight:900;color:var(--accent);letter-spacing:.5px;}
-.textbox .en{font-size:.92rem;font-weight:800;line-height:1.75;color:#243b53;margin-top:5px;font-family:Georgia,'Times New Roman',serif;}
+.textbox .en{font-size:.92rem;font-weight:800;line-height:1.75;color:#00796b;margin-top:5px;font-family:Georgia,'Times New Roman',serif;}
 .textbox .cn{font-size:.78rem;font-weight:700;line-height:1.7;color:#6b7f95;margin-top:6px;}
-.textbox .ans{font-size:.82rem;font-weight:900;color:#1b7c33;margin-top:8px;}
+.textbox .ans{font-size:.82rem;font-weight:900;color:#1b7c33;margin-top:8px;line-height:1.6;}
 .textbox .ans b{font-size:1rem;}
 .hint{font-size:.72rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
 .summary{display:none;flex-direction:column;align-items:center;gap:8px;width:min(560px,100%);
@@ -71,17 +71,17 @@ h1{font-size:1.15rem;}
 .sumline{font-size:1rem;font-weight:800;color:#2f4a63;}
 .sumline b{color:var(--accent);font-size:1.22rem;}
 .sumgrades{font-size:.78rem;font-weight:800;color:#7b8ea8;line-height:1.65;}
-.sumagain{min-height:46px;padding:0 20px;border-radius:999px;border:2px solid rgba(224,36,94,.25);
-  background:#fff;color:#c2185b;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;}
+.sumagain{min-height:44px;padding:0 18px;border-radius:999px;border:2px solid rgba(0,137,123,.3);
+  background:#fff;color:#00796b;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;}
 .notes{display:none;width:min(680px,100%);flex-direction:column;gap:8px;}
 .notes.show{display:flex;}
 .notecard{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px 14px;text-align:left;
   box-shadow:0 5px 14px rgba(36,59,83,.07);}
 .notecard h4{font-size:.88rem;font-weight:900;margin-bottom:4px;}
 .notecard p{font-size:.76rem;font-weight:700;color:#7b8ea8;line-height:1.6;}
-.notecard .kw{color:#c2185b;}
+.notecard .kw{color:#00796b;}
 .notecard a{display:inline-flex;align-items:center;min-height:38px;margin-top:8px;padding:5px 13px;
-  border-radius:999px;background:#fff5f8;border:1px solid rgba(224,36,94,.22);color:#c2185b;
+  border-radius:999px;background:#eefaf7;border:1px solid rgba(0,137,123,.22);color:#00796b;
   font-size:.76rem;font-weight:900;text-decoration:none;}
 @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
@@ -98,6 +98,7 @@ h1{font-size:1.15rem;}
 }
 </style>
 <script src="../voice.js"></script>
+<script src="../audio-en.js"></script>
 <script src="../sound.js"></script>
 <script src="../deck.js"></script>
 </head>
@@ -123,7 +124,7 @@ h1{font-size:1.15rem;}
   <div class="feedback" id="feedback"></div>
   <div class="summary" id="summary"></div>
   <div class="notes" id="notes"></div>
-  <div class="hint">没有声音时，请检查设备是否安装了英文语音包</div>
+  <div class="hint">没声音先点一下屏幕 · 语音为离线合成，与听力选图页同一套童声</div>
 </div>
 
 <script>
@@ -258,6 +259,8 @@ function take(k){
 }
 
 function speakEn(t){
+  /* mp3 已按 -10% 语速合成，这里只叠全站语速滑杆 */
+  if (window.XNLYSay){ XNLYSay.play(t, { rate:1 }); return; }
   if (window.XNLY && XNLY.voice) XNLY.voice.speak(t, { lang:'en-US', rate:0.9 });
   else if (window.speechSynthesis){
     var u = new SpeechSynthesisUtterance(t); u.lang='en-US'; u.rate=0.9; window.speechSynthesis.speak(u);
@@ -462,6 +465,7 @@ document.getElementById('btnText').addEventListener('click', function(){
   document.addEventListener('pointerdown', function(){
     if(firstTap) return;
     firstTap = true;
+    if(window.XNLYSay){ try{ XNLYSay.unlock(); }catch(e){} }
     if(window.XNLY && XNLY.voice && XNLY.voice.unlock){ try{ XNLY.voice.unlock(); }catch(e){} }
     if(!state.answered && state.cur) speakEn(state.cur.audio);
   }, { passive:true });
