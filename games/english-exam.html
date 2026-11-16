@@ -140,20 +140,24 @@ h1{font-size:1.15rem;}
 <div class="stage">
   <div class="prompt" id="prompt"></div>
   <div class="btns" id="playbar" style="display:none">
-    <span class="hint" style="align-self:center">🔊 听力自动播放 · 点右上角 🔊 可重听 · 没声音先点一下屏幕</span>
+    <span class="hint" style="align-self:center" id="playhint">🔊 听力自动播放 · 点右上角 🔊 可重听 · 没声音先点一下屏幕</span>
   </div>
   <div class="passage" id="passage"></div>
   <div class="mainpic" id="mainpic"></div>
   <div class="stem" id="stem" style="display:none"></div>
   <div class="opts" id="opts"></div>
   <div class="reveal" id="reveal"></div>
+  <div class="btns" id="navbar" style="display:none">
+    <button class="btnr" id="btnPrev" type="button">← 上一题</button>
+    <button class="btnr" id="btnNextQ" type="button">下一题 →</button>
+  </div>
   <div class="sheetwrap" id="sheetwrap">
     <div class="sheet" id="sheet"></div>
     <button class="submit" id="submit" type="button">📄 交卷批改</button>
   </div>
   <div class="feedback" id="feedback"></div>
   <div class="summary" id="summary"></div>
-  <div class="hint">听力 + 笔试 · 三/四年级各 45 题满分 100 · 80 分及以上过关</div>
+  <div class="hint">听力 15 题（每题自动播 2 遍、不能重听、不能回退）+ 笔试 35 题 · 满分 100 · 80 分过关</div>
 </div>
 
 <script>
@@ -203,6 +207,10 @@ var elPassN = document.getElementById('passN');
 var elModeBar = document.getElementById('modeBar');
 var elGradeBar = document.getElementById('gradeBar');
 var elPlay = document.getElementById('playbar');
+var elPlayHint = document.getElementById('playhint');
+var elNav = document.getElementById('navbar');
+var elPrev = document.getElementById('btnPrev');
+var elNextQ = document.getElementById('btnNextQ');
 
 function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
 function secOf(k) { for (var i = 0; i < SEC_DEF.length; i++) if (SEC_DEF[i].k === k) return SEC_DEF[i]; return SEC_DEF[0]; }
@@ -245,9 +253,20 @@ function buildPaper() {
   return ids;
 }
 
+var LISTEN_END = 0;        /* 听力题在前 15 题，之后是笔试区 */
+function isListenAt(i) {
+  var s = UI.s;
+  if (!s || i < 0 || i >= s.ids.length) return false;
+  return !!secOf(Q[s.ids[i]].c).listen;
+}
 function startSession(kind) {
   UI.mode = kind; UI.submitted = false; UI.answered = false; UI.freeRight = 0;
   UI.s = { kind: kind, ids: buildPaper(), idx: -1, answers: {}, t0: Date.now() };
+  LISTEN_END = 0;
+  while (LISTEN_END < UI.s.ids.length && secOf(Q[UI.s.ids[LISTEN_END]].c).listen) LISTEN_END++;
+  /* 换模式/重开考：先把题号表与导航条收起来 */
+  elSheetWrap.classList.remove('show');
+  elNav.style.display = 'none';
   buildModeBar();
   nextQ();
 }
@@ -261,6 +280,7 @@ function nextSoon(ms) {
 
 function nextQ() {
   clearPend();
+  audSeq++;
   if (window.XNLYSay) XNLYSay.stop();
   var s = UI.s;
   s.idx++;
@@ -272,7 +292,30 @@ function nextQ() {
   elOpts.style.display = '';
   UI.answered = false;
   renderQ(s.idx, s.kind === 'exam' ? '第 ' + (s.idx + 1) + '/' + s.ids.length + ' 题 · ' + secOf(Q[s.ids[s.idx]].c).pt + ' 分' : '');
-  if (s.kind === 'exam') { elSheetWrap.classList.add('show'); buildSheet(); }
+  if (s.kind === 'exam' && !UI.submitted) syncExamChrome();
+}
+
+/* 考试中：听力区不显示答题卡与题号，也不能回退；笔试区显示答题卡（只读）+ 上一题/下一题 */
+function syncExamChrome() {
+  var s = UI.s;
+  var listening = isListenAt(s.idx);
+  var written = !listening;
+  elSheetWrap.classList.toggle('show', written);
+  elNav.style.display = written ? 'flex' : 'none';
+  if (written) { buildSheet(); updateNav(); }
+  if (elPlayHint) {
+    elPlayHint.textContent = listening
+      ? '🎧 考试听力自动播 2 遍，不能重听、不能回退'
+      : '🔊 点右上角 🔊 可重听';
+  }
+}
+function updateNav() {
+  var s = UI.s;
+  if (!s) return;
+  elPrev.disabled = s.idx <= LISTEN_END;          /* 不允许回退到听力 */
+  elNextQ.disabled = s.idx >= s.ids.length - 1;
+  elPrev.style.opacity = elPrev.disabled ? .45 : 1;
+  elNextQ.style.opacity = elNextQ.disabled ? .45 : 1;
 }
 
 function renderQ(pos, extra) {
@@ -343,24 +386,20 @@ function buildSheet() {
     c.type = 'button';
     c.className = 'cell' + (s.answers[i] !== undefined ? ' done' : '') + (i === s.idx ? ' cur' : '');
     c.textContent = i + 1;
-    c.addEventListener('click', function () {
-      if (UI.submitted) return;
-      renderExamIdx(i);
-    });
     elSheet.appendChild(c);
   });
 }
 
 function renderExamIdx(i) {
   clearPend();
+  audSeq++;
   if (window.XNLYSay) XNLYSay.stop();
   var s = UI.s;
   hideAll();
   UI.answered = false;
   s.idx = i;
   renderQ(i, '第 ' + (i + 1) + '/' + s.ids.length + ' 题 · 可改选');
-  elSheetWrap.classList.add('show');
-  buildSheet();
+  if (s.kind === 'exam' && !UI.submitted) syncExamChrome();
 }
 
 function selectOpt(i, btn) {
@@ -523,27 +562,61 @@ function buildGradeBar() {
   });
 }
 
+function audioTextOf(q) {
+  if (!q) return '';
+  if (q.c === 'lc') return (q.d || '') + '\nQuestion: ' + (q.s || '');
+  if (q.c === 'la' || q.c === 'lb') return q.d || q.s || '';
+  return '';
+}
+
+/* 连播 n 遍；换题/交卷时 audSeq 自增，旧序列自动作废 */
+var audSeq = 0;
+function playTimes(text, times, rateFallback) {
+  var my = ++audSeq;
+  var n = 0;
+  function once() {
+    if (my !== audSeq || n >= times) return;
+    n++;
+    var nxt = function () {
+      if (my !== audSeq) return;
+      setTimeout(function () { if (my === audSeq) once(); }, 450);
+    };
+    if (window.XNLYSay) { XNLYSay.play(text, { rate: 1, onend: nxt }); return; }
+    if (window.XNLY && XNLY.voice) {
+      XNLY.voice.speak(text.replace(/^[AB]:\s*/gm, '').replace(/[—]/g, ', '), {
+        lang: 'en-US', rate: rateFallback
+      });
+    }
+    setTimeout(nxt, 4000);
+  }
+  once();
+}
+
 function speakQ() {
   if (!UI.cur) return;
   var q = UI.cur;
-  var rate = q.g === 3 ? 0.8 : 0.85;
-  /* 音频文本 = 页面实际朗读的原文，build_audio_en.py 按同一规则合成 */
-  var text = '';
-  if (q.c === 'lc') text = (q.d || '') + '\nQuestion: ' + (q.s || '');
-  else if (q.c === 'la' || q.c === 'lb') text = q.d || q.s || '';
-  else {
+  var text = audioTextOf(q);
+  if (!text) {
     /* 非听力题（判断/阅读/连词成句等）题干是中文，继续用系统语音 */
-    var zh = String(q.s || '');
-    if (window.XNLY && XNLY.voice) XNLY.voice.speak(zh, { lang: 'zh-CN' });
+    if (window.XNLY && XNLY.voice) XNLY.voice.speak(String(q.s || ''), { lang: 'zh-CN' });
     return;
   }
-  /* mp3 已按年级语速合成，这里只叠全局语速滑杆 */
-  if (window.XNLYSay) { XNLYSay.play(text, { rate: 1 }); return; }
-  if (!window.XNLY || !XNLY.voice) return;
-  XNLY.voice.speak(text.replace(/^[AB]:\s*/gm, '').replace(/[—]/g, ', ')
-    .replace(/___/g, ' blank ').replace(/ \/ /g, ', '), { lang: 'en-US', rate: rate });
+  var examListen = (UI.mode === 'exam' && !UI.submitted && !!secOf(q.c).listen);
+  playTimes(text, examListen ? 2 : 1, q.g === 3 ? 0.8 : 0.85);
 }
-window.replayCurrent = speakQ;
+
+/* 顶栏 🔊：考试听力期间不允许重听 */
+window.replayCurrent = function () {
+  if (UI.mode === 'exam' && !UI.submitted && UI.cur && secOf(UI.cur.c).listen) {
+    elFb.className = 'feedback bad';
+    elFb.innerHTML = '⛔ 考试听力每题只播 2 遍，不能重听';
+    setTimeout(function () {
+      if (elFb.innerHTML.indexOf('⛔') === 0) { elFb.innerHTML = ''; elFb.className = 'feedback'; }
+    }, 1800);
+    return;
+  }
+  speakQ();
+};
 
 window.XNLY_NEXT = function () {
   clearPend();
@@ -552,14 +625,22 @@ window.XNLY_NEXT = function () {
   var s = UI.s;
   if (!s) return;
   if (s.kind === 'exam' && !UI.submitted) {
-    for (var j = s.idx + 1; j < s.ids.length; j++) {
-      if (s.answers[j] === undefined) { renderExamIdx(j); return; }
-    }
+    if (s.idx + 1 < s.ids.length) renderExamIdx(s.idx + 1);
     return;
   }
   nextQ();
 };
 
+elPrev.addEventListener('click', function () {
+  var s = UI.s;
+  if (!s || UI.submitted || UI.mode !== 'exam') return;
+  if (s.idx - 1 >= LISTEN_END) renderExamIdx(s.idx - 1);
+});
+elNextQ.addEventListener('click', function () {
+  var s = UI.s;
+  if (!s || UI.submitted || UI.mode !== 'exam') return;
+  if (s.idx + 1 < s.ids.length) renderExamIdx(s.idx + 1);
+});
 elSubmit.addEventListener('click', function () { submitExam(false); });
 
 (function init() {

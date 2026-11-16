@@ -239,6 +239,7 @@ function nextSoon(ms) {
 
 function nextQ() {
   clearPend();
+  audSeq++;
   if (window.XNLYSay) XNLYSay.stop();
   var s = UI.s;
   if (!s) { startSession('daily'); return; }
@@ -276,11 +277,15 @@ function nextQ() {
     elOpts.appendChild(b);
   });
 
-  if (s.kind === 'exam') {
-    elSheetWrap.classList.add('show');
-    buildSheet();
-  }
+  if (s.kind === 'exam') showExamBar();
   speakQ();
+}
+
+/* 考试中不显示 50 个题号：听力不能回退，平铺题号既是干扰也容易误点 */
+function showExamBar() {
+  elSheet.innerHTML = '';
+  elSheet.style.display = 'none';
+  elSheetWrap.classList.add('show');
 }
 
 function buildSheet() {
@@ -300,6 +305,7 @@ function buildSheet() {
 }
 function renderExamIdx(i) {
   clearPend();
+  audSeq++;
   if (window.XNLYSay) XNLYSay.stop();
   var s = UI.s;
   hideAll();
@@ -326,8 +332,7 @@ function renderExamIdx(i) {
     });
     elOpts.appendChild(b);
   });
-  elSheetWrap.classList.add('show');
-  buildSheet();
+  if (s.kind === 'exam') showExamBar();
   speakQ();
 }
 function selectOpt(i, btn) {
@@ -489,14 +494,41 @@ function buildModeBar() {
   });
 }
 
+var audSeq = 0;
+function playTimes(text, times, rateFallback) {
+  var my = ++audSeq;
+  var n = 0;
+  function once() {
+    if (my !== audSeq || n >= times) return;
+    n++;
+    var nxt = function () {
+      if (my !== audSeq) return;
+      setTimeout(function () { if (my === audSeq) once(); }, 450);
+    };
+    if (window.XNLYSay) { XNLYSay.play(text, { rate: 1, onend: nxt }); return; }
+    if (window.XNLY && XNLY.voice) XNLY.voice.speak(text, { lang: 'en-US', rate: rateFallback });
+    setTimeout(nxt, 4000);
+  }
+  once();
+}
+
 function speakQ() {
   if (!UI.cur) return;
   var rate = lvOf(UI.lv).rate;
-  /* mp3 已按档位语速合成，这里只叠全局语速滑杆 */
-  if (window.XNLYSay) { XNLYSay.play(UI.cur.script, { rate: 1 }); return; }
-  if (window.XNLY && XNLY.voice) XNLY.voice.speak(UI.cur.script, { lang: 'en-US', rate: rate });
+  var examListen = (UI.s && UI.s.kind === 'exam' && !UI.submitted);
+  playTimes(UI.cur.script, examListen ? 2 : 1, rate);
 }
-window.replayCurrent = speakQ;
+window.replayCurrent = function () {
+  if (UI.s && UI.s.kind === 'exam' && !UI.submitted) {
+    elFb.className = 'feedback bad';
+    elFb.innerHTML = '⛔ 考试听力每题只播 2 遍，不能重听';
+    setTimeout(function () {
+      if (elFb.innerHTML.indexOf('⛔') === 0) { elFb.innerHTML = ''; elFb.className = 'feedback'; }
+    }, 1800);
+    return;
+  }
+  speakQ();
+};
 
 /* 顶栏「⏭ 下一题」：跳过不判分、不泄题（考试中跳到下一道未答的题） */
 window.XNLY_NEXT = function () {
@@ -506,9 +538,7 @@ window.XNLY_NEXT = function () {
   var s = UI.s;
   if (!s) return;
   if (s.kind === 'exam' && !UI.submitted) {
-    for (var j = s.idx + 1; j < s.ids.length; j++) {
-      if (s.answers[j] === undefined) { renderExamIdx(j); return; }
-    }
+    if (s.idx + 1 < s.ids.length) nextQ();
     return;
   }
   nextQ();
