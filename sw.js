@@ -154,7 +154,7 @@
  *           按 3/4 年级分卷分题库（每年级 625/690 题，≥卷面 50 题的 10 倍），卷面 50 题 100 分；
  *           最佳分/过关次数按年级分开记录。页面体积约 0.39 MB。
  */
-var CACHE = 'xnly-v75';
+var CACHE = 'xnly-v76';
 
 var PRECACHE = [
   './',
@@ -249,6 +249,7 @@ var PRECACHE = [
   'sudoku-ui.js',
   'sudoku.html',
   'voice.js',
+  'audio-en.js',
 ];
 
 /* 逐条预缓存：单条失败只跳过，不会让整个 install 失败 */
