@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1d7fd0">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>英语句型 · 对话学习 · 小脑袋乐园</title>
+<link rel="icon" type="image/png" href="../games/img/icon-192.png">
+<script src="../voice.js"></script>
+<script src="../sound.js"></script>
+<script src="../audio-en.js"></script>
+<style>
+:root{
+  --ink:#16324f; --muted:#7a8ba0; --line:rgba(22,50,79,.10);
+  --a:#f1f8fe; --a-br:#cfdff0; --a-ink:#1668b3;
+  --b:#f0fbf6; --b-br:#c7e8da; --b-ink:#0b7a5c;
+  --ok:#1f9d63; --bad:#e5484d; --blue:#1d7fd0; --amber:#e8912a;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{
+  font-family:'PingFang SC','Microsoft YaHei',system-ui,-apple-system,sans-serif;
+  color:var(--ink); user-select:none; -webkit-font-smoothing:antialiased;
+  background:linear-gradient(175deg,#f7fbff 0%,#f4faf7 55%,#fffdf7 100%);
+  min-height:100dvh; display:flex; flex-direction:column;
+  padding:0 0 96px;
+}
+header{
+  position:sticky; top:0; z-index:20; display:flex; align-items:center; gap:8px;
+  padding:10px 14px; background:rgba(255,255,255,.86);
+  backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line); flex-wrap:wrap;
+}
+.back{
+  display:inline-flex; align-items:center; gap:3px; height:34px; padding:0 12px;
+  border-radius:999px; background:#fff; border:1px solid var(--line);
+  color:var(--blue); font-weight:700; font-size:.8rem; text-decoration:none; flex:none;
+}
+h1{font-size:1rem; font-weight:700; letter-spacing:.2px;}
+h1 small{display:block; font-size:.66rem; font-weight:500; color:var(--muted); margin-top:1px;}
+.hstat{margin-left:auto; display:flex; gap:6px; align-items:center;}
+.pill{
+  background:#fff; border:1px solid var(--line); border-radius:999px;
+  padding:5px 11px; font-size:.72rem; font-weight:700; color:var(--muted); white-space:nowrap;
+}
+.pill b{color:var(--blue); font-size:.82rem;}
+.tabs{display:flex; gap:6px; width:100%;}
+.tab{
+  flex:1; height:38px; border-radius:12px; border:1px solid var(--line); background:#fff;
+  font-family:inherit; font-size:.84rem; font-weight:700; color:var(--muted); cursor:pointer;
+  display:flex; align-items:center; justify-content:center; gap:5px; transition:.16s;
+}
+.tab.on{background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 4px 14px rgba(29,127,208,.28);}
+
+main{flex:1; display:flex; flex-direction:column; padding:14px 14px 0; max-width:720px; width:100%; margin:0 auto;}
+
+/* ---------- 场景头 ---------- */
+.shead{margin-bottom:12px;}
+.sline{display:flex; align-items:baseline; gap:8px; margin-bottom:6px;}
+.sno{font-size:.72rem; font-weight:700; color:var(--blue); letter-spacing:1px;}
+.stitle{font-size:1.16rem; font-weight:700; letter-spacing:.2px;}
+.sbadges{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px;}
+.bdg{font-size:.68rem; font-weight:700; padding:3px 9px; border-radius:999px; background:#fff; border:1px solid var(--line); color:var(--muted);}
+.bdg.g{background:#fff6e8; border-color:#f5dcbb; color:#a9691a;}
+.bdg.c{background:#eef6ff; border-color:#cfe0f5; color:#1a69ad; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+
+/* ---------- 对话气泡 ---------- */
+.chat{display:flex; flex-direction:column; gap:9px; padding-bottom:8px;}
+.row{display:flex; gap:9px; align-items:flex-start; animation:pop .3s cubic-bezier(.2,.9,.3,1.2) both;}
+.row.B{flex-direction:row-reverse;}
+@keyframes pop{from{opacity:0;transform:translateY(9px) scale(.97);}to{opacity:1;transform:none;}}
+.av{
+  width:32px; height:32px; border-radius:50%; flex:none; display:grid; place-items:center;
+  font-size:.76rem; font-weight:800; margin-top:2px;
+}
+.row.A .av{background:#d9ecfb; color:var(--a-ink);}
+.row.B .av{background:#c9efe0; color:var(--b-ink);}
+.bub{
+  max-width:78%; padding:9px 13px 10px; border-radius:16px; background:#fff;
+  border:1px solid var(--a-br); transition:box-shadow .2s, border-color .2s;
+}
+.row.A .bub{background:var(--a); border-top-left-radius:5px;}
+.row.B .bub{background:var(--b); border-color:var(--b-br); border-top-right-radius:5px;}
+.en{font-size:1.01rem; line-height:1.52; font-weight:500; letter-spacing:.1px; word-break:break-word;}
+.zh{font-size:.75rem; line-height:1.5; color:var(--muted); margin-top:4px;}
+.say{display:inline-flex; align-items:center; justify-content:center; width:22px; height:22px; border-radius:50%;
+  background:rgba(29,127,208,.10); color:var(--blue); font-size:.66rem; margin-left:6px; vertical-align:2px; cursor:pointer;}
+.row.on .bub{border-color:var(--blue); box-shadow:0 0 0 3px rgba(29,127,208,.13);}
+.row.dim{opacity:.5;}
+.row.hidden{display:none;}
+
+/* ---------- 句型条 ---------- */
+.patbox{margin-top:14px; border-radius:14px; border:1px dashed #d5e3f2; background:#fbfdff; padding:11px 13px;}
+.patbox h3{font-size:.75rem; font-weight:700; color:var(--blue); margin-bottom:7px; letter-spacing:.3px;}
+.patbox ul{list-style:none; display:flex; flex-direction:column; gap:6px;}
+.patbox li{font-size:.83rem; line-height:1.45;}
+.patbox li i{font-style:normal; color:var(--muted); font-size:.73rem; margin-left:5px;}
+
+/* ---------- 底部控制 ---------- */
+.ctrl{
+  position:fixed; left:0; right:0; bottom:0; z-index:30;
+  display:flex; gap:8px; padding:10px 14px calc(10px + env(safe-area-inset-bottom));
+  background:rgba(255,255,255,.92); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border-top:1px solid var(--line); max-width:720px; margin:0 auto;
+}
+.cbtn{
+  height:46px; border-radius:13px; border:1px solid var(--line); background:#fff; font-family:inherit;
+  font-size:.85rem; font-weight:700; color:var(--ink); cursor:pointer; display:flex; align-items:center;
+  justify-content:center; gap:5px; transition:.15s; white-space:nowrap;
+}
+.cbtn:active{transform:scale(.96);}
+.cbtn.ic{width:46px; flex:none; font-size:1rem;}
+.cbtn.main{flex:1; background:var(--blue); border-color:var(--blue); color:#fff; box-shadow:0 5px 16px rgba(29,127,208,.3);}
+.cbtn.side{flex:0 0 auto; padding:0 14px; color:var(--blue); border-color:#cfdff0; background:#f4faff;}
+.cbtn:disabled{opacity:.45;}
+
+/* ---------- 测试 ---------- */
+.qwrap{display:flex; flex-direction:column; gap:12px;}
+.qhead{display:flex; align-items:center; gap:8px;}
+.qtag{font-size:.68rem; font-weight:700; padding:4px 9px; border-radius:7px; background:#eef6ff; color:#1a69ad;}
+.qtag.w{background:#fff4e8; color:#a9691a;}
+.qno{margin-left:auto; font-size:.72rem; color:var(--muted); font-weight:700;}
+.prog{height:5px; border-radius:4px; background:rgba(22,50,79,.08); overflow:hidden;}
+.prog>i{display:block; height:100%; width:0; background:linear-gradient(90deg,#1d7fd0,#22b07d); transition:width .3s;}
+
+.qcard{background:#fff; border:1px solid var(--line); border-radius:18px; padding:14px; box-shadow:0 6px 20px rgba(22,50,79,.05);}
+.blank{
+  display:inline-block; min-width:88px; border-bottom:2px dashed var(--blue); color:var(--blue);
+  font-weight:700; text-align:center; padding:0 6px; line-height:1.3;
+}
+.sent{font-size:1.06rem; line-height:1.85; font-weight:500;}
+.sent .gap{display:inline-block; min-width:74px; border-bottom:2px dashed var(--blue); text-align:center; color:var(--blue); font-weight:700;}
+
+.opts{display:flex; flex-direction:column; gap:8px; margin-top:12px;}
+.opt{
+  display:flex; align-items:center; gap:10px; width:100%; min-height:50px; padding:9px 13px;
+  border-radius:13px; border:1.5px solid #e2ebf4; background:#fbfdff; font-family:inherit;
+  font-size:.95rem; font-weight:500; color:var(--ink); text-align:left; cursor:pointer; transition:.15s;
+}
+.opt:active{transform:scale(.99);}
+.opt .k{
+  width:24px; height:24px; flex:none; border-radius:7px; background:#e9f1f9; color:#5a7a99;
+  color:#5a7a99; display:grid; place-items:center; font-size:.74rem; font-weight:800;
+}
+.opt.right{border-color:var(--ok); background:#effaf4;}
+.opt.right .k{background:var(--ok); color:#fff;}
+.opt.wrong{border-color:var(--bad); background:#fdf0f0;}
+.opt.wrong .k{background:var(--bad); color:#fff;}
+.opt:disabled{cursor:default;}
+
+.fb{margin-top:10px; font-size:.82rem; line-height:1.55; padding:10px 12px; border-radius:11px; display:none;}
+.fb.show{display:block;}
+.fb.ok{background:#effaf4; color:#137a4e;}
+.fb.no{background:#fdf0f0; color:#b3353a;}
+
+.big{display:flex; flex-direction:column; align-items:center; gap:10px; text-align:center; padding:26px 16px;}
+.big .score{font-size:3rem; font-weight:800; color:var(--blue); line-height:1;}
+.big .score small{font-size:.9rem; color:var(--muted); font-weight:600;}
+.big h2{font-size:1.1rem;}
+
+/* ---------- 开始遮罩 ---------- */
+.mask{
+  position:fixed; inset:0; z-index:99; display:grid; place-items:center; padding:24px;
+  background:rgba(247,251,255,.94); backdrop-filter:blur(6px); transition:opacity .3s;
+}
+.mask.hide{opacity:0; pointer-events:none;}
+.mask .box{display:flex; flex-direction:column; align-items:center; gap:14px; text-align:center; max-width:320px;}
+.mask .ic{width:74px; height:74px; border-radius:24px; background:linear-gradient(150deg,#dcecfb,#cfefe1); display:grid; place-items:center; font-size:2rem;}
+.mask h2{font-size:1.15rem; font-weight:700;}
+.mask p{font-size:.82rem; color:var(--muted); line-height:1.6;}
+.mask button{
+  height:50px; padding:0 34px; border-radius:14px; border:0; background:var(--blue); color:#fff;
+  font-family:inherit; font-size:1rem; font-weight:700; box-shadow:0 8px 22px rgba(29,127,208,.32); cursor:pointer;
+}
+@media (min-width:560px){
+  .opts{flex-direction:row; flex-wrap:wrap;}
+  .opt{flex:1 1 calc(50% - 4px);}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <a class="back" href="../index.html">← 返回</a>
+  <h1>英语句型<small>对话学习 · 常用语</small></h1>
+  <div class="hstat">
+    <span class="pill">场景 <b id="scNo">1</b>/20</span>
+    <span class="pill">学会 <b id="doneNo">0</b></span>
+  </div>
+</header>
+
+<main>
+  <div class="tabs" style="margin-bottom:12px">
+    <button class="tab on" id="tabLearn">📖 学对话</button>
+    <button class="tab" id="tabTest">✍️ 做测试</button>
+  </div>
+  <section id="learnView">
+    <div class="shead">
+      <div class="sline"><span class="sno" id="sNo">SCENE 01</span><span class="stitle" id="sTitle">初次见面</span></div>
+      <div class="sbadges" id="sBadges"></div>
+    </div>
+    <div class="chat" id="chat"></div>
+    <div class="patbox" id="patbox" hidden>
+      <h3>本场景核心句型</h3>
+      <ul id="patList"></ul>
+    </div>
+  </section>
+
+  <section id="testView" hidden>
+    <div id="qArea"></div>
+  </section>
+</main>
+
+<div class="ctrl" id="ctrl">
+  <button class="cbtn ic" id="btnPause" title="暂停 / 继续">⏸</button>
+  <button class="cbtn ic" id="btnReplay" title="再放一遍">🔁</button>
+  <button class="cbtn main" id="btnNext">下一个场景 →</button>
+  <button class="cbtn side" id="btnTest">✍️ 测一测</button>
+</div>
+
+<div class="mask" id="mask">
+  <div class="box">
+    <div class="ic">💬</div>
+    <h2>先听对话，再学句型</h2>
+    <p>20 个生活场景，每段 6～8 句。<br>一句一句读给你听，读完自动换下一个。</p>
+    <button id="btnStart">点我开始</button>
+  </div>
+</div>
+
+<script>
+var Q = [{"s":"A: Hello! I'm Amy. What's your name?","t":"Hello! I'm Amy. What's your name?","z":"你好！我是艾米。你叫什么名字？","r":"A","sc":0},{"s":"B: Hi, Amy. My name is Sam.","t":"Hi, Amy. My name is Sam.","z":"你好，艾米。我叫萨姆。","r":"B","sc":0},{"s":"A: Nice to meet you, Sam.","t":"Nice to meet you, Sam.","z":"很高兴认识你，萨姆。","r":"A","sc":0},{"s":"B: Nice to meet you, too.","t":"Nice to meet you, too.","z":"我也很高兴认识你。","r":"B","sc":0},{"s":"A: How old are you?","t":"How old are you?","z":"你几岁了？","r":"A","sc":0},{"s":"B: I'm nine years old. And you?","t":"I'm nine years old. And you?","z":"我九岁。你呢？","r":"B","sc":0},{"s":"A: I'm nine, too. Let's be friends.","t":"I'm nine, too. Let's be friends.","z":"我也九岁。我们做朋友吧。","r":"A","sc":0},{"s":"B: Great! See you.","t":"Great! See you.","z":"太好了！再见。","r":"B","sc":0},{"s":"A: Good morning, Miss White.","t":"Good morning, Miss White.","z":"早上好，怀特老师。","r":"A","sc":1},{"s":"B: Good morning, Amy. How are you today?","t":"Good morning, Amy. How are you today?","z":"早上好，艾米。你今天好吗？","r":"B","sc":1},{"s":"A: I'm fine, thank you. And you?","t":"I'm fine, thank you. And you?","z":"我很好，谢谢。您呢？","r":"A","sc":1},{"s":"B: I'm fine, too. Thank you.","t":"I'm fine, too. Thank you.","z":"我也很好，谢谢。","r":"B","sc":1},{"s":"A: It's a nice day, isn't it?","t":"It's a nice day, isn't it?","z":"今天天气真好，是吧？","r":"A","sc":1},{"s":"B: Yes, it is. Let's go to the playground.","t":"Yes, it is. Let's go to the playground.","z":"是的。我们去操场吧。","r":"B","sc":1},{"s":"A: Look, this is a photo of my family.","t":"Look, this is a photo of my family.","z":"看，这是我家的照片。","r":"A","sc":2},{"s":"B: Who's this man?","t":"Who's this man?","z":"这个男人是谁？","r":"B","sc":2},{"s":"A: He's my father. He's a doctor.","t":"He's my father. He's a doctor.","z":"他是我爸爸。他是医生。","r":"A","sc":2},{"s":"B: And who's that woman?","t":"And who's that woman?","z":"那位女士是谁？","r":"B","sc":2},{"s":"A: She's my mother. She's a teacher.","t":"She's my mother. She's a teacher.","z":"她是我妈妈。她是老师。","r":"A","sc":2},{"s":"B: Is this your sister?","t":"Is this your sister?","z":"这是你姐姐吗？","r":"B","sc":2},{"s":"A: Yes, she is. She's only five.","t":"Yes, she is. She's only five.","z":"是的。她只有五岁。","r":"A","sc":2},{"s":"B: What a happy family!","t":"What a happy family!","z":"多幸福的一家！","r":"B","sc":2},{"s":"A: Good afternoon, Mrs Green. I'm Mike.","t":"Good afternoon, Mrs Green. I'm Mike.","z":"下午好，格林太太。我是迈克。","r":"A","sc":3},{"s":"B: Good afternoon, Mike. Welcome to our home.","t":"Good afternoon, Mike. Welcome to our home.","z":"下午好，迈克。欢迎来我家。","r":"B","sc":3},{"s":"A: Thank you. Your home is very nice.","t":"Thank you. Your home is very nice.","z":"谢谢。你家真漂亮。","r":"A","sc":3},{"s":"B: Thank you. Please sit down.","t":"Thank you. Please sit down.","z":"谢谢。请坐。","r":"B","sc":3},{"s":"B: Would you like some juice?","t":"Would you like some juice?","z":"你想喝点果汁吗？","r":"B","sc":3},{"s":"A: Yes, please. Thank you very much.","t":"Yes, please. Thank you very much.","z":"好的，谢谢。","r":"A","sc":3},{"s":"B: Here you are. Help yourself.","t":"Here you are. Help yourself.","z":"给你。请随意。","r":"B","sc":3},{"s":"A: Thanks. You're so kind.","t":"Thanks. You're so kind.","z":"谢谢。你真好。","r":"A","sc":3},{"s":"A: What do you have on Mondays?","t":"What do you have on Mondays?","z":"你们周一有什么课？","r":"A","sc":4},{"s":"B: We have Chinese, maths and English.","t":"We have Chinese, maths and English.","z":"我们有语文、数学和英语。","r":"B","sc":4},{"s":"A: What's your favourite subject?","t":"What's your favourite subject?","z":"你最喜欢哪一科？","r":"A","sc":4},{"s":"B: My favourite subject is English. It's fun.","t":"My favourite subject is English. It's fun.","z":"我最喜欢英语。很有趣。","r":"B","sc":4},{"s":"A: Me too. But I'm not good at maths.","t":"Me too. But I'm not good at maths.","z":"我也是。不过我数学不好。","r":"A","sc":4},{"s":"B: Don't worry. I can help you.","t":"Don't worry. I can help you.","z":"别担心，我可以帮你。","r":"B","sc":4},{"s":"A: Thank you. Let's study together.","t":"Thank you. Let's study together.","z":"谢谢。我们一起学吧。","r":"A","sc":4},{"s":"A: What do you often do on the weekend?","t":"What do you often do on the weekend?","z":"你周末常做什么？","r":"A","sc":5},{"s":"B: I often play basketball. What about you?","t":"I often play basketball. What about you?","z":"我常打篮球。你呢？","r":"B","sc":5},{"s":"A: I usually read books at home.","t":"I usually read books at home.","z":"我通常在家看书。","r":"A","sc":5},{"s":"B: Do you like story books?","t":"Do you like story books?","z":"你喜欢故事书吗？","r":"B","sc":5},{"s":"A: Yes, I do. I like them very much.","t":"Yes, I do. I like them very much.","z":"喜欢，我很喜欢。","r":"A","sc":5},{"s":"B: Me too. Let's go to the library together.","t":"Me too. Let's go to the library together.","z":"我也是。我们一起去图书馆吧。","r":"B","sc":5},{"s":"A: Good idea! When?","t":"Good idea! When?","z":"好主意！什么时候？","r":"A","sc":5},{"s":"B: How about Saturday morning?","t":"How about Saturday morning?","z":"周六上午怎么样？","r":"B","sc":5},{"s":"A: Can I help you?","t":"Can I help you?","z":"需要帮忙吗？","r":"A","sc":6},{"s":"B: Yes, I'd like that blue T-shirt.","t":"Yes, I'd like that blue T-shirt.","z":"是的，我想要那件蓝色 T 恤。","r":"B","sc":6},{"s":"A: What size do you want?","t":"What size do you want?","z":"你要什么尺码？","r":"A","sc":6},{"s":"B: Size eight, please.","t":"Size eight, please.","z":"请拿八号。","r":"B","sc":6},{"s":"A: Here you are. It's forty yuan.","t":"Here you are. It's forty yuan.","z":"给您。四十元。","r":"A","sc":6},{"s":"B: Oh, that's too expensive. Do you have a cheaper one?","t":"Oh, that's too expensive. Do you have a cheaper one?","z":"太贵了。有便宜点的吗？","r":"B","sc":6},{"s":"A: Yes. This one is thirty yuan.","t":"Yes. This one is thirty yuan.","z":"有。这件三十元。","r":"A","sc":6},{"s":"B: OK, I'll take it.","t":"OK, I'll take it.","z":"好，我买了。","r":"B","sc":6},{"s":"A: What would you like to eat?","t":"What would you like to eat?","z":"你想吃点什么？","r":"A","sc":7},{"s":"B: I'd like a hamburger and some French fries.","t":"I'd like a hamburger and some French fries.","z":"我想要一个汉堡和一些薯条。","r":"B","sc":7},{"s":"A: What would you like to drink?","t":"What would you like to drink?","z":"你想喝点什么？","r":"A","sc":7},{"s":"B: A glass of orange juice, please.","t":"A glass of orange juice, please.","z":"请来一杯橙汁。","r":"B","sc":7},{"s":"A: Anything else?","t":"Anything else?","z":"还要别的吗？","r":"A","sc":7},{"s":"B: No, thanks. How much is it?","t":"No, thanks. How much is it?","z":"不用了，多少钱？","r":"B","sc":7},{"s":"A: Twenty-five yuan.","t":"Twenty-five yuan.","z":"二十五元。","r":"A","sc":7},{"s":"B: Here you are.","t":"Here you are.","z":"给你。","r":"B","sc":7},{"s":"A: Can I help you?","t":"Can I help you?","z":"需要点什么？","r":"A","sc":8},{"s":"B: I want some apples. How much are they?","t":"I want some apples. How much are they?","z":"我要一些苹果。多少钱？","r":"B","sc":8},{"s":"A: Five yuan a kilo.","t":"Five yuan a kilo.","z":"五元一公斤。","r":"A","sc":8},{"s":"B: They're cheap. I'll take two kilos.","t":"They're cheap. I'll take two kilos.","z":"挺便宜。我要两公斤。","r":"B","sc":8},{"s":"A: Do you want any bananas?","t":"Do you want any bananas?","z":"要香蕉吗？","r":"A","sc":8},{"s":"B: No, thanks. I don't like bananas.","t":"No, thanks. I don't like bananas.","z":"不用，我不喜欢香蕉。","r":"B","sc":8},{"s":"A: Here you are. Ten yuan, please.","t":"Here you are. Ten yuan, please.","z":"给您。十元。","r":"A","sc":8},{"s":"A: Excuse me. Where is the post office?","t":"Excuse me. Where is the post office?","z":"打扰一下，邮局在哪？","r":"A","sc":9},{"s":"B: Go straight for two minutes, then turn left.","t":"Go straight for two minutes, then turn left.","z":"直走两分钟，然后左转。","r":"B","sc":9},{"s":"A: Is it far from here?","t":"Is it far from here?","z":"离这儿远吗？","r":"A","sc":9},{"s":"B: No, it's near. It's next to the bank.","t":"No, it's near. It's next to the bank.","z":"不远，就在银行旁边。","r":"B","sc":9},{"s":"A: Can I go there by bus?","t":"Can I go there by bus?","z":"我能坐公交去吗？","r":"A","sc":9},{"s":"B: Yes. You can take the No. 3 bus.","t":"Yes. You can take the No. 3 bus.","z":"可以，坐 3 路公交。","r":"B","sc":9},{"s":"A: Thank you very much.","t":"Thank you very much.","z":"非常感谢。","r":"A","sc":9},{"s":"B: You're welcome.","t":"You're welcome.","z":"不客气。","r":"B","sc":9},{"s":"A: Hello, this is Amy speaking. May I speak to Mike?","t":"Hello, this is Amy speaking. May I speak to Mike?","z":"你好，我是艾米。请找一下迈克。","r":"A","sc":10},{"s":"B: Hold on, please. ... Sorry, he's out.","t":"Hold on, please. ... Sorry, he's out.","z":"请稍等。……抱歉，他出去了。","r":"B","sc":10},{"s":"A: When will he come back?","t":"When will he come back?","z":"他什么时候回来？","r":"A","sc":10},{"s":"B: At about five. Can I take a message?","t":"At about five. Can I take a message?","z":"大概五点。要留言吗？","r":"B","sc":10},{"s":"A: Yes. Please tell him to bring his book tomorrow.","t":"Yes. Please tell him to bring his book tomorrow.","z":"好。请告诉他明天带书。","r":"A","sc":10},{"s":"B: OK. I'll tell him.","t":"OK. I'll tell him.","z":"好的，我会转告他。","r":"B","sc":10},{"s":"A: Thank you. Goodbye.","t":"Thank you. Goodbye.","z":"谢谢，再见。","r":"A","sc":10},{"s":"B: Goodbye.","t":"Goodbye.","z":"再见。","r":"B","sc":10},{"s":"A: What's the matter with you?","t":"What's the matter with you?","z":"你怎么了？","r":"A","sc":11},{"s":"B: I have a cold and a headache.","t":"I have a cold and a headache.","z":"我感冒了，还头疼。","r":"B","sc":11},{"s":"A: When did it start?","t":"When did it start?","z":"什么时候开始的？","r":"A","sc":11},{"s":"B: Yesterday evening.","t":"Yesterday evening.","z":"昨天晚上。","r":"B","sc":11},{"s":"A: You should drink more water and take this medicine.","t":"You should drink more water and take this medicine.","z":"你应该多喝水，吃这个药。","r":"A","sc":11},{"s":"B: Can I go to school tomorrow?","t":"Can I go to school tomorrow?","z":"我明天能上学吗？","r":"B","sc":11},{"s":"A: No, you should stay at home and rest.","t":"No, you should stay at home and rest.","z":"不行，你该在家休息。","r":"A","sc":11},{"s":"B: OK. Thank you, doctor.","t":"OK. Thank you, doctor.","z":"好的，谢谢医生。","r":"B","sc":11},{"s":"A: How's the weather today?","t":"How's the weather today?","z":"今天天气怎么样？","r":"A","sc":12},{"s":"B: It's sunny and warm.","t":"It's sunny and warm.","z":"晴天，很暖和。","r":"B","sc":12},{"s":"A: Great. Which season do you like best?","t":"Great. Which season do you like best?","z":"太好了。你最喜欢哪个季节？","r":"A","sc":12},{"s":"B: I like spring best. It's not too hot.","t":"I like spring best. It's not too hot.","z":"我最喜欢春天。不太热。","r":"B","sc":12},{"s":"A: Why don't you like summer?","t":"Why don't you like summer?","z":"你为什么不喜欢夏天？","r":"A","sc":12},{"s":"B: Because it's too hot and I can't sleep well.","t":"Because it's too hot and I can't sleep well.","z":"因为太热了，我睡不好。","r":"B","sc":12},{"s":"A: What about winter?","t":"What about winter?","z":"那冬天呢？","r":"A","sc":12},{"s":"B: It's cold, but I can make a snowman.","t":"It's cold, but I can make a snowman.","z":"很冷，但我能堆雪人。","r":"B","sc":12},{"s":"A: When is your birthday?","t":"When is your birthday?","z":"你的生日是什么时候？","r":"A","sc":13},{"s":"B: It's on May 12th.","t":"It's on May 12th.","z":"五月十二号。","r":"B","sc":13},{"s":"A: What would you like for your birthday?","t":"What would you like for your birthday?","z":"你生日想要什么？","r":"A","sc":13},{"s":"B: I'd like a new bike.","t":"I'd like a new bike.","z":"我想要一辆新自行车。","r":"B","sc":13},{"s":"A: Here's a present for you. Happy birthday!","t":"Here's a present for you. Happy birthday!","z":"这是给你的礼物。生日快乐！","r":"A","sc":13},{"s":"B: Wow, a story book! Thank you so much.","t":"Wow, a story book! Thank you so much.","z":"哇，一本故事书！太感谢了。","r":"B","sc":13},{"s":"A: You're welcome. Let's have some cake.","t":"You're welcome. Let's have some cake.","z":"不客气。我们吃蛋糕吧。","r":"A","sc":13},{"s":"B: Great!","t":"Great!","z":"太好了！","r":"B","sc":13},{"s":"A: Excuse me, can I borrow your ruler?","t":"Excuse me, can I borrow your ruler?","z":"打扰一下，我能借你的尺子吗？","r":"A","sc":14},{"s":"B: Sure. Here it is.","t":"Sure. Here it is.","z":"当然。给你。","r":"B","sc":14},{"s":"A: Thank you. I lost mine.","t":"Thank you. I lost mine.","z":"谢谢，我的丢了。","r":"A","sc":14},{"s":"B: That's OK. Do you have a pencil?","t":"That's OK. Do you have a pencil?","z":"没关系。你有铅笔吗？","r":"B","sc":14},{"s":"A: Yes, I do. But I need an eraser, too.","t":"Yes, I do. But I need an eraser, too.","z":"有。但我还需要一块橡皮。","r":"A","sc":14},{"s":"B: Here you are.","t":"Here you are.","z":"给你。","r":"B","sc":14},{"s":"A: Thanks a lot. I'll give them back after class.","t":"Thanks a lot. I'll give them back after class.","z":"多谢。下课后还你。","r":"A","sc":14},{"s":"B: No problem.","t":"No problem.","z":"没问题。","r":"B","sc":14},{"s":"A: Would you like to come to my birthday party?","t":"Would you like to come to my birthday party?","z":"你愿意来我的生日聚会吗？","r":"A","sc":15},{"s":"B: I'd love to. When is it?","t":"I'd love to. When is it?","z":"我很乐意。什么时候？","r":"B","sc":15},{"s":"A: It's on Sunday afternoon, at my home.","t":"It's on Sunday afternoon, at my home.","z":"周日下午，在我家。","r":"A","sc":15},{"s":"B: What time does it start?","t":"What time does it start?","z":"几点开始？","r":"B","sc":15},{"s":"A: At three o'clock.","t":"At three o'clock.","z":"三点。","r":"A","sc":15},{"s":"B: Can I bring my sister?","t":"Can I bring my sister?","z":"我能带我妹妹来吗？","r":"B","sc":15},{"s":"A: Of course. You're both welcome.","t":"Of course. You're both welcome.","z":"当然，欢迎你们俩。","r":"A","sc":15},{"s":"B: Great. See you on Sunday.","t":"Great. See you on Sunday.","z":"太好了，周日见。","r":"B","sc":15},{"s":"A: What are you going to do this summer holiday?","t":"What are you going to do this summer holiday?","z":"这个暑假你打算做什么？","r":"A","sc":16},{"s":"B: I'm going to visit my grandparents in Shanghai.","t":"I'm going to visit my grandparents in Shanghai.","z":"我打算去上海看祖父母。","r":"B","sc":16},{"s":"A: How are you going there?","t":"How are you going there?","z":"你怎么去？","r":"A","sc":16},{"s":"B: We're going there by train.","t":"We're going there by train.","z":"我们坐火车去。","r":"B","sc":16},{"s":"A: How long are you going to stay?","t":"How long are you going to stay?","z":"你打算待多久？","r":"A","sc":16},{"s":"B: For two weeks.","t":"For two weeks.","z":"两周。","r":"B","sc":16},{"s":"A: Have a good trip!","t":"Have a good trip!","z":"旅途愉快！","r":"A","sc":16},{"s":"B: Thank you. What about your holiday?","t":"Thank you. What about your holiday?","z":"谢谢。你的假期呢？","r":"B","sc":16},{"s":"A: How was your weekend?","t":"How was your weekend?","z":"你周末过得怎么样？","r":"A","sc":17},{"s":"B: It was great. I went to the park with my family.","t":"It was great. I went to the park with my family.","z":"很棒。我和家人去了公园。","r":"B","sc":17},{"s":"A: What did you do there?","t":"What did you do there?","z":"你们在那儿做了什么？","r":"A","sc":17},{"s":"B: We flew kites and had a picnic.","t":"We flew kites and had a picnic.","z":"我们放风筝、野餐。","r":"B","sc":17},{"s":"A: Did you take any photos?","t":"Did you take any photos?","z":"你拍照了吗？","r":"A","sc":17},{"s":"B: Yes, I did. Look at this one.","t":"Yes, I did. Look at this one.","z":"拍了。看这张。","r":"B","sc":17},{"s":"A: Wow, it's beautiful!","t":"Wow, it's beautiful!","z":"哇，真漂亮！","r":"A","sc":17},{"s":"B: We were very happy.","t":"We were very happy.","z":"我们非常开心。","r":"B","sc":17},{"s":"A: Excuse me, can I borrow this book?","t":"Excuse me, can I borrow this book?","z":"打扰一下，我能借这本书吗？","r":"A","sc":18},{"s":"B: Yes. Please show me your library card.","t":"Yes. Please show me your library card.","z":"可以。请出示你的借书卡。","r":"B","sc":18},{"s":"A: Here you are. How long can I keep it?","t":"Here you are. How long can I keep it?","z":"给你。我能借多久？","r":"A","sc":18},{"s":"B: For two weeks. You mustn't write in it.","t":"For two weeks. You mustn't write in it.","z":"两周。不能在书上写字。","r":"B","sc":18},{"s":"A: I see. Thank you.","t":"I see. Thank you.","z":"明白了，谢谢。","r":"A","sc":18},{"s":"B: You're welcome. Enjoy your reading.","t":"You're welcome. Enjoy your reading.","z":"不客气。祝你阅读愉快。","r":"B","sc":18},{"s":"A: Do you have a pet?","t":"Do you have a pet?","z":"你养宠物吗？","r":"A","sc":19},{"s":"B: Yes, I have a dog. His name is Lucky.","t":"Yes, I have a dog. His name is Lucky.","z":"养，我有只狗，叫 Lucky。","r":"B","sc":19},{"s":"A: What's he like?","t":"What's he like?","z":"他什么样？","r":"A","sc":19},{"s":"B: He's black and white. He's very clever.","t":"He's black and white. He's very clever.","z":"黑白相间，很聪明。","r":"B","sc":19},{"s":"A: What can he do?","t":"What can he do?","z":"他会做什么？","r":"A","sc":19},{"s":"B: He can run fast and catch a ball.","t":"He can run fast and catch a ball.","z":"他跑得快，还会接球。","r":"B","sc":19},{"s":"A: I like dogs, too. But my mum doesn't.","t":"I like dogs, too. But my mum doesn't.","z":"我也喜欢狗。但我妈妈不喜欢。","r":"A","sc":19},{"s":"B: What a pity!","t":"What a pity!","z":"真可惜！","r":"B","sc":19},{"s":"Hello, I'm Amy.","t":"Hello, I'm Amy.","z":"你好，我是艾米。","r":"","sc":-1,"pat":"A01"},{"s":"Good morning, Miss White.","t":"Good morning, Miss White.","z":"早上好，怀特老师。","r":"","sc":-1,"pat":"A02"},{"s":"Good night, Mum.","t":"Good night, Mum.","z":"晚安，妈妈。","r":"","sc":-1,"pat":"A03"},{"s":"How are you? I'm fine, thank you.","t":"How are you? I'm fine, thank you.","z":"你好吗？我很好，谢谢。","r":"","sc":-1,"pat":"A04"},{"s":"Nice to meet you, Mr Jones.","t":"Nice to meet you, Mr Jones.","z":"很高兴见到您。","r":"","sc":-1,"pat":"A05"},{"s":"Mum, this is my friend, Amy.","t":"Mum, this is my friend, Amy.","z":"妈妈，这是我的朋友艾米。","r":"","sc":-1,"pat":"A06"},{"s":"I'm from the UK.","t":"I'm from the UK.","z":"我来自英国。","r":"","sc":-1,"pat":"A07"},{"s":"What's your name? My name's Sam.","t":"What's your name? My name's Sam.","z":"你叫什么名字？","r":"","sc":-1,"pat":"A08"},{"s":"How old are you? I'm nine years old.","t":"How old are you? I'm nine years old.","z":"你几岁了？","r":"","sc":-1,"pat":"A09"},{"s":"See you tomorrow, Miss Li.","t":"See you tomorrow, Miss Li.","z":"明天见。","r":"","sc":-1,"pat":"A10"},{"s":"Goodbye, Sam. Bye, Amy.","t":"Goodbye, Sam. Bye, Amy.","z":"再见。","r":"","sc":-1,"pat":"A11"},{"s":"Welcome to our school.","t":"Welcome to our school.","z":"欢迎来到我们学校。","r":"","sc":-1,"pat":"A12"},{"s":"How do you do?","t":"How do you do?","z":"您好。（初次见面）","r":"","sc":-1,"pat":"A13"},{"s":"Thank you very much. You're welcome.","t":"Thank you very much. You're welcome.","z":"非常感谢。不客气。","r":"","sc":-1,"pat":"B01"},{"s":"Sorry, I'm late. That's all right.","t":"Sorry, I'm late. That's all right.","z":"对不起我迟到了。没关系。","r":"","sc":-1,"pat":"B02"},{"s":"Excuse me, where is the library?","t":"Excuse me, where is the library?","z":"打扰一下，图书馆在哪？","r":"","sc":-1,"pat":"B03"},{"s":"I'm sorry to hear that.","t":"I'm sorry to hear that.","z":"听到这个我很难过。","r":"","sc":-1,"pat":"B04"},{"s":"Never mind. Let's try again.","t":"Never mind. Let's try again.","z":"没关系，再试一次。","r":"","sc":-1,"pat":"B05"},{"s":"Please open the door.","t":"Please open the door.","z":"请开门。","r":"","sc":-1,"pat":"B06"},{"s":"Here you are. Thank you.","t":"Here you are. Thank you.","z":"给你。谢谢。","r":"","sc":-1,"pat":"B07"},{"s":"After you, please.","t":"After you, please.","z":"您先请。","r":"","sc":-1,"pat":"B08"},{"s":"Who's she? She's my mother.","t":"Who's she? She's my mother.","z":"她是谁？我妈妈。","r":"","sc":-1,"pat":"C01"},{"s":"Who's that woman? She's my aunt.","t":"Who's that woman? She's my aunt.","z":"那位女士是谁？","r":"","sc":-1,"pat":"C02"},{"s":"What's your father? He's a doctor.","t":"What's your father? He's a doctor.","z":"你爸爸做什么工作？","r":"","sc":-1,"pat":"C03"},{"s":"What does your mother do?","t":"What does your mother do?","z":"你妈妈做什么？","r":"","sc":-1,"pat":"C04"},{"s":"Is she your sister? No, she isn't.","t":"Is she your sister? No, she isn't.","z":"她是你姐姐吗？","r":"","sc":-1,"pat":"C05"},{"s":"Whose bag is this? It's Mike's.","t":"Whose bag is this? It's Mike's.","z":"这是谁的书包？","r":"","sc":-1,"pat":"C06"},{"s":"This is a photo of my family.","t":"This is a photo of my family.","z":"这是我家的照片。","r":"","sc":-1,"pat":"C07"},{"s":"There are three people in my family.","t":"There are three people in my family.","z":"你家有几口人？","r":"","sc":-1,"pat":"C08"},{"s":"What's this? It's a pencil.","t":"What's this? It's a pencil.","z":"这是什么？","r":"","sc":-1,"pat":"D01"},{"s":"What are those? They're ducks.","t":"What are those? They're ducks.","z":"那些是什么？","r":"","sc":-1,"pat":"D02"},{"s":"Is this your eraser? No, it isn't.","t":"Is this your eraser? No, it isn't.","z":"这是你的橡皮吗？","r":"","sc":-1,"pat":"D03"},{"s":"What colour is your bag? It's blue.","t":"What colour is your bag? It's blue.","z":"它是什么颜色？","r":"","sc":-1,"pat":"D04"},{"s":"What colour are the shoes?","t":"What colour are the shoes?","z":"鞋子是什么颜色？","r":"","sc":-1,"pat":"D05"},{"s":"How many books do you have?","t":"How many books do you have?","z":"你有几本书？","r":"","sc":-1,"pat":"D06"},{"s":"How many students are there?","t":"How many students are there?","z":"有多少学生？","r":"","sc":-1,"pat":"D07"},{"s":"I have a red pen.","t":"I have a red pen.","z":"我有一个新书包。","r":"","sc":-1,"pat":"D08"},{"s":"I like that blue one.","t":"I like that blue one.","z":"我喜欢那个蓝色的。","r":"","sc":-1,"pat":"D09"},{"s":"The shoes are too small.","t":"The shoes are too small.","z":"太贵了／太小了。","r":"","sc":-1,"pat":"D10"},{"s":"Where's my ball? It's under the bed.","t":"Where's my ball? It's under the bed.","z":"球在哪？床下。","r":"","sc":-1,"pat":"E01"},{"s":"Where are the keys?","t":"Where are the keys?","z":"钥匙在哪？","r":"","sc":-1,"pat":"E02"},{"s":"It's between the desk and the bed.","t":"It's between the desk and the bed.","z":"在桌子和床中间。","r":"","sc":-1,"pat":"E03"},{"s":"There is a computer on the desk.","t":"There is a computer on the desk.","z":"桌上有一台电脑。","r":"","sc":-1,"pat":"E04"},{"s":"There are two beds in the room.","t":"There are two beds in the room.","z":"房间里有两张床。","r":"","sc":-1,"pat":"E05"},{"s":"Is there a park near here?","t":"Is there a park near here?","z":"附近有公园吗？","r":"","sc":-1,"pat":"E06"},{"s":"Are there any apples? No, there aren't.","t":"Are there any apples? No, there aren't.","z":"有苹果吗？","r":"","sc":-1,"pat":"E07"},{"s":"Go straight, then turn left.","t":"Go straight, then turn left.","z":"直走，然后左转。","r":"","sc":-1,"pat":"E08"},{"s":"The bank is on your right.","t":"The bank is on your right.","z":"银行在你右边。","r":"","sc":-1,"pat":"E09"},{"s":"How can I get to the post office?","t":"How can I get to the post office?","z":"怎么去邮局？","r":"","sc":-1,"pat":"E10"},{"s":"What time is it? It's nine thirty.","t":"What time is it? It's nine thirty.","z":"几点了？","r":"","sc":-1,"pat":"F01"},{"s":"It's time for English class.","t":"It's time for English class.","z":"该上英语课了。","r":"","sc":-1,"pat":"F02"},{"s":"When do you get up? At six thirty.","t":"When do you get up? At six thirty.","z":"你什么时候起床？","r":"","sc":-1,"pat":"F03"},{"s":"What day is it today? It's Friday.","t":"What day is it today? It's Friday.","z":"今天星期几？","r":"","sc":-1,"pat":"F04"},{"s":"What's the date today? It's June 1st.","t":"What's the date today? It's June 1st.","z":"今天几月几号？","r":"","sc":-1,"pat":"F05"},{"s":"My birthday is in October.","t":"My birthday is in October.","z":"你的生日在什么时候？","r":"","sc":-1,"pat":"F06"},{"s":"How's the weather in Beijing? It's windy.","t":"How's the weather in Beijing? It's windy.","z":"天气怎么样？","r":"","sc":-1,"pat":"F07"},{"s":"What's the weather like there?","t":"What's the weather like there?","z":"那儿天气如何？","r":"","sc":-1,"pat":"F08"},{"s":"It's going to be sunny tomorrow.","t":"It's going to be sunny tomorrow.","z":"明天要晴。","r":"","sc":-1,"pat":"F09"},{"s":"I read books in the evening.","t":"I read books in the evening.","z":"我在晚上看书。","r":"","sc":-1,"pat":"F10"},{"s":"We have music on Tuesday.","t":"We have music on Tuesday.","z":"我们周二有音乐课。","r":"","sc":-1,"pat":"F11"},{"s":"Do you like grapes? No, I don't.","t":"Do you like grapes? No, I don't.","z":"你喜欢葡萄吗？","r":"","sc":-1,"pat":"G01"},{"s":"I like apples very much.","t":"I like apples very much.","z":"我很喜欢苹果。","r":"","sc":-1,"pat":"G02"},{"s":"I don't like onions.","t":"I don't like onions.","z":"我不喜欢洋葱。","r":"","sc":-1,"pat":"G03"},{"s":"What's your favourite colour?","t":"What's your favourite colour?","z":"你最喜欢什么颜色？","r":"","sc":-1,"pat":"G04"},{"s":"Would you like some tea? Yes, please.","t":"Would you like some tea? Yes, please.","z":"你想要点茶吗？","r":"","sc":-1,"pat":"G05"},{"s":"How do you feel? I feel tired.","t":"How do you feel? I feel tired.","z":"你感觉怎么样？","r":"","sc":-1,"pat":"G06"},{"s":"I'm afraid of dogs.","t":"I'm afraid of dogs.","z":"我开心／难过／生气／担心／害怕。","r":"","sc":-1,"pat":"G07"},{"s":"I like music. What about you?","t":"I like music. What about you?","z":"你呢？","r":"","sc":-1,"pat":"G08"},{"s":"I think it's a good idea.","t":"I think it's a good idea.","z":"我认为……","r":"","sc":-1,"pat":"G09"},{"s":"The story is very interesting.","t":"The story is very interesting.","z":"有趣／无聊／好玩。","r":"","sc":-1,"pat":"G10"},{"s":"I can play the piano.","t":"I can play the piano.","z":"我会游泳／我不会跳舞。","r":"","sc":-1,"pat":"H01"},{"s":"Can you cook? Yes, I can.","t":"Can you cook? Yes, I can.","z":"你会做饭吗？","r":"","sc":-1,"pat":"H02"},{"s":"Can I use your pen? Sure.","t":"Can I use your pen? Sure.","z":"我能用下你的笔吗？","r":"","sc":-1,"pat":"H03"},{"s":"May I come in? Come in, please.","t":"May I come in? Come in, please.","z":"我可以进来吗？","r":"","sc":-1,"pat":"H04"},{"s":"Let's go to the park. Good idea!","t":"Let's go to the park. Good idea!","z":"我们去公园吧。","r":"","sc":-1,"pat":"H05"},{"s":"Shall we play football?","t":"Shall we play football?","z":"我们踢球好吗？","r":"","sc":-1,"pat":"H06"},{"s":"How about going by bus?","t":"How about going by bus?","z":"坐公交怎么样？","r":"","sc":-1,"pat":"H07"},{"s":"Why don't you ask your teacher?","t":"Why don't you ask your teacher?","z":"你为什么不去问老师？","r":"","sc":-1,"pat":"H08"},{"s":"You should see a doctor.","t":"You should see a doctor.","z":"你应该去看医生。","r":"","sc":-1,"pat":"H09"},{"s":"You mustn't run in the hall.","t":"You mustn't run in the hall.","z":"我必须要……吗？","r":"","sc":-1,"pat":"H10"},{"s":"Don't touch it. It's hot.","t":"Don't touch it. It's hot.","z":"别碰，很烫。","r":"","sc":-1,"pat":"H11"},{"s":"Let me help you carry it.","t":"Let me help you carry it.","z":"我来帮你。","r":"","sc":-1,"pat":"H12"},{"s":"Can I help you? Yes, I want a cap.","t":"Can I help you? Yes, I want a cap.","z":"需要帮忙吗？","r":"","sc":-1,"pat":"I01"},{"s":"I'd like a hamburger, please.","t":"I'd like a hamburger, please.","z":"我想要……","r":"","sc":-1,"pat":"I02"},{"s":"How much is the shirt? It's forty yuan.","t":"How much is the shirt? It's forty yuan.","z":"多少钱？","r":"","sc":-1,"pat":"I03"},{"s":"How much are the socks?","t":"How much are the socks?","z":"一共多少钱？","r":"","sc":-1,"pat":"I04"},{"s":"That's too expensive for me.","t":"That's too expensive for me.","z":"太贵／太便宜。","r":"","sc":-1,"pat":"I05"},{"s":"Here's your change. Thank you.","t":"Here's your change. Thank you.","z":"这是您的找零。","r":"","sc":-1,"pat":"I06"},{"s":"A bowl of noodles, please.","t":"A bowl of noodles, please.","z":"请来两份／一杯茶。","r":"","sc":-1,"pat":"I07"},{"s":"What would you like to eat?","t":"What would you like to eat?","z":"你想喝点什么？","r":"","sc":-1,"pat":"I08"},{"s":"Help yourself to some fish.","t":"Help yourself to some fish.","z":"请随意吃。","r":"","sc":-1,"pat":"I09"},{"s":"Enjoy your meal!","t":"Enjoy your meal!","z":"祝您用餐愉快。","r":"","sc":-1,"pat":"I10"},{"s":"I have Chinese and maths.","t":"I have Chinese and maths.","z":"周一你有什么课？","r":"","sc":-1,"pat":"J01"},{"s":"We have PE in the afternoon.","t":"We have PE in the afternoon.","z":"我们有英语、数学和音乐。","r":"","sc":-1,"pat":"J02"},{"s":"My favourite subject is English.","t":"My favourite subject is English.","z":"你最喜欢哪一科？","r":"","sc":-1,"pat":"J03"},{"s":"Yes, I often read books.","t":"Yes, I often read books.","z":"你常在这看书吗？","r":"","sc":-1,"pat":"J04"},{"s":"I often play football.","t":"I often play football.","z":"你周末做什么？","r":"","sc":-1,"pat":"J05"},{"s":"I usually go to bed at nine.","t":"I usually go to bed at nine.","z":"我通常六点半起床。","r":"","sc":-1,"pat":"J06"},{"s":"I come to school on foot.","t":"I come to school on foot.","z":"你怎么来学校？","r":"","sc":-1,"pat":"J07"},{"s":"I'm good at maths.","t":"I'm good at maths.","z":"你英语好吗？","r":"","sc":-1,"pat":"J08"},{"s":"Let's go and play.","t":"Let's go and play.","z":"去操场吧。","r":"","sc":-1,"pat":"J09"},{"s":"Stand up, please. Sit down.","t":"Stand up, please. Sit down.","z":"上课了／请起立。","r":"","sc":-1,"pat":"J10"},{"s":"I go to school by bus.","t":"I go to school by bus.","z":"坐公交／骑车／坐地铁／步行。","r":"","sc":-1,"pat":"K01"},{"s":"Where are you going? To the library.","t":"Where are you going? To the library.","z":"你去哪儿？","r":"","sc":-1,"pat":"K02"},{"s":"I'm going to visit my grandma.","t":"I'm going to visit my grandma.","z":"你打算做什么？","r":"","sc":-1,"pat":"K03"},{"s":"Where did you go last Sunday?","t":"Where did you go last Sunday?","z":"你上周去哪了？","r":"","sc":-1,"pat":"K04"},{"s":"We went there by plane.","t":"We went there by plane.","z":"你们怎么去的？","r":"","sc":-1,"pat":"K05"},{"s":"Have a good trip!","t":"Have a good trip!","z":"玩得开心！","r":"","sc":-1,"pat":"K06"},{"s":"How was your trip? It was wonderful.","t":"How was your trip? It was wonderful.","z":"周末过得怎样？","r":"","sc":-1,"pat":"K07"},{"s":"How long did you stay there?","t":"How long did you stay there?","z":"待了多久？","r":"","sc":-1,"pat":"K08"},{"s":"She goes to school by bike.","t":"She goes to school by bike.","z":"我每天踢球。","r":"","sc":-1,"pat":"L01"},{"s":"My father works in a hospital.","t":"My father works in a hospital.","z":"他喜欢……","r":"","sc":-1,"pat":"L02"},{"s":"Look! The children are playing.","t":"Look! The children are playing.","z":"我正在看书。","r":"","sc":-1,"pat":"L03"},{"s":"What's he doing? He's sleeping.","t":"What's he doing? He's sleeping.","z":"你在做什么？","r":"","sc":-1,"pat":"L04"},{"s":"They were happy last night.","t":"They were happy last night.","z":"我昨天在家。","r":"","sc":-1,"pat":"L05"},{"s":"We watched TV together.","t":"We watched TV together.","z":"我看望了祖父母。","r":"","sc":-1,"pat":"L06"},{"s":"Did you clean your room?","t":"Did you clean your room?","z":"你……了吗？","r":"","sc":-1,"pat":"L07"},{"s":"He didn't come to the party.","t":"He didn't come to the party.","z":"我昨天没去上学。","r":"","sc":-1,"pat":"L08"},{"s":"We're going to have a picnic.","t":"We're going to have a picnic.","z":"我打算看电影。","r":"","sc":-1,"pat":"L09"},{"s":"It will be sunny tomorrow.","t":"It will be sunny tomorrow.","z":"我会帮你。","r":"","sc":-1,"pat":"L10"},{"s":"What happened to you?","t":"What happened to you?","z":"发生了什么？","r":"","sc":-1,"pat":"L11"},{"s":"Mike is taller than me.","t":"Mike is taller than me.","z":"A 比 B 高。","r":"","sc":-1,"pat":"M01"},{"s":"My sister is younger than me.","t":"My sister is younger than me.","z":"更大／更小／更重／更瘦。","r":"","sc":-1,"pat":"M02"},{"s":"Which is bigger, the sun or the moon?","t":"Which is bigger, the sun or the moon?","z":"哪个更大？","r":"","sc":-1,"pat":"M03"},{"s":"It's the tallest building in the city.","t":"It's the tallest building in the city.","z":"最大的／最美的","r":"","sc":-1,"pat":"M04"},{"s":"I'm as tall as my brother.","t":"I'm as tall as my brother.","z":"和……一样高","r":"","sc":-1,"pat":"M05"},{"s":"He is much taller than me.","t":"He is much taller than me.","z":"高得多／高一点","r":"","sc":-1,"pat":"M06"},{"s":"Hello, this is Tom speaking.","t":"Hello, this is Tom speaking.","z":"你好，我是艾米。","r":"","sc":-1,"pat":"N01"},{"s":"May I speak to Mr Li, please?","t":"May I speak to Mr Li, please?","z":"请找一下李先生。","r":"","sc":-1,"pat":"N02"},{"s":"Hold on, please. He's out.","t":"Hold on, please. He's out.","z":"请稍等／你是哪位？","r":"","sc":-1,"pat":"N03"},{"s":"I'll call you back later.","t":"I'll call you back later.","z":"我回头打给你。","r":"","sc":-1,"pat":"N04"},{"s":"What's the matter? I have a fever.","t":"What's the matter? I have a fever.","z":"怎么了？我感冒了。","r":"","sc":-1,"pat":"N05"},{"s":"I have a toothache.","t":"I have a toothache.","z":"我头疼／牙疼／肚子疼。","r":"","sc":-1,"pat":"N06"},{"s":"Take this medicine twice a day.","t":"Take this medicine twice a day.","z":"你应该吃点药。","r":"","sc":-1,"pat":"N07"},{"s":"Get well soon, Amy.","t":"Get well soon, Amy.","z":"早日康复。","r":"","sc":-1,"pat":"N08"},{"s":"Can I borrow your ruler?","t":"Can I borrow your ruler?","z":"我能借你的……吗？","r":"","sc":-1,"pat":"N09"},{"s":"Here it is. Thank you.","t":"Here it is. Thank you.","z":"给你／我没有。","r":"","sc":-1,"pat":"N10"},{"s":"Would you like to come to my birthday party?","t":"Would you like to come to my birthday party?","z":"你愿意来我的聚会吗？","r":"","sc":-1,"pat":"N11"},{"s":"I'd love to. Thank you.","t":"I'd love to. Thank you.","z":"听起来不错／我很乐意。","r":"","sc":-1,"pat":"N12"},{"s":"I'm sorry, I can't. I'm busy.","t":"I'm sorry, I can't. I'm busy.","z":"抱歉我去不了。","r":"","sc":-1,"pat":"N13"}];
+var SC = [{"t":"初次见面（自我介绍）","fn":"交换姓名","g":"3A","core":"'s your name? / Nice to meet you.","p":"A","a":0,"b":7},{"t":"日常问候与寒暄","fn":"打招呼 + 问近况","g":"3A","core":"are you? / I'm fine, thank you.","p":"A","a":8,"b":13},{"t":"介绍家人（看照片）","fn":"介绍家庭成员","g":"4A","core":" is ... / Who's he?","p":"C","a":14,"b":21},{"t":"到同学家做客（介绍与礼貌）","fn":"介绍他人 + 做客礼貌","g":"3A–4A","core":" is my friend. / Nice to meet you.","p":"A","a":22,"b":29},{"t":"谈论学校课程","fn":"问课程 + 说喜好","g":"5A","core":" do you have on ...? / favourite subject","p":"J","a":30,"b":36},{"t":"谈论爱好与周末","fn":"问爱好 + 反问","g":"5A–5B","core":"ou like ...? / What about you?","p":"G","a":37,"b":44},{"t":"在服装店买衣服","fn":"购物","g":"5B","core":"I help you? / How much is it?","p":"I","a":45,"b":52},{"t":"在快餐店点餐","fn":"点餐","g":"5A–5B","core":" would you like? / I'd like ...","p":"I","a":53,"b":60},{"t":"在水果店","fn":"问价 + 买多少","g":"4A–5B","core":"much ...? / How many ...?","p":"I","a":61,"b":67},{"t":"问路","fn":"问路指路","g":"5B–6A","core":"e is ...? / Go straight / Turn left","p":"E","a":68,"b":75},{"t":"打电话约同学","fn":"电话交际","g":"6A","core":" is ... speaking. / May I speak to ...?","p":"N","a":76,"b":83},{"t":"在医院看病","fn":"描述症状 + 医嘱","g":"6A","core":"'s the matter? / You should ...","p":"N","a":84,"b":91},{"t":"谈论天气与季节","fn":"天气 + 季节偏好","g":"4B–5B","core":"s the weather? / Which season do you like best?","p":"F","a":92,"b":99},{"t":"生日与礼物","fn":"问日期 + 送礼","g":"5B","core":" is your birthday? / Happy birthday!","p":"F","a":100,"b":107},{"t":"借文具","fn":"请求许可","g":"5A","core":"I borrow ...?","p":"H","a":108,"b":115},{"t":"邀请参加派对","fn":"邀请与应答","g":"5B","core":"d you like to ...?","p":"H","a":116,"b":123},{"t":"假期计划（将来时）","fn":"计划 + 交通","g":"6A","core":"oing to / How are you going there?","p":"K","a":124,"b":131},{"t":"谈论上周末（过去时）","fn":"过去经历","g":"6B","core":"e did you go? / How was it?","p":"L","a":132,"b":139},{"t":"在图书馆借书","fn":"借书 + 规则","g":"6A","core":"I ...? / You must ...","p":"H","a":140,"b":145},{"t":"谈论宠物","fn":"描述动物 + 能力","g":"4A–5A","core":"'s it like? / It can ...","p":"D","a":146,"b":153}];
+var PATPACK = {"A":[{"e":"Hello. / Hi.","z":"你好，我是艾米。"},{"e":"Good morning / afternoon / evening.","z":"早上好，怀特老师。"},{"e":"Good night.","z":"晚安，妈妈。"},{"e":"How are you? — I'm fine, thank you.","z":"你好吗？我很好，谢谢。"},{"e":"Nice to meet you. — Nice to meet you, too.","z":"很高兴见到您。"},{"e":"This is my friend, Amy.","z":"妈妈，这是我的朋友艾米。"},{"e":"I'm from China.","z":"我来自英国。"},{"e":"What's your name? — My name is Sam.","z":"你叫什么名字？"}],"B":[{"e":"Thank you. / Thanks. — You're welcome.","z":"非常感谢。不客气。"},{"e":"Sorry. — That's OK. / That's all right.","z":"对不起我迟到了。没关系。"},{"e":"Excuse me.","z":"打扰一下，图书馆在哪？"},{"e":"I'm sorry to hear that.","z":"听到这个我很难过。"},{"e":"Never mind.","z":"没关系，再试一次。"},{"e":"Please ...","z":"请开门。"},{"e":"Here you are. — Thank you.","z":"给你。谢谢。"},{"e":"After you.","z":"您先请。"}],"C":[{"e":"Who's he / she? — He's my father.","z":"她是谁？我妈妈。"},{"e":"Who's that man / woman?","z":"那位女士是谁？"},{"e":"What's he / she? — He's a doctor.","z":"你爸爸做什么工作？"},{"e":"What do you do? — I'm a student.","z":"你妈妈做什么？"},{"e":"Is he your brother? — Yes, he is. / No, he isn't.","z":"她是你姐姐吗？"},{"e":"Whose book is this? — It's mine / Amy's.","z":"这是谁的书包？"},{"e":"This is my family photo.","z":"这是我家的照片。"},{"e":"How many people are there in your family?","z":"你家有几口人？"}],"D":[{"e":"What's this / that? — It's a pen.","z":"这是什么？"},{"e":"What are these / those? — They're apples.","z":"那些是什么？"},{"e":"Is this your ruler? — Yes, it is.","z":"这是你的橡皮吗？"},{"e":"What colour is it? — It's red.","z":"它是什么颜色？"},{"e":"What colour are they? — They're black.","z":"鞋子是什么颜色？"},{"e":"How many ... do you have?","z":"你有几本书？"},{"e":"How many ... are there?","z":"有多少学生？"},{"e":"I have a new schoolbag.","z":"我有一个新书包。"}],"E":[{"e":"Where is ...? — It's in / on / under the desk.","z":"球在哪？床下。"},{"e":"Where are ...? — They're near the door.","z":"钥匙在哪？"},{"e":"It's behind / in front of / next to / between.","z":"在桌子和床中间。"},{"e":"There is a ... on the desk.","z":"桌上有一台电脑。"},{"e":"There are two ... in the room.","z":"房间里有两张床。"},{"e":"Is there a ...? — Yes, there is. / No, there isn't.","z":"附近有公园吗？"},{"e":"Are there any ...? — Yes, there are.","z":"有苹果吗？"},{"e":"Go straight. / Turn left / right.","z":"直走，然后左转。"}],"F":[{"e":"What time is it? — It's seven o'clock.","z":"几点了？"},{"e":"It's time for ... / to ....","z":"该上英语课了。"},{"e":"When do you ...? — At six.","z":"你什么时候起床？"},{"e":"What day is it today? — It's Monday.","z":"今天星期几？"},{"e":"What's the date today? — It's May 1st.","z":"今天几月几号？"},{"e":"When is your birthday? — It's in May.","z":"你的生日在什么时候？"},{"e":"How's the weather? — It's sunny.","z":"天气怎么样？"},{"e":"What's the weather like today?","z":"那儿天气如何？"}],"G":[{"e":"Do you like ...? — Yes, I do. / No, I don't.","z":"你喜欢葡萄吗？"},{"e":"I like ... very much. / a lot.","z":"我很喜欢苹果。"},{"e":"I don't like ....","z":"我不喜欢洋葱。"},{"e":"What's your favourite ...? — My favourite ... is ....","z":"你最喜欢什么颜色？"},{"e":"Would you like ...? — Yes, please. / No, thanks.","z":"你想要点茶吗？"},{"e":"How do you feel? — I feel happy.","z":"你感觉怎么样？"},{"e":"I'm happy / sad / angry / worried / afraid.","z":"我开心／难过／生气／担心／害怕。"},{"e":"What about you? / How about you?","z":"你呢？"}],"H":[{"e":"I can swim. / I can't dance.","z":"我会游泳／我不会跳舞。"},{"e":"Can you ...? — Yes, I can. / No, I can't.","z":"你会做饭吗？"},{"e":"Can I ...? — Sure. / Of course.","z":"我能用下你的笔吗？"},{"e":"May I come in? — Yes, please.","z":"我可以进来吗？"},{"e":"Let's .... — Great! / Good idea!","z":"我们去公园吧。"},{"e":"Shall we ...?","z":"我们踢球好吗？"},{"e":"What about ...? / How about ...?","z":"坐公交怎么样？"},{"e":"Why don't you ...? / Why not ...?","z":"你为什么不去问老师？"}],"I":[{"e":"Can I help you? / What can I do for you?","z":"需要帮忙吗？"},{"e":"I'd like .... / I want ....","z":"我想要……"},{"e":"How much is it? — It's ten yuan.","z":"多少钱？"},{"e":"How much are they? — They're twenty yuan.","z":"一共多少钱？"},{"e":"It's too expensive / cheap.","z":"太贵／太便宜。"},{"e":"Here's your change.","z":"这是您的找零。"},{"e":"Two, please. / A cup of tea, please.","z":"请来两份／一杯茶。"},{"e":"What would you like to drink?","z":"你想喝点什么？"}],"J":[{"e":"What do you have on Mondays?","z":"周一你有什么课？"},{"e":"We have English, maths and music.","z":"我们有英语、数学和音乐。"},{"e":"What's your favourite subject?","z":"你最喜欢哪一科？"},{"e":"Do you often read books here?","z":"你常在这看书吗？"},{"e":"What do you do on the weekend?","z":"你周末做什么？"},{"e":"I usually get up at 6:30.","z":"我通常六点半起床。"},{"e":"How do you come to school?","z":"你怎么来学校？"},{"e":"Are you good at English?","z":"你英语好吗？"}],"K":[{"e":"by bus / by bike / by subway / on foot","z":"坐公交／骑车／坐地铁／步行。"},{"e":"Where are you going? — I'm going to ....","z":"你去哪儿？"},{"e":"What are you going to do?","z":"你打算做什么？"},{"e":"Where did you go ...? — I went to ....","z":"你上周去哪了？"},{"e":"How did you go there? — By train.","z":"你们怎么去的？"},{"e":"Have a good time! / Have a nice day!","z":"玩得开心！"},{"e":"How was your weekend? — It was great.","z":"周末过得怎样？"},{"e":"How long ...? — For two days.","z":"待了多久？"}],"L":[{"e":"I play football every day.","z":"我每天踢球。"},{"e":"He / She likes ....","z":"他喜欢……"},{"e":"I am reading a book now.","z":"我正在看书。"},{"e":"What are you doing? — I'm ....","z":"你在做什么？"},{"e":"I was at home yesterday.","z":"我昨天在家。"},{"e":"I visited my grandparents.","z":"我看望了祖父母。"},{"e":"Did you ...? — Yes, I did. / No, I didn't.","z":"你……了吗？"},{"e":"I didn't go to school yesterday.","z":"我昨天没去上学。"}],"M":[{"e":"A is taller than B.","z":"A 比 B 高。"},{"e":"He is older / younger / heavier / thinner.","z":"更大／更小／更重／更瘦。"},{"e":"Which is bigger, A or B?","z":"哪个更大？"},{"e":"the biggest / the most beautiful","z":"最大的／最美的"},{"e":"as tall as","z":"和……一样高"},{"e":"much / a little + 比较级","z":"高得多／高一点"}],"N":[{"e":"Hello, this is Amy speaking.","z":"你好，我是艾米。"},{"e":"May I speak to ...?","z":"请找一下李先生。"},{"e":"Hold on, please. / Who's that?","z":"请稍等／你是哪位？"},{"e":"I'll call you back.","z":"我回头打给你。"},{"e":"What's the matter? — I have a cold.","z":"怎么了？我感冒了。"},{"e":"I have a headache / toothache / stomachache.","z":"我头疼／牙疼／肚子疼。"},{"e":"You should take some medicine.","z":"你应该吃点药。"},{"e":"Get well soon.","z":"早日康复。"}]};
+var EX = [{"k":"d","chat":[{"r":"A","t":"Hello! I'm Amy. What's your name?"},{"r":"B","blank":true},{"r":"A","t":"Nice to meet you, Sam."},{"r":"B","t":"Nice to meet you, too."}],"opts":["Hi, Amy. My name is Sam.","OK, I'll take it.","Do you like story books?","Don't worry. I can help you."],"a":0,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Hi, Amy. My name is Sam."},{"k":"d","chat":[{"r":"B","t":"Hi, Amy. My name is Sam."},{"r":"A","t":"Nice to meet you, Sam."},{"r":"B","blank":true},{"r":"A","t":"How old are you?"},{"r":"B","t":"I'm nine years old. And you?"}],"opts":["Who's this man?","Thank you. What about your holiday?","Wow, a story book! Thank you so much.","Nice to meet you, too."],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Nice to meet you, too."},{"k":"d","chat":[{"r":"B","t":"Good morning, Amy. How are you today?"},{"r":"A","t":"I'm fine, thank you. And you?"},{"r":"B","blank":true},{"r":"A","t":"It's a nice day, isn't it?"},{"r":"B","t":"Yes, it is. Let's go to the playground."}],"opts":["Yes. You can take the No. 3 bus.","I'm nine years old. And you?","I'd love to. When is it?","I'm fine, too. Thank you."],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: I'm fine, too. Thank you."},{"k":"d","chat":[{"r":"A","t":"Good morning, Miss White."},{"r":"B","t":"Good morning, Amy. How are you today?"},{"r":"A","blank":true},{"r":"B","t":"I'm fine, too. Thank you."},{"r":"A","t":"It's a nice day, isn't it?"}],"opts":["I'm fine, thank you. And you?","What do you have on Mondays?","I'm nine, too. Let's be friends.","I like dogs, too. But my mum doesn't."],"a":0,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: I'm fine, thank you. And you?"},{"k":"d","chat":[{"r":"A","t":"He's my father. He's a doctor."},{"r":"B","t":"And who's that woman?"},{"r":"A","blank":true},{"r":"B","t":"Is this your sister?"},{"r":"A","t":"Yes, she is. She's only five."}],"opts":["She's my mother. She's a teacher.","Yes, I do. But I need an eraser, too.","When will he come back?","How long are you going to stay?"],"a":0,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: She's my mother. She's a teacher."},{"k":"d","chat":[{"r":"B","t":"And who's that woman?"},{"r":"A","t":"She's my mother. She's a teacher."},{"r":"B","blank":true},{"r":"A","t":"Yes, she is. She's only five."},{"r":"B","t":"What a happy family!"}],"opts":["We're going there by train.","Is this your sister?","Here you are.","He can run fast and catch a ball."],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Is this your sister?"},{"k":"d","chat":[{"r":"B","t":"Would you like some juice?"},{"r":"A","t":"Yes, please. Thank you very much."},{"r":"B","blank":true},{"r":"A","t":"Thanks. You're so kind."}],"opts":["How about Saturday morning?","Here you are. Help yourself.","What a happy family!","We were very happy."],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Here you are. Help yourself."},{"k":"d","chat":[{"r":"B","t":"Thank you. Please sit down."},{"r":"B","t":"Would you like some juice?"},{"r":"A","blank":true},{"r":"B","t":"Here you are. Help yourself."},{"r":"A","t":"Thanks. You're so kind."}],"opts":["Yes, I do. But I need an eraser, too.","Yes, she is. She's only five.","Yes, I do. I like them very much.","Yes, please. Thank you very much."],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: Yes, please. Thank you very much."},{"k":"d","chat":[{"r":"B","t":"We have Chinese, maths and English."},{"r":"A","t":"What's your favourite subject?"},{"r":"B","blank":true},{"r":"A","t":"Me too. But I'm not good at maths."},{"r":"B","t":"Don't worry. I can help you."}],"opts":["No, it's near. It's next to the bank.","What time does it start?","My favourite subject is English. It's fun.","Yes, I'd like that blue T-shirt."],"a":2,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: My favourite subject is English. It's fun."},{"k":"d","chat":[{"r":"B","t":"My favourite subject is English. It's fun."},{"r":"A","t":"Me too. But I'm not good at maths."},{"r":"B","blank":true},{"r":"A","t":"Thank you. Let's study together."}],"opts":["I'd love to. When is it?","Would you like some juice?","Do you like story books?","Don't worry. I can help you."],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Don't worry. I can help you."},{"k":"d","chat":[{"r":"B","t":"I often play basketball. What about you?"},{"r":"A","t":"I usually read books at home."},{"r":"B","blank":true},{"r":"A","t":"Yes, I do. I like them very much."},{"r":"B","t":"Me too. Let's go to the library together."}],"opts":["I have a cold and a headache.","Do you like story books?","He's black and white. He's very clever.","Thank you. What about your holiday?"],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Do you like story books?"},{"k":"d","chat":[{"r":"A","t":"Yes, I do. I like them very much."},{"r":"B","t":"Me too. Let's go to the library together."},{"r":"A","blank":true},{"r":"B","t":"How about Saturday morning?"}],"opts":["What size do you want?","Good idea! When?","Is it far from here?","Good morning, Miss White."],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: Good idea! When?"},{"k":"d","chat":[{"r":"A","t":"Can I help you?"},{"r":"B","t":"Yes, I'd like that blue T-shirt."},{"r":"A","blank":true},{"r":"B","t":"Size eight, please."},{"r":"A","t":"Here you are. It's forty yuan."}],"opts":["What do you have on Mondays?","What did you do there?","What size do you want?","What would you like to eat?"],"a":2,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: What size do you want?"},{"k":"d","chat":[{"r":"A","t":"Can I help you?"},{"r":"B","blank":true},{"r":"A","t":"What size do you want?"},{"r":"B","t":"Size eight, please."}],"opts":["Yes, I did. Look at this one.","Yes, I'd like that blue T-shirt.","Yes, it is. Let's go to the playground.","Yes, I have a dog. His name is Lucky."],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Yes, I'd like that blue T-shirt."},{"k":"d","chat":[{"r":"B","t":"I'd like a hamburger and some French fries."},{"r":"A","t":"What would you like to drink?"},{"r":"B","blank":true},{"r":"A","t":"Anything else?"},{"r":"B","t":"No, thanks. How much is it?"}],"opts":["OK. Thank you, doctor.","A glass of orange juice, please.","I'd like a new bike.","What time does it start?"],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: A glass of orange juice, please."},{"k":"d","chat":[{"r":"B","t":"A glass of orange juice, please."},{"r":"A","t":"Anything else?"},{"r":"B","blank":true},{"r":"A","t":"Twenty-five yuan."},{"r":"B","t":"Here you are."}],"opts":["No, it's near. It's next to the bank.","No, thanks. How much is it?","No, thanks. I don't like bananas.","Me too. Let's go to the library together."],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: No, thanks. How much is it?"},{"k":"d","chat":[{"r":"A","t":"Can I help you?"},{"r":"B","t":"I want some apples. How much are they?"},{"r":"A","blank":true},{"r":"B","t":"They're cheap. I'll take two kilos."},{"r":"A","t":"Do you want any bananas?"}],"opts":["Have a good trip!","Good morning, Miss White.","Five yuan a kilo.","When will he come back?"],"a":2,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: Five yuan a kilo."},{"k":"d","chat":[{"r":"B","t":"They're cheap. I'll take two kilos."},{"r":"A","t":"Do you want any bananas?"},{"r":"B","blank":true},{"r":"A","t":"Here you are. Ten yuan, please."}],"opts":["No, thanks. I don't like bananas.","No, thanks. How much is it?","I'm fine, too. Thank you.","No, it's near. It's next to the bank."],"a":0,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: No, thanks. I don't like bananas."},{"k":"d","chat":[{"r":"A","t":"Excuse me. Where is the post office?"},{"r":"B","t":"Go straight for two minutes, then turn left."},{"r":"A","blank":true},{"r":"B","t":"No, it's near. It's next to the bank."},{"r":"A","t":"Can I go there by bus?"}],"opts":["Is it far from here?","Thank you. Your home is very nice.","At three o'clock.","Yes. This one is thirty yuan."],"a":0,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: Is it far from here?"},{"k":"d","chat":[{"r":"A","t":"Can I go there by bus?"},{"r":"B","t":"Yes. You can take the No. 3 bus."},{"r":"A","blank":true},{"r":"B","t":"You're welcome."}],"opts":["Thank you. Let's study together.","Thank you. I lost mine.","Thank you. Goodbye.","Thank you very much."],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: Thank you very much."},{"k":"d","chat":[{"r":"B","t":"Hold on, please. ... Sorry, he's out."},{"r":"A","t":"When will he come back?"},{"r":"B","blank":true},{"r":"A","t":"Yes. Please tell him to bring his book tomorrow."},{"r":"B","t":"OK. I'll tell him."}],"opts":["Yes, it is. Let's go to the playground.","At about five. Can I take a message?","Great. See you on Sunday.","It's cold, but I can make a snowman."],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: At about five. Can I take a message?"},{"k":"d","chat":[{"r":"A","t":"When will he come back?"},{"r":"B","t":"At about five. Can I take a message?"},{"r":"A","blank":true},{"r":"B","t":"OK. I'll tell him."},{"r":"A","t":"Thank you. Goodbye."}],"opts":["I usually read books at home.","What would you like to drink?","Yes. Please tell him to bring his book tomorrow.","Yes. This one is thirty yuan."],"a":2,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: Yes. Please tell him to bring his book tomorrow."},{"k":"d","chat":[{"r":"A","t":"What's the matter with you?"},{"r":"B","t":"I have a cold and a headache."},{"r":"A","blank":true},{"r":"B","t":"Yesterday evening."},{"r":"A","t":"You should drink more water and take this medicine."}],"opts":["Thank you very much.","When did it start?","When is your birthday?","When will he come back?"],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: When did it start?"},{"k":"d","chat":[{"r":"A","t":"When did it start?"},{"r":"B","t":"Yesterday evening."},{"r":"A","blank":true},{"r":"B","t":"Can I go to school tomorrow?"},{"r":"A","t":"No, you should stay at home and rest."}],"opts":["Me too. But I'm not good at maths.","Thank you. Let's study together.","You should drink more water and take this medicine.","What would you like to drink?"],"a":2,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: You should drink more water and take this medicine."},{"k":"d","chat":[{"r":"A","t":"How's the weather today?"},{"r":"B","blank":true},{"r":"A","t":"Great. Which season do you like best?"},{"r":"B","t":"I like spring best. It's not too hot."}],"opts":["It's on May 12th.","Great! See you.","Yes, I'd like that blue T-shirt.","It's sunny and warm."],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: It's sunny and warm."},{"k":"d","chat":[{"r":"B","t":"I like spring best. It's not too hot."},{"r":"A","t":"Why don't you like summer?"},{"r":"B","blank":true},{"r":"A","t":"What about winter?"},{"r":"B","t":"It's cold, but I can make a snowman."}],"opts":["Me too. Let's go to the library together.","No, thanks. How much is it?","We're going there by train.","Because it's too hot and I can't sleep well."],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Because it's too hot and I can't sleep well."},{"k":"d","chat":[{"r":"A","t":"What would you like for your birthday?"},{"r":"B","t":"I'd like a new bike."},{"r":"A","blank":true},{"r":"B","t":"Wow, a story book! Thank you so much."},{"r":"A","t":"You're welcome. Let's have some cake."}],"opts":["Yes. This one is thirty yuan.","Did you take any photos?","Here's a present for you. Happy birthday!","What's your favourite subject?"],"a":2,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: Here's a present for you. Happy birthday!"},{"k":"d","chat":[{"r":"A","t":"Here's a present for you. Happy birthday!"},{"r":"B","t":"Wow, a story book! Thank you so much."},{"r":"A","blank":true},{"r":"B","t":"Great!"}],"opts":["You're welcome. Let's have some cake.","Yes, I do. I like them very much.","Good morning, Miss White.","Yes, I do. But I need an eraser, too."],"a":0,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: You're welcome. Let's have some cake."},{"k":"d","chat":[{"r":"A","t":"Excuse me, can I borrow your ruler?"},{"r":"B","t":"Sure. Here it is."},{"r":"A","blank":true},{"r":"B","t":"That's OK. Do you have a pencil?"},{"r":"A","t":"Yes, I do. But I need an eraser, too."}],"opts":["Thank you very much.","Thank you. Let's study together.","Thank you. Goodbye.","Thank you. I lost mine."],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: Thank you. I lost mine."},{"k":"d","chat":[{"r":"A","t":"Excuse me, can I borrow your ruler?"},{"r":"B","blank":true},{"r":"A","t":"Thank you. I lost mine."},{"r":"B","t":"That's OK. Do you have a pencil?"}],"opts":["Sure. Here it is.","Here you are.","OK. Thank you, doctor.","Can I bring my sister?"],"a":0,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Sure. Here it is."},{"k":"d","chat":[{"r":"B","t":"What time does it start?"},{"r":"A","t":"At three o'clock."},{"r":"B","blank":true},{"r":"A","t":"Of course. You're both welcome."},{"r":"B","t":"Great. See you on Sunday."}],"opts":["Can I go to school tomorrow?","You're welcome. Enjoy your reading.","Would you like some juice?","Can I bring my sister?"],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Can I bring my sister?"},{"k":"d","chat":[{"r":"A","t":"Would you like to come to my birthday party?"},{"r":"B","t":"I'd love to. When is it?"},{"r":"A","blank":true},{"r":"B","t":"What time does it start?"},{"r":"A","t":"At three o'clock."}],"opts":["Wow, it's beautiful!","It's on Sunday afternoon, at my home.","It's a nice day, isn't it?","Yes, I do. I like them very much."],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: It's on Sunday afternoon, at my home."},{"k":"d","chat":[{"r":"B","t":"We're going there by train."},{"r":"A","t":"How long are you going to stay?"},{"r":"B","blank":true},{"r":"A","t":"Have a good trip!"},{"r":"B","t":"Thank you. What about your holiday?"}],"opts":["Is this your sister?","For two weeks.","You're welcome.","Goodbye."],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: For two weeks."},{"k":"d","chat":[{"r":"A","t":"What are you going to do this summer holiday?"},{"r":"B","t":"I'm going to visit my grandparents in Shanghai."},{"r":"A","blank":true},{"r":"B","t":"We're going there by train."},{"r":"A","t":"How long are you going to stay?"}],"opts":["How was your weekend?","How are you going there?","How old are you?","Thank you. I lost mine."],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: How are you going there?"},{"k":"d","chat":[{"r":"A","t":"How was your weekend?"},{"r":"B","blank":true},{"r":"A","t":"What did you do there?"},{"r":"B","t":"We flew kites and had a picnic."}],"opts":["It was great. I went to the park with my family.","Yes. You can take the No. 3 bus.","Yes. Please show me your library card.","I'm nine years old. And you?"],"a":0,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: It was great. I went to the park with my family."},{"k":"d","chat":[{"r":"A","t":"Did you take any photos?"},{"r":"B","t":"Yes, I did. Look at this one."},{"r":"A","blank":true},{"r":"B","t":"We were very happy."}],"opts":["Me too. But I'm not good at maths.","Can I help you?","Anything else?","Wow, it's beautiful!"],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: Wow, it's beautiful!"},{"k":"d","chat":[{"r":"B","t":"Yes. Please show me your library card."},{"r":"A","t":"Here you are. How long can I keep it?"},{"r":"B","blank":true},{"r":"A","t":"I see. Thank you."},{"r":"B","t":"You're welcome. Enjoy your reading."}],"opts":["No, it's near. It's next to the bank.","For two weeks. You mustn't write in it.","Nice to meet you, too.","That's OK. Do you have a pencil?"],"a":1,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: For two weeks. You mustn't write in it."},{"k":"d","chat":[{"r":"A","t":"Here you are. How long can I keep it?"},{"r":"B","t":"For two weeks. You mustn't write in it."},{"r":"A","blank":true},{"r":"B","t":"You're welcome. Enjoy your reading."}],"opts":["Wow, it's beautiful!","What's the matter with you?","Did you take any photos?","I see. Thank you."],"a":3,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: I see. Thank you."},{"k":"d","chat":[{"r":"A","t":"What can he do?"},{"r":"B","t":"He can run fast and catch a ball."},{"r":"A","blank":true},{"r":"B","t":"What a pity!"}],"opts":["I usually read books at home.","What would you like for your birthday?","I like dogs, too. But my mum doesn't.","He's my father. He's a doctor."],"a":2,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"A: I like dogs, too. But my mum doesn't."},{"k":"d","chat":[{"r":"A","t":"Do you have a pet?"},{"r":"B","blank":true},{"r":"A","t":"What's he like?"},{"r":"B","t":"He's black and white. He's very clever."}],"opts":["Yes, I did. Look at this one.","Yes, I'd like that blue T-shirt.","Yes, I have a dog. His name is Lucky.","Yes, it is. Let's go to the playground."],"a":2,"hint":"看上下的问答关系，这一句要接得住上一句。","say":"B: Yes, I have a dog. His name is Lucky."},{"k":"w","html":"Good morning, Miss <span class=\"gap\">?</span>.","z":"早上好，怀特老师。","opts":["purple","black","White","red"],"a":2,"hint":"句意：早上好，怀特老师。","say":"Good morning, Miss White."},{"k":"w","html":"Yes, it is. Let's go to the <span class=\"gap\">?</span>.","z":"是的。我们去操场吧。","opts":["playground","library","cinema","museum"],"a":0,"hint":"句意：是的。我们去操场吧。","say":"Yes, it is. Let's go to the playground."},{"k":"w","html":"He's my <span class=\"gap\">?</span>. He's a doctor.","z":"他是我爸爸。他是医生。","opts":["aunt","mother","father","sister"],"a":2,"hint":"句意：他是我爸爸。他是医生。","say":"He's my father. He's a doctor."},{"k":"w","html":"She's my mother. She's a <span class=\"gap\">?</span>.","z":"她是我妈妈。她是老师。","opts":["singer","cook","teacher","driver"],"a":2,"hint":"句意：她是我妈妈。她是老师。","say":"She's my mother. She's a teacher."},{"k":"w","html":"Is this your <span class=\"gap\">?</span>?","z":"这是你姐姐吗？","opts":["aunt","mother","sister","brother"],"a":2,"hint":"句意：这是你姐姐吗？","say":"Is this your sister?"},{"k":"w","html":"What a <span class=\"gap\">?</span> family!","z":"多幸福的一家！","opts":["sad","bored","happy","thirsty"],"a":2,"hint":"句意：多幸福的一家！","say":"What a happy family!"},{"k":"w","html":"Good afternoon, Mrs <span class=\"gap\">?</span>. I'm Mike.","z":"下午好，格林太太。我是迈克。","opts":["black","Green","pink","red"],"a":1,"hint":"句意：下午好，格林太太。我是迈克。","say":"Good afternoon, Mrs Green. I'm Mike."},{"k":"w","html":"Would you like some <span class=\"gap\">?</span>?","z":"你想喝点果汁吗？","opts":["egg","juice","rice","milk"],"a":1,"hint":"句意：你想喝点果汁吗？","say":"Would you like some juice?"},{"k":"w","html":"We have <span class=\"gap\">?</span>, maths and English.","z":"我们有语文、数学和英语。","opts":["art","maths","Chinese","music"],"a":2,"hint":"句意：我们有语文、数学和英语。","say":"We have Chinese, maths and English."},{"k":"w","html":"My favourite subject is <span class=\"gap\">?</span>. It's fun.","z":"我最喜欢英语。很有趣。","opts":["maths","English","science","Chinese"],"a":1,"hint":"句意：我最喜欢英语。很有趣。","say":"My favourite subject is English. It's fun."},{"k":"w","html":"Me too. But I'm not good at <span class=\"gap\">?</span>.","z":"我也是。不过我数学不好。","opts":["art","science","English","maths"],"a":3,"hint":"句意：我也是。不过我数学不好。","say":"Me too. But I'm not good at maths."},{"k":"w","html":"Thank you. Let's <span class=\"gap\">?</span> together.","z":"谢谢。我们一起学吧。","opts":["living room","bathroom","kitchen","study"],"a":3,"hint":"句意：谢谢。我们一起学吧。","say":"Thank you. Let's study together."},{"k":"w","html":"Me too. Let's go to the <span class=\"gap\">?</span> together.","z":"我也是。我们一起去图书馆吧。","opts":["cinema","zoo","park","library"],"a":3,"hint":"句意：我也是。我们一起去图书馆吧。","say":"Me too. Let's go to the library together."},{"k":"w","html":"How about <span class=\"gap\">?</span> morning?","z":"周六上午怎么样？","opts":["Wednesday","Sunday","Thursday","Saturday"],"a":3,"hint":"句意：周六上午怎么样？","say":"How about Saturday morning?"},{"k":"w","html":"Yes, I'd like that <span class=\"gap\">?</span> T-shirt.","z":"是的，我想要那件蓝色 T 恤。","opts":["yellow","green","red","blue"],"a":3,"hint":"句意：是的，我想要那件蓝色 T 恤。","say":"Yes, I'd like that blue T-shirt."},{"k":"w","html":"A glass of orange <span class=\"gap\">?</span>, please.","z":"请来一杯橙汁。","opts":["orange","noodles","grape","juice"],"a":3,"hint":"句意：请来一杯橙汁。","say":"A glass of orange juice, please."},{"k":"w","html":"No, it's <span class=\"gap\">?</span>. It's next to the bank.","z":"不远，就在银行旁边。","opts":["near","by","behind","for"],"a":0,"hint":"句意：不远，就在银行旁边。","say":"No, it's near. It's next to the bank."},{"k":"w","html":"Can I go there by <span class=\"gap\">?</span>?","z":"我能坐公交去吗？","opts":["plane","car","bus","train"],"a":2,"hint":"句意：我能坐公交去吗？","say":"Can I go there by bus?"},{"k":"w","html":"Yes. You can take the No. 3 <span class=\"gap\">?</span>.","z":"可以，坐 3 路公交。","opts":["ship","subway","bus","car"],"a":2,"hint":"句意：可以，坐 3 路公交。","say":"Yes. You can take the No. 3 bus."},{"k":"w","html":"Yes. Please tell him to bring his <span class=\"gap\">?</span> tomorrow.","z":"好。请告诉他明天带书。","opts":["book","pencil","crayon","eraser"],"a":0,"hint":"句意：好。请告诉他明天带书。","say":"Yes. Please tell him to bring his book tomorrow."},{"k":"w","html":"I have a <span class=\"gap\">?</span> and a headache.","z":"我感冒了，还头疼。","opts":["cool","cold","rainy","warm"],"a":1,"hint":"句意：我感冒了，还头疼。","say":"I have a cold and a headache."},{"k":"w","html":"You should drink more <span class=\"gap\">?</span> and take this medicine.","z":"你应该多喝水，吃这个药。","opts":["grape","egg","orange","water"],"a":3,"hint":"句意：你应该多喝水，吃这个药。","say":"You should drink more water and take this medicine."},{"k":"w","html":"Can I go to <span class=\"gap\">?</span> tomorrow?","z":"我明天能上学吗？","opts":["hospital","bank","school","supermarket"],"a":2,"hint":"句意：我明天能上学吗？","say":"Can I go to school tomorrow?"},{"k":"w","html":"OK. Thank you, <span class=\"gap\">?</span>.","z":"好的，谢谢医生。","opts":["doctor","teacher","policeman","worker"],"a":0,"hint":"句意：好的，谢谢医生。","say":"OK. Thank you, doctor."},{"k":"w","html":"It's <span class=\"gap\">?</span> and warm.","z":"晴天，很暖和。","opts":["windy","snowy","sunny","rainy"],"a":2,"hint":"句意：晴天，很暖和。","say":"It's sunny and warm."},{"k":"w","html":"I like spring best. It's not too <span class=\"gap\">?</span>.","z":"我最喜欢春天。不太热。","opts":["hot","cool","snowy","windy"],"a":0,"hint":"句意：我最喜欢春天。不太热。","say":"I like spring best. It's not too hot."},{"k":"w","html":"Why don't you like <span class=\"gap\">?</span>?","z":"你为什么不喜欢夏天？","opts":["winter","summer","autumn","spring"],"a":1,"hint":"句意：你为什么不喜欢夏天？","say":"Why don't you like summer?"},{"k":"w","html":"Because it's too <span class=\"gap\">?</span> and I can't sleep well.","z":"因为太热了，我睡不好。","opts":["cool","rainy","snowy","hot"],"a":3,"hint":"句意：因为太热了，我睡不好。","say":"Because it's too hot and I can't sleep well."},{"k":"w","html":"What about <span class=\"gap\">?</span>?","z":"那冬天呢？","opts":["spring","winter","summer","autumn"],"a":1,"hint":"句意：那冬天呢？","say":"What about winter?"},{"k":"w","html":"It's <span class=\"gap\">?</span>, but I can make a snowman.","z":"很冷，但我能堆雪人。","opts":["sunny","snowy","cold","warm"],"a":2,"hint":"句意：很冷，但我能堆雪人。","say":"It's cold, but I can make a snowman."},{"k":"w","html":"I'd like a new <span class=\"gap\">?</span>.","z":"我想要一辆新自行车。","opts":["plane","bike","bus","taxi"],"a":1,"hint":"句意：我想要一辆新自行车。","say":"I'd like a new bike."},{"k":"w","html":"Here's a present for you. <span class=\"gap\">?</span> birthday!","z":"这是给你的礼物。生日快乐！","opts":["afraid","Happy","hungry","sad"],"a":1,"hint":"句意：这是给你的礼物。生日快乐！","say":"Here's a present for you. Happy birthday!"},{"k":"w","html":"Wow, a story <span class=\"gap\">?</span>! Thank you so much.","z":"哇，一本故事书！太感谢了。","opts":["book","bag","pen","ruler"],"a":0,"hint":"句意：哇，一本故事书！太感谢了。","say":"Wow, a story book! Thank you so much."},{"k":"w","html":"You're welcome. Let's have some <span class=\"gap\">?</span>.","z":"不客气。我们吃蛋糕吧。","opts":["apple","noodles","water","cake"],"a":3,"hint":"句意：不客气。我们吃蛋糕吧。","say":"You're welcome. Let's have some cake."},{"k":"w","html":"Excuse me, can I borrow your <span class=\"gap\">?</span>?","z":"打扰一下，我能借你的尺子吗？","opts":["bag","ruler","knife","crayon"],"a":1,"hint":"句意：打扰一下，我能借你的尺子吗？","say":"Excuse me, can I borrow your ruler?"},{"k":"w","html":"That's OK. Do you have a <span class=\"gap\">?</span>?","z":"没关系。你有铅笔吗？","opts":["ruler","pen","eraser","pencil"],"a":3,"hint":"句意：没关系。你有铅笔吗？","say":"That's OK. Do you have a pencil?"},{"k":"w","html":"Yes, I do. But I need an <span class=\"gap\">?</span>, too.","z":"有。但我还需要一块橡皮。","opts":["book","eraser","bag","pencil"],"a":1,"hint":"句意：有。但我还需要一块橡皮。","say":"Yes, I do. But I need an eraser, too."},{"k":"w","html":"It's on <span class=\"gap\">?</span> afternoon, at my home.","z":"周日下午，在我家。","opts":["Friday","Tuesday","Sunday","Thursday"],"a":2,"hint":"句意：周日下午，在我家。","say":"It's on Sunday afternoon, at my home."},{"k":"w","html":"Can I bring my <span class=\"gap\">?</span>?","z":"我能带我妹妹来吗？","opts":["aunt","sister","grandpa","cousin"],"a":1,"hint":"句意：我能带我妹妹来吗？","say":"Can I bring my sister?"},{"k":"w","html":"Great. See you on <span class=\"gap\">?</span>.","z":"太好了，周日见。","opts":["Sunday","Wednesday","Monday","Thursday"],"a":0,"hint":"句意：太好了，周日见。","say":"Great. See you on Sunday."},{"k":"w","html":"What are you going to do this <span class=\"gap\">?</span> holiday?","z":"这个暑假你打算做什么？","opts":["summer","autumn","winter","spring"],"a":0,"hint":"句意：这个暑假你打算做什么？","say":"What are you going to do this summer holiday?"},{"k":"w","html":"We're going there by <span class=\"gap\">?</span>.","z":"我们坐火车去。","opts":["taxi","bike","train","bus"],"a":2,"hint":"句意：我们坐火车去。","say":"We're going there by train."},{"k":"w","html":"It was great. I went to the <span class=\"gap\">?</span> with my family.","z":"很棒。我和家人去了公园。","opts":["bank","zoo","library","park"],"a":3,"hint":"句意：很棒。我和家人去了公园。","say":"It was great. I went to the park with my family."},{"k":"w","html":"We were very <span class=\"gap\">?</span>.","z":"我们非常开心。","opts":["afraid","tired","happy","excited"],"a":2,"hint":"句意：我们非常开心。","say":"We were very happy."},{"k":"w","html":"Excuse me, can I borrow this <span class=\"gap\">?</span>?","z":"打扰一下，我能借这本书吗？","opts":["knife","book","bag","pen"],"a":1,"hint":"句意：打扰一下，我能借这本书吗？","say":"Excuse me, can I borrow this book?"},{"k":"w","html":"Yes. Please show me your <span class=\"gap\">?</span> card.","z":"可以。请出示你的借书卡。","opts":["zoo","library","bank","supermarket"],"a":1,"hint":"句意：可以。请出示你的借书卡。","say":"Yes. Please show me your library card."},{"k":"w","html":"Yes, I have a <span class=\"gap\">?</span>. His name is Lucky.","z":"养，我有只狗，叫 Lucky。","opts":["cat","pig","fish","dog"],"a":3,"hint":"句意：养，我有只狗，叫 Lucky。","say":"Yes, I have a dog. His name is Lucky."},{"k":"w","html":"He's <span class=\"gap\">?</span> and white. He's very clever.","z":"黑白相间，很聪明。","opts":["green","black","white","blue"],"a":1,"hint":"句意：黑白相间，很聪明。","say":"He's black and white. He's very clever."},{"k":"w","html":"Welcome to our <span class=\"gap\">?</span>.","z":"欢迎来到我们学校。","opts":["bank","museum","hospital","school"],"a":3,"hint":"句意：欢迎来到我们学校。","say":"Welcome to our school."},{"k":"w","html":"Excuse me, where is the <span class=\"gap\">?</span>?","z":"打扰一下，图书馆在哪？","opts":["hospital","cinema","park","library"],"a":3,"hint":"句意：打扰一下，图书馆在哪？","say":"Excuse me, where is the library?"},{"k":"w","html":"Who's she? She's my <span class=\"gap\">?</span>.","z":"她是谁？我妈妈。","opts":["uncle","aunt","brother","mother"],"a":3,"hint":"句意：她是谁？我妈妈。","say":"Who's she? She's my mother."},{"k":"w","html":"Who's that woman? She's my <span class=\"gap\">?</span>.","z":"那位女士是谁？","opts":["grandma","aunt","cousin","brother"],"a":1,"hint":"句意：那位女士是谁？","say":"Who's that woman? She's my aunt."},{"k":"w","html":"What's your father? He's a <span class=\"gap\">?</span>.","z":"你爸爸做什么工作？","opts":["farmer","worker","cook","doctor"],"a":3,"hint":"句意：你爸爸做什么工作？","say":"What's your father? He's a doctor."},{"k":"w","html":"What does your <span class=\"gap\">?</span> do?","z":"你妈妈做什么？","opts":["mother","sister","uncle","grandma"],"a":0,"hint":"句意：你妈妈做什么？","say":"What does your mother do?"},{"k":"w","html":"Is she your <span class=\"gap\">?</span>? No, she isn't.","z":"她是你姐姐吗？","opts":["aunt","mother","grandma","sister"],"a":3,"hint":"句意：她是你姐姐吗？","say":"Is she your sister? No, she isn't."},{"k":"w","html":"Whose <span class=\"gap\">?</span> is this? It's Mike's.","z":"这是谁的书包？","opts":["pen","pencil","bag","ruler"],"a":2,"hint":"句意：这是谁的书包？","say":"Whose bag is this? It's Mike's."},{"k":"w","html":"What's this? It's a <span class=\"gap\">?</span>.","z":"这是什么？","opts":["pencil","bag","crayon","pen"],"a":0,"hint":"句意：这是什么？","say":"What's this? It's a pencil."},{"k":"w","html":"Is this your <span class=\"gap\">?</span>? No, it isn't.","z":"这是你的橡皮吗？","opts":["bag","eraser","book","pen"],"a":1,"hint":"句意：这是你的橡皮吗？","say":"Is this your eraser? No, it isn't."},{"k":"w","html":"What colour is your <span class=\"gap\">?</span>? It's blue.","z":"它是什么颜色？","opts":["bag","pen","ruler","knife"],"a":0,"hint":"句意：它是什么颜色？","say":"What colour is your bag? It's blue."},{"k":"w","html":"What colour are the <span class=\"gap\">?</span>?","z":"鞋子是什么颜色？","opts":["skirt","sweater","shoes","socks"],"a":2,"hint":"句意：鞋子是什么颜色？","say":"What colour are the shoes?"},{"k":"w","html":"I have a red <span class=\"gap\">?</span>.","z":"我有一个新书包。","opts":["eraser","crayon","pen","knife"],"a":2,"hint":"句意：我有一个新书包。","say":"I have a red pen."},{"k":"w","html":"I like that <span class=\"gap\">?</span> one.","z":"我喜欢那个蓝色的。","opts":["green","blue","brown","orange"],"a":1,"hint":"句意：我喜欢那个蓝色的。","say":"I like that blue one."},{"k":"w","html":"The <span class=\"gap\">?</span> are too small.","z":"太贵了／太小了。","opts":["skirt","cap","shoes","socks"],"a":2,"hint":"句意：太贵了／太小了。","say":"The shoes are too small."},{"k":"w","html":"Where's my ball? It's <span class=\"gap\">?</span> the bed.","z":"球在哪？床下。","opts":["by","between","in","under"],"a":3,"hint":"句意：球在哪？床下。","say":"Where's my ball? It's under the bed."},{"k":"w","html":"It's <span class=\"gap\">?</span> the desk and the bed.","z":"在桌子和床中间。","opts":["at","with","between","on"],"a":2,"hint":"句意：在桌子和床中间。","say":"It's between the desk and the bed."},{"k":"w","html":"Is there a park <span class=\"gap\">?</span> here?","z":"附近有公园吗？","opts":["of","near","behind","for"],"a":1,"hint":"句意：附近有公园吗？","say":"Is there a park near here?"},{"k":"w","html":"The <span class=\"gap\">?</span> is on your right.","z":"银行在你右边。","opts":["park","supermarket","playground","bank"],"a":3,"hint":"句意：银行在你右边。","say":"The bank is on your right."},{"k":"w","html":"It's time for <span class=\"gap\">?</span> class.","z":"该上英语课了。","opts":["maths","English","art","music"],"a":1,"hint":"句意：该上英语课了。","say":"It's time for English class."},{"k":"w","html":"What day is it today? It's <span class=\"gap\">?</span>.","z":"今天星期几？","opts":["Friday","Sunday","Thursday","Tuesday"],"a":0,"hint":"句意：今天星期几？","say":"What day is it today? It's Friday."},{"k":"w","html":"How's the weather in Beijing? It's <span class=\"gap\">?</span>.","z":"天气怎么样？","opts":["windy","rainy","cloudy","snowy"],"a":0,"hint":"句意：天气怎么样？","say":"How's the weather in Beijing? It's windy."},{"k":"w","html":"It's going to be <span class=\"gap\">?</span> tomorrow.","z":"明天要晴。","opts":["warm","snowy","cloudy","sunny"],"a":3,"hint":"句意：明天要晴。","say":"It's going to be sunny tomorrow."},{"k":"w","html":"We have <span class=\"gap\">?</span> on Tuesday.","z":"我们周二有音乐课。","opts":["Chinese","English","music","science"],"a":2,"hint":"句意：我们周二有音乐课。","say":"We have music on Tuesday."},{"k":"w","html":"Would you like some <span class=\"gap\">?</span>? Yes, please.","z":"你想要点茶吗？","opts":["milk","grape","tea","rice"],"a":2,"hint":"句意：你想要点茶吗？","say":"Would you like some tea? Yes, please."},{"k":"w","html":"How do you feel? I feel <span class=\"gap\">?</span>.","z":"你感觉怎么样？","opts":["tired","angry","happy","afraid"],"a":0,"hint":"句意：你感觉怎么样？","say":"How do you feel? I feel tired."},{"k":"w","html":"I'm <span class=\"gap\">?</span> of dogs.","z":"我开心／难过／生气／担心／害怕。","opts":["afraid","sad","hungry","thirsty"],"a":0,"hint":"句意：我开心／难过／生气／担心／害怕。","say":"I'm afraid of dogs."},{"k":"w","html":"I like <span class=\"gap\">?</span>. What about you?","z":"你呢？","opts":["music","science","Chinese","PE"],"a":0,"hint":"句意：你呢？","say":"I like music. What about you?"},{"k":"w","html":"Can you <span class=\"gap\">?</span>? Yes, I can.","z":"你会做饭吗？","opts":["driver","worker","policeman","cook"],"a":3,"hint":"句意：你会做饭吗？","say":"Can you cook? Yes, I can."},{"k":"w","html":"Can I use your <span class=\"gap\">?</span>? Sure.","z":"我能用下你的笔吗？","opts":["ruler","knife","pen","crayon"],"a":2,"hint":"句意：我能用下你的笔吗？","say":"Can I use your pen? Sure."},{"k":"w","html":"Let's go to the <span class=\"gap\">?</span>. Good idea!","z":"我们去公园吧。","opts":["zoo","playground","school","park"],"a":3,"hint":"句意：我们去公园吧。","say":"Let's go to the park. Good idea!"},{"k":"w","html":"How about going by <span class=\"gap\">?</span>?","z":"坐公交怎么样？","opts":["plane","bus","bike","taxi"],"a":1,"hint":"句意：坐公交怎么样？","say":"How about going by bus?"},{"k":"w","html":"Why don't you ask your <span class=\"gap\">?</span>?","z":"你为什么不去问老师？","opts":["cook","teacher","singer","driver"],"a":1,"hint":"句意：你为什么不去问老师？","say":"Why don't you ask your teacher?"},{"k":"w","html":"You should see a <span class=\"gap\">?</span>.","z":"你应该去看医生。","opts":["singer","policeman","doctor","farmer"],"a":2,"hint":"句意：你应该去看医生。","say":"You should see a doctor."},{"k":"w","html":"Don't touch it. It's <span class=\"gap\">?</span>.","z":"别碰，很烫。","opts":["cold","snowy","hot","rainy"],"a":2,"hint":"句意：别碰，很烫。","say":"Don't touch it. It's hot."},{"k":"w","html":"Can I help you? Yes, I want a <span class=\"gap\">?</span>.","z":"需要帮忙吗？","opts":["socks","skirt","shoes","cap"],"a":3,"hint":"句意：需要帮忙吗？","say":"Can I help you? Yes, I want a cap."},{"k":"w","html":"How much is the <span class=\"gap\">?</span>? It's forty yuan.","z":"多少钱？","opts":["coat","shirt","cap","hat"],"a":1,"hint":"句意：多少钱？","say":"How much is the shirt? It's forty yuan."},{"k":"w","html":"How much are the <span class=\"gap\">?</span>?","z":"一共多少钱？","opts":["sweater","shoes","socks","shirt"],"a":2,"hint":"句意：一共多少钱？","say":"How much are the socks?"},{"k":"w","html":"A bowl of <span class=\"gap\">?</span>, please.","z":"请来两份／一杯茶。","opts":["rice","cake","noodles","tea"],"a":2,"hint":"句意：请来两份／一杯茶。","say":"A bowl of noodles, please."},{"k":"w","html":"Help yourself to some <span class=\"gap\">?</span>.","z":"请随意吃。","opts":["dog","horse","monkey","fish"],"a":3,"hint":"句意：请随意吃。","say":"Help yourself to some fish."},{"k":"w","html":"I have <span class=\"gap\">?</span> and maths.","z":"周一你有什么课？","opts":["Chinese","music","English","maths"],"a":0,"hint":"句意：周一你有什么课？","say":"I have Chinese and maths."},{"k":"w","html":"We have <span class=\"gap\">?</span> in the afternoon.","z":"我们有英语、数学和音乐。","opts":["PE","English","maths","music"],"a":0,"hint":"句意：我们有英语、数学和音乐。","say":"We have PE in the afternoon."},{"k":"w","html":"My favourite subject is <span class=\"gap\">?</span>.","z":"你最喜欢哪一科？","opts":["music","maths","English","PE"],"a":2,"hint":"句意：你最喜欢哪一科？","say":"My favourite subject is English."},{"k":"w","html":"I come to <span class=\"gap\">?</span> on foot.","z":"你怎么来学校？","opts":["school","playground","zoo","museum"],"a":0,"hint":"句意：你怎么来学校？","say":"I come to school on foot."},{"k":"w","html":"I'm good at <span class=\"gap\">?</span>.","z":"你英语好吗？","opts":["music","maths","science","PE"],"a":1,"hint":"句意：你英语好吗？","say":"I'm good at maths."},{"k":"w","html":"I go to school by <span class=\"gap\">?</span>.","z":"坐公交／骑车／坐地铁／步行。","opts":["ship","car","plane","bus"],"a":3,"hint":"句意：坐公交／骑车／坐地铁／步行。","say":"I go to school by bus."},{"k":"w","html":"Where are you going? To the <span class=\"gap\">?</span>.","z":"你去哪儿？","opts":["supermarket","library","museum","bank"],"a":1,"hint":"句意：你去哪儿？","say":"Where are you going? To the library."},{"k":"w","html":"I'm going to visit my <span class=\"gap\">?</span>.","z":"你打算做什么？","opts":["grandma","grandpa","aunt","uncle"],"a":0,"hint":"句意：你打算做什么？","say":"I'm going to visit my grandma."},{"k":"w","html":"Where did you go last <span class=\"gap\">?</span>?","z":"你上周去哪了？","opts":["Wednesday","Monday","Sunday","Friday"],"a":2,"hint":"句意：你上周去哪了？","say":"Where did you go last Sunday?"},{"k":"w","html":"We went there by <span class=\"gap\">?</span>.","z":"你们怎么去的？","opts":["bike","taxi","plane","ship"],"a":2,"hint":"句意：你们怎么去的？","say":"We went there by plane."},{"k":"w","html":"She goes to school by <span class=\"gap\">?</span>.","z":"我每天踢球。","opts":["car","ship","bike","plane"],"a":2,"hint":"句意：我每天踢球。","say":"She goes to school by bike."},{"k":"w","html":"My <span class=\"gap\">?</span> works in a hospital.","z":"他喜欢……","opts":["cousin","father","grandma","sister"],"a":1,"hint":"句意：他喜欢……","say":"My father works in a hospital."},{"k":"w","html":"They were <span class=\"gap\">?</span> last night.","z":"我昨天在家。","opts":["thirsty","happy","hungry","angry"],"a":1,"hint":"句意：我昨天在家。","say":"They were happy last night."},{"k":"w","html":"It will be <span class=\"gap\">?</span> tomorrow.","z":"我会帮你。","opts":["cold","hot","rainy","sunny"],"a":3,"hint":"句意：我会帮你。","say":"It will be sunny tomorrow."},{"k":"w","html":"My <span class=\"gap\">?</span> is younger than me.","z":"更大／更小／更重／更瘦。","opts":["sister","grandpa","aunt","uncle"],"a":0,"hint":"句意：更大／更小／更重／更瘦。","say":"My sister is younger than me."},{"k":"w","html":"I'm as tall as my <span class=\"gap\">?</span>.","z":"和……一样高","opts":["father","mother","brother","grandma"],"a":2,"hint":"句意：和……一样高","say":"I'm as tall as my brother."},{"k":"w","html":"Can I borrow your <span class=\"gap\">?</span>?","z":"我能借你的……吗？","opts":["book","pen","ruler","pencil"],"a":2,"hint":"句意：我能借你的……吗？","say":"Can I borrow your ruler?"}];
+</script>
+<script>
+(function () {
+  var state = { mode: 'learn', sc: 0, k: 0, playing: false, paused: false, auto: true,
+                done: {}, qs: [], qi: 0, right: 0, locked: false, testMode: 'run' };
+
+  var $ = function (id) { return document.getElementById(id); };
+  var elChat = $('chat'), elTitle = $('sTitle'), elNo = $('sNo'), elBadges = $('sBadges');
+  var elScNo = $('scNo'), elDone = $('doneNo'), elPatBox = $('patbox'), elPatList = $('patList');
+  var elLearn = $('learnView'), elTest = $('testView'), elQArea = $('qArea');
+  var btnPause = $('btnPause'), btnReplay = $('btnReplay'), btnNext = $('btnNext'), btnTest = $('btnTest');
+  var tabLearn = $('tabLearn'), tabTest = $('tabTest');
+
+  function say(text, opt) {
+    opt = opt || {};
+    if (window.XNLYSay && XNLYSay.play) {
+      XNLYSay.play(text, opt);
+      return;
+    }
+    try {
+      if (!window.speechSynthesis) { if (opt.onend) opt.onend(); return; }
+      speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US'; u.rate = 0.9;
+      if (opt.onend) u.onend = opt.onend;
+      speechSynthesis.speak(u);
+    } catch (e) { if (opt.onend) opt.onend(); }
+  }
+  function stopSay() { try { if (window.XNLYSay) XNLYSay.stop(); } catch (e) {} try { speechSynthesis.cancel(); } catch (e) {} }
+
+  /* ---------- 学习 ---------- */
+  function sceneRange(i) {
+    var a = -1, b = -1;
+    for (var k = 0; k < Q.length; k++) {
+      if (Q[k].sc === i) { if (a < 0) a = k; b = k; }
+    }
+    return [a, b];
+  }
+
+  function renderScene(i) {
+    state.sc = i; state.k = -1; state.playing = false; state.paused = false;
+    var s = SC[i];
+    elNo.textContent = 'SCENE ' + (i + 1 < 10 ? '0' : '') + (i + 1);
+    elTitle.textContent = s.t;
+    elScNo.textContent = i + 1;
+    elBadges.innerHTML = '';
+    var add = function (cls, txt) {
+      if (!txt) return;
+      var d = document.createElement('span');
+      d.className = 'bdg ' + cls; d.textContent = txt; elBadges.appendChild(d);
+    };
+    add('g', s.g);
+    add('', s.fn);
+    add('c', '核心：' + s.core);
+
+    var rg = sceneRange(i), n = 0;
+    elChat.innerHTML = '';
+    for (var q = rg[0]; q <= rg[1]; q++) {
+      var it = Q[q];
+      var row = document.createElement('div');
+      row.className = 'row ' + it.r + ' hidden';
+      row.setAttribute('data-q', q);
+      row.innerHTML = '<div class="av">' + it.r + '</div>' +
+        '<div class="bub"><div class="en">' + esc(it.t) + '</div><div class="zh">' + esc(it.z) + '</div></div>';
+      row.querySelector('.bub').addEventListener('click', function (ev) {
+        var qq = +this.parentNode.getAttribute('data-q');
+        stopSay(); say(Q[qq].s, { rate: 0.92 });
+        highlight(qq);
+      });
+      elChat.appendChild(row);
+      n++;
+    }
+    var pack = PATPACK[s.p] || [];
+    if (pack.length) {
+      elPatBox.hidden = false;
+      elPatList.innerHTML = '';
+      pack.forEach(function (p) {
+        var li = document.createElement('li');
+        li.innerHTML = '<span>' + esc(p.e) + '</span><i>' + esc(p.z) + '</i>';
+        elPatList.appendChild(li);
+      });
+    } else { elPatBox.hidden = true; }
+
+    btnNext.textContent = (i + 1 < SC.length) ? '下一个场景 →' : '重新开始 ↺';
+    btnNext.disabled = false;
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  function rows() { return elChat.querySelectorAll('.row'); }
+
+  function highlight(qIdx) {
+    var rs = rows();
+    for (var i = 0; i < rs.length; i++) {
+      var on = (+rs[i].getAttribute('data-q') === qIdx);
+      rs[i].classList.toggle('on', on);
+      if (on) {
+        rs[i].classList.remove('hidden', 'dim');
+        try {
+          var r = rs[i].getBoundingClientRect();
+          var h = window.innerHeight || 600;
+          if (r.bottom > h - 150 || r.top < 90) {
+            window.scrollBy({ top: r.top - h * 0.42, behavior: 'smooth' });
+          }
+        } catch (e) {}
+      }
+      else if (!rs[i].classList.contains('hidden')) rs[i].classList.add('dim');
+    }
+  }
+
+  function reveal(qIdx) {
+    var rs = rows();
+    for (var i = 0; i < rs.length; i++) {
+      if (+rs[i].getAttribute('data-q') === qIdx) rs[i].classList.remove('hidden');
+    }
+  }
+
+  function playFrom(k) {
+    if (state.paused) return;
+    state.k = k;
+    var rg = sceneRange(state.sc);
+    if (k > rg[1] - rg[0] + rg[0]) { finishScene(); return; }
+    if (k > rg[1]) { finishScene(); return; }
+    var it = Q[k];
+    reveal(k); highlight(k);
+    state.playing = true;
+    say(it.s, {
+      rate: 0.9,
+      onend: function () {
+        if (state.paused) return;
+        var nxt = k + 1;
+        if (nxt > rg[1]) { setTimeout(finishScene, 240); return; }
+        setTimeout(function () { if (!state.paused) playFrom(nxt); }, 260);
+      }
+    });
+  }
+
+  function startScene() {
+    var rg = sceneRange(state.sc);
+    state.paused = false; btnPause.textContent = '⏸';
+    playFrom(rg[0]);
+  }
+
+  function finishScene() {
+    state.playing = false;
+    state.done[state.sc] = 1;
+    elDone.textContent = Object.keys(state.done).length;
+    try { if (window.XNLY && XNLY.sound && XNLY.sound.ok) XNLY.sound.ok(); } catch (e) {}
+    if (!state.auto) return;
+    var nx = state.sc + 1;
+    setTimeout(function () {
+      if (state.mode !== 'learn' || !state.auto) return;
+      if (nx < SC.length) { renderScene(nx); } else { renderScene(0); }
+      try { window.scrollTo({ top: 0, behavior: 'smooth' }); } catch (e) {}
+      startScene();
+    }, 2200);
+  }
+
+  function goScene(d) {
+    stopSay();
+    var i = state.sc + d;
+    if (i < 0) i = 0;
+    if (i >= SC.length) i = SC.length - 1;
+    renderScene(i); startScene();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  btnPause.addEventListener('click', function () {
+    if (!state.playing) { startScene(); return; }
+    state.paused = !state.paused;
+    if (state.paused) { stopSay(); btnPause.textContent = '▶'; }
+    else { btnPause.textContent = '⏸'; playFrom(state.k + 1 < 0 ? 0 : state.k); }
+  });
+
+  btnReplay.addEventListener('click', function () { stopSay(); startScene(); });
+  btnNext.addEventListener('click', function () {
+    if (state.sc + 1 >= SC.length) { renderScene(0); startScene(); return; }
+    goScene(1);
+  });
+
+  window.replayCurrent = function () { stopSay(); startScene(); };
+  window.XNLY_NEXT = function () { goScene(1); };
+
+  /* ---------- 测试 ---------- */
+  function shuffle(a) {
+    var b = a.slice();
+    for (var i = b.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = b[i]; b[i] = b[j]; b[j] = t; }
+    return b;
+  }
+
+  function buildTest(n) {
+    n = n || 20;
+    var ds = shuffle(EX.filter(function (x) { return x.k === 'd'; })).slice(0, Math.round(n * 0.4));
+    var ws = shuffle(EX.filter(function (x) { return x.k === 'w'; })).slice(0, n - ds.length);
+    var pool = shuffle(ds.concat(ws));
+    state.qs = pool; state.qi = 0; state.right = 0; state.locked = false; state.testMode = 'run';
+    renderQ();
+  }
+
+  function renderQ() {
+    var it = state.qs[state.qi];
+    if (!it) { renderResult(); return; }
+    var head = '<div class="qhead"><span class="qtag ' + (it.k === 'w' ? 'w' : '') + '">' +
+      (it.k === 'w' ? '选词填空' : '对话补全') + '</span>' +
+      '<span class="qno">' + (state.qi + 1) + ' / ' + state.qs.length + '</span></div>' +
+      '<div class="prog"><i style="width:' + Math.round(state.qi / state.qs.length * 100) + '%"></i></div>';
+
+    var body = '';
+    if (it.k === 'w') {
+      body = '<div class="qcard"><div class="sent">' + it.html + '</div>' +
+        '<div class="zh" style="font-size:.74rem;color:#7a8ba0;margin-top:8px">选一个词填进空位</div></div>';
+    } else {
+      var chat = '';
+      it.chat.forEach(function (c) {
+        if (c.blank) {
+          chat += '<div class="row ' + c.r + '"><div class="av">' + c.r + '</div>' +
+            '<div class="bub" style="border-style:dashed;border-color:#1d7fd0;background:#fff"><div class="en" style="color:#1d7fd0">？ 该说什么</div></div></div>';
+        } else {
+          chat += '<div class="row ' + c.r + '"><div class="av">' + c.r + '</div>' +
+            '<div class="bub"><div class="en">' + esc(c.t) + '</div></div></div>';
+        }
+      });
+      body = '<div class="qcard"><div class="chat" style="gap:8px">' + chat + '</div></div>';
+    }
+
+    var opts = '<div class="opts">';
+    it.opts.forEach(function (o, i) {
+      opts += '<button class="opt" data-i="' + i + '"><span class="k">' + 'ABCD'.charAt(i) + '</span><span>' + esc(o) + '</span></button>';
+    });
+    opts += '</div>';
+
+    elQArea.innerHTML = '<div class="qwrap">' + head + body + opts +
+      '<div class="fb" id="fb"></div>' +
+      '<button class="cbtn main" id="btnQNext" style="width:100%;display:none">下一题 →</button></div>';
+
+    var btns = elQArea.querySelectorAll('.opt');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener('click', function () { answer(this, +this.getAttribute('data-i')); });
+    }
+    $('btnQNext').addEventListener('click', nextQ);
+
+    if (it.k === 'd' && it.say) { /* 对话题不朗读：答案就在选项里 */ }
+  }
+
+  function answer(btn, i) {
+    if (state.locked) return;
+    state.locked = true;
+    var it = state.qs[state.qi];
+    var all = elQArea.querySelectorAll('.opt');
+    for (var k = 0; k < all.length; k++) all[k].disabled = true;
+    var ok = (i === it.a);
+    if (ok) {
+      btn.classList.add('right'); state.right++;
+      try { if (window.XNLY && XNLY.sound && XNLY.sound.ok) XNLY.sound.ok(); } catch (e) {}
+    } else {
+      btn.classList.add('wrong');
+      for (var j = 0; j < all.length; j++) if (+all[j].getAttribute('data-i') === it.a) all[j].classList.add('right');
+      try { if (window.XNLY && XNLY.sound && XNLY.sound.bad) XNLY.sound.bad(); } catch (e) {}
+    }
+    var fb = $('fb');
+    fb.className = 'fb show ' + (ok ? 'ok' : 'no');
+    fb.innerHTML = (ok ? '✓ 对了！' : '✗ 正确答案：' + esc(it.opts[it.a])) +
+      (it.hint ? '<br><span style="opacity:.85">' + esc(it.hint) + '</span>' : '');
+    if (it.k === 'w') say(it.say, { rate: 0.86 });
+
+    if (ok) {
+      setTimeout(nextQ, 900);
+    } else {
+      var b = $('btnQNext'); b.style.display = 'flex';
+    }
+  }
+
+  function nextQ() {
+    state.qi++; state.locked = false;
+    if (state.qi >= state.qs.length) { renderResult(); return; }
+    renderQ();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function renderResult() {
+    var n = state.qs.length, r = state.right;
+    var pct = n ? Math.round(r / n * 100) : 0;
+    var face = pct >= 90 ? '🏆' : pct >= 80 ? '🎉' : pct >= 60 ? '💪' : '📚';
+    var msg = pct >= 90 ? '太厉害了，句型掌握得很牢！' :
+              pct >= 80 ? '过关！再练一轮更稳。' :
+              pct >= 60 ? '大部分会了，错的地方回看对话。' : '先把对话再听两遍，再来一次。';
+    elQArea.innerHTML = '<div class="big"><div style="font-size:2.6rem">' + face + '</div>' +
+      '<div class="score">' + r + '<small> / ' + n + '</small></div>' +
+      '<h2>' + msg + '</h2>' +
+      '<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;justify-content:center">' +
+      '<button class="cbtn side" id="btnAgain" style="height:46px">再来一轮</button>' +
+      '<button class="cbtn main" id="btnBackLearn" style="height:46px;flex:0 0 auto;padding:0 20px">回去学对话</button></div></div>';
+    $('btnAgain').addEventListener('click', function () { buildTest(20); });
+    $('btnBackLearn').addEventListener('click', function () { setMode('learn'); });
+    if (pct >= 80) { try { if (window.XNLY && XNLY.sound && XNLY.sound.win) XNLY.sound.win(); } catch (e) {} }
+  }
+
+  /* ---------- 模式 ---------- */
+  function setMode(m) {
+    state.mode = m;
+    elLearn.hidden = (m !== 'learn');
+    elTest.hidden = (m !== 'test');
+    tabLearn.classList.toggle('on', m === 'learn');
+    tabTest.classList.toggle('on', m === 'test');
+    $('ctrl').style.display = (m === 'learn') ? 'flex' : 'none';
+    document.body.style.paddingBottom = (m === 'learn') ? '96px' : '24px';
+    stopSay();
+    if (m === 'test') { if (!state.qs.length || state.testMode === 'over') { state.testMode = 'run'; buildTest(20); } }
+    else { renderScene(state.sc); startScene(); }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+  tabLearn.addEventListener('click', function () { setMode('learn'); });
+  tabTest.addEventListener('click', function () { setMode('test'); state.testMode = 'run'; buildTest(20); });
+  btnTest.addEventListener('click', function () { state.testMode = 'run'; setMode('test'); buildTest(20); });
+
+  /* ---------- 启动 ---------- */
+  $('btnStart').addEventListener('click', function () {
+    $('mask').classList.add('hide');
+    try { if (window.XNLYSay && XNLYSay.unlock) XNLYSay.unlock(); } catch (e) {}
+    renderScene(0); startScene();
+  });
+
+  renderScene(0);
+  elDone.textContent = '0';
+})();
+</script>
+<script src="../homebtn.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('../sw.js').catch(function () { });
+  });
+}
+</script>
+</body>
+</html>

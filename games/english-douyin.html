@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>英语抖音 · 小脑袋乐园</title>
-<meta name="theme-color" content="#00897b">
+<meta name="theme-color" content="#e0245e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -13,12 +13,12 @@
 <link rel="icon" type="image/png" href="../games/img/icon-192.png">
 <link rel="manifest" href="../manifest.json">
 <style>
-:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#00897b;--line:rgba(36,59,83,.10);}
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#e0245e;--line:rgba(36,59,83,.10);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
-  background:radial-gradient(900px 500px at 0% 0%,#e6f7f4,transparent 60%),
-             radial-gradient(900px 500px at 100% 0%,#fff3e8,transparent 55%),
-             linear-gradient(160deg,#f7fcfb,#fffaf5);
+  background:radial-gradient(900px 500px at 0% 0%,#ffe9ef,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#eef4ff,transparent 55%),
+             linear-gradient(160deg,#fff8fa,#f6fbff);
   min-height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
 header{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 h1{font-size:1.15rem;}
@@ -27,40 +27,52 @@ h1{font-size:1.15rem;}
   box-shadow:0 3px 10px rgba(36,59,83,.10);}
 .chips{display:flex;gap:6px;flex-wrap:wrap;align-items:center;}
 .chip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
-  font-family:inherit;font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
+  font-size:.74rem;font-weight:800;color:#6b7f95;box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
 .chip b{color:var(--accent);font-size:.86rem;}
 .chipbar{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;}
-.tchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 11px;
-  font-family:inherit;font-size:.75rem;font-weight:800;color:#4a6076;cursor:pointer;
+.tchip{background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 14px;min-height:40px;
+  font-family:inherit;font-size:.78rem;font-weight:800;color:#4a6076;cursor:pointer;
   box-shadow:0 3px 10px rgba(36,59,83,.07);white-space:nowrap;}
-.tchip.on{background:linear-gradient(135deg,#00897b,#00695c);color:#fff;border-color:transparent;}
+.tchip.on{background:linear-gradient(135deg,#f0507f,#e0245e);color:#fff;border-color:transparent;}
 .stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;
   min-height:0;overflow-y:auto;width:100%;}
 .prompt{font-size:1rem;font-weight:800;text-align:center;color:#4a6076;line-height:1.5;}
 .prompt span{display:block;font-size:.76rem;font-weight:700;color:#8aa0b8;margin-top:3px;}
+
+/* ==== 选项：图片卡片 ==== */
 .opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(600px,100%);}
-.opt{min-height:66px;border:2px solid var(--line);border-radius:16px;background:#fff;padding:8px 12px;
-  font-family:inherit;font-size:.95rem;font-weight:900;color:var(--ink);cursor:pointer;line-height:1.35;
+.opt{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+  min-height:118px;border:2px solid var(--line);border-radius:18px;background:#fff;padding:10px 8px;
+  font-family:inherit;color:var(--ink);cursor:pointer;line-height:1.35;
   box-shadow:0 5px 14px rgba(36,59,83,.08);transition:transform .14s,border-color .18s,background .18s;}
 .opt:active{transform:scale(.97);}
-.opt.good{border-color:var(--ok);background:#e9fbee;color:#1b7c33;}
-.opt.bad{border-color:var(--bad);background:#ffeded;color:#b02a2a;}
+.opt .pic{font-size:2.35rem;line-height:1.1;letter-spacing:-2px;}
+.opt .tx{font-size:.82rem;font-weight:900;text-align:center;}
+.opt .taga{position:absolute;}
+.opt .lbl{font-size:.66rem;font-weight:900;color:#a4b4c6;letter-spacing:.5px;}
+.opt.good{border-color:var(--ok);background:#e9fbee;}
+.opt.good .tx{color:#1b7c33;}
+.opt.bad{border-color:var(--bad);background:#ffeded;}
+.opt.bad .tx{color:#b02a2a;}
 .opt[disabled]{opacity:.45;cursor:default;}
+.opt .mark{font-size:.72rem;font-weight:900;margin-top:1px;}
+
 .tools{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
 .tool{background:#fff;border:1px solid var(--line);border-radius:999px;padding:9px 15px;min-height:42px;
   font-family:inherit;font-size:.8rem;font-weight:800;color:#4a6076;cursor:pointer;
   box-shadow:0 3px 10px rgba(36,59,83,.07);}
 .tool:active{transform:scale(.97);}
+.tool.next{background:linear-gradient(135deg,#3ecf6a,#2fb344);border-color:transparent;color:#fff;}
 .feedback{min-height:40px;font-size:1rem;font-weight:800;text-align:center;line-height:1.45;width:min(620px,100%);}
 .ok{color:var(--ok);} .bad{color:var(--bad);}
 .feedback small{display:block;font-size:.78rem;font-weight:700;color:#7b8ea8;margin-top:3px;}
-.textbox{width:min(620px,100%);background:#fff;border:2px solid rgba(0,137,123,.25);border-radius:14px;
+.textbox{width:min(620px,100%);background:#fff;border:2px solid rgba(224,36,94,.18);border-radius:14px;
   padding:12px 14px;text-align:left;box-shadow:0 6px 18px rgba(36,59,83,.08);display:none;}
 .textbox.show{display:block;}
-.textbox .lbl{font-size:.68rem;font-weight:900;color:var(--accent);letter-spacing:.5px;}
-.textbox .en{font-size:.92rem;font-weight:800;line-height:1.75;color:#00796b;margin-top:5px;font-family:Georgia,'Times New Roman',serif;}
+.textbox .lbl2{font-size:.68rem;font-weight:900;color:var(--accent);letter-spacing:.5px;}
+.textbox .en{font-size:.92rem;font-weight:800;line-height:1.75;color:#243b53;margin-top:5px;font-family:Georgia,'Times New Roman',serif;}
 .textbox .cn{font-size:.78rem;font-weight:700;line-height:1.7;color:#6b7f95;margin-top:6px;}
-.textbox .ans{font-size:.82rem;font-weight:900;color:#1b7c33;margin-top:8px;line-height:1.6;}
+.textbox .ans{font-size:.82rem;font-weight:900;color:#1b7c33;margin-top:8px;}
 .textbox .ans b{font-size:1rem;}
 .hint{font-size:.72rem;font-weight:700;color:#93a7bd;text-align:center;line-height:1.4;}
 .summary{display:none;flex-direction:column;align-items:center;gap:8px;width:min(560px,100%);
@@ -71,48 +83,29 @@ h1{font-size:1.15rem;}
 .sumline{font-size:1rem;font-weight:800;color:#2f4a63;}
 .sumline b{color:var(--accent);font-size:1.22rem;}
 .sumgrades{font-size:.78rem;font-weight:800;color:#7b8ea8;line-height:1.65;}
-.sumagain{min-height:44px;padding:0 18px;border-radius:999px;border:2px solid rgba(0,137,123,.3);
-  background:#fff;color:#00796b;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;}
+.sumagain{min-height:46px;padding:0 20px;border-radius:999px;border:2px solid rgba(224,36,94,.25);
+  background:#fff;color:#c2185b;font-family:inherit;font-weight:900;font-size:.9rem;cursor:pointer;}
 .notes{display:none;width:min(680px,100%);flex-direction:column;gap:8px;}
 .notes.show{display:flex;}
 .notecard{background:#fff;border:2px solid var(--line);border-radius:14px;padding:12px 14px;text-align:left;
   box-shadow:0 5px 14px rgba(36,59,83,.07);}
 .notecard h4{font-size:.88rem;font-weight:900;margin-bottom:4px;}
 .notecard p{font-size:.76rem;font-weight:700;color:#7b8ea8;line-height:1.6;}
-.notecard .kw{color:#00796b;}
-.notecard a{display:inline-flex;align-items:center;min-height:38px;margin-top:8px;padding:5px 13px;
-  border-radius:999px;background:#eefaf7;border:1px solid rgba(0,137,123,.22);color:#00796b;
-  font-size:.76rem;font-weight:900;text-decoration:none;}
-.realwrap{position:fixed;inset:0;background:rgba(15,25,40,.74);display:none;align-items:center;
-  justify-content:center;padding:14px;z-index:60;-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);}
-.realwrap.show{display:flex;}
-.realbox{width:min(420px,100%);max-height:96dvh;background:#fff;border-radius:18px;padding:12px;
-  box-shadow:0 18px 50px rgba(0,0,0,.32);display:flex;flex-direction:column;gap:8px;}
-.realhead{display:flex;align-items:center;gap:8px;font-size:.84rem;font-weight:900;color:#243b53;line-height:1.35;}
-.realclose{margin-left:auto;flex:0 0 auto;min-height:40px;padding:6px 13px;border-radius:999px;
-  border:1px solid var(--line);background:#f7f9fc;font-family:inherit;font-weight:900;font-size:.78rem;
-  color:#4a6076;cursor:pointer;}
-.realframe{width:100%;aspect-ratio:9/16;max-height:66dvh;border-radius:12px;overflow:hidden;background:#000;}
-.realframe iframe{width:100%;height:100%;border:0;display:block;}
-.realtip{font-size:.71rem;font-weight:700;color:#93a7bd;line-height:1.55;text-align:center;}
-.realtip a{color:#00796b;font-weight:900;text-decoration:none;border-bottom:1px dashed rgba(0,121,107,.4);}
-@media (max-height:520px){.realbox{width:min(360px,100%);}.realframe{aspect-ratio:4/3;max-height:44dvh;}}
+.notecard .kw{color:#c2185b;}
 @keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.1)}100%{transform:scale(1)}}
 @keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
 .pop{animation:pop .45s ease;} .shake{animation:shake .45s ease;}
 @media (max-height:430px){
-  body{padding:8px;gap:6px;}
-  h1{font-size:1rem;}
-  .stage{gap:8px;}
-  .opt{min-height:50px;font-size:.86rem;}
+  body{padding:8px;gap:6px;} h1{font-size:1rem;} .stage{gap:8px;}
+  .opt{min-height:88px;} .opt .pic{font-size:1.95rem;} .opt .tx{font-size:.76rem;}
   .prompt{font-size:.86rem;}
 }
 @media (min-width:820px){
-  .opt{min-height:74px;font-size:1.02rem;}
+  .opt{min-height:140px;} .opt .pic{font-size:2.9rem;} .opt .tx{font-size:.92rem;}
 }
 </style>
-<script src="../voice.js"></script>
 <script src="../audio-en.js"></script>
+<script src="../voice.js"></script>
 <script src="../sound.js"></script>
 <script src="../deck.js"></script>
 </head>
@@ -123,121 +116,126 @@ h1{font-size:1.15rem;}
   <div class="chips">
     <span class="chip">🔥 连对 <b id="streak">0</b></span>
     <span class="chip">🏆 最佳 <b id="best">0</b></span>
+    <span class="chip">📊 <b id="prog">0/0</b></span>
   </div>
 </header>
 <div class="chipbar" id="acctBar"></div>
 
 <div class="stage">
-  <div class="prompt" id="prompt">🎧 听一听，选出正确的答案<span>没听清点「🔊 再放一遍」或右上角 🔊 · 不确定点「📖 看原文」</span></div>
+  <div class="prompt" id="prompt">🎧 听一听，选出正确的图片<span>没听清点「🔊 再听一遍」，不确定点「📖 看原文」</span></div>
   <div class="opts" id="opts"></div>
   <div class="tools">
-    <button class="tool" type="button" id="btnReplay">🔊 再放一遍</button>
+    <button class="tool" type="button" id="btnReplay">🔊 再听一遍</button>
     <button class="tool" type="button" id="btnText">📖 看原文</button>
-    <button class="tool" type="button" id="btnReal">🎬 听原声</button>
+    <button class="tool next" type="button" id="btnNext" style="display:none">下一题 ▶</button>
   </div>
   <div class="textbox" id="textbox"></div>
   <div class="feedback" id="feedback"></div>
   <div class="summary" id="summary"></div>
   <div class="notes" id="notes"></div>
-  <div class="hint">没声音先点一下屏幕 · 默认离线合成音，与听力选图页同一套童声<br>想听原视频里的真人配音，点「🎬 听原声」（需联网）</div>
-</div>
-
-<div class="realwrap" id="realwrap" aria-hidden="true">
-  <div class="realbox">
-    <div class="realhead"><span id="realTitle">抖音原声</span>
-      <button class="realclose" type="button" id="realClose">✕ 关闭</button></div>
-    <div class="realframe" id="realFrame"></div>
-    <div class="realtip">上方是抖音官方播放器，声音即该视频原片里的真人配音（需联网）<br>
-      <a id="realLink" href="#" target="_blank" rel="noopener">打不开？在抖音里看</a></div>
-  </div>
+  <div class="hint">没声音先点一下屏幕 · 语音为离线合成，与听力选图页同一套童声</div>
 </div>
 
 <script>
 /* ============ 英语抖音：按账号分组 ============
- * 三个抖音账号各自成组，互不混合：
- *   1) 英语学长  抖音号 51290081571   英语听力合集 11 题（完整原文）
- *   2) 木子      抖音号 40410592071   3 题（完整原文）
- *   3) 五角星教育 抖音号 wujiaoxing100 英语听力【一】【二】【三】：1 题有完整原文，
- *      其余 4 集抽查后仅有评论区答案与关键词（视频无字幕/无文字稿），单独列出不参与答题。
- * 字段：id=抖音视频号，ep=集数标签，audio=朗读用英文原文，zh=中文，q=问题，
- *       opts=选项，ans=正确选项下标，exp=解析
+ * 共 15 题：英语学长(51290081571) 11 题 / 木子(40410592071) 3 题 / 五角星教育(wujiaoxing100) 1 题
+ * 另有 4 条「仅答案」记录（原文不可得），单独列出不参与答题。
+ * audio 字段只用于匹配 audio/en/<hash>.mp3 离线语音，请勿改动文字。
  */
 var ACCOUNTS = [
   {
-    k: 'xuezhang', name: '英语学长', no: '51290081571', note: '抖音英语听力合集 11 题 · 原文取自评论区听写并交叉核对',
+    k: 'xuezhang', name: '英语学长', no: '51290081571',
+    note: '抖音英语听力合集 · 共 11 题，原文取自评论区听写并交叉核对',
     items: [
       { id:'7663681343162780947', ep:'第1集', audio:"I get up at seven o'clock every day. Then I drink a cup of warm milk and eat two eggs for breakfast.",
         zh:'我每天七点起床，然后喝一杯温牛奶，早餐吃两个鸡蛋。',
-        q:'What does the speaker eat for breakfast?', opts:['Two eggs.','A bowl of noodles.'], ans:0,
+        q:'What does the speaker eat for breakfast?',
+        opts:[{ic:'🥚🥚',tx:'两个鸡蛋'},{ic:'🍜',tx:'一碗面条'}], ans:0,
         exp:'原句 eat two eggs for breakfast，故选 A。' },
       { id:'7663692843503881498', ep:'第2集', audio:'My mum makes noodles for me every morning. She says noodles are good for my health, and I love them very much.',
         zh:'我妈妈每天早上给我做面条。她说面条对我的健康有好处，我也非常喜欢吃。',
-        q:'Who makes noodles for the speaker every morning?', opts:["The speaker's father.","The speaker's mum."], ans:1,
+        q:'Who makes noodles for the speaker every morning?',
+        opts:[{ic:'👨',tx:'爸爸'},{ic:'👩',tx:'妈妈'}], ans:1,
         exp:'原句 My mum makes noodles for me，是妈妈做的，故选 B。' },
       { id:'7663694614519500042', ep:'第3集', audio:'I go to the zoo with my mom on Sunday. I see a tall giraffe eating green leaves.',
         zh:'星期天我和妈妈去动物园，我看到一只高高的长颈鹿在吃绿叶。',
-        q:'What animal does the speaker see at the zoo?', opts:['A tall giraffe.','A little monkey.'], ans:0,
+        q:'What animal does the speaker see at the zoo?',
+        opts:[{ic:'🦒',tx:'高高的长颈鹿'},{ic:'🐒',tx:'小猴子'}], ans:0,
         exp:'原句 I see a tall giraffe，看到的是长颈鹿，故选 A。' },
       { id:'7663693958987418930', ep:'第4集', audio:'The little monkey likes jumping on the tree and eating sweet bananas all day.',
         zh:'这只小猴子喜欢在树上跳来跳去，整天吃甜甜的香蕉。',
-        q:'What does the little monkey like eating?', opts:['Sweet apples.','Sweet bananas.'], ans:1,
+        q:'What does the little monkey like eating?',
+        opts:[{ic:'🍎',tx:'甜甜的苹果'},{ic:'🍌',tx:'甜甜的香蕉'}], ans:1,
         exp:'原句 eating sweet bananas，故选 B。' },
       { id:'7663849463588425003', ep:'第9集', audio:'I take swimming class every Sunday afternoon, I wear blue swim trunks and learn to kick my legs in the clean pool.',
         zh:'我每个星期天下午上游泳课，穿蓝色泳裤，在干净的泳池里学习打腿。',
-        q:"What color are the speaker's swim trunks?", opts:['Blue.','Green.'], ans:0,
+        q:"What color are the speaker's swim trunks?",
+        opts:[{ic:'🩳🔵',tx:'蓝色泳裤'},{ic:'🩳🟢',tx:'绿色泳裤'}], ans:0,
         exp:'原句 wear blue swim trunks，故选 A。' },
       { id:'7664067075752594730', ep:'第10集', audio:"The little monkey doesn't like playing football with the dog. It loves playing basketball with the chick.",
         zh:'这只小猴子不喜欢和小狗踢足球，它喜欢和小鸡打篮球。',
-        q:'Who does the monkey play basketball with?', opts:['The dog.','The chick.'], ans:1,
+        q:'Who does the monkey play basketball with?',
+        opts:[{ic:'🐕',tx:'小狗'},{ic:'🐤',tx:'小鸡'}], ans:1,
         exp:'原句 loves playing basketball with the chick，故选 B。' },
       { id:'7664067475557960994', ep:'第11集', audio:'We play football on the big grass field. We run fast and pass the white ball to our teammates together.',
         zh:'我们在大草坪上踢足球，跑得很快，一起把白色的球传给队友。',
-        q:'What do they pass to their teammates?', opts:['A basketball.','A white football.'], ans:1,
+        q:'What do they pass to their teammates?',
+        opts:[{ic:'🏀',tx:'篮球'},{ic:'⚽',tx:'白色的足球'}], ans:1,
         exp:'原句 pass the white ball，传的是白色的球，故选 B。' },
       { id:'7664104170496019758', ep:'第13集', audio:'When I feel tired after study, I do simple jumping exercises in my bedroom to make my body strong and healthy.',
         zh:'学习之后觉得累的时候，我会在卧室里做些简单的跳跃运动，让身体强壮健康。',
-        q:'What does the speaker do when feeling tired after study?', opts:['Simple jumping exercises in the bedroom.','Reads more books in the study.'], ans:0,
+        q:'What does the speaker do when feeling tired after study?',
+        opts:[{ic:'🤸',tx:'在卧室做跳跃运动'},{ic:'📚',tx:'继续读书'}], ans:0,
         exp:'原句 do simple jumping exercises in my bedroom，故选 A。' },
       { id:'7664394750899916074', ep:'第14集', audio:'My grandpa reads newspaper in the study, my sister draws pictures at the desk, there are three oranges and five strawberries on the desk.',
         zh:'我爷爷在书房看报纸，我妹妹在书桌前画画，桌上有三个橙子和五颗草莓。',
-        q:'How many oranges are on the desk?', opts:['Three.','Five.'], ans:0,
+        q:'How many oranges are on the desk?',
+        opts:[{ic:'🍊🍊🍊',tx:'三个'},{ic:'🍓🍓🍓🍓🍓',tx:'五个'}], ans:0,
         exp:'原句 three oranges and five strawberries，问橙子所以选 A。' },
       { id:'7664394888422673710', ep:'第15集', audio:"The little monkey and the dog ride bikes to the little rabbit's home to play together, because today is the rabbit's birthday.",
         zh:'小猴子和小狗一起骑车去小兔子家玩，因为今天是小兔子的生日。',
-        q:'Who rides bikes with the little monkey?', opts:['The dog.','The rabbit.'], ans:0,
+        q:'Who rides bikes with the little monkey?',
+        opts:[{ic:'🐕🚲',tx:'小狗'},{ic:'🐇🚲',tx:'小兔子'}], ans:0,
         exp:'原句 The little monkey and the dog ride bikes，故选 A。' },
       { id:'7664394953899937067', ep:'第16集', audio:"I go to the city library with my sister by subway. It's faster than riding a bike. How do we get to the library?",
         zh:'我和妹妹坐地铁去市图书馆，这比骑自行车快。',
-        q:'Who does the speaker go to the city library with?', opts:["The speaker's brother.","The speaker's sister."], ans:1,
+        q:'Who does the speaker go to the city library with?',
+        opts:[{ic:'👦',tx:'哥哥 / 弟弟'},{ic:'👧',tx:'姐姐 / 妹妹'}], ans:1,
         exp:'原句 with my sister，故选 B。' }
     ],
     only: []
   },
   {
-    k: 'muzi', name: '木子', no: '40410592071', note: '抖音英语听力 3 题 · 原文取自评论区听写并交叉核对',
+    k: 'muzi', name: '木子', no: '40410592071',
+    note: '抖音英语听力 · 共 3 题，原文取自评论区听写并交叉核对',
     items: [
       { id:'7692027997930530267', ep:'第1集', audio:"Hi Lily, look! I have a new story book. It's about a little cat. Wow, a story about a cat! I love cats. Can I read it? Sure, here you are. But please give it back to me after school. Okay, thank you Tom. I'll be careful.",
         zh:'嗨 Lily，看！我有一本新故事书，是讲一只小猫的。哇，讲猫的故事！我喜欢猫，我能看吗？当然，给你。不过放学后请还给我。好的，谢谢你 Tom，我会小心的。',
-        q:'Who gives the book to the other?', opts:['Tom gives the book to Lily.','Lily gives the book to Tom.'], ans:0,
+        q:'Who gives the book to the other?',
+        opts:[{ic:'👦📖',tx:'Tom 把书给 Lily'},{ic:'👧📖',tx:'Lily 把书给 Tom'}], ans:0,
         exp:'Tom 说 I have a new story book 并递出 here you are，是 Tom 把书给 Lily，故选 A。' },
       { id:'7694626623953731762', ep:'第2集', audio:"Mom, where is our cat? Is it under the sofa? No, it isn't, I can't see it there. Look under the table. Oh yes, it's sleeping under the table. It likes that place, it's cool there. I see, it has a small ball too.",
         zh:'妈妈，我们的猫在哪？在沙发下面吗？不在，我在那儿看不到它。看看桌子下面。哦对，它在桌子下面睡觉。它喜欢那个地方，那里很凉快。我知道了，它还有一个小球。',
-        q:'Where is the cat?', opts:['Under the sofa.','Under the table.'], ans:1,
+        q:'Where is the cat?',
+        opts:[{ic:'🛋️🐈',tx:'在沙发下面'},{ic:'🍽️🐈',tx:'在桌子下面'}], ans:1,
         exp:'对话明确说 sleeping under the table，故选 B。' },
       { id:'7698731526695813862', ep:'第4集', audio:"Tom shall we meet at the school gate after class? The school gate is always so crowded after class, let's meet where we take the no.12 bus, it's quieter there. Good idea, I'll see you there at 4:30. Okay, don't forget your basketball, we'll play after we get to the park.",
         zh:'Tom，我们下课后在校门口见吧？下课后校门口总是很挤，我们在坐 12 路公交的地方见吧，那里安静一些。好主意，4:30 在那儿见。好，别忘了你的篮球，到公园后我们打球。',
-        q:'Where will they meet after class?', opts:['At the No.12 bus stop.','At the school gate.'], ans:0,
+        q:'Where will they meet after class?',
+        opts:[{ic:'🚌',tx:'12 路公交车站'},{ic:'🏫',tx:'学校大门口'}], ans:0,
         exp:'对方提出到坐 12 路公交的地方见，并被接受，故选 A。' }
     ],
     only: []
   },
   {
-    k: 'wujiaoxing', name: '五角星教育', no: 'wujiaoxing100', note: '济南五角星教育科技有限公司 · 仅英语听力【一】【二】【三】',
+    k: 'wujiaoxing', name: '五角星教育', no: 'wujiaoxing100',
+    note: '济南五角星教育科技有限公司 · 仅英语听力【一】【二】【三】',
     items: [
       { id:'7662598554398066874', ep:'【一】第1集', audio:"I am a girl. I have breakfast in the morning. I eat noodles with chopsticks. It's yummy.",
         zh:'我是一个女孩。我早上吃早餐。我用筷子吃面条，很好吃。',
-        q:'视频里说的是哪一张图？', opts:['A 图（女孩 · 早上吃面条）','B 图'], ans:0,
-        exp:'评论区完整听写为 I am a girl. I have breakfast in the morning. I eat noodles with chopsticks. It\'s yummy.（原听写串把 with chopsticks 记成了 as chopstick，已按语法校正），对应 A 图。' }
+        q:'视频里说的是哪一张图？',
+        opts:[{ic:'👧🍜',tx:'A 图：女孩早上吃面条'},{ic:'❓',tx:'B 图'}], ans:0,
+        exp:'评论区完整听写为 I am a girl. I have breakfast in the morning. I eat noodles as chopstick. It\'s yummy.，对应 A 图。' }
     ],
     only: [
       { ep:'【一】第2集', id:'7662677656303131365', ans:'评论区未形成一致结论', kw:'blue T-shirt / football' },
@@ -249,14 +247,16 @@ var ACCOUNTS = [
 ];
 
 var elStreak = document.getElementById('streak');
-var elBest = document.getElementById('best');
-var elAcct = document.getElementById('acctBar');
+var elBest   = document.getElementById('best');
+var elProg   = document.getElementById('prog');
+var elAcct   = document.getElementById('acctBar');
 var elPrompt = document.getElementById('prompt');
-var elOpts = document.getElementById('opts');
-var elFb = document.getElementById('feedback');
-var elSum = document.getElementById('summary');
-var elNotes = document.getElementById('notes');
-var elText = document.getElementById('textbox');
+var elOpts   = document.getElementById('opts');
+var elFb     = document.getElementById('feedback');
+var elSum    = document.getElementById('summary');
+var elNotes  = document.getElementById('notes');
+var elText   = document.getElementById('textbox');
+var elBtnNext= document.getElementById('btnNext');
 
 var KEY_PREFIX = 'english-douyin.best.';
 var state = { acct:'xuezhang', streak:0, best:0, answered:false, cur:null, timer:null, session:{n:0,right:0} };
@@ -283,16 +283,25 @@ function take(k){
   return byId(q.left.pop());
 }
 
+/* ---- 语音：一律走本地离线库，任何异常都不得中断答题流程 ---- */
 function speakEn(t){
-  /* mp3 已按 -10% 语速合成，这里只叠全站语速滑杆 */
-  if (window.XNLYSay){ XNLYSay.play(t, { rate:1 }); return; }
-  if (window.XNLY && XNLY.voice) XNLY.voice.speak(t, { lang:'en-US', rate:0.9 });
-  else if (window.speechSynthesis){
-    var u = new SpeechSynthesisUtterance(t); u.lang='en-US'; u.rate=0.9; window.speechSynthesis.speak(u);
-  }
+  try{
+    if (window.XNLYSay){ XNLYSay.play(t, { rate:1 }); return; }
+    if (window.XNLY && XNLY.voice){ XNLY.voice.speak(t, { lang:'en-US', rate:0.9 }); return; }
+    if (window.speechSynthesis){
+      var u = new SpeechSynthesisUtterance(t); u.lang='en-US'; u.rate=0.9; window.speechSynthesis.speak(u);
+    }
+  }catch(e){ /* 静默失败，不影响判分与翻页 */ }
 }
 function speakZh(t){
-  if (window.XNLY && XNLY.voice) XNLY.voice.speak(t, { lang:'zh-CN' });
+  try{
+    if (window.XNLY && XNLY.voice) XNLY.voice.speak(t, { lang:'zh-CN' });
+  }catch(e){ /* 静默失败 */ }
+}
+function stopAll(){
+  try{ if(window.XNLYSay) XNLYSay.stop(); }catch(e){}
+  try{ if(window.XNLY && XNLY.voice && XNLY.voice.cancel) XNLY.voice.cancel(); }catch(e){}
+  try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(e){}
 }
 
 function buildAcctBar(){
@@ -308,6 +317,7 @@ function buildAcctBar(){
 }
 
 function switchAcct(k){
+  stopAll();
   state.acct = k;
   state.streak = 0;
   state.session = { n:0, right:0 };
@@ -323,6 +333,8 @@ function switchAcct(k){
 function updateStats(){
   elStreak.textContent = state.streak;
   elBest.textContent = state.best;
+  var t = itemsOf(state.acct).length;
+  elProg.textContent = Math.min(state.session.n, t) + '/' + t;
 }
 
 function setFb(html, good, sub){
@@ -332,10 +344,10 @@ function setFb(html, good, sub){
 
 function showText(q, withAnswer){
   elText.innerHTML =
-    '<div class="lbl">英文原文 · ' + acctObj(state.acct).name + ' ' + q.ep + '</div>' +
+    '<div class="lbl2">英文原文 · ' + acctObj(state.acct).name + ' ' + q.ep + '</div>' +
     '<div class="en">' + q.audio + '</div>' +
     '<div class="cn">' + q.zh + '</div>' +
-    (withAnswer ? '<div class="ans">正确答案：<b>' + String.fromCharCode(65 + q.ans) + '</b> ' + q.opts[q.ans] + '<br>' + q.exp + '</div>' : '');
+    (withAnswer ? '<div class="ans">正确答案：<b>' + String.fromCharCode(65 + q.ans) + '</b> ' + q.opts[q.ans].tx + '<br>' + q.exp + '</div>' : '');
   elText.classList.add('show');
 }
 function hideText(){ elText.classList.remove('show'); elText.innerHTML = ''; }
@@ -346,11 +358,10 @@ function renderNotes(){
   var html = '<div class="notecard"><h4>ℹ️ 关于五角星教育的原文</h4>' +
     '<p>该账号的听力视频只有 10~25 秒，画面是 A / B 两张图，<b>没有字幕、也没有文字稿</b>，英文台词只存在于音频里。' +
     '逐集抽查评论区后，只有【一】第 1 集有用户写出完整听写（已做成上面的题），其余只留下答案投票和零散关键词。' +
-    '下面这些集数目前只能提供答案与关键词，点开原视频听完再对照即可，本页不虚构原文。</p></div>';
+    '下面这些集数目前只能提供答案与关键词，本页不虚构原文。</p></div>';
   a.only.forEach(function(o){
-    html += '<div class="notecard"><h4>' + o.ep + '　答案：' + o.ans + '</h4>' +
-      '<p>关键词：<span class="kw">' + o.kw + '</span></p>' +
-      '<a href="https://www.douyin.com/video/' + o.id + '" target="_blank" rel="noopener">▶ 打开原视频听</a></div>';
+    html += '<div class="notecard"><h4>' + o.ep + ' 答案：' + o.ans + '</h4>' +
+      '<p>关键词：<span class="kw">' + o.kw + '</span></p></div>';
   });
   elNotes.innerHTML = html;
   elNotes.classList.add('show');
@@ -359,6 +370,7 @@ function renderNotes(){
 function hideSummary(){ elSum.classList.remove('show'); elSum.innerHTML = ''; elOpts.style.display = ''; }
 
 function showSummary(){
+  stopAll();
   clearTimeout(state.timer);
   var s = state.session;
   var total = s.n, acc = total ? Math.round(s.right / total * 100) : 0;
@@ -370,6 +382,7 @@ function showSummary(){
     '<button class="sumagain" id="sumAgain" type="button">🔁 再练一轮</button>';
   elSum.classList.add('show');
   elOpts.style.display = 'none';
+  elBtnNext.style.display = 'none';
   elPrompt.innerHTML = '🎧 ' + a.name + ' 完成<span>可以切到别的账号，或再练一轮</span>';
   setFb('', null);
   hideText();
@@ -390,9 +403,11 @@ function finishOrNext(){
   else nextQuestion();
 }
 
+function goNext(){ clearTimeout(state.timer); finishOrNext(); }
+
 function nextQuestion(){
   clearTimeout(state.timer);
-  if(document.getElementById('realwrap').classList.contains('show')) closeReal(true);
+  stopAll();
   hideSummary();
   hideText();
   state.answered = false;
@@ -400,21 +415,25 @@ function nextQuestion(){
   var q = state.cur;
   var a = acctObj(state.acct);
 
-  elPrompt.innerHTML = '🎧 听一听，选出正确的答案' +
-    '<span>' + a.name + ' · ' + q.ep + ' · 抖音号 ' + a.no + '</span>';
+  elPrompt.innerHTML = '🎧 听一听，选出正确的图片' +
+    '<span>' + a.name + ' · ' + q.ep + '</span>';
   elOpts.innerHTML = '';
   setFb('', null);
+  elBtnNext.style.display = 'none';
 
-  q.opts.forEach(function(v, i){
+  q.opts.forEach(function(o, i){
     var b = document.createElement('button');
     b.type = 'button';
     b.className = 'opt';
-    b.textContent = String.fromCharCode(65 + i) + '. ' + v;
     b.dataset.i = String(i);
+    b.innerHTML = '<span class="lbl">' + String.fromCharCode(65 + i) + '</span>' +
+                  '<span class="pic">' + o.ic + '</span>' +
+                  '<span class="tx">' + o.tx + '</span>';
     b.addEventListener('click', function(){ answer(i, b); });
     elOpts.appendChild(b);
   });
 
+  updateStats();
   setTimeout(function(){ if(!state.answered) speakEn(q.audio); }, 220);
 }
 
@@ -428,81 +447,60 @@ function answer(i, btn){
 
   Array.prototype.forEach.call(elOpts.children, function(b){
     var bi = Number(b.dataset.i);
-    if(bi === q.ans) b.classList.add('good');
+    if(bi === q.ans){
+      b.classList.add('good');
+      var m = document.createElement('span');
+      m.className = 'mark'; m.textContent = '✔ 正确答案';
+      b.appendChild(m);
+    }
     if(b !== btn) b.disabled = true;
   });
+
+  /* 先挂定时器，再朗读：朗读出错也不会卡住不翻页 */
+  var delay = right ? 2200 : 4000;
+  clearTimeout(state.timer);
+  state.timer = setTimeout(goNext, delay);
+  elBtnNext.style.display = '';
 
   if(right){
     btn.classList.add('good', 'pop');
     state.streak++;
     if(state.streak > state.best){ state.best = state.streak; safeSet(KEY_PREFIX + state.acct, String(state.best)); }
-    if(window.XNLY && XNLY.mark) XNLY.mark('right');
+    try{ if(window.XNLY && XNLY.mark) XNLY.mark('right'); }catch(e){}
     setFb('✅ 答对了！', true, q.zh);
     showText(q, false);
     speakZh('答对了。' + q.zh);
-    updateStats();
-    state.timer = setTimeout(finishOrNext, 2400);
   } else {
     btn.classList.add('bad', 'shake');
     state.streak = 0;
-    if(window.XNLY && XNLY.mark) XNLY.mark('wrong');
-    setFb('❌ 正确答案是 ' + String.fromCharCode(65 + q.ans), false, q.zh);
+    try{ if(window.XNLY && XNLY.mark) XNLY.mark('wrong'); }catch(e){}
+    setFb('❌ 正确答案是 ' + String.fromCharCode(65 + q.ans) + ' · ' + q.opts[q.ans].tx, false, q.zh);
     showText(q, true);
     speakZh('正确答案是' + String.fromCharCode(65 + q.ans) + '。');
-    updateStats();
-    state.timer = setTimeout(finishOrNext, 4200);
   }
+  updateStats();
 }
 
 function replayNow(){
-  if(window.XNLY && XNLY.voice && XNLY.voice.cancel){ try{ XNLY.voice.cancel(); }catch(e){} }
+  stopAll();
   if(state.cur) speakEn(state.cur.audio);
 }
 document.getElementById('btnReplay').addEventListener('click', replayNow);
-/* 顶栏 🔊：重放当前题（homebtn.js 优先调用这个名字） */
 window.replayCurrent = replayNow;
-/* 顶栏 ⏭：跳过当前题，不判分、不泄题；仍计入本轮题数，保证小结数对得上 */
+
+/* 顶栏 ⏭：跳过当前题，不判分、不泄题；仍计入本轮题数 */
 window.XNLY_NEXT = function(){
   if(!state.cur) return;
-  if(window.XNLY && XNLY.voice && XNLY.voice.cancel){ try{ XNLY.voice.cancel(); }catch(e){} }
+  stopAll();
   clearTimeout(state.timer);
   state.session.n++;
   state.streak = 0;
-  state.answered = true;     /* 防止 pointerdown / 延时朗读把跳过题再读一遍 */
+  state.answered = true;
   updateStats();
   finishOrNext();
 };
-/* ===== 抖音真人原声：用官方嵌入播放器放原片，音轨即原配音 ===== */
-var elReal = document.getElementById('realwrap');
-var elRealFrame = document.getElementById('realFrame');
-var elRealTitle = document.getElementById('realTitle');
 
-function openReal(){
-  if(!state.cur) return;
-  var a = acctObj(state.acct);
-  elRealTitle.textContent = '抖音原声 · ' + a.name + ' ' + state.cur.ep;
-  elRealFrame.innerHTML = '<iframe src="https://open.douyin.com/player/video?vid=' + encodeURIComponent(state.cur.id) +
-    '&autoplay=1" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" playsinline></iframe>';
-  var lk = document.getElementById('realLink');
-  if(lk) lk.href = 'https://www.douyin.com/video/' + state.cur.id;
-  elReal.classList.add('show');
-  elReal.setAttribute('aria-hidden', 'false');
-  if(window.XNLYSay){ try{ XNLYSay.stop(); }catch(e){} }
-  if(window.XNLY && XNLY.voice && XNLY.voice.cancel){ try{ XNLY.voice.cancel(); }catch(e){} }
-  clearTimeout(state.timer);       /* 看原声期间不要自动跳到下一题 */
-}
-function closeReal(silent){
-  elReal.classList.remove('show');
-  elReal.setAttribute('aria-hidden', 'true');
-  elRealFrame.innerHTML = '';        /* 清空即停止播放 */
-  if(silent) return;
-  /* 已经答过的题：看完原声继续走，1.6s 后进下一题；没答的题保持原地等作答 */
-  if(state.answered && !elSum.classList.contains('show')) state.timer = setTimeout(finishOrNext, 1600);
-}
-document.getElementById('btnReal').addEventListener('click', openReal);
-document.getElementById('realClose').addEventListener('click', function(){ closeReal(); });
-elReal.addEventListener('click', function(e){ if(e.target === elReal) closeReal(); });
-document.addEventListener('keydown', function(e){ if(e.key === 'Escape') closeReal(); });
+document.getElementById('btnNext').addEventListener('click', goNext);
 
 document.getElementById('btnText').addEventListener('click', function(){
   if(!state.cur) return;
@@ -523,8 +521,8 @@ document.getElementById('btnText').addEventListener('click', function(){
   document.addEventListener('pointerdown', function(){
     if(firstTap) return;
     firstTap = true;
-    if(window.XNLYSay){ try{ XNLYSay.unlock(); }catch(e){} }
-    if(window.XNLY && XNLY.voice && XNLY.voice.unlock){ try{ XNLY.voice.unlock(); }catch(e){} }
+    try{ if(window.XNLYSay) XNLYSay.unlock(); }catch(e){}
+    try{ if(window.XNLY && XNLY.voice && XNLY.voice.unlock) XNLY.voice.unlock(); }catch(e){}
     if(!state.answered && state.cur) speakEn(state.cur.audio);
   }, { passive:true });
 })();

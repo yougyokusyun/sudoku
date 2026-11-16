@@ -158,12 +158,17 @@
  * v77 变化：考试听力每题自动播 2 遍、不可重听、不显示题号且不能回退；笔试区答题卡只读，
  *           仅「上一题 / 下一题」；练习模式答对自动跳下一题、答错停留看原文。
  * v78 变化：新增「英语抖音」页 games/english-douyin.html（3 个抖音账号分组练听力，答错给全文）并加入预缓存。
+ * v81 变化：原「英语简单句型」（english.html 听句子选图）重做为 games/english-sentence.html——
+ *           20 个生活场景的 A/B 对话逐句朗读（读完自动换下一个）、底部挂本场景核心句型；
+ *           学完可直接做测试：对话补全（挖一句从 4 句里选）40 题 + 句内缺词 105 题，
+ *           答对 0.9s 自动跳、答错给中文与正确答案。首页卡片改指新页。
+ * v80 变化：英语抖音页去掉了抖音跳转与原声浮层，全部改为本地离线语音；
+ *            选项从文字改为图片卡片（emoji 图标），答完自动进入下一题，并新增「下一题 ▶」按钮与进度显示。
  * v79 变化：英语抖音页与另两页统一——配色改青绿 #00897b，朗读换成 audio/en 的离线神经语音
  *           （15 条 mp3，-10% 语速），失败回退系统语音；首页卡片同色。
- * v80 变化：英语抖音页新增「🎬 听原声」浮层——内嵌抖音官方播放器放原片真人配音（需联网），
  *           附「在抖音里看」兜底链接；看原声期间暂停自动跳题，已答题关闭后 1.6s 继续。
  */
-var CACHE = 'xnly-v80';
+var CACHE = 'xnly-v81';
 
 var PRECACHE = [
   './',
@@ -182,6 +187,7 @@ var PRECACHE = [
   'games/count.html',
   'games/daily-order.html',
   'games/emotions.html',
+  'games/english-sentence.html',
   'games/english.html',
   'games/english-listening.html',
   'games/english-douyin.html',
