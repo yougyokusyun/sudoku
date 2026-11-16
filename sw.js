@@ -146,8 +146,15 @@
  *           跳过前取消当前朗读组；题目池耗尽时回到第 1 题。题库 puzzles.js 更新为 388 题（新增 D级73/74）。
  * v71 变化：修复 beat-clock 作答反馈期间点「下一题」会多跳一题的定时器竞态（跳过时先清掉待执行的自动跳题定时器）。
  * v72 变化：题库 puzzles.js 更新为 390 题（新增 A级207、B级37，其余题目不变），页面无需改动。
+ * v73 变化：新增「英语听力选图」页（三档分级 1500 题 + 605 张内联 SVG 插画，约 1.19 MB），
+ *           加入预缓存——是全站首个超 1 MB 的单页，预缓存总量约 +1.2 MB；若安装过慢可改为运行时缓存。
+ * v74 变化：新增「英语过关考试」页（六大笔试题型 704 题 + 48 篇阅读短文 + 70 张内联 SVG，约 0.25 MB），
+ *           满分 100、80 分过关、交卷自动批改并给逐题解析；加入预缓存，总量约再 +0.3 MB。
+ * v75 变化：英语过关考试升级——新增听力题型（听音选图/听音选答/听对话选答，系统语音朗读），
+ *           按 3/4 年级分卷分题库（每年级 625/690 题，≥卷面 50 题的 10 倍），卷面 50 题 100 分；
+ *           最佳分/过关次数按年级分开记录。页面体积约 0.39 MB。
  */
-var CACHE = 'xnly-v72';
+var CACHE = 'xnly-v75';
 
 var PRECACHE = [
   './',
@@ -176,6 +183,8 @@ var PRECACHE = [
   'games/idioms-all.html',
   'games/riddles-all.html',
   'games/dialogue-choice.html',
+  'games/english-listen-pick.html',
+  'games/english-exam.html',
   'games/gomoku.html',
   'games/guess-number.html',
   'games/gushi.html',
