@@ -153,8 +153,13 @@
  * v75 变化：英语过关考试升级——新增听力题型（听音选图/听音选答/听对话选答，系统语音朗读），
  *           按 3/4 年级分卷分题库（每年级 625/690 题，≥卷面 50 题的 10 倍），卷面 50 题 100 分；
  *           最佳分/过关次数按年级分开记录。页面体积约 0.39 MB。
+ * v76 变化：两页接入离线神经语音（audio/en 1874 段 mp3 + audio-en.js），播放失败回退系统语音；
+ *           新增双人对话题库——听力选图每档 +40 题（20 选图 / 20 选答），考试听力池 +20 道对话选图。
+ * v77 变化：考试听力每题自动播 2 遍、不可重听、不显示题号且不能回退；笔试区答题卡只读，
+ *           仅「上一题 / 下一题」；练习模式答对自动跳下一题、答错停留看原文。
+ * v78 变化：新增「英语抖音」页 games/english-douyin.html（3 个抖音账号分组练听力，答错给全文）并加入预缓存。
  */
-var CACHE = 'xnly-v77';
+var CACHE = 'xnly-v78';
 
 var PRECACHE = [
   './',
@@ -175,6 +180,7 @@ var PRECACHE = [
   'games/emotions.html',
   'games/english.html',
   'games/english-listening.html',
+  'games/english-douyin.html',
   'games/find-diff.html',
   'games/beat-clock.html',
   'games/picture-sentence.html',
