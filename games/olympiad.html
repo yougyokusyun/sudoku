@@ -121,7 +121,7 @@ h1{font-size:1.15rem;color:var(--accent-d);}
  * 所有数值题的答案由公式计算得出，避免人工编题出错。
  * gen(grade, topicId, seed) -> {q, o:[选项字符串], a:正确答案字符串, e:解析}
  */
-var OLY_TOPICS = {
+var OLY_TOPICS_BASE = {
   low: [
     { id: 'guilv',    name: '找规律',   icon: '🔢', desc: '看数列，找下一个数' },
     { id: 'pai dui',  name: '排队问题', icon: '🚶', desc: '前数后数，算总人数' },
@@ -169,7 +169,7 @@ function opts(r, ansNum, nums) {
 }
 function q(o) { return o; }
 
-function genQuestion(grade, topic, seed) {
+function genQuestionBase(grade, topic, seed) {
   var r = rng(seed + 1);
   switch (topic) {
     /* ============ 低年级 ============ */
@@ -294,7 +294,8 @@ function genQuestion(grade, topic, seed) {
       if (kind === 0) {
         var cyc = ['红', '黄', '蓝', '绿'], T = pickInt(r, 3, 4), period = cyc.slice(0, T);
         var n = pickInt(r, 20, 60), idx = n % T, ans = idx === 0 ? period[T - 1] : period[idx - 1];
-        return q({ q: '彩灯按 ' + period.join('、') + ' 的顺序循环排列，第 ' + n + ' 盏是什么颜色？', o: shuffle(r, period), a: ans, e: n + '÷' + T + ' 余 ' + (n % T) + '（余 0 看作第 ' + T + ' 个），对应' + ans + '色。' });
+        var opts4 = period.length < 4 ? period.concat(['紫']) : period;
+        return q({ q: '彩灯按 ' + period.join('、') + ' 的顺序循环排列，第 ' + n + ' 盏是什么颜色？', o: shuffle(r, opts4), a: ans, e: n + '÷' + T + ' 余 ' + (n % T) + '（余 0 看作第 ' + T + ' 个），对应' + ans + '色。' });
       }
       if (kind === 1) {
         var week = ['一', '二', '三', '四', '五', '六', '日'], start = pickInt(r, 0, 6), days = pickInt(r, 10, 50);
@@ -403,7 +404,7 @@ function genQuestion(grade, topic, seed) {
 }
 
 // 生成固定题库：每专题 10 题
-function buildBank() {
+function buildBankBase() {
   var bank = {};
   for (var grade in OLY_TOPICS) {
     bank[grade] = {};
@@ -421,1691 +422,6963 @@ function buildBank() {
 }
 
 
+/* 小学奥数思维 · 新增专题生成器（低/中/高）
+ * 依赖：无。导出 EXTRA_TOPICS 与 genExtra(grade, topic, seed)
+ * 所有数值答案由公式计算；每个返回 {q,o:[4选项],a:答案字符串,e:解析}
+ */
+var EX_EXTRA_TOPICS = {
+  low: [
+    { id:'cutrope',   name:'割绳子',       icon:'✂️', desc:'剪几刀变几段' },
+    { id:'interval',  name:'锯木爬楼',     icon:'🪚', desc:'间隔问题三兄弟' },
+    { id:'exchange',  name:'等量代换',     icon:'⚖️', desc:'天平链条替换' },
+    { id:'age0',      name:'年龄差不变',   icon:'🎂', desc:'抓住不变量' },
+    { id:'pages',     name:'页码数字',     icon:'📖', desc:'数一数用了几个数字' },
+    { id:'stroke',    name:'一笔画',       icon:'✏️', desc:'数奇点判断' },
+    { id:'match',     name:'火柴棒',       icon:'🕯️', desc:'摆图形与移火柴' },
+    { id:'vertical',  name:'竖式谜',       icon:'🔢', desc:'从个位往高位推' },
+    { id:'signs',     name:'巧填符号',     icon:'➕', desc:'填运算符号' },
+    { id:'array',     name:'数阵图',       icon:'🔺', desc:'顶点多加几次' },
+    { id:'river',     name:'过河问题',     icon:'🛶', desc:'谁不能单独相处' },
+    { id:'handshake', name:'握手配对',     icon:'🤝', desc:'n(n−1)÷2' }
+  ],
+  mid: [
+    { id:'yingkui',   name:'盈亏问题',     icon:'📦', desc:'两次分配求人数' },
+    { id:'age1',      name:'年龄倍数',     icon:'🎈', desc:'差不变倍数在变' },
+    { id:'average',   name:'平均数进阶',   icon:'📊', desc:'移多补少' },
+    { id:'phalanx',   name:'方阵问题',     icon:'🔲', desc:'最外层4n−4' },
+    { id:'inclusion', name:'容斥原理',     icon:'🔀', desc:'总数=A+B−重叠' },
+    { id:'area',      name:'割补求面积',   icon:'⬜', desc:'切开拼成长方形' },
+    { id:'perimeter', name:'周长变化',     icon:'🧵', desc:'拼一次少两条边' },
+    { id:'cube',      name:'立方体展开',   icon:'🧊', desc:'分层数与对面' },
+    { id:'counting',  name:'搭配与路线',   icon:'👕', desc:'分类加、分步乘' },
+    { id:'series',    name:'数列求和',     icon:'➕', desc:'等差数列与奇数和' },
+    { id:'horizontal',name:'横式谜',       icon:'🔤', desc:'先定范围再排除' },
+    { id:'schedule',  name:'合理安排',     icon:'⏱️', desc:'沏茶烙饼排队' }
+  ],
+  high: [
+    { id:'cowgrass',  name:'牛吃草',       icon:'🐄', desc:'两组条件联立' },
+    { id:'clock',     name:'时钟问题',     icon:'🕐', desc:'速度差5.5°' },
+    { id:'train',     name:'火车过桥',     icon:'🚂', desc:'路程=车长+桥长' },
+    { id:'boat',      name:'流水行船',     icon:'🛶', desc:'顺逆水速度' },
+    { id:'track',     name:'环形跑道',     icon:'🏃', desc:'同向差反向和' },
+    { id:'number',    name:'数论基础',     icon:'🧮', desc:'整除与公约公倍' },
+    { id:'remainder', name:'余数问题',     icon:'🧩', desc:'余同取余' },
+    { id:'parity',    name:'奇偶分析',     icon:'⚖️', desc:'翻杯子与和差' },
+    { id:'digit',     name:'位值弃九',     icon:'9️⃣', desc:'数字和模9不变' },
+    { id:'fraction',  name:'分数裂项',     icon:'🧪', desc:'只剩首尾两项' },
+    { id:'ratio',     name:'按比分配',     icon:'🥤', desc:'总量÷总份数' },
+    { id:'mix',       name:'浓度进阶',     icon:'☕', desc:'十字交叉混合' },
+    { id:'profit',    name:'经济问题',     icon:'💰', desc:'折扣与利润' },
+    { id:'solid',     name:'立体几何',     icon:'📦', desc:'切割增面排水' },
+    { id:'maxmin',    name:'最值问题',     icon:'📈', desc:'和定差小积大' },
+    { id:'tournament',name:'计数赛制',     icon:'🏆', desc:'单循环标数法' },
+    { id:'optimize',  name:'统筹优化',     icon:'🛠️', desc:'消除重复劳动' }
+  ]
+};
+
+function EX_rng(seed){ var x=(seed*2654435761)>>>0; return function(){ x=(x*1664525+1013904223)>>>0; return x/4294967296; }; }
+function EX_pick(r,a,b){ return a+Math.floor(r()*(b-a+1)); }
+function EX_shuf(r,arr){ var a=arr.slice(); for(var i=a.length-1;i>0;i--){ var j=Math.floor(r()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function EX_opts(r,ans,nums){
+  nums = nums || [];
+  var set=[String(ans)];
+  for(var i=0;i<nums.length&&set.length<4;i++){ if(set.indexOf(String(nums[i]))<0) set.push(String(nums[i])); }
+  var e=1; while(set.length<4){ var v=Number(ans)+e; if(set.indexOf(String(v))<0) set.push(String(v)); e++; }
+  return EX_shuf(r,set);
+}
+function EX_q(q,o,a,e){ return {q:q,o:o,a:String(a),e:e}; }
+function EX_pickQ(r,arr){ return arr[Math.floor(r()*arr.length)]; }
+
+function genExtra(grade, topic, seed){
+  var r = EX_rng(seed+101);
+  switch(topic){
+    /* ==================== 低年级 ==================== */
+    case 'cutrope': {
+      var kind=seed%4;
+      if(kind===0){ var n=EX_pick(r,2,9), ans=n+1;
+        return EX_q('一根绳子剪 '+n+' 刀（每刀只剪断一处），一共分成几段？',
+          EX_opts(r,ans,[n,n+2,n-1]), ans, '每剪一刀多一段：'+n+'+1='+ans+' 段。'); }
+      if(kind===1){ var k=EX_pick(r,1,3), layers=Math.pow(2,k), ans=layers+1;
+        return EX_q('把一根绳子对折 '+k+' 次后，从中间剪一刀，展开后共有几段？',
+          EX_opts(r,ans,[layers,layers+2,2*k+1]), ans,
+          '对折 '+k+' 次有 '+layers+' 层，一刀剪出 '+layers+' 个断口，段数=断口+1='+ans+'。'); }
+      if(kind===2){ var n=EX_pick(r,2,8);
+        return EX_q('一个绳圈（绳子两头接在一起）剪 '+n+' 刀，会变成几段？',
+          EX_opts(r,n,[n+1,n-1,n*2]), n, '封闭绳圈剪第一刀还是 1 段，以后每刀多一段，共 '+n+' 段。'); }
+      var m=EX_pick(r,3,10);
+      return EX_q('要把一根绳子剪成 '+m+' 段，需要剪几刀？',
+        EX_opts(r,m-1,[m,m+1,m-2]), m-1, '段数比刀数多 1，所以剪 '+(m-1)+' 刀。');
+    }
+    case 'interval': {
+      var kind=seed%4;
+      if(kind===0){ var n=EX_pick(r,3,12);
+        return EX_q('把一根木头锯成 '+n+' 段，一共要锯几次？',
+          EX_opts(r,n-1,[n,n+1,n-2]), n-1, '锯的次数比段数少 1：'+n+'−1='+(n-1)+' 次。'); }
+      if(kind===1){ var n=EX_pick(r,3,15);
+        return EX_q('从 1 楼走到 '+n+' 楼，一共要走几层楼梯？',
+          EX_opts(r,n-1,[n,n+1,n-2]), n-1, '楼层数减 1：'+n+'−1='+(n-1)+' 层。'); }
+      if(kind===2){ var n=EX_pick(r,3,10), t=EX_pick(r,2,5), ans=(n-1)*t;
+        return EX_q('时钟敲 '+n+' 下，每两下之间隔 '+t+' 秒，从第一下到最后一下共多少秒？',
+          EX_opts(r,ans,[n*t,(n+1)*t,ans+t]), ans, '敲 '+n+' 下有 '+(n-1)+' 个间隔：'+(n-1)+'×'+t+'='+ans+' 秒。'); }
+      var n=EX_pick(r,3,10), t=EX_pick(r,2,4), ans=(n-1)*t;
+      return EX_q('锯木头每锯一次要 '+t+' 分钟，锯成 '+n+' 段共要多少分钟？',
+        EX_opts(r,ans,[n*t,ans+t,n*t+t]), ans, '要锯 '+(n-1)+' 次：'+(n-1)+'×'+t+'='+ans+' 分钟。');
+    }
+    case 'exchange': {
+      var kind=seed%4;
+      if(kind===0){ var a=EX_pick(r,2,5), b=EX_pick(r,2,5), ans=a*b;
+        return EX_q('1 个苹果能换 '+a+' 个桃，1 个桃能换 '+b+' 个枣。1 个苹果能换几个枣？',
+          EX_opts(r,ans,[a+b,ans+1,a*b+b]), ans, '苹果→桃→枣：'+a+'×'+b+'='+ans+' 个枣。'); }
+      if(kind===1){ var b=EX_pick(r,2,5), ans=b*3;
+        return EX_q('2 个苹果能换 '+2*b+' 个梨，1 个梨能换 3 个桃。1 个苹果能换几个桃？',
+          EX_opts(r,ans,[b*3+2,b+3,ans+3]), ans, '先算 1 苹果='+b+' 个梨，再 ×3 得 '+ans+' 个桃。'); }
+      if(kind===2){ var a=EX_pick(r,2,5);
+        return EX_q('天平平衡：3 个 A 等于 '+(3*a)+' 个 B。1 个 A 等于几个 B？',
+          EX_opts(r,a,[a+1,a-1,2*a]), a, '3 个 A = '+(3*a)+' 个 B，1 个 A = '+(3*a)+'÷3 = '+a+' 个 B。'); }
+      var x=EX_pick(r,2,4), ans=x*6;
+      return EX_q('1 只羊能换 2 只兔，1 只兔能换 3 只鸡。'+x+' 只羊能换几只鸡？',
+        EX_opts(r,ans,[x*5,ans+2,x*8]), ans, '1 羊=2×3=6 鸡，'+x+' 羊='+x+'×6='+ans+' 鸡。');
+    }
+    case 'age0': {
+      var kind=seed%4;
+      if(kind===0){ var d=EX_pick(r,2,20), y=EX_pick(r,2,10);
+        return EX_q('今年爸爸比小明大 '+d+' 岁。'+y+' 年后，爸爸比小明大几岁？',
+          EX_opts(r,d,[d+y,d-y,d+1]), d, '年龄差永远不变，还是 '+d+' 岁。'); }
+      if(kind===1){ var d=EX_pick(r,2,15), y=EX_pick(r,2,8);
+        return EX_q('3 年前哥哥比弟弟大 '+d+' 岁，今年哥哥比弟弟大几岁？',
+          EX_opts(r,d,[d+3,d-3,d+1]), d, '不管过几年，年龄差都是 '+d+' 岁。'); }
+      if(kind===2){ var a=EX_pick(r,20,50), b=EX_pick(r,5,18), ans=a-b;
+        return EX_q('妈妈今年 '+a+' 岁，小明今年 '+b+' 岁。妈妈比小明大几岁？',
+          EX_opts(r,ans,[a+b,a-b+1,a-b-1]), ans, '年龄差='+a+'−'+b+'='+ans+' 岁。'); }
+      var d=EX_pick(r,3,18), now=EX_pick(r,8,20), ans=now+d;
+      return EX_q('妹妹今年 '+now+' 岁，姐姐比妹妹大 '+d+' 岁。姐姐今年几岁？',
+        EX_opts(r,ans,[d,now+d+1,now]), ans, '姐姐='+now+'+'+d+'='+ans+' 岁。');
+    }
+    case 'pages': {
+      var kind=seed%4;
+      if(kind===0){ var n=EX_pick(r,5,99), ans=n<10?n:9+(n-9)*2;
+        return EX_q('一本书从第 1 页编到第 '+n+' 页，一共用了多少个数字？',
+          EX_opts(r,ans,[ans+1,ans-1,n*2]), ans,
+          n<10?('1~'+n+' 每个页码 1 个数字，共 '+ans+' 个。'):('1~9 用 9 个，10~'+n+' 有 '+(n-9)+' 个两位数用 '+(n-9)*2+' 个，共 9+'+(n-9)*2+'='+ans+' 个。')); }
+      if(kind===1){ var m=EX_pick(r,5,45), n=9+m, ans=9+m*2;
+        return EX_q('一本书第 1~9 页用 9 个数字，第 10 页起每页用 2 个数字。编到第 '+n+' 页共用几个数字？',
+          EX_opts(r,ans,[ans+2,ans-2,n*2]), ans, '9+'+(n-9)+'×2='+ans+' 个数字。'); }
+      if(kind===2){ var a=EX_pick(r,10,40), b=a+EX_pick(r,2,20), ans=(b-a+1)*2;
+        return EX_q('从第 '+a+' 页到第 '+b+' 页（页码都是两位数），一共印了多少个数字？',
+          EX_opts(r,ans,[ans+2,(b-a)*2,b-a+1]), ans, '共 '+(b-a+1)+' 页，每页 2 个数字：'+(b-a+1)+'×2='+ans+'。'); }
+      return EX_q('从第 1 页到第 99 页，数字“5”一共出现多少次？',
+        EX_opts(r,20,[18,22,10]), 20, '个位上 5 出现 10 次，十位上 5 出现 10 次，共 20 次。');
+    }
+    case 'stroke': {
+      var FIX=[
+        {q:'一个连通图有 0 个奇点，能一笔画成吗？',o:['能','不能','只有从奇点出发才行','无法判断'],a:'能',e:'奇点数为 0 或 2 的连通图能一笔画。'},
+        {q:'一个连通图有 2 个奇点，能一笔画成吗？',o:['能','不能','必须从一个偶点开始','无法判断'],a:'能',e:'2 个奇点时从一个奇点出发、另一个奇点结束即可。'},
+        {q:'一个连通图有 4 个奇点，能一笔画成吗？',o:['能','不能','要看大小','无法判断'],a:'不能',e:'奇点数超过 2 就不能一笔画。'},
+        {q:'正方形加一条对角线，能一笔画成吗？',o:['能','不能','要两笔','要看怎么画'],a:'能',e:'对角线两端的两个顶点是奇点（度 3），其余为偶点，共 2 个奇点，能一笔画。'},
+        {q:'“日”字形（两个正方形共用一条边），奇点有几个？',o:['0 个','2 个','4 个','6 个'],a:'2 个',e:'中间横线两端各连 3 条线，是 2 个奇点，其余都是偶点。'},
+        {q:'“田”字格，奇点有几个？',o:['2 个','4 个','6 个','0 个'],a:'4 个',e:'四条边的中点各连出 3 条线，是 4 个奇点，所以不能一笔画。'},
+        {q:'两个圆相交于一点（像数字 8），能一笔画成吗？',o:['能','不能','要两笔','无法判断'],a:'能',e:'交点连出 4 条线是偶点，其余也是偶点，共 0 个奇点，能一笔画。'},
+        {q:'一个连通图有 6 个奇点，能一笔画成吗？',o:['能','不能','从奇点出发就能','无法判断'],a:'不能',e:'奇点数大于 2，不能一笔画。'},
+        {q:'平面上两条互不相交的线段，能一笔画完吗？',o:['能','不能','从端点开始就能','无法判断'],a:'不能',e:'图形不连通，不能一笔画（一笔画要求连通）。'},
+        {q:'一个连通图只有 1 个奇点，可能吗？',o:['可能','不可能','要看边数','无法判断'],a:'不可能',e:'图的奇点个数一定是偶数，不可能只有 1 个。'}
+      ];
+      return EX_q(FIX[seed%FIX.length].q, FIX[seed%FIX.length].o, FIX[seed%FIX.length].a, FIX[seed%FIX.length].e);
+    }
+    case 'match': {
+      var kind=seed%4;
+      if(kind===0){ var n=EX_pick(r,3,12), ans=3*n+1;
+        return EX_q('用小棒摆 '+n+' 个连在一起的正方形，一共要多少根？',
+          EX_opts(r,ans,[4*n,3*n,ans+2]), ans, '第一个 4 根，以后每加一个多 3 根：4+3×'+(n-1)+'='+ans+'。'); }
+      if(kind===1){ var n=EX_pick(r,3,12), ans=2*n+1;
+        return EX_q('用小棒摆 '+n+' 个连在一起的三角形，一共要多少根？',
+          EX_opts(r,ans,[3*n,2*n,ans+2]), ans, '第一个 3 根，以后每加一个多 2 根：3+2×'+(n-1)+'='+ans+'。'); }
+      if(kind===2){
+        return EX_q('算式 6+4=4 不成立。移动 1 根火柴让它成立，应变成下面哪个式子？',
+          EX_shuf(r,['8−4=4','6−4=2','9+4=13','5+4=9']), '8−4=4',
+          '把“+”号的竖火柴移到 6 的左上角，6 变 8、“+”变“−”，得 8−4=4。'); }
+      return EX_q('算式 1+1=10 不成立。移动 1 根火柴让它成立，应变成哪个式子？',
+        EX_shuf(r,['11−1=10','1−1=10','1+1=2','11+1=10']), '11−1=10',
+        '把“+”的竖火柴移到第一个 1 前面，变成 11−1=10。');
+    }
+    case 'vertical': {
+      var FIX=[
+        {q:'竖式谜：AB + BA = CDC（A、B、C、D 代表不同数字，C 不为 0）。C 是多少？',o:['1','2','3','无法确定'],a:'1',e:'AB+BA=11(A+B)，和是 11 的倍数且为三位数，只能取 121（C=1、D=2、A+B=11），故 C=1。'},
+        {q:'竖式谜：一个两位数加它的倒序数，和是 121。这两个数字之和是多少？',o:['11','12','10','9'],a:'11',e:'两位数 AB+BA=11(A+B)=121，所以 A+B=11。'},
+        {q:'加法竖式：个位 7+8 的结果，个位写几、向十位进几？',o:['写5进1','写15进1','写5进0','写15进0'],a:'写5进1',e:'7+8=15，个位写 5，向十位进 1。'},
+        {q:'竖式谜：3A + 4 = 42，A 是几？',o:['8','38','4','2'],a:'8',e:'3A 表示 30+A，30+A+4=42，A=8。'},
+        {q:'竖式谜：两位数 AB 减去 BA 等于 27，A 比 B 大几？',o:['3','2','9','无法确定'],a:'3',e:'AB−BA=9(A−B)=27，所以 A−B=3。'},
+        {q:'乘法竖式：24 × 3 的积的十位数字是几？',o:['7','2','4','3'],a:'7',e:'24×3=72，十位是 7。'},
+        {q:'竖式谜：一个两位数乘以 3，积是 111。这个两位数是多少？',o:['37','33','39','27'],a:'37',e:'111÷3=37，验算 37×3=111，正确。'},
+        {q:'加法竖式中，某一位相加满 10，应该怎么办？',o:['向高位进 1','向低位借 1','不进位','写 10'],a:'向高位进 1',e:'满十向前一位进 1，这是十进制竖式的基本规则。'},
+        {q:'减法竖式中，个位不够减时应该怎么办？',o:['向十位借 1','向个位借 1','直接减','写成负数'],a:'向十位借 1',e:'个位不够减，向十位借 1 当 10。'},
+        {q:'竖式谜：一个加数个位是 6，另一个加数个位是 9，和的个位是几？',o:['5','15','6','9'],a:'5',e:'6+9=15，个位写 5，向十位进 1。'}
+      ];
+      var it=FIX[seed%FIX.length]; return EX_q(it.q,it.o,it.a,it.e);
+    }
+    case 'signs': {
+      var FIX=[
+        {q:'在 1、2、3 之间填运算符号：1 ○ 2 × 3 = 7，○ 里填什么？',o:['+','−','×','÷'],a:'+',e:'1+2×3=1+6=7。'},
+        {q:'在 2、3、4 之间填符号：2 × 3 ○ 4 = 10，○ 里填什么？',o:['+','−','×','÷'],a:'+',e:'2×3+4=6+4=10。'},
+        {q:'下面哪个算式的结果等于 1？（用 3、3、3、3）',o:['3÷3+3−3','3+3+3−3','3×3÷3+3','3−3−3−3'],a:'3÷3+3−3',e:'3÷3+3−3=1+3−3=1。'},
+        {q:'在 8、8、8、8 之间填符号使结果为 2：8÷8+8÷8=？',o:['2','1','4','16'],a:'2',e:'8÷8=1，两个 1 相加得 2。'},
+        {q:'算式 1+2×3−4 的结果是多少？',o:['3','5','7','9'],a:'3',e:'先乘后加减：1+6−4=3。'},
+        {q:'算式 (1+2)×3−4 的结果是多少？',o:['5','3','9','7'],a:'5',e:'先算括号：3×3−4=9−4=5。'},
+        {q:'给 4+4÷4 加括号，使结果等于 2，应写成？',o:['(4+4)÷4','4+(4÷4)','(4+4÷4)','4+4÷(4)'],a:'(4+4)÷4',e:'(4+4)÷4=8÷4=2。'},
+        {q:'用 5、5、5、1 各一次，下面哪个式子得 24？',o:['5×(5−1÷5)','5×5−5−1','5+5+5+1','(5+5)×1+5'],a:'5×(5−1÷5)',e:'1÷5=0.2，5−0.2=4.8，5×4.8=24。'},
+        {q:'在 9、9、9 之间填符号：9 ○ 9 ÷ 9 = 10，○ 里填什么？',o:['+','−','×','÷'],a:'+',e:'9+9÷9=9+1=10。'},
+        {q:'算式 2×3+4×5 的结果是多少？',o:['26','22','30','50'],a:'26',e:'先乘：6+20=26。'}
+      ];
+      var it=FIX[seed%FIX.length]; return EX_q(it.q,it.o,it.a,it.e);
+    }
+    case 'array': {
+      var kind=seed%3;
+      if(kind===0){ var s=EX_pick(r,6,15); if(s%3!==0)s=9;
+        var edge=(21+s)/3;
+        return EX_q('把 1~6 填入三角形的三个顶点和三条边中点，使每边和相等。若三个顶点填的数和为 '+s+'，每边的和是多少？',
+          EX_opts(r,edge,[edge+1,edge-1,21/3]), edge, '三顶点被算了两次：(21+'+s+')÷3='+edge+'。'); }
+      if(kind===1){ var s=EX_pick(r,1,9)+EX_pick(r,1,9);
+        var edge=(21+s)/3;
+        return EX_q('三角形数阵填 1~6，顶点数和为 '+s+'，每边和是多少？',
+          EX_opts(r,edge,[edge+2,edge-2,7]), edge, '每边和=(21+'+s+')÷3='+edge+'。'); }
+      var n=EX_pick(r,3,5), ans=n*(n+1)/2;
+      return EX_q('把 1~'+n+' 排成一列，所有数的和是多少？',
+        EX_opts(r,ans,[ans+1,ans-1,n*n]), ans, '1+2+…+'+n+'='+n+'×'+(n+1)+'÷2='+ans+'。');
+    }
+    case 'river': {
+      var FIX=[
+        {q:'狼、羊、菜过河：人不在时狼会吃羊、羊会吃菜。人每次只能带一样，第一步应带什么？',o:['狼','羊','菜','空手'],a:'羊',e:'先带羊过去，人回来再带狼（或菜），并把羊带回来，最后带菜（或狼）。'},
+        {q:'狼羊菜问题：人带羊过河后空手回来，第二步应带什么？',o:['狼','菜','羊','什么都不带'],a:'狼',e:'带狼过去后把羊带回来，避免狼和羊单独相处。'},
+        {q:'四个人过桥用时 1、2、5、10 分钟，每次最多 2 人且必须带手电，最短要几分钟？',o:['17','19','15','20'],a:'17',e:'1和2过(2)，1回(1)，5和10过(10)，2回(2)，1和2过(2)，共 17 分钟。'},
+        {q:'两人过桥（用时 1、2 分钟）加一人 5 分钟，三人全过桥最少几分钟？',o:['8','9','10','11'],a:'8',e:'1和2过(2)，1回(1)，1和5过(5)，共 8 分钟。'},
+        {q:'狼羊菜问题中，哪两样不能单独留在一起？',o:['狼和菜','狼和羊、羊和菜','狼和羊','只有羊和菜'],a:'狼和羊、羊和菜',e:'狼会吃羊，羊会吃菜，狼和菜可以单独相处。'},
+        {q:'手电筒过桥：A用1分、B用2分、C用5分，A和C一起过桥要几分钟？',o:['5','6','1','4'],a:'5',e:'两人一起过用较慢者的时间，即 5 分钟。'},
+        {q:'过河时船只能载 2 人，4 个人都要过河，至少要渡几次（单程算一次）？',o:['5','4','6','7'],a:'5',e:'去2回1去2回1去2，共 5 次单程。'},
+        {q:'农夫带鸡和狐狸过河，狐狸会吃鸡。人不在时必须把什么带走？',o:['鸡','狐狸','都带走','都不带'],a:'鸡',e:'人不在时狐狸会吃鸡，所以离开时要把鸡带走。'},
+        {q:'三人过桥分别要 1、2、3 分钟，每次最多 2 人且须带手电，最短几分钟？',o:['6','5','4','7'],a:'6',e:'1和2先过用 2 分，1 返回用 1 分，1和3再过用 3 分，共 2+1+3=6 分钟。'},
+        {q:'过河问题主要考察的是什么？',o:['谁不能单独相处、谁来回送','谁走得最快','船有多大','水有多深'],a:'谁不能单独相处、谁来回送',e:'过河问题核心是安全约束和往返安排。'}
+      ];
+      var it=FIX[seed%FIX.length]; return EX_q(it.q,it.o,it.a,it.e);
+    }
+    case 'handshake': {
+      var kind=seed%3;
+      if(kind===0){ var n=EX_pick(r,4,20), ans=n*(n-1)/2;
+        return EX_q(n+' 个人两两握手一次，一共握手多少次？',
+          EX_opts(r,ans,[n*(n-1),n*n/2,ans+1]), ans, '每人和其他 '+(n-1)+' 人握，除以 2：'+n+'×'+(n-1)+'÷2='+ans+'。'); }
+      if(kind===1){ var n=EX_pick(r,4,16), ans=n*(n-1)/2;
+        return EX_q('一条直线上有 '+n+' 个点，一共能连出多少条线段？',
+          EX_opts(r,ans,[n*(n-1),n*n,ans-1]), ans, '每两点确定一条：'+n+'×'+(n-1)+'÷2='+ans+'。'); }
+      var n=EX_pick(r,4,15), ans=n*(n-1)/2;
+      return EX_q(n+' 支球队进行单循环比赛（每两队赛一场），一共多少场？',
+        EX_opts(r,ans,[n*(n-1),n*n,ans+2]), ans, '单循环场次='+n+'×'+(n-1)+'÷2='+ans+'。');
+    }
+
+    /* ==================== 中年级 ==================== */
+    case 'yingkui': {
+      var kind=seed%3;
+      if(kind===0){ var a=EX_pick(r,2,5), b=a+EX_pick(r,1,4), y=EX_pick(r,1,10), k=EX_pick(r,1,10);
+        var people=(y+k)/(b-a); if(people%1!==0){ people=Math.round(people); }
+        return EX_q('分苹果：每人 '+a+' 个多 '+y+' 个，每人 '+b+' 个少 '+k+' 个。一共有几人？',
+          EX_opts(r,people,[people+1,people-1,(y+k)]), people, '人数=(盈+亏)÷两次差=('+y+'+'+k+')÷'+(b-a)+'='+people+' 人。'); }
+      if(kind===1){ var a=EX_pick(r,2,5), b=a+EX_pick(r,1,4), people=EX_pick(r,3,10);
+        var y1=a+people+EX_pick(r,1,9), y2=y1-(b-a)*people;
+        return EX_q('分糖：每人 '+a+' 颗多 '+y1+' 颗，每人 '+b+' 颗多 '+y2+' 颗。共有几人？',
+          EX_opts(r,people,[people+1,people-1,y1-y2]), people, '双盈用减：('+y1+'−'+y2+')÷'+(b-a)+'='+people+' 人。'); }
+      var a=EX_pick(r,2,5), b=a+EX_pick(r,1,3), k1=EX_pick(r,1,8), k2=k1+EX_pick(r,2,8);
+      var people=(k2-k1)/(b-a); if(people%1!==0)people=Math.round(people);
+      return EX_q('分书：每人 '+a+' 本少 '+k1+' 本，每人 '+b+' 本少 '+k2+' 本。共有几人？',
+        EX_opts(r,people,[people+1,people-1,k2-k1]), people, '双亏用减：('+k2+'−'+k1+')÷'+(b-a)+'='+people+' 人。');
+    }
+    case 'age1': {
+      var kind=seed%3;
+      if(kind===0){ var k=EX_pick(r,2,5), ans=EX_pick(r,3,15), d=(k-1)*ans;
+        return EX_q('哥哥比弟弟大 '+d+' 岁，今年哥哥的年龄是弟弟的 '+k+' 倍。弟弟今年几岁？',
+          EX_opts(r,ans,[ans+1,ans-1,d]), ans, '弟弟=差÷(倍数−1)='+d+'÷'+(k-1)+'='+ans+' 岁。'); }
+      if(kind===1){ var k=EX_pick(r,3,4), t=EX_pick(r,2,8);
+        var now=(k-2)*t, years=t, d=(k-2)*(k-1)*t, later=now+years;
+        return EX_q('弟弟今年 '+now+' 岁，哥哥年龄是弟弟的 '+k+' 倍。几年后哥哥年龄是弟弟的 '+(k-1)+' 倍？',
+          EX_opts(r,years,[years+1,years-1,years+2]), years,
+          '年龄差不变='+d+' 岁；'+(k-1)+' 倍时弟弟='+d+'÷'+(k-2)+'='+later+' 岁，距现在 '+later+'−'+now+'='+years+' 年。'); }
+      var d=EX_pick(r,6,30), k=EX_pick(r,2,4), small=d/(k-1); if(small%1!==0){k=3;small=d/2;}
+      var ans=small*k;
+      return EX_q('两人年龄差 '+d+' 岁，大的年龄是小的 '+k+' 倍。大的几岁？',
+        EX_opts(r,ans,[small,ans+1,d]), ans, '小的='+d+'÷'+(k-1)+'='+small+'，大的='+small+'×'+k+'='+ans+'。');
+    }
+    case 'average': {
+      var kind=seed%3;
+      if(kind===0){ var n=EX_pick(r,3,8), avg=EX_pick(r,10,40), newAvg=avg+EX_pick(r,1,6);
+        var x=newAvg*(n+1)-avg*n;
+        return EX_q(n+' 个数的平均数是 '+avg+'，加入 '+x+' 后，平均数是多少？',
+          EX_opts(r,newAvg,[newAvg+1,newAvg-1,avg]), newAvg, '原和 '+n+'×'+avg+'='+(avg*n)+'，加 '+x+' 后÷'+(n+1)+'='+newAvg+'。'); }
+      if(kind===1){ var n=EX_pick(r,4,10), oldAvg=EX_pick(r,20,60), removed=EX_pick(r,5,40);
+        var newN=n-1, newAvg=oldAvg+EX_pick(r,1,6), removedCalc=oldAvg*n-newAvg*newN;
+        return EX_q(n+' 个数的平均数是 '+oldAvg+'，去掉一个数后平均数变成 '+newAvg+'。去掉的数是多少？',
+          EX_opts(r,removedCalc,[removedCalc+1,removedCalc-1,oldAvg]), removedCalc,
+          '去掉的数='+oldAvg+'×'+n+'−'+newAvg+'×'+newN+'='+removedCalc+'。'); }
+      var a=EX_pick(r,60,100), b=EX_pick(r,60,100), c=EX_pick(r,60,100), avg=Math.round((a+b+c)/3);
+      return EX_q('三次数学测验得分 '+a+'、'+b+'、'+c+'，平均分约是多少？',
+        EX_opts(r,avg,[avg+1,avg-1,avg+2]), avg, '('+a+'+'+b+'+'+c+')÷3≈'+avg+'。');
+    }
+    case 'phalanx': {
+      var kind=seed%3;
+      if(kind===0){ var n=EX_pick(r,4,20), ans=n*n;
+        return EX_q('一个实心方阵每边 '+n+' 人，一共有多少人？',
+          EX_opts(r,ans,[n*4,n*(n-1),ans+1]), ans, '实心方阵='+n+'×'+n+'='+ans+' 人。'); }
+      if(kind===1){ var n=EX_pick(r,4,20), ans=4*n-4;
+        return EX_q('一个方阵每边 '+n+' 人，最外层一共有多少人？',
+          EX_opts(r,ans,[4*n,4*n+4,n*n]), ans, '最外层=4×'+n+'−4='+ans+' 人（四个角重复算了）。'); }
+      var n=EX_pick(r,4,20), ans=4*n-4, inner=ans-8;
+      return EX_q('方阵最外层有 '+ans+' 人，里面相邻一层有多少人？',
+        EX_opts(r,inner,[ans+8,ans-4,ans-16]), inner, '相邻两层相差 8 人：'+ans+'−8='+inner+'。');
+    }
+    case 'inclusion': {
+      var kind=seed%3;
+      if(kind===0){ var a=EX_pick(r,10,30), b=EX_pick(r,10,30), both=EX_pick(r,2,Math.min(a,b)-1), ans=a+b-both;
+        return EX_q('班里喜欢语文的有 '+a+' 人，喜欢数学的有 '+b+' 人，都喜欢的有 '+both+' 人。至少喜欢一科的有几人？',
+          EX_opts(r,ans,[a+b,ans-both,ans+1]), ans, '总数='+a+'+'+b+'−'+both+'='+ans+' 人。'); }
+      if(kind===1){ var a=EX_pick(r,10,30), b=EX_pick(r,10,30), both=EX_pick(r,2,Math.min(a,b)-1), total=a+b-both;
+        return EX_q('喜欢画画 '+a+' 人、唱歌 '+b+' 人，都喜欢的 '+both+' 人。全班至少喜欢一样的有几人？',
+          EX_opts(r,total,[a+b,total+both,total-1]), total, a+'+'+b+'−'+both+'='+total+'。'); }
+      var total=EX_pick(r,30,60), a=EX_pick(r,10,25), b=EX_pick(r,10,25), both=a+b-total;
+      if(both<1){total=a+b-EX_pick(r,2,8);both=a+b-total;}
+      return EX_q('全班 '+total+' 人，参加语文组 '+a+' 人、数学组 '+b+' 人，每人至少参加一组。两组都参加的有几人？',
+        EX_opts(r,both,[a+b-total+1,1,total-a-b]), both, '重叠=a+b−总数='+a+'+'+b+'−'+total+'='+both+'。');
+    }
+    case 'area': {
+      var kind=seed%3;
+      if(kind===0){ var a=EX_pick(r,4,15), b=EX_pick(r,4,15), ans=a*b;
+        return EX_q('一个长方形长 '+a+' 厘米、宽 '+b+' 厘米，面积是多少平方厘米？',
+          EX_opts(r,ans,[2*(a+b),a+b,ans+1]), ans, '长方形面积=长×宽='+a+'×'+b+'='+ans+'。'); }
+      if(kind===1){ var a=EX_pick(r,5,12), ans=a*a;
+        return EX_q('一个正方形边长 '+a+' 厘米，面积是多少平方厘米？',
+          EX_opts(r,ans,[4*a,a+a,ans+1]), ans, '正方形面积=边长×边长='+a+'×'+a+'='+ans+'。'); }
+      var a=EX_pick(r,6,15), b=EX_pick(r,4,12), cut=EX_pick(r,1,3), ans=a*b-cut;
+      return EX_q('长 '+a+'、宽 '+b+' 的长方形，剪掉 '+cut+' 平方厘米的小块，剩下面积是多少？',
+        EX_opts(r,ans,[a*b,a*b+cut,ans-cut]), ans, a+'×'+b+'−'+cut+'='+ans+' 平方厘米。');
+    }
+    case 'perimeter': {
+      var kind=seed%3;
+      if(kind===0){ var a=EX_pick(r,3,12), ans=4*a;
+        return EX_q('正方形边长 '+a+' 厘米，周长是多少厘米？',
+          EX_opts(r,ans,[a*a,2*a,ans+1]), ans, '正方形周长=边长×4='+a+'×4='+ans+'。'); }
+      if(kind===1){ var a=EX_pick(r,4,12), b=EX_pick(r,3,10), ans=2*(a+b);
+        return EX_q('长方形长 '+a+'、宽 '+b+' 厘米，周长是多少厘米？',
+          EX_opts(r,ans,[a*b,2*a+b,ans+2]), ans, '周长=(长+宽)×2=('+a+'+'+b+')×2='+ans+'。'); }
+      var a=EX_pick(r,4,10), ans=6*a;
+      return EX_q('两个边长 '+a+' 厘米的正方形拼成一个长方形，周长是多少厘米？',
+        EX_opts(r,ans,[8*a,4*a,ans+2]), ans, '拼成长 '+2*a+'、宽 '+a+' 的长方形，周长=2×('+2*a+'+'+a+')='+ans+' 厘米。');
+    }
+    case 'cube': {
+      var kind=seed%3;
+      if(kind===0){ var n=EX_pick(r,2,5), ans=n*n*n;
+        return EX_q('用棱长 1 厘米的小方块摆成 '+n+'×'+n+'×'+n+' 的大正方体，共需多少块？',
+          EX_opts(r,ans,[3*n,n*n,ans+1]), ans, n+'×'+n+'×'+n+'='+ans+' 块。'); }
+      if(kind===1){ var a=EX_pick(r,3,8), b=EX_pick(r,2,6), ans=a*b;
+        return EX_q('一个长方体底面积 '+a+' 平方厘米、高 '+b+' 厘米，体积是多少立方厘米？',
+          EX_opts(r,ans,[a+b,a+b+1,ans+b]), ans, '体积=底面积×高='+a+'×'+b+'='+ans+' 立方厘米。'); }
+      return EX_q('正方体展开图一共有多少种不同的形式？',
+        EX_opts(r,11,[9,10,12]), 11, '正方体展开图共有 11 种，判断时要看哪些面互为对面。');
+    }
+    case 'counting': {
+      var kind=seed%3;
+      if(kind===0){ var a=EX_pick(r,2,6), b=EX_pick(r,2,6), ans=a*b;
+        return EX_q('上衣有 '+a+' 件、裤子有 '+b+' 条，一套搭配有几种？',
+          EX_opts(r,ans,[a+b,ans+1,a*b+1]), ans, '分步用乘：'+a+'×'+b+'='+ans+' 种。'); }
+      if(kind===1){ var a=EX_pick(r,2,6), b=EX_pick(r,2,6), ans=a+b;
+        return EX_q('去学校有 '+a+' 条公交路线，或 '+b+' 条地铁线路可选，共有几种走法？',
+          EX_opts(r,ans,[a*b,ans+1,a+b+1]), ans, '分类用加：'+a+'+'+b+'='+ans+' 种。'); }
+      var a=EX_pick(r,2,5), b=EX_pick(r,2,5), c=EX_pick(r,2,5), ans=a*b*c;
+      return EX_q('从甲地到乙地有 '+a+' 条路，乙到丙有 '+b+' 条，丙到丁有 '+c+' 条。甲到丁共几种走法？',
+        EX_opts(r,ans,[a+b+c,a*b+b*c,ans+1]), ans, '分步相乘：'+a+'×'+b+'×'+c+'='+ans+' 种。');
+    }
+    case 'series': {
+      var kind=seed%3;
+      if(kind===0){ var n=EX_pick(r,5,30), ans=n*(n+1)/2;
+        return EX_q('计算 1+2+3+…+'+n+' 的和。',
+          EX_opts(r,ans,[n*n,n*(n+1),ans+1]), ans, '和='+n+'×'+(n+1)+'÷2='+ans+'。'); }
+      if(kind===1){ var n=EX_pick(r,3,12), ans=n*n;
+        return EX_q('前 '+n+' 个连续奇数的和（1+3+5+…）是多少？',
+          EX_opts(r,ans,[n*(n+1),2*n,n*n-1]), ans, '连续奇数和=项数²='+n+'²='+ans+'。'); }
+      var a=EX_pick(r,1,5), d=EX_pick(r,2,6), n=EX_pick(r,5,12), ans=n*a+n*(n-1)*d/2;
+      return EX_q('等差数列首项 '+a+'、公差 '+d+'，共 '+n+' 项，求和。',
+        EX_opts(r,ans,[n*(a+d),ans+d,ans+1]), ans, '和=n×a+n(n−1)d÷2='+ans+'。');
+    }
+    case 'horizontal': {
+      var FIX=[
+        {q:'算式中的汉字代表不同数字：苹+果=10，苹−果=2。苹是几？',o:['6','4','8','5'],a:'6',e:'苹=(10+2)÷2=6，果=4。'},
+        {q:'A+B=12，A−B=4，A 是多少？',o:['8','4','6','10'],a:'8',e:'A=(12+4)÷2=8。'},
+        {q:'一个两位数，十位比个位大 3，个位数字是 2，这个数是多少？',o:['52','25','32','23'],a:'52',e:'十位=2+3=5，所以是 52。'},
+        {q:'甲乙两数之和是 30，甲是乙的 2 倍。乙是多少？',o:['10','20','15','12'],a:'10',e:'乙=30÷(2+1)=10。'},
+        {q:'3×□+2=20，□里是几？',o:['6','5','7','8'],a:'6',e:'3×□=18，□=6。'},
+        {q:'一个数的 3 倍减去 5 等于 16，这个数是多少？',o:['7','6','8','9'],a:'7',e:'3x=21，x=7。'},
+        {q:'□÷4=6……2，□是多少？',o:['26','24','28','22'],a:'26',e:'被除数=4×6+2=26。'},
+        {q:'A、B 是不同的数字，AB+BA=99，A+B 是多少？',o:['9','11','10','99'],a:'9',e:'11(A+B)=99，A+B=9。'},
+        {q:'两个数的积是 48，和是 14，较大的数是多少？',o:['8','6','12','10'],a:'8',e:'6×8=48，6+8=14，较大的是 8。'},
+        {q:'用 2、4、6、8 组成的四位数，最大与最小相差多少？',o:['6174','6420','2468','5200'],a:'6174',e:'8642−2468=6174。'}
+      ];
+      var it=FIX[seed%FIX.length]; return EX_q(it.q,it.o,it.a,it.e);
+    }
+    case 'schedule': {
+      var FIX=[
+        {q:'沏茶：洗水壶1分、烧水8分、洗茶杯2分、找茶叶1分、沏茶1分。最少几分钟？',o:['11','13','9','10'],a:'11',e:'烧水8分钟里洗茶杯、找茶叶，最后沏茶：1+8+1+1=11 分钟。'},
+        {q:'烙饼：锅最多放2张饼，每面3分钟。烙3张饼最少几分钟？',o:['9','12','6','18'],a:'9',e:'交替烙，共 6 个面、每面3分钟分3轮，共9分钟。'},
+        {q:'烙饼：锅最多放2张，每面3分钟。烙4张饼最少几分钟？',o:['12','9','6','24'],a:'12',e:'两张一组，每组6分钟，两组共12分钟。'},
+        {q:'三人接水分别要 1、3、5 分钟，只有一个水龙头。怎样排总等待时间最短？',o:['1、3、5','5、3、1','3、1、5','都一样'],a:'1、3、5',e:'用时短的先接，等待总和最小。'},
+        {q:'接到热水需要 5 分钟，这 5 分钟里可以同时做什么以节省时间？',o:['洗茶杯','发呆','等着','关火'],a:'洗茶杯',e:'把不依赖热水的活安排进等待时间。'},
+        {q:'妈妈煎鱼，锅一次煎2条，每面2分钟，煎3条最少几分钟？',o:['6','8','4','12'],a:'6',e:'6 个面分 3 轮，每轮2分钟，共6分钟。'},
+        {q:'合理安排的核心思想是什么？',o:['能同时做的事同时做','先做难的','一件件慢慢做','只做一件'],a:'能同时做的事同时做',e:'利用等待时间做别的事，减少总用时。'},
+        {q:'刷牙3分、烧水10分、冲奶粉2分，最短几分钟能喝上奶？',o:['12','15','10','13'],a:'12',e:'烧水时刷牙，水开后冲奶粉：10+2=12 分钟。'},
+        {q:'排队打水时，让谁先打能使所有人等待时间总和最小？',o:['用时最短的','用时最长的','随机','高个子'],a:'用时最短的',e:'短作业优先可最小化总等待时间。'},
+        {q:'做作业20分、听英语10分（可用耳朵），最少几分钟完成两件事？',o:['20','30','10','15'],a:'20',e:'做作业时同时听英语，取较长的20分钟。'}
+      ];
+      var it=FIX[seed%FIX.length]; return EX_q(it.q,it.o,it.a,it.e);
+    }
+
+    /* ==================== 高年级 ==================== */
+    case 'cowgrass': {
+      var kind=seed%3;
+      if(kind===0){ var g=EX_pick(r,2,8), t=EX_pick(r,5,20), n=EX_pick(r,10,40), ans=n*t+g*t;
+        return EX_q('一片草每天新长 '+g+' 份，供 '+n+' 头牛吃 '+t+' 天。这些天共吃掉多少份草？',
+          EX_opts(r,ans,[n*t,ans-g,ans+g]), ans, '共吃='+n+'×'+t+'（原有部分）+'+g+'×'+t+'（新长）='+ans+' 份。'); }
+      if(kind===1){ var orig=EX_pick(r,40,120), g=EX_pick(r,2,10), n=EX_pick(r,10,40);
+        var t=orig/(n-g); if(t%1!==0){n=g+EX_pick(r,5,20);t=orig/(n-g);}
+        return EX_q('原有草 '+orig+' 份，每天新长 '+g+' 份，'+n+' 头牛能吃几天？',
+          EX_opts(r,Math.round(t),[Math.round(t)+1,Math.round(t)-1,n]), Math.round(t),
+          '每天净吃 '+(n-g)+' 份，'+orig+'÷'+(n-g)+'≈'+Math.round(t)+' 天。'); }
+      var g=EX_pick(r,2,8), n=EX_pick(r,10,30), t=EX_pick(r,4,15), ans=n*t-g*t;
+      return EX_q('每天新长 '+g+' 份草，'+n+' 头牛吃 '+t+' 天刚好吃完。原有草多少份？',
+        EX_opts(r,ans,[n*t,ans+g,ans-g]), ans, '原有草=(牛数−新长)×天数=('+n+'−'+g+')×'+t+'='+ans+' 份。');
+    }
+    case 'clock': {
+      var kind=seed%3;
+      if(kind===0){ var t=EX_pick(r,10,55), deg=t*6;
+        return EX_q('钟面上分针每分钟走 6°，'+t+' 分钟走了多少度？',
+          EX_opts(r,deg,[t,deg/2,deg+6]), deg, '分针速度 6°/分：'+t+'×6='+deg+'°。'); }
+      if(kind===1){ var t=EX_pick(r,5,30), gap=EX_pick(r,20,300), ans=gap/5.5; if(ans%1!==0){gap=Math.round(ans)*5.5;ans=gap/5.5;}
+        return EX_q('分针与时针的夹角相差 '+Math.round(gap)+'°，两针速度差 5.5°/分，经过多少分钟重合？',
+          EX_opts(r,Math.round(ans),[Math.round(ans)+1,Math.round(ans)-1,Math.round(gap)]), Math.round(ans),
+          '追及时间=角度差÷速度差='+Math.round(gap)+'÷5.5≈'+Math.round(ans)+' 分。'); }
+      var h=EX_pick(r,1,11), m=EX_pick(r,0,59), mirror=(11-h)*60+(60-m);
+      var mm=mirror%60, hh=Math.floor(mirror/60)%12; if(hh===0)hh=12;
+      var pad=function(x){ return x<10?'0'+x:''+x; };
+      var ansTxt=hh+'点'+pad(mm)+'分';
+      var alt1=h+'点'+pad(m)+'分';
+      var alt2=((hh%12)+1)+'点'+pad(mm)+'分';
+      var alt3=hh+'点'+pad((mm+1)%60)+'分';
+      return EX_q('镜子里看到的时间是 '+h+' 点 '+m+' 分，实际时间约是几点几分（11:60 减）？',
+        EX_shuf(r,[ansTxt,alt1,alt2,alt3]), ansTxt,
+        '镜面时间=11:60−镜中时间，得 '+hh+' 点 '+mm+' 分。');
+    }
+    case 'train': {
+      var kind=seed%3;
+      if(kind===0){ var car=EX_pick(r,100,300), bridge=EX_pick(r,200,800), v=EX_pick(r,10,40), ans=(car+bridge)/v;
+        if(ans%1!==0){bridge=v*Math.round(ans)-car;ans=Math.round(ans);}
+        return EX_q('一列火车长 '+car+' 米，通过一座 '+bridge+' 米的大桥，速度 '+v+' 米/秒，需要几秒？',
+          EX_opts(r,ans,[ans+1,car/v,bridge/v]), ans, '过桥路程=车长+桥长='+car+'+'+bridge+'='+(ans*v)+'，时间='+(ans*v)+'÷'+v+'='+ans+' 秒。'); }
+      if(kind===1){ var c1=EX_pick(r,100,250), c2=EX_pick(r,100,250), v1=EX_pick(r,15,30), v2=EX_pick(r,15,30), ans=(c1+c2)/(v1+v2);
+        if(ans%1!==0){v2=Math.round((c1+c2)/ans)-v1;ans=Math.round(ans);}
+        return EX_q('两列火车长 '+c1+' 米和 '+c2+' 米，相向而行速度 '+v1+' 和 '+v2+' 米/秒，错车需几秒？',
+          EX_opts(r,Math.round(ans),[Math.round(ans)+1,c1/v1,c2/v2]), Math.round(ans),
+          '错车路程=两车长之和='+(c1+c2)+'，速度和='+(v1+v2)+'，时间≈'+Math.round(ans)+' 秒。'); }
+      var car=EX_pick(r,100,300), v=EX_pick(r,10,30), ans=car/v; if(ans%1!==0){v=Math.round(car/ans);ans=car/v;}
+      return EX_q('火车长 '+car+' 米，速度 '+v+' 米/秒，通过一根电线杆需几秒？',
+        EX_opts(r,Math.round(ans),[Math.round(ans)+1,Math.round(ans)*2,Math.round(ans)-1]), Math.round(ans),
+        '过电线杆路程=车长 '+car+'，时间='+car+'÷'+v+'≈'+Math.round(ans)+' 秒。');
+    }
+    case 'boat': {
+      var kind=seed%3;
+      if(kind===0){ var boat=EX_pick(r,10,40), water=EX_pick(r,2,8), t=EX_pick(r,2,8), ans=(boat+water)*t;
+        return EX_q('船在静水中速度 '+boat+' 千米/时，水速 '+water+' 千米/时，顺水航行 '+t+' 小时走多少千米？',
+          EX_opts(r,ans,[(boat-water)*t,boat*t,ans+1]), ans, '顺水速度='+boat+'+'+water+'='+(boat+water)+'，路程='+(boat+water)+'×'+t+'='+ans+'。'); }
+      if(kind===1){ var boat=EX_pick(r,10,40), water=EX_pick(r,2,8), t=EX_pick(r,2,8), ans=(boat-water)*t;
+        return EX_q('船静水速度 '+boat+' 千米/时，水速 '+water+' 千米/时，逆水 '+t+' 小时走多少千米？',
+          EX_opts(r,ans,[(boat+water)*t,boat*t,ans+1]), ans, '逆水速度='+boat+'−'+water+'='+(boat-water)+'，路程='+(boat-water)+'×'+t+'='+ans+'。'); }
+      var down=EX_pick(r,20,50), up=EX_pick(r,8,18), ans=(down+up)/2;
+      return EX_q('顺水速度 '+down+' 千米/时，逆水速度 '+up+' 千米/时，静水船速是多少？',
+        EX_opts(r,ans,[(down-up)/2,down,up]), ans, '静水速度=(顺+逆)÷2=('+down+'+'+up+')÷2='+ans+'。');
+    }
+    case 'track': {
+      var kind=seed%3;
+      if(kind===0){ var L=EX_pick(r,200,600), v1=EX_pick(r,4,10), v2=EX_pick(r,3,8), ans=L/(v1+v2);
+        if(ans%1!==0){L=Math.round(ans)*(v1+v2);ans=Math.round(ans);}
+        return EX_q('环形跑道长 '+L+' 米，两人反向而跑速度 '+v1+' 和 '+v2+' 米/秒，几秒后第一次相遇？',
+          EX_opts(r,ans,[ans+1,L/v1,L/v2]), ans, '反向用速度和：'+L+'÷'+(v1+v2)+'='+ans+' 秒。'); }
+      if(kind===1){ var L=EX_pick(r,200,600), v1=EX_pick(r,6,12), v2=EX_pick(r,3,8), ans=L/(v1-v2);
+        if(ans%1!==0){L=Math.round(ans)*(v1-v2);ans=Math.round(ans);}
+        return EX_q('环形跑道长 '+L+' 米，两人同向而跑速度 '+v1+' 和 '+v2+' 米/秒，快者多久第一次追上慢者？',
+          EX_opts(r,ans,[ans+1,L/v1,L/(v1+v2)]), ans, '同向用速度差：'+L+'÷'+(v1-v2)+'='+ans+' 秒。'); }
+      var L=EX_pick(r,200,600), v1=EX_pick(r,4,10), v2=EX_pick(r,3,8), n=EX_pick(r,2,4), first=L/(v1+v2), ans=Math.round(first*n);
+      return EX_q('环形跑道长 '+L+' 米，两人反向速度 '+v1+' 和 '+v2+' 米/秒，第 '+n+' 次相遇需几秒？',
+        EX_opts(r,ans,[ans/ n,ans+Math.round(first),first]), ans, '第一次 '+first+' 秒，第 '+n+' 次='+first+'×'+n+'≈'+ans+' 秒。');
+    }
+    case 'number': {
+      var FIX=[
+        {q:'下面哪个数能被 3 整除？',o:['1234','1242','1235','1241'],a:'1242',e:'1+2+4+2=9，能被3整除。'},
+        {q:'下面哪个数能被 9 整除？',o:['123','124','125','126'],a:'126',e:'1+2+6=9，能被9整除。'},
+        {q:'36 和 48 的最大公约数是多少？',o:['12','6','24','8'],a:'12',e:'36=2²×3²，48=2⁴×3，最大公约数=2²×3=12。'},
+        {q:'12 和 18 的最小公倍数是多少？',o:['36','24','18','72'],a:'36',e:'12=2²×3，18=2×3²，最小公倍数=2²×3²=36。'},
+        {q:'两个数的积是 72，最大公约数是 6，最小公倍数是多少？',o:['12','66','432','36'],a:'12',e:'两数积=最大公约数×最小公倍数，72=6×最小公倍数，得12。'},
+        {q:'把 60 分解质因数，正确的是？',o:['2²×3×5','2×3×10','4×15','6×10'],a:'2²×3×5',e:'60=2×2×3×5=2²×3×5。'},
+        {q:'一个数能被 4 整除，只要看它的什么？',o:['末两位','末三位','数字和','首位'],a:'末两位',e:'能被4整除看末两位，能被8整除看末三位。'},
+        {q:'一个数能被 11 整除，看什么？',o:['奇偶位数字和的差','末两位','数字和','末位'],a:'奇偶位数字和的差',e:'奇数位和与偶数位和的差能被11整除即可。'},
+        {q:'8 和 9 的最大公约数是多少？',o:['1','2','8','72'],a:'1',e:'互质的两个数最大公约数是1。'},
+        {q:'能被 2 和 5 同时整除的数，末位一定是？',o:['0','2','5','偶数'],a:'0',e:'同时被2和5整除即被10整除，末位为0。'}
+      ];
+      var it=FIX[seed%FIX.length]; return EX_q(it.q,it.o,it.a,it.e);
+    }
+    case 'remainder': {
+      var FIX=[
+        {q:'一个数除以 5 余 2，除以 3 也余 2，最小是多少？',o:['17','7','12','22'],a:'17',e:'余同取余：5和3的最小公倍数15，15+2=17。'},
+        {q:'除以 4 余 1 的数中，最小的是几？',o:['5','4','1','9'],a:'5',e:'4×1+1=5（正整数的商至少1；若允许0则为1，此处取5）。'},
+        {q:'一串珠子按红黄蓝循环，第 100 颗是什么颜色？（100÷3 余 1）',o:['红','黄','蓝','不确定'],a:'红',e:'余1对应周期第一个，红色。'},
+        {q:'今天是星期三，再过 100 天是星期几？',o:['星期五','星期四','星期六','星期三'],a:'星期五',e:'100÷7余2，星期三往后2天是星期五。'},
+        {q:'一个数除以 7 余 3，除以 7 余 3 的另一个数，它们的和除以 7 余几？',o:['6','3','0','2'],a:'6',e:'余数相加：3+3=6。'},
+        {q:'“余同取余”中的“公倍数”指的是？',o:['两个除数的最小公倍数','两个除数之积','除数之和','余数之和'],a:'两个除数的最小公倍数',e:'通解周期是两个除数的最小公倍数。'},
+        {q:'除以 6 余 4，除以 8 余 6，这个数最小是多少？',o:['22','46','70','16'],a:'22',e:'差同减差：6−4=2，8−6=2，6和8最小公倍数24，24−2=22。'},
+        {q:'彩灯按 4 个一组循环，第 2026 盏是第几个？',o:['第1个','第2个','第3个','第4个'],a:'第2个',e:'2026÷4=506余2，对应第2个。'},
+        {q:'一个数除以 5 余 3，这个数可能是？',o:['18','20','15','17'],a:'18',e:'18=5×3+3。'},
+        {q:'某数除以 3 余 1，除以 4 余 1，除以 5 余 1，最小是多少？',o:['61','60','13','121'],a:'61',e:'余同取余：3、4、5最小公倍数60，60+1=61。'}
+      ];
+      var it=FIX[seed%FIX.length]; return EX_q(it.q,it.o,it.a,it.e);
+    }
+    case 'parity': {
+      var FIX=[
+        {q:'两个奇数相加，结果是？',o:['偶数','奇数','不确定','质数'],a:'偶数',e:'奇+奇=偶。'},
+        {q:'奇数加偶数的结果是？',o:['奇数','偶数','不确定','0'],a:'奇数',e:'奇+偶=奇。'},
+        {q:'连续 10 个自然数中，奇数有几个？',o:['5','10','4','6'],a:'5',e:'奇偶交替，各占一半。'},
+        {q:'一个杯子正放，翻转 7 次后是正放还是倒放？',o:['倒放','正放','不确定','侧放'],a:'倒放',e:'奇数次翻转改变状态。'},
+        {q:'有 7 个杯子全正放，每次翻 2 个，能否全翻成倒放？',o:['能','不能','翻3次能','翻7次能'],a:'不能',e:'每次翻2个，倒放数变化为偶数；7是奇数，不可能全倒。'},
+        {q:'1+2+3+…+100 的和是奇数还是偶数？',o:['偶数','奇数','不确定','质数'],a:'偶数',e:'100×101÷2=5050，是偶数。'},
+        {q:'两个数的和是奇数，它们的积是？',o:['偶数','奇数','不确定','0'],a:'偶数',e:'和为奇说明一奇一偶，积必为偶。'},
+        {q:'任意三个连续整数的和一定是几的倍数？',o:['3','2','5','6'],a:'3',e:'设n−1,n,n+1，和为3n，是3的倍数。'},
+        {q:'一个偶数与一个偶数的差是？',o:['偶数','奇数','不确定','质数'],a:'偶数',e:'偶−偶=偶。'},
+        {q:'翻杯子问题主要用的是什么方法？',o:['奇偶性分析','面积计算','植树模型','平均数'],a:'奇偶性分析',e:'看翻转次数的奇偶。'}
+      ];
+      var it=FIX[seed%FIX.length]; return EX_q(it.q,it.o,it.a,it.e);
+    }
+    case 'digit': {
+      var kind=seed%3;
+      if(kind===0){ var n=EX_pick(r,100,999), ans=n%9;
+        return EX_q('数 '+n+' 除以 9 的余数是多少？',
+          EX_opts(r,ans,[(ans+1)%9,(ans+2)%9,9]), ans,
+          '弃九法：数字和 mod 9 = 原数 mod 9，余 '+ans+'。'); }
+      if(kind===1){ var a=EX_pick(r,10,99), b=EX_pick(r,10,99), s=a+b, ds=String(s).split('').reduce(function(x,y){return x+Number(y);},0);
+        return EX_q('计算 '+a+'+'+b+'='+s+'，用弃九法验算：结果各位数字之和是多少？',
+          EX_opts(r,ds,[ds+1,ds-1,9]), ds, '数字和 '+ds+'，与原式模9同余，可用于验算。'); }
+      var n=EX_pick(r,100,999), digs=String(n).split('').map(Number).reduce(function(x,y){return x+y;},0);
+      return EX_q('数 '+n+' 各位数字之和是多少？',
+        EX_opts(r,digs,[digs+1,digs-1,digs+2]), digs, '各位相加='+digs+'，弃九法用它检验计算。');
+    }
+    case 'fraction': {
+      var kind=seed%3;
+      if(kind===0){ var n=EX_pick(r,2,20);
+        var num=n, den=n+1, ans=num+'/'+den;
+        var opts=[ans, (n-1)+'/'+n, (n+1)+'/'+(n+2), '1/'+den];
+        return EX_q('计算 1/(1×2)+1/(2×3)+…+1/('+n+'×'+(n+1)+')，结果是多少？',
+          EX_shuf(r,opts), ans,
+          '裂项后只剩 1−1/'+(n+1)+'='+n+'/'+(n+1)+'，即 '+ans+'。'); }
+      if(kind===1){ var n=EX_pick(r,3,15), ans=1-1/(n+1);
+        return EX_q('1/(1×2)+…+1/('+n+'×'+(n+1)+') 等于 1−1/'+(n+1)+'，这个结果约是多少（保留两位）？',
+          EX_opts(r,(1-1/(n+1)).toFixed(2),['0.5','0.9','1.00']), (1-1/(n+1)).toFixed(2),
+          '1−1/'+(n+1)+'≈'+(1-1/(n+1)).toFixed(2)+'。'); }
+      var n=EX_pick(r,2,12);
+      return EX_q('1/(2×3)+1/(3×4)+…+1/('+n+'×'+(n+1)+') 裂项后剩什么？',
+        EX_opts(r,'1/2−1/'+(n+1),['1−1/'+(n+1),'1/2+1/'+(n+1),'1/2']), '1/2−1/'+(n+1),
+        '从 1/2 开始裂项，首尾相消剩 1/2−1/'+(n+1)+'。');
+    }
+    case 'ratio': {
+      var kind=seed%3;
+      if(kind===0){ var total=EX_pick(r,4,12)*EX_pick(r,3,8), a=EX_pick(r,1,4), b=EX_pick(r,1,4), ans=total*a/(a+b);
+        if(ans%1!==0){ total=(a+b)*EX_pick(r,3,10); ans=total*a/(a+b); }
+        return EX_q('把 '+total+' 按 '+a+':'+b+' 分配，第一份是多少？',
+          EX_opts(r,ans,[total/(a+b),ans+1,total-ans]), ans, '每份='+total+'÷'+(a+b)+'='+total/(a+b)+'，第一份='+ans+'。'); }
+      if(kind===1){ var a=EX_pick(r,10,50), k=EX_pick(r,2,5), ans=a*k;
+        return EX_q('一种饮料原液与水按 1:'+k+' 配制，原液 '+a+' 毫升，需要水多少毫升？',
+          EX_opts(r,ans,[a+k,ans+a,ans+1]), ans, '水=原液×'+k+'='+a+'×'+k+'='+ans+' 毫升。'); }
+      var a=EX_pick(r,20,60), n=EX_pick(r,2,5), ans=a*n;
+      return EX_q('长方形的长是宽的 '+n+' 倍，宽 '+a+' 厘米，长是多少厘米？',
+        EX_opts(r,ans,[a+n,ans+1,a*n+1]), ans, '长='+a+'×'+n+'='+ans+' 厘米。');
+    }
+    case 'mix': {
+      var kind=seed%3;
+      if(kind===0){ var m1=EX_pick(r,20,80), p1=EX_pick(r,5,30), m2=EX_pick(r,20,80), p2=EX_pick(r,5,30);
+        var sugar=m1*p1/100+m2*p2/100, pct=Math.round(sugar/(m1+m2)*100);
+        return EX_q('浓度 '+p1+'% 的糖水 '+m1+' 克与浓度 '+p2+'% 的糖水 '+m2+' 克混合，浓度约是多少？',
+          EX_opts(r,pct,[p1,p2,(p1+p2)]), pct, '糖共 '+Math.round(sugar)+' 克，总重 '+(m1+m2)+'，浓度≈'+pct+'%。'); }
+      if(kind===1){ var sugar=EX_pick(r,10,40), water=EX_pick(r,60,150), add=EX_pick(r,20,80), ans=Math.round(sugar/(sugar+water+add)*100);
+        return EX_q(sugar+' 克糖、'+water+' 克水，再加入 '+add+' 克水，浓度约变为多少？',
+          EX_opts(r,ans,[Math.round(sugar/(sugar+water)*100),ans+2,ans-2]), ans, '糖不变，总重 '+(sugar+water+add)+'，浓度≈'+ans+'%（变稀）。'); }
+      var sugar=EX_pick(r,10,30), water=EX_pick(r,50,120), add=EX_pick(r,5,20), ans=Math.round((sugar+add)/(sugar+water+add)*100);
+      return EX_q(sugar+' 克糖、'+water+' 克水，再加入 '+add+' 克糖，浓度约变为多少？',
+        EX_opts(r,ans,[Math.round(sugar/(sugar+water)*100),ans+2,ans-2]), ans, '糖变为 '+(sugar+add)+'，总重 '+(sugar+water+add)+'，浓度≈'+ans+'%（变浓）。');
+    }
+    case 'profit': {
+      var kind=seed%3;
+      if(kind===0){ var cost=EX_pick(r,20,100)*5, rose=EX_pick(r,10,50), ans=cost*rose/100;
+        return EX_q('一件商品成本 '+cost+' 元，按成本加价 '+rose+'% 出售，利润是多少元？',
+          EX_opts(r,ans,[cost,ans+cost,ans+1]), ans, '利润=成本×利润率='+cost+'×'+rose+'%='+ans+' 元。'); }
+      if(kind===1){ var price=EX_pick(r,20,100)*5, disc=EX_pick(r,6,9), ans=price*disc/10;
+        return EX_q('原价 '+price+' 元，打 '+disc+' 折后售价多少元？',
+          EX_opts(r,ans,[price-ans,ans+1,price]), ans, '售价=原价×'+disc+'÷10='+ans+' 元。'); }
+      var price=EX_pick(r,20,100)*5, up=EX_pick(r,10,30), down=up;
+      var final=Math.round(price*(1+up/100)*(1-down/100)), diff=price-final;
+      if(diff<=0){ diff=Math.max(1,Math.round(price*up*up/10000)); final=price-diff; }
+      var ansTxt='低'+diff+'元';
+      return EX_q('一件商品先涨价 '+up+'%，再降价 '+up+'%，现价比原价？',
+        EX_shuf(r,[ansTxt,'一样','高'+diff+'元','无法判断']), ansTxt,
+        '原价 '+price+'，现价 '+final+'，先涨后降不等于原价，低了 '+diff+' 元。');
+    }
+    case 'solid': {
+      var kind=seed%3;
+      if(kind===0){ var a=EX_pick(r,2,8), b=EX_pick(r,2,8), ans=4*(a+b);
+        return EX_q('长方体长 '+a+'、宽 '+b+'、高 1 厘米，所有棱长总和是多少厘米？',
+          EX_opts(r,ans,[a*b*2,2*(a+b),ans+4]), ans, '棱长总和=4×(长+宽+高)=4×('+a+'+'+b+'+1)='+ans+' 厘米。'); }
+      if(kind===1){ var a=EX_pick(r,2,6), b=EX_pick(r,2,6), c=EX_pick(r,2,6), ans=2*(a*b+b*c+a*c);
+        return EX_q('长方体长 '+a+'、宽 '+b+'、高 '+c+'，表面积是多少平方厘米？',
+          EX_opts(r,ans,[a*b*c,2*(a+b+c),ans+2]), ans, '表面积=2(ab+bc+ac)='+ans+' 平方厘米。'); }
+      var a=EX_pick(r,3,8), ans=a*a*a;
+      return EX_q('棱长 '+a+' 厘米的正方体铁块浸没水中，排开水的体积是多少立方厘米？',
+        EX_opts(r,ans,[3*a,a*a,ans-1]), ans, '浸没时排水体积=物体体积='+a+'³='+ans+' 立方厘米。');
+    }
+    case 'maxmin': {
+      var FIX=[
+        {q:'两个数的和是 20，它们的积最大是多少？',o:['100','99','96','91'],a:'100',e:'和一定时两数越接近积越大，10×10=100。'},
+        {q:'两个数的和是 15，积最大时两数分别是？',o:['7和8','6和9','5和10','1和14'],a:'7和8',e:'越接近积越大，7×8=56。'},
+        {q:'周长相等的长方形和正方形，谁的面积大？',o:['正方形','长方形','一样','无法比较'],a:'正方形',e:'周长一定时，越接近正方形面积越大。'},
+        {q:'两个数的差是 6，要使积最小，应该？',o:['两数尽量小（含0附近）','两数尽量大','相等','无法确定'],a:'两数尽量小（含0附近）',e:'差一定时积随两数增大而增大，取小的数积更小。'},
+        {q:'用 24 米篱笆围长方形菜地，最大面积是多少？',o:['36平方米','24平方米','48平方米','144平方米'],a:'36平方米',e:'围成正方形边长6米，面积36平方米。'},
+        {q:'和是 12 的两个正整数，积最大是多少？',o:['36','35','32','27'],a:'36',e:'6×6=36。'},
+        {q:'和一定的两个数，什么时候积最大？',o:['两数相等或最接近','相差最大','一数为0','无法判断'],a:'两数相等或最接近',e:'这是和定差小积大的原理。'},
+        {q:'差是 4 的两个数，积是 45，较大的数是多少？',o:['9','5','10','8'],a:'9',e:'5和9差4、积45，较大的是9。'},
+        {q:'面积一定的长方形，周长最小时形状是？',o:['正方形','细长条','长方形都可以','三角形'],a:'正方形',e:'面积一定时，正方形周长最小。'},
+        {q:'和是 10 的三个正整数，积最大是多少？',o:['36','27','30','24'],a:'36',e:'尽量平均 3+3+4，积=36。'}
+      ];
+      var it=FIX[seed%FIX.length]; return EX_q(it.q,it.o,it.a,it.e);
+    }
+    case 'tournament': {
+      var kind=seed%3;
+      if(kind===0){ var n=EX_pick(r,4,20), ans=n*(n-1)/2;
+        return EX_q(n+' 支队伍单循环比赛（每两队赛一场），共多少场？',
+          EX_opts(r,ans,[n*(n-1),n*n,ans+1]), ans, '场次='+n+'×'+(n-1)+'÷2='+ans+'。'); }
+      if(kind===1){ var n=EX_pick(r,4,15), ans=n-1;
+        return EX_q(n+' 支队伍淘汰赛决出冠军（每场淘汰一队），共赛多少场？',
+          EX_opts(r,ans,[n,n*(n-1)/2,ans+1]), ans, '淘汰 '+(n-1)+' 队需 '+(n-1)+' 场。'); }
+      var w=EX_pick(r,2,6), h=EX_pick(r,2,6), ans=w*h;
+      return EX_q('从甲地到乙地 '+w+' 条路，乙到丙 '+h+' 条路，甲经乙到丙共几种走法（标数法）？',
+        EX_opts(r,ans,[w+h,ans+1,w*h+1]), ans, '分步相乘 '+w+'×'+h+'='+ans+' 种。');
+    }
+    case 'optimize': {
+      var FIX=[
+        {q:'统筹优化的核心思想是什么？',o:['消除重复劳动、能并行的并行','只做第一件事','全部串行','先做最难的'],a:'消除重复劳动、能并行的并行',e:'通过重排顺序、合并步骤来省时间。'},
+        {q:'烙 3 张饼（每面 3 分钟、锅放 2 张）最少几分钟？',o:['9','12','6','18'],a:'9',e:'交替烙 3 轮，每轮 3 分钟，共 9 分钟。'},
+        {q:'3 人接水分别 1、2、4 分钟，怎样排总等待时间最短？',o:['1、2、4','4、2、1','2、1、4','都一样'],a:'1、2、4',e:'用时短的先接。'},
+        {q:'烧水 8 分钟的同时可以做哪类事？',o:['洗杯子、找茶叶','一直盯着水','关掉火','把水倒掉'],a:'洗杯子、找茶叶',e:'把不依赖烧水的事放到等待时间里。'},
+        {q:'过桥问题中，让最快的两个人负责送手电，是为了？',o:['减少返回用时','增加次数','让慢的先过','没有作用'],a:'减少返回用时',e:'返回用时应尽量短。'},
+        {q:'货物调运问题要最小化什么？',o:['总运输量×距离','只看距离','只看数量','随便运'],a:'总运输量×距离',e:'统筹调运以总周转量最小为目标。'},
+        {q:'同时做两件事至少要花的时间是？',o:['较长的那件','两件之和','较短的那件','两件之差'],a:'较长的那件',e:'并行时取耗时 longest。'},
+        {q:'排队时“短作业优先”能使什么最小？',o:['总等待时间','单人最长用时','人数','队伍长度'],a:'总等待时间',e:'短作业优先最小化平均等待时间。'},
+        {q:'田忌赛马体现的思想是？',o:['合理安排顺序以弱胜强','比马跑得快','马越多越好','不用安排'],a:'合理安排顺序以弱胜强',e:'通过调整出场顺序取得整体优势。'},
+        {q:'统筹方法与简单罗列步骤的区别在于？',o:['会优化顺序和并行','没有区别','步骤更多','更慢'],a:'会优化顺序和并行',e:'统筹强调优化安排，不是简单罗列。'}
+      ];
+      var it=FIX[seed%FIX.length]; return EX_q(it.q,it.o,it.a,it.e);
+    }
+  }
+  return null;
+}
+
+
+
+var OLY_TOPICS = {
+  low: OLY_TOPICS_BASE.low.concat(EX_EXTRA_TOPICS.low),
+  mid: OLY_TOPICS_BASE.mid.concat(EX_EXTRA_TOPICS.mid),
+  high: OLY_TOPICS_BASE.high.concat(EX_EXTRA_TOPICS.high)
+};
+var BASE_IDS = { low: OLY_TOPICS_BASE.low.map(function(t){return t.id;}), mid: OLY_TOPICS_BASE.mid.map(function(t){return t.id;}), high: OLY_TOPICS_BASE.high.map(function(t){return t.id;}) };
+function genQuestion(grade, topic, seed){
+  if (BASE_IDS[grade].indexOf(topic) >= 0) return genQuestionBase(grade, topic, seed);
+  return genExtra(grade, topic, seed);
+}
+
 
 /* ===== 固定题库（内联，150 题） ===== */
 var BANK = {
- "low": {
-  "guilv": [
-   {
-    "q": "找规律填数：3、5、7、9、11、（  ）",
-    "o": [
-     "15",
-     "11",
-     "13",
-     "14"
-    ],
-    "a": "13",
-    "e": "相邻两数相差 2，所以下一个是 11+2=13。"
-   },
-   {
-    "q": "找规律填数：3、6、12、24、48、（  ）",
-    "o": [
-     "48",
-     "192",
-     "99",
-     "96"
-    ],
-    "a": "96",
-    "e": "每个数是前一个的 2 倍，所以 48×2=96。"
-   },
-   {
-    "q": "找规律填数：1、4、9、16、25、（  ）",
-    "o": [
-     "36",
-     "30",
-     "42",
-     "37"
-    ],
-    "a": "36",
-    "e": "依次是 1²、2²…所以下一个是 6×6=36。"
-   },
-   {
-    "q": "找规律填数：2、8、10、18、28、（  ）",
-    "o": [
-     "47",
-     "29",
-     "46",
-     "56"
-    ],
-    "a": "46",
-    "e": "每个数等于前两个数的和：18+28=46。"
-   },
-   {
-    "q": "找规律填数：12、17、12、17、12、（  ）",
-    "o": [
-     "17",
-     "12",
-     "7",
-     "18"
-    ],
-    "a": "17",
-    "e": "两个数一组交替出现：12、17 重复，所以下一个是 17。"
-   },
-   {
-    "q": "找规律填数：4、9、14、19、24、（  ）",
-    "o": [
-     "24",
-     "30",
-     "29",
-     "34"
-    ],
-    "a": "29",
-    "e": "相邻两数相差 5，所以下一个是 24+5=29。"
-   },
-   {
-    "q": "找规律填数：4、8、16、32、64、（  ）",
-    "o": [
-     "128",
-     "256",
-     "64",
-     "132"
-    ],
-    "a": "128",
-    "e": "每个数是前一个的 2 倍，所以 64×2=128。"
-   },
-   {
-    "q": "找规律填数：4、9、16、25、36、（  ）",
-    "o": [
-     "49",
-     "50",
-     "42",
-     "56"
-    ],
-    "a": "49",
-    "e": "依次是 2²、3²…所以下一个是 7×7=49。"
-   },
-   {
-    "q": "找规律填数：3、5、8、13、21、（  ）",
-    "o": [
-     "42",
-     "34",
-     "35",
-     "22"
-    ],
-    "a": "34",
-    "e": "每个数等于前两个数的和：13+21=34。"
-   },
-   {
-    "q": "找规律填数：13、16、13、16、13、（  ）",
-    "o": [
-     "16",
-     "10",
-     "17",
-     "13"
-    ],
-    "a": "16",
-    "e": "两个数一组交替出现：13、16 重复，所以下一个是 16。"
-   }
-  ],
-  "pai dui": [
-   {
-    "q": "小朋友排队，小红从前数第 4，从后数第 4，这队一共有几人？",
-    "o": [
-     "6",
-     "8",
-     "7",
-     "9"
-    ],
-    "a": "7",
-    "e": "小红被数了两次，所以 4+4-1=7 人。"
-   },
-   {
-    "q": "排队时，小明前面有 3 人，后面有 2 人，一共几人？",
-    "o": [
-     "6",
-     "4",
-     "5",
-     "7"
-    ],
-    "a": "6",
-    "e": "前面 3 人 + 后面 2 人 + 小明自己 = 6 人。"
-   },
-   {
-    "q": "一共有 13 人排队，小华从后数第 6，那么从前往后他是第几？",
-    "o": [
-     "8",
-     "7",
-     "9",
-     "6"
-    ],
-    "a": "8",
-    "e": "从后数第 6，前面有 7 人，所以从前数是第 7+1=8。"
-   },
-   {
-    "q": "小朋友排队，小红从前数第 5，从后数第 9，这队一共有几人？",
-    "o": [
-     "15",
-     "14",
-     "13",
-     "12"
-    ],
-    "a": "13",
-    "e": "小红被数了两次，所以 5+9-1=13 人。"
-   },
-   {
-    "q": "排队时，小明前面有 4 人，后面有 7 人，一共几人？",
-    "o": [
-     "12",
-     "11",
-     "10",
-     "13"
-    ],
-    "a": "12",
-    "e": "前面 4 人 + 后面 7 人 + 小明自己 = 12 人。"
-   },
-   {
-    "q": "一共有 14 人排队，小华从后数第 6，那么从前往后他是第几？",
-    "o": [
-     "8",
-     "10",
-     "9",
-     "6"
-    ],
-    "a": "9",
-    "e": "从后数第 6，前面有 8 人，所以从前数是第 8+1=9。"
-   },
-   {
-    "q": "小朋友排队，小红从前数第 5，从后数第 7，这队一共有几人？",
-    "o": [
-     "10",
-     "11",
-     "13",
-     "12"
-    ],
-    "a": "11",
-    "e": "小红被数了两次，所以 5+7-1=11 人。"
-   },
-   {
-    "q": "排队时，小明前面有 4 人，后面有 5 人，一共几人？",
-    "o": [
-     "8",
-     "10",
-     "11",
-     "9"
-    ],
-    "a": "10",
-    "e": "前面 4 人 + 后面 5 人 + 小明自己 = 10 人。"
-   },
-   {
-    "q": "一共有 14 人排队，小华从后数第 4，那么从前往后他是第几？",
-    "o": [
-     "4",
-     "11",
-     "12",
-     "10"
-    ],
-    "a": "11",
-    "e": "从后数第 4，前面有 10 人，所以从前数是第 10+1=11。"
-   },
-   {
-    "q": "小朋友排队，小红从前数第 6，从后数第 5，这队一共有几人？",
-    "o": [
-     "10",
-     "12",
-     "9",
-     "11"
-    ],
-    "a": "10",
-    "e": "小红被数了两次，所以 6+5-1=10 人。"
-   }
-  ],
-  "qiaosuan": [
-   {
-    "q": "巧算：93 + 25 = ?",
-    "o": [
-     "120",
-     "116",
-     "118",
-     "128"
-    ],
-    "a": "118",
-    "e": "把 93 看成 100：100+25−7=118。"
-   },
-   {
-    "q": "巧算：25 × 4 × 4 = ?",
-    "o": [
-     "401",
-     "200",
-     "500",
-     "400"
-    ],
-    "a": "400",
-    "e": "先算 25×4=100，再 ×4=400。"
-   },
-   {
-    "q": "巧算：290 − 99 = ?",
-    "o": [
-     "191",
-     "190",
-     "193",
-     "192"
-    ],
-    "a": "191",
-    "e": "先减 100 再加回零头：290−100+1=191。"
-   },
-   {
-    "q": "算一算：23 + 77 = ?",
-    "o": [
-     "101",
-     "100",
-     "99",
-     "102"
-    ],
-    "a": "100",
-    "e": "23 和 77 正好凑成 100，答案是 100。"
-   },
-   {
-    "q": "巧算：94 + 75 = ?",
-    "o": [
-     "169",
-     "167",
-     "179",
-     "171"
-    ],
-    "a": "169",
-    "e": "把 94 看成 100：100+75−6=169。"
-   },
-   {
-    "q": "巧算：25 × 4 × 4 = ?",
-    "o": [
-     "200",
-     "400",
-     "401",
-     "500"
-    ],
-    "a": "400",
-    "e": "先算 25×4=100，再 ×4=400。"
-   },
-   {
-    "q": "巧算：317 − 96 = ?",
-    "o": [
-     "222",
-     "221",
-     "217",
-     "220"
-    ],
-    "a": "221",
-    "e": "先减 100 再加回零头：317−100+4=221。"
-   },
-   {
-    "q": "算一算：27 + 73 = ?",
-    "o": [
-     "100",
-     "102",
-     "99",
-     "101"
-    ],
-    "a": "100",
-    "e": "27 和 73 正好凑成 100，答案是 100。"
-   },
-   {
-    "q": "巧算：94 + 45 = ?",
-    "o": [
-     "141",
-     "139",
-     "149",
-     "137"
-    ],
-    "a": "139",
-    "e": "把 94 看成 100：100+45−6=139。"
-   },
-   {
-    "q": "巧算：25 × 4 × 5 = ?",
-    "o": [
-     "600",
-     "250",
-     "500",
-     "501"
-    ],
-    "a": "500",
-    "e": "先算 25×4=100，再 ×5=500。"
-   }
-  ],
-  "tuxing": [
-   {
-    "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
-    "o": [
-     "5",
-     "9",
-     "20",
-     "10"
-    ],
-    "a": "10",
-    "e": "每两个点确定一条线段：5×4÷2=10 条。"
-   },
-   {
-    "q": "用小棒摆 4 个连在一起的正方形，一共要多少根小棒？",
-    "o": [
-     "16",
-     "14",
-     "12",
-     "13"
-    ],
-    "a": "13",
-    "e": "第一个用 4 根，以后每加一个多用 3 根：4+3×3=13 根。"
-   },
-   {
-    "q": "从 1 数到 4，一共有多少个数？如果每层摆的个数是 1、2、3…4，共摆多少个？",
-    "o": [
-     "10",
-     "16",
-     "9",
-     "8"
-    ],
-    "a": "10",
-    "e": "1+2+…+4=4×5÷2=10 个。"
-   },
-   {
-    "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
-    "o": [
-     "20",
-     "10",
-     "5",
-     "9"
-    ],
-    "a": "10",
-    "e": "每两个点确定一条线段：5×4÷2=10 条。"
-   },
-   {
-    "q": "用小棒摆 5 个连在一起的正方形，一共要多少根小棒？",
-    "o": [
-     "16",
-     "15",
-     "20",
-     "17"
-    ],
-    "a": "16",
-    "e": "第一个用 4 根，以后每加一个多用 3 根：4+3×4=16 根。"
-   },
-   {
-    "q": "从 1 数到 5，一共有多少个数？如果每层摆的个数是 1、2、3…5，共摆多少个？",
-    "o": [
-     "10",
-     "15",
-     "25",
-     "14"
-    ],
-    "a": "15",
-    "e": "1+2+…+5=5×6÷2=15 个。"
-   },
-   {
-    "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
-    "o": [
-     "10",
-     "9",
-     "5",
-     "20"
-    ],
-    "a": "10",
-    "e": "每两个点确定一条线段：5×4÷2=10 条。"
-   },
-   {
-    "q": "用小棒摆 5 个连在一起的正方形，一共要多少根小棒？",
-    "o": [
-     "16",
-     "17",
-     "20",
-     "15"
-    ],
-    "a": "16",
-    "e": "第一个用 4 根，以后每加一个多用 3 根：4+3×4=16 根。"
-   },
-   {
-    "q": "从 1 数到 5，一共有多少个数？如果每层摆的个数是 1、2、3…5，共摆多少个？",
-    "o": [
-     "14",
-     "15",
-     "10",
-     "25"
-    ],
-    "a": "15",
-    "e": "1+2+…+5=5×6÷2=15 个。"
-   },
-   {
-    "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
-    "o": [
-     "20",
-     "9",
-     "10",
-     "5"
-    ],
-    "a": "10",
-    "e": "每两个点确定一条线段：5×4÷2=10 条。"
-   }
-  ],
-  "jianyi": [
-   {
-    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
-    "o": [
-     "小明",
-     "小刚",
-     "小丽",
-     "一样高"
-    ],
-    "a": "小明",
-    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
-   },
-   {
-    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
-    "o": [
-     "小明",
-     "小刚",
-     "小丽",
-     "一样高"
-    ],
-    "a": "小明",
-    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
-   },
-   {
-    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
-    "o": [
-     "小明",
-     "小刚",
-     "小丽",
-     "一样高"
-    ],
-    "a": "小明",
-    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
-   },
-   {
-    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
-    "o": [
-     "小明",
-     "小刚",
-     "小丽",
-     "一样高"
-    ],
-    "a": "小明",
-    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
-   },
-   {
-    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
-    "o": [
-     "小明",
-     "小刚",
-     "小丽",
-     "一样高"
-    ],
-    "a": "小明",
-    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
-   },
-   {
-    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
-    "o": [
-     "小明",
-     "小刚",
-     "小丽",
-     "一样高"
-    ],
-    "a": "小明",
-    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
-   },
-   {
-    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
-    "o": [
-     "小明",
-     "小刚",
-     "小丽",
-     "一样高"
-    ],
-    "a": "小明",
-    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
-   },
-   {
-    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
-    "o": [
-     "小明",
-     "小刚",
-     "小丽",
-     "一样高"
-    ],
-    "a": "小明",
-    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
-   },
-   {
-    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
-    "o": [
-     "小明",
-     "小刚",
-     "小丽",
-     "一样高"
-    ],
-    "a": "小明",
-    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
-   },
-   {
-    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
-    "o": [
-     "小明",
-     "小刚",
-     "小丽",
-     "一样高"
-    ],
-    "a": "小明",
-    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
-   }
-  ]
- },
- "mid": {
-  "hecha": [
-   {
-    "q": "两数和是 20，大数是小数的 3 倍，大数是多少？",
-    "o": [
-     "16",
-     "5",
-     "15",
-     "20"
-    ],
-    "a": "15",
-    "e": "小数 = 20÷4=5，大数 = 5×3=15。"
-   },
-   {
-    "q": "两数相差 6，大数是小数的 3 倍，大数是多少？",
-    "o": [
-     "9",
-     "6",
-     "3",
-     "10"
-    ],
-    "a": "9",
-    "e": "小数 = 6÷2=3，大数 = 3×3=9。"
-   },
-   {
-    "q": "两数和是 48，差是 20，较大的数是多少？",
-    "o": [
-     "34",
-     "14",
-     "32",
-     "36"
-    ],
-    "a": "34",
-    "e": "大数 = (和+差)÷2 = (48+20)÷2 = 34。"
-   },
-   {
-    "q": "两数和是 56，大数是小数的 3 倍，大数是多少？",
-    "o": [
-     "56",
-     "14",
-     "42",
-     "43"
-    ],
-    "a": "42",
-    "e": "小数 = 56÷4=14，大数 = 14×3=42。"
-   },
-   {
-    "q": "两数相差 22，大数是小数的 3 倍，大数是多少？",
-    "o": [
-     "33",
-     "11",
-     "22",
-     "34"
-    ],
-    "a": "33",
-    "e": "小数 = 22÷2=11，大数 = 11×3=33。"
-   },
-   {
-    "q": "两数和是 52，差是 16，较大的数是多少？",
-    "o": [
-     "18",
-     "32",
-     "34",
-     "36"
-    ],
-    "a": "34",
-    "e": "大数 = (和+差)÷2 = (52+16)÷2 = 34。"
-   },
-   {
-    "q": "两数和是 44，大数是小数的 3 倍，大数是多少？",
-    "o": [
-     "34",
-     "33",
-     "44",
-     "11"
-    ],
-    "a": "33",
-    "e": "小数 = 44÷4=11，大数 = 11×3=33。"
-   },
-   {
-    "q": "两数相差 16，大数是小数的 3 倍，大数是多少？",
-    "o": [
-     "16",
-     "24",
-     "25",
-     "8"
-    ],
-    "a": "24",
-    "e": "小数 = 16÷2=8，大数 = 8×3=24。"
-   },
-   {
-    "q": "两数和是 57，差是 11，较大的数是多少？",
-    "o": [
-     "36",
-     "34",
-     "32",
-     "23"
-    ],
-    "a": "34",
-    "e": "大数 = (和+差)÷2 = (57+11)÷2 = 34。"
-   },
-   {
-    "q": "两数和是 28，大数是小数的 3 倍，大数是多少？",
-    "o": [
-     "21",
-     "28",
-     "22",
-     "7"
-    ],
-    "a": "21",
-    "e": "小数 = 28÷4=7，大数 = 7×3=21。"
-   }
-  ],
-  "zhishu": [
-   {
-    "q": "一条 35 米长的路，每隔 5 米栽一棵树，两端都栽，共栽几棵？",
-    "o": [
-     "6",
-     "7",
-     "8",
-     "9"
-    ],
-    "a": "8",
-    "e": "间隔数 = 35÷5=7，两端都栽：7+1=8 棵。"
-   },
-   {
-    "q": "一条 30 米长的路，每隔 5 米栽一棵，两端都不栽，共栽几棵？",
-    "o": [
-     "5",
-     "4",
-     "6",
-     "7"
-    ],
-    "a": "5",
-    "e": "间隔数 = 6，两端都不栽：6−1=5 棵。"
-   },
-   {
-    "q": "一个圆形花坛周长 100 米，每隔 5 米栽一棵，共栽几棵？",
-    "o": [
-     "20",
-     "21",
-     "22",
-     "19"
-    ],
-    "a": "20",
-    "e": "封闭图形：棵数 = 间隔数 = 100÷5=20 棵。"
-   },
-   {
-    "q": "一条 95 米长的路，每隔 5 米栽一棵，只栽一端，共栽几棵？",
-    "o": [
-     "21",
-     "20",
-     "19",
-     "18"
-    ],
-    "a": "19",
-    "e": "只栽一端：棵数 = 间隔数 = 19 棵。"
-   },
-   {
-    "q": "一条 85 米长的路，每隔 5 米栽一棵树，两端都栽，共栽几棵？",
-    "o": [
-     "18",
-     "17",
-     "19",
-     "16"
-    ],
-    "a": "18",
-    "e": "间隔数 = 85÷5=17，两端都栽：17+1=18 棵。"
-   },
-   {
-    "q": "一条 80 米长的路，每隔 5 米栽一棵，两端都不栽，共栽几棵？",
-    "o": [
-     "16",
-     "14",
-     "15",
-     "17"
-    ],
-    "a": "15",
-    "e": "间隔数 = 16，两端都不栽：16−1=15 棵。"
-   },
-   {
-    "q": "一个圆形花坛周长 84 米，每隔 6 米栽一棵，共栽几棵？",
-    "o": [
-     "13",
-     "14",
-     "16",
-     "15"
-    ],
-    "a": "14",
-    "e": "封闭图形：棵数 = 间隔数 = 84÷6=14 棵。"
-   },
-   {
-    "q": "一条 78 米长的路，每隔 6 米栽一棵，只栽一端，共栽几棵？",
-    "o": [
-     "15",
-     "13",
-     "12",
-     "14"
-    ],
-    "a": "13",
-    "e": "只栽一端：棵数 = 间隔数 = 13 棵。"
-   },
-   {
-    "q": "一条 66 米长的路，每隔 6 米栽一棵树，两端都栽，共栽几棵？",
-    "o": [
-     "10",
-     "12",
-     "13",
-     "11"
-    ],
-    "a": "12",
-    "e": "间隔数 = 66÷6=11，两端都栽：11+1=12 棵。"
-   },
-   {
-    "q": "一条 60 米长的路，每隔 6 米栽一棵，两端都不栽，共栽几棵？",
-    "o": [
-     "9",
-     "8",
-     "11",
-     "10"
-    ],
-    "a": "9",
-    "e": "间隔数 = 10，两端都不栽：10−1=9 棵。"
-   }
-  ],
-  "jitu": [
-   {
-    "q": "鸡兔同笼，共 15 个头，36 只脚。鸡有几只？",
-    "o": [
-     "14",
-     "3",
-     "12",
-     "11"
-    ],
-    "a": "12",
-    "e": "假设全是兔：15×4=60 脚，少了 24 脚，每只鸡少 2 脚，所以鸡 = 24÷2=12 只。"
-   },
-   {
-    "q": "鸡兔同笼，共 15 个头，34 只脚。兔有几只？",
-    "o": [
-     "2",
-     "1",
-     "13",
-     "4"
-    ],
-    "a": "2",
-    "e": "假设全是鸡：15×2=30 脚，多出 4 脚，每只兔多 2 脚，所以兔 = 4÷2=2 只。"
-   },
-   {
-    "q": "鸡兔同笼，共 16 个头，48 只脚。鸡有几只？",
-    "o": [
-     "8",
-     "10",
-     "9",
-     "7"
-    ],
-    "a": "8",
-    "e": "假设全是兔：16×4=64 脚，少了 16 脚，每只鸡少 2 脚，所以鸡 = 16÷2=8 只。"
-   },
-   {
-    "q": "鸡兔同笼，共 16 个头，48 只脚。兔有几只？",
-    "o": [
-     "9",
-     "10",
-     "8",
-     "7"
-    ],
-    "a": "8",
-    "e": "假设全是鸡：16×2=32 脚，多出 16 脚，每只兔多 2 脚，所以兔 = 16÷2=8 只。"
-   },
-   {
-    "q": "鸡兔同笼，共 17 个头，48 只脚。鸡有几只？",
-    "o": [
-     "10",
-     "7",
-     "9",
-     "12"
-    ],
-    "a": "10",
-    "e": "假设全是兔：17×4=68 脚，少了 20 脚，每只鸡少 2 脚，所以鸡 = 20÷2=10 只。"
-   },
-   {
-    "q": "鸡兔同笼，共 17 个头，48 只脚。兔有几只？",
-    "o": [
-     "10",
-     "6",
-     "7",
-     "9"
-    ],
-    "a": "7",
-    "e": "假设全是鸡：17×2=34 脚，多出 14 脚，每只兔多 2 脚，所以兔 = 14÷2=7 只。"
-   },
-   {
-    "q": "鸡兔同笼，共 18 个头，48 只脚。鸡有几只？",
-    "o": [
-     "14",
-     "12",
-     "11",
-     "6"
-    ],
-    "a": "12",
-    "e": "假设全是兔：18×4=72 脚，少了 24 脚，每只鸡少 2 脚，所以鸡 = 24÷2=12 只。"
-   },
-   {
-    "q": "鸡兔同笼，共 18 个头，48 只脚。兔有几只？",
-    "o": [
-     "5",
-     "6",
-     "8",
-     "12"
-    ],
-    "a": "6",
-    "e": "假设全是鸡：18×2=36 脚，多出 12 脚，每只兔多 2 脚，所以兔 = 12÷2=6 只。"
-   },
-   {
-    "q": "鸡兔同笼，共 19 个头，48 只脚。鸡有几只？",
-    "o": [
-     "16",
-     "14",
-     "13",
-     "5"
-    ],
-    "a": "14",
-    "e": "假设全是兔：19×4=76 脚，少了 28 脚，每只鸡少 2 脚，所以鸡 = 28÷2=14 只。"
-   },
-   {
-    "q": "鸡兔同笼，共 19 个头，46 只脚。兔有几只？",
-    "o": [
-     "4",
-     "3",
-     "6",
-     "15"
-    ],
-    "a": "4",
-    "e": "假设全是鸡：19×2=38 脚，多出 8 脚，每只兔多 2 脚，所以兔 = 8÷2=4 只。"
-   }
-  ],
-  "zhouqi": [
-   {
-    "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 27 盏是什么颜色？",
-    "o": [
-     "黄",
-     "红",
-     "蓝"
-    ],
-    "a": "蓝",
-    "e": "27÷3 余 0（余 0 看作第 3 个），对应蓝色。"
-   },
-   {
-    "q": "今天是星期二，再过 13 天是星期几？",
-    "o": [
-     "一",
-     "四",
-     "二",
-     "三"
-    ],
-    "a": "一",
-    "e": "13÷7 余 6，从星期二往后数 6 天是星期一。"
-   },
-   {
-    "q": "一串珠子每 5 颗穿一组，80 颗珠子可以穿几组？",
-    "o": [
-     "16",
-     "17",
-     "5",
-     "15"
-    ],
-    "a": "16",
-    "e": "80÷5=16 组（取整）。"
-   },
-   {
-    "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 57 盏是什么颜色？",
-    "o": [
-     "蓝",
-     "红",
-     "黄"
-    ],
-    "a": "蓝",
-    "e": "57÷3 余 0（余 0 看作第 3 个），对应蓝色。"
-   },
-   {
-    "q": "今天是星期三，再过 43 天是星期几？",
-    "o": [
-     "四",
-     "一",
-     "三",
-     "二"
-    ],
-    "a": "四",
-    "e": "43÷7 余 1，从星期三往后数 1 天是星期四。"
-   },
-   {
-    "q": "一串珠子每 5 颗穿一组，66 颗珠子可以穿几组？",
-    "o": [
-     "14",
-     "5",
-     "13",
-     "12"
-    ],
-    "a": "13",
-    "e": "66÷5=13 组（取整）。"
-   },
-   {
-    "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 45 盏是什么颜色？",
-    "o": [
-     "红",
-     "蓝",
-     "黄"
-    ],
-    "a": "蓝",
-    "e": "45÷3 余 0（余 0 看作第 3 个），对应蓝色。"
-   },
-   {
-    "q": "今天是星期三，再过 31 天是星期几？",
-    "o": [
-     "三",
-     "六",
-     "二",
-     "一"
-    ],
-    "a": "六",
-    "e": "31÷7 余 3，从星期三往后数 3 天是星期六。"
-   },
-   {
-    "q": "一串珠子每 5 颗穿一组，52 颗珠子可以穿几组？",
-    "o": [
-     "9",
-     "10",
-     "5",
-     "11"
-    ],
-    "a": "10",
-    "e": "52÷5=10 组（取整）。"
-   },
-   {
-    "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 34 盏是什么颜色？",
-    "o": [
-     "蓝",
-     "黄",
-     "红"
-    ],
-    "a": "红",
-    "e": "34÷3 余 1（余 0 看作第 3 个），对应红色。"
-   }
-  ],
-  "huanyuan": [
-   {
-    "q": "一个数加上 5，再乘 5，结果是 45。这个数是多少？",
-    "o": [
-     "9",
-     "6",
-     "5",
-     "4"
-    ],
-    "a": "4",
-    "e": "倒推：45÷5=9，再减 5 得 4。"
-   },
-   {
-    "q": "一个数加上 4，再乘 5，结果是 45。这个数是多少？",
-    "o": [
-     "5",
-     "9",
-     "7",
-     "6"
-    ],
-    "a": "5",
-    "e": "倒推：45÷5=9，再减 4 得 5。"
-   },
-   {
-    "q": "一个数加上 15，再乘 5，结果是 100。这个数是多少？",
-    "o": [
-     "6",
-     "5",
-     "20",
-     "7"
-    ],
-    "a": "5",
-    "e": "倒推：100÷5=20，再减 15 得 5。"
-   },
-   {
-    "q": "一个数加上 14，再乘 5，结果是 95。这个数是多少？",
-    "o": [
-     "5",
-     "7",
-     "19",
-     "6"
-    ],
-    "a": "5",
-    "e": "倒推：95÷5=19，再减 14 得 5。"
-   },
-   {
-    "q": "一个数加上 13，再乘 4，结果是 72。这个数是多少？",
-    "o": [
-     "6",
-     "5",
-     "7",
-     "18"
-    ],
-    "a": "5",
-    "e": "倒推：72÷4=18，再减 13 得 5。"
-   },
-   {
-    "q": "一个数加上 12，再乘 4，结果是 72。这个数是多少？",
-    "o": [
-     "18",
-     "7",
-     "8",
-     "6"
-    ],
-    "a": "6",
-    "e": "倒推：72÷4=18，再减 12 得 6。"
-   },
-   {
-    "q": "一个数加上 11，再乘 4，结果是 68。这个数是多少？",
-    "o": [
-     "8",
-     "7",
-     "6",
-     "17"
-    ],
-    "a": "6",
-    "e": "倒推：68÷4=17，再减 11 得 6。"
-   },
-   {
-    "q": "一个数加上 9，再乘 4，结果是 60。这个数是多少？",
-    "o": [
-     "7",
-     "15",
-     "6",
-     "8"
-    ],
-    "a": "6",
-    "e": "倒推：60÷4=15，再减 9 得 6。"
-   },
-   {
-    "q": "一个数加上 8，再乘 3，结果是 42。这个数是多少？",
-    "o": [
-     "6",
-     "14",
-     "8",
-     "7"
-    ],
-    "a": "6",
-    "e": "倒推：42÷3=14，再减 8 得 6。"
-   },
-   {
-    "q": "一个数加上 7，再乘 3，结果是 39。这个数是多少？",
-    "o": [
-     "13",
-     "6",
-     "7",
-     "8"
-    ],
-    "a": "6",
-    "e": "倒推：39÷3=13，再减 7 得 6。"
-   }
-  ]
- },
- "high": {
-  "xingcheng": [
-   {
-    "q": "甲乙两地相距 435 千米，两车相向而行，速度分别是 50 和 37 千米/时，几小时相遇？",
-    "o": [
-     "4",
-     "8",
-     "6",
-     "5"
-    ],
-    "a": "5",
-    "e": "相遇时间 = 路程÷速度和 = 435÷87=5 小时。"
-   },
-   {
-    "q": "两车相距 72 千米，同向而行，快车 68 千米/时，慢车 32 千米/时，快车几小时追上慢车？",
-    "o": [
-     "2",
-     "4",
-     "1",
-     "3"
-    ],
-    "a": "2",
-    "e": "追及时间 = 路程差÷速度差 = 72÷36=2 小时。"
-   },
-   {
-    "q": "一辆车以 52 千米/时行驶了 5 小时，一共走了多少千米？",
-    "o": [
-     "260",
-     "57",
-     "208",
-     "312"
-    ],
-    "a": "260",
-    "e": "路程 = 速度×时间 = 52×5=260 千米。"
-   },
-   {
-    "q": "甲乙两地相距 600 千米，两车相向而行，速度分别是 53 和 67 千米/时，几小时相遇？",
-    "o": [
-     "5",
-     "11",
-     "4",
-     "6"
-    ],
-    "a": "5",
-    "e": "相遇时间 = 路程÷速度和 = 600÷120=5 小时。"
-   },
-   {
-    "q": "两车相距 57 千米，同向而行，快车 70 千米/时，慢车 51 千米/时，快车几小时追上慢车？",
-    "o": [
-     "4",
-     "3",
-     "2",
-     "5"
-    ],
-    "a": "3",
-    "e": "追及时间 = 路程差÷速度差 = 57÷19=3 小时。"
-   },
-   {
-    "q": "一辆车以 55 千米/时行驶了 4 小时，一共走了多少千米？",
-    "o": [
-     "59",
-     "165",
-     "220",
-     "275"
-    ],
-    "a": "220",
-    "e": "路程 = 速度×时间 = 55×4=220 千米。"
-   },
-   {
-    "q": "甲乙两地相距 440 千米，两车相向而行，速度分别是 55 和 55 千米/时，几小时相遇？",
-    "o": [
-     "8",
-     "5",
-     "4",
-     "3"
-    ],
-    "a": "4",
-    "e": "相遇时间 = 路程÷速度和 = 440÷110=4 小时。"
-   },
-   {
-    "q": "两车相距 58 千米，同向而行，快车 72 千米/时，慢车 43 千米/时，快车几小时追上慢车？",
-    "o": [
-     "3",
-     "4",
-     "2",
-     "1"
-    ],
-    "a": "2",
-    "e": "追及时间 = 路程差÷速度差 = 58÷29=2 小时。"
-   },
-   {
-    "q": "一辆车以 57 千米/时行驶了 3 小时，一共走了多少千米？",
-    "o": [
-     "228",
-     "171",
-     "114",
-     "60"
-    ],
-    "a": "171",
-    "e": "路程 = 速度×时间 = 57×3=171 千米。"
-   },
-   {
-    "q": "甲乙两地相距 306 千米，两车相向而行，速度分别是 58 和 44 千米/时，几小时相遇？",
-    "o": [
-     "2",
-     "3",
-     "4",
-     "5"
-    ],
-    "a": "3",
-    "e": "相遇时间 = 路程÷速度和 = 306÷102=3 小时。"
-   }
-  ],
-  "gongcheng": [
-   {
-    "q": "一项工程，甲单独做要 6 天，乙单独做要 6 天。两人合作要几天完成？",
-    "o": [
-     "6",
-     "4",
-     "3",
-     "5"
-    ],
-    "a": "3",
-    "e": "合作时间 = 1÷(1/6+1/6) = 6×6÷(6+6)=3 天。"
-   },
-   {
-    "q": "一项工程，甲单独做要 6 天，乙单独做要 6 天。两人合作要几天完成？",
-    "o": [
-     "3",
-     "5",
-     "4",
-     "6"
-    ],
-    "a": "3",
-    "e": "合作时间 = 1÷(1/6+1/6) = 6×6÷(6+6)=3 天。"
-   },
-   {
-    "q": "一项工程，甲单独做要 6 天，乙单独做要 12 天。两人合作要几天完成？",
-    "o": [
-     "4",
-     "5",
-     "9",
-     "6"
-    ],
-    "a": "4",
-    "e": "合作时间 = 1÷(1/6+1/12) = 6×12÷(6+12)=4 天。"
-   },
-   {
-    "q": "一项工程，甲单独做要 6 天，乙单独做要 12 天。两人合作要几天完成？",
-    "o": [
-     "9",
-     "5",
-     "4",
-     "6"
-    ],
-    "a": "4",
-    "e": "合作时间 = 1÷(1/6+1/12) = 6×12÷(6+12)=4 天。"
-   },
-   {
-    "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
-    "o": [
-     "3.5",
-     "4.5",
-     "5.5",
-     "7"
-    ],
-    "a": "3.5",
-    "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
-   },
-   {
-    "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
-    "o": [
-     "4.5",
-     "5.5",
-     "3.5",
-     "7"
-    ],
-    "a": "3.5",
-    "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
-   },
-   {
-    "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
-    "o": [
-     "7",
-     "3.5",
-     "5.5",
-     "4.5"
-    ],
-    "a": "3.5",
-    "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
-   },
-   {
-    "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
-    "o": [
-     "5.5",
-     "3.5",
-     "7",
-     "4.5"
-    ],
-    "a": "3.5",
-    "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
-   },
-   {
-    "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
-    "o": [
-     "7",
-     "3.5",
-     "5.5",
-     "4.5"
-    ],
-    "a": "3.5",
-    "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
-   },
-   {
-    "q": "一项工程，甲单独做要 8 天，乙单独做要 8 天。两人合作要几天完成？",
-    "o": [
-     "4",
-     "6",
-     "8",
-     "5"
-    ],
-    "a": "4",
-    "e": "合作时间 = 1÷(1/8+1/8) = 8×8÷(8+8)=4 天。"
-   }
-  ],
-  "chouti": [
-   {
-    "q": "有 6 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
-    "o": [
-     "6",
-     "12",
-     "8",
-     "7"
-    ],
-    "a": "7",
-    "e": "最坏情况每个抽屉 1 个，放 6 个；再多 1 个必有抽屉达 2 个，所以是 6+1=7 个。"
-   },
-   {
-    "q": "一年有 9 个月，至少有多少人，才能保证有 2 人同一个月生日？",
-    "o": [
-     "9",
-     "18",
-     "11",
-     "10"
-    ],
-    "a": "10",
-    "e": "把人看作苹果、月份看作抽屉：9+1=10 人。"
-   },
-   {
-    "q": "袋里有 3 种颜色的球各若干个，至少摸出几个，才能保证有 3 个同色？",
-    "o": [
-     "7",
-     "6",
-     "8",
-     "9"
-    ],
-    "a": "7",
-    "e": "最坏情况每种摸 2 个共 6 个，再摸 1 个必有 3 个同色：7 个。"
-   },
-   {
-    "q": "有 6 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
-    "o": [
-     "8",
-     "7",
-     "6",
-     "12"
-    ],
-    "a": "7",
-    "e": "最坏情况每个抽屉 1 个，放 6 个；再多 1 个必有抽屉达 2 个，所以是 6+1=7 个。"
-   },
-   {
-    "q": "一年有 10 个月，至少有多少人，才能保证有 2 人同一个月生日？",
-    "o": [
-     "11",
-     "12",
-     "10",
-     "20"
-    ],
-    "a": "11",
-    "e": "把人看作苹果、月份看作抽屉：10+1=11 人。"
-   },
-   {
-    "q": "袋里有 4 种颜色的球各若干个，至少摸出几个，才能保证有 3 个同色？",
-    "o": [
-     "12",
-     "9",
-     "8",
-     "10"
-    ],
-    "a": "9",
-    "e": "最坏情况每种摸 2 个共 8 个，再摸 1 个必有 3 个同色：9 个。"
-   },
-   {
-    "q": "有 7 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
-    "o": [
-     "8",
-     "14",
-     "7",
-     "9"
-    ],
-    "a": "8",
-    "e": "最坏情况每个抽屉 1 个，放 7 个；再多 1 个必有抽屉达 2 个，所以是 7+1=8 个。"
-   },
-   {
-    "q": "一年有 11 个月，至少有多少人，才能保证有 2 人同一个月生日？",
-    "o": [
-     "12",
-     "22",
-     "11",
-     "13"
-    ],
-    "a": "12",
-    "e": "把人看作苹果、月份看作抽屉：11+1=12 人。"
-   },
-   {
-    "q": "袋里有 4 种颜色的球各若干个，至少摸出几个，才能保证有 3 个同色？",
-    "o": [
-     "10",
-     "9",
-     "12",
-     "8"
-    ],
-    "a": "9",
-    "e": "最坏情况每种摸 2 个共 8 个，再摸 1 个必有 3 个同色：9 个。"
-   },
-   {
-    "q": "有 8 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
-    "o": [
-     "10",
-     "16",
-     "9",
-     "8"
-    ],
-    "a": "9",
-    "e": "最坏情况每个抽屉 1 个，放 8 个；再多 1 个必有抽屉达 2 个，所以是 8+1=9 个。"
-   }
-  ],
-  "nongdu": [
-   {
-    "q": "把 11 克糖放入 68 克水中，糖水的浓度约是多少？",
-    "o": [
-     "16",
-     "19",
-     "14",
-     "11"
-    ],
-    "a": "14",
-    "e": "浓度 = 糖÷糖水总重 = 11÷79≈14%。"
-   },
-   {
-    "q": "浓度为 11% 的糖水共 164 克，其中糖有多少克？",
-    "o": [
-     "18",
-     "2",
-     "23",
-     "146"
-    ],
-    "a": "18",
-    "e": "糖 = 糖水总重×浓度 = 164×11%=18 克。"
-   },
-   {
-    "q": "16 克糖和 120 克水的糖水，再加入 47 克水后，浓度约变为多少？",
-    "o": [
-     "12",
-     "9",
-     "6",
-     "13"
-    ],
-    "a": "9",
-    "e": "加水后糖仍是 16 克，总重 183 克，浓度 = 16÷183≈9%。（加水变稀）"
-   },
-   {
-    "q": "把 13 克糖放入 141 克水中，糖水的浓度约是多少？",
-    "o": [
-     "5",
-     "13",
-     "8",
-     "9"
-    ],
-    "a": "8",
-    "e": "浓度 = 糖÷糖水总重 = 13÷154≈8%。"
-   },
-   {
-    "q": "浓度为 22% 的糖水共 91 克，其中糖有多少克？",
-    "o": [
-     "20",
-     "25",
-     "1",
-     "71"
-    ],
-    "a": "20",
-    "e": "糖 = 糖水总重×浓度 = 91×22%=20 克。"
-   },
-   {
-    "q": "17 克糖和 103 克水的糖水，再加入 41 克水后，浓度约变为多少？",
-    "o": [
-     "8",
-     "14",
-     "15",
-     "11"
-    ],
-    "a": "11",
-    "e": "加水后糖仍是 17 克，总重 161 克，浓度 = 17÷161≈11%。（加水变稀）"
-   },
-   {
-    "q": "把 15 克糖放入 113 克水中，糖水的浓度约是多少？",
-    "o": [
-     "13",
-     "12",
-     "9",
-     "17"
-    ],
-    "a": "12",
-    "e": "浓度 = 糖÷糖水总重 = 15÷128≈12%。"
-   },
-   {
-    "q": "浓度为 18% 的糖水共 122 克，其中糖有多少克？",
-    "o": [
-     "1",
-     "22",
-     "100",
-     "27"
-    ],
-    "a": "22",
-    "e": "糖 = 糖水总重×浓度 = 122×18%=22 克。"
-   },
-   {
-    "q": "19 克糖和 86 克水的糖水，再加入 35 克水后，浓度约变为多少？",
-    "o": [
-     "14",
-     "11",
-     "15",
-     "18"
-    ],
-    "a": "14",
-    "e": "加水后糖仍是 19 克，总重 140 克，浓度 = 19÷140≈14%。（加水变稀）"
-   },
-   {
-    "q": "把 16 克糖放入 84 克水中，糖水的浓度约是多少？",
-    "o": [
-     "16",
-     "13",
-     "19",
-     "21"
-    ],
-    "a": "16",
-    "e": "浓度 = 糖÷糖水总重 = 16÷100≈16%。"
-   }
-  ],
-  "luoji": [
-   {
-    "q": "甲、乙、丙三人中只有一人做了好事。甲说“是乙做的”，乙说“不是我”，丙说“也不是我”。已知只有一人说真话，是谁做的好事？",
-    "o": [
-     "甲",
-     "乙",
-     "丙",
-     "无法确定"
-    ],
-    "a": "丙",
-    "e": "假设甲做：甲假、乙真、丙真（两真，不符）；假设乙做：甲真、乙假、丙真（两真，不符）；假设丙做：甲假、乙真、丙假（只有一真，符合）。所以是丙做的。"
-   },
-   {
-    "q": "小明、小红、小强分别喜欢语文、数学、英语中的一科。小明不喜欢语文，小红不喜欢数学也不喜欢语文，那么小强喜欢哪一科？",
-    "o": [
-     "语文",
-     "数学",
-     "英语",
-     "无法确定"
-    ],
-    "a": "语文",
-    "e": "小红不喜欢数学也不喜欢语文 → 小红喜欢英语；小明不喜欢语文 → 小明只能喜欢数学；剩下语文归小强。"
-   },
-   {
-    "q": "三张卡片分别写着 1、2、3。小张拿的不是 1，小李拿的不是 2 也不是 1，那么小王拿的是几？",
-    "o": [
-     "1",
-     "2",
-     "3",
-     "无法确定"
-    ],
-    "a": "1",
-    "e": "小李不是 2 也不是 1 → 小李拿 3；小张不是 1 且 3 已被拿 → 小张拿 2；剩下 1 归小王。"
-   },
-   {
-    "q": "红、黄、蓝三种颜色的球各一个，分给小丽、小美、小芳。小丽不要红球，小美不要红球也不要黄球，那么小芳拿到什么球？",
-    "o": [
-     "红球",
-     "黄球",
-     "蓝球",
-     "无法确定"
-    ],
-    "a": "红球",
-    "e": "小美不要红黄 → 小美拿蓝球；小丽不要红且蓝已被拿 → 小丽拿黄球；剩下红球归小芳。"
-   },
-   {
-    "q": "老师把 1、2、3 三个数分给小强、小军、小浩。小强拿的不是最大的，小军拿的是最小的，那么小浩拿到几？",
-    "o": [
-     "1",
-     "2",
-     "3",
-     "无法确定"
-    ],
-    "a": "3",
-    "e": "最小是 1 → 小军拿 1；最大是 3，小强不是最大 → 小强拿 2；剩下 3 归小浩。"
-   },
-   {
-    "q": "小云、小雨、小雪三人年龄各不相同。小云比小雨大，小雨比小雪大。谁年龄最小？",
-    "o": [
-     "小云",
-     "小雨",
-     "小雪",
-     "一样大"
-    ],
-    "a": "小雪",
-    "e": "小云 > 小雨 > 小雪，所以小雪最小。"
-   },
-   {
-    "q": "书架上层、中层、下层分别放着语文、数学、英语书。已知语文不在上层，数学在中层，那么英语在哪一层？",
-    "o": [
-     "上层",
-     "中层",
-     "下层",
-     "无法确定"
-    ],
-    "a": "上层",
-    "e": "数学在中层；语文不在上层 → 语文在下层；剩下英语在上层。"
-   },
-   {
-    "q": "甲、乙、丙站成一排。甲站在乙的左边，丙站在最右边。谁站在中间？",
-    "o": [
-     "甲",
-     "乙",
-     "丙",
-     "无法确定"
-    ],
-    "a": "乙",
-    "e": "丙在最右边；甲在乙左边，所以甲最左、乙居中、丙最右。中间是乙。"
-   },
-   {
-    "q": "小 A 比小 B 高，小 C 比小 A 高，小 B 比小 D 高。他们四人中谁最高？",
-    "o": [
-     "小 A",
-     "小 B",
-     "小 C",
-     "小 D"
-    ],
-    "a": "小 C",
-    "e": "由条件得 小 C > 小 A > 小 B > 小 D，所以最高的是小 C。"
-   },
-   {
-    "q": "甲、乙、丙、丁比身高。甲不是最高也不是最矮，乙比甲矮，丙比甲高，丁比乙矮。谁最高？",
-    "o": [
-     "甲",
-     "乙",
-     "丙",
-     "丁"
-    ],
-    "a": "丙",
-    "e": "由条件得 丙 > 甲 > 乙 > 丁，所以最高的是丙。"
-   }
-  ]
- }
+  "low": {
+    "guilv": [
+      {
+        "q": "找规律填数：3、5、7、9、11、（  ）",
+        "o": [
+          "15",
+          "11",
+          "13",
+          "14"
+        ],
+        "a": "13",
+        "e": "相邻两数相差 2，所以下一个是 11+2=13。"
+      },
+      {
+        "q": "找规律填数：3、6、12、24、48、（  ）",
+        "o": [
+          "48",
+          "192",
+          "99",
+          "96"
+        ],
+        "a": "96",
+        "e": "每个数是前一个的 2 倍，所以 48×2=96。"
+      },
+      {
+        "q": "找规律填数：1、4、9、16、25、（  ）",
+        "o": [
+          "36",
+          "30",
+          "42",
+          "37"
+        ],
+        "a": "36",
+        "e": "依次是 1²、2²…所以下一个是 6×6=36。"
+      },
+      {
+        "q": "找规律填数：2、8、10、18、28、（  ）",
+        "o": [
+          "47",
+          "29",
+          "46",
+          "56"
+        ],
+        "a": "46",
+        "e": "每个数等于前两个数的和：18+28=46。"
+      },
+      {
+        "q": "找规律填数：12、17、12、17、12、（  ）",
+        "o": [
+          "17",
+          "12",
+          "7",
+          "18"
+        ],
+        "a": "17",
+        "e": "两个数一组交替出现：12、17 重复，所以下一个是 17。"
+      },
+      {
+        "q": "找规律填数：4、9、14、19、24、（  ）",
+        "o": [
+          "24",
+          "30",
+          "29",
+          "34"
+        ],
+        "a": "29",
+        "e": "相邻两数相差 5，所以下一个是 24+5=29。"
+      },
+      {
+        "q": "找规律填数：4、8、16、32、64、（  ）",
+        "o": [
+          "128",
+          "256",
+          "64",
+          "132"
+        ],
+        "a": "128",
+        "e": "每个数是前一个的 2 倍，所以 64×2=128。"
+      },
+      {
+        "q": "找规律填数：4、9、16、25、36、（  ）",
+        "o": [
+          "49",
+          "50",
+          "42",
+          "56"
+        ],
+        "a": "49",
+        "e": "依次是 2²、3²…所以下一个是 7×7=49。"
+      },
+      {
+        "q": "找规律填数：3、5、8、13、21、（  ）",
+        "o": [
+          "42",
+          "34",
+          "35",
+          "22"
+        ],
+        "a": "34",
+        "e": "每个数等于前两个数的和：13+21=34。"
+      },
+      {
+        "q": "找规律填数：13、16、13、16、13、（  ）",
+        "o": [
+          "16",
+          "10",
+          "17",
+          "13"
+        ],
+        "a": "16",
+        "e": "两个数一组交替出现：13、16 重复，所以下一个是 16。"
+      }
+    ],
+    "pai dui": [
+      {
+        "q": "小朋友排队，小红从前数第 4，从后数第 4，这队一共有几人？",
+        "o": [
+          "6",
+          "8",
+          "7",
+          "9"
+        ],
+        "a": "7",
+        "e": "小红被数了两次，所以 4+4-1=7 人。"
+      },
+      {
+        "q": "排队时，小明前面有 3 人，后面有 2 人，一共几人？",
+        "o": [
+          "6",
+          "4",
+          "5",
+          "7"
+        ],
+        "a": "6",
+        "e": "前面 3 人 + 后面 2 人 + 小明自己 = 6 人。"
+      },
+      {
+        "q": "一共有 13 人排队，小华从后数第 6，那么从前往后他是第几？",
+        "o": [
+          "8",
+          "7",
+          "9",
+          "6"
+        ],
+        "a": "8",
+        "e": "从后数第 6，前面有 7 人，所以从前数是第 7+1=8。"
+      },
+      {
+        "q": "小朋友排队，小红从前数第 5，从后数第 9，这队一共有几人？",
+        "o": [
+          "15",
+          "14",
+          "13",
+          "12"
+        ],
+        "a": "13",
+        "e": "小红被数了两次，所以 5+9-1=13 人。"
+      },
+      {
+        "q": "排队时，小明前面有 4 人，后面有 7 人，一共几人？",
+        "o": [
+          "12",
+          "11",
+          "10",
+          "13"
+        ],
+        "a": "12",
+        "e": "前面 4 人 + 后面 7 人 + 小明自己 = 12 人。"
+      },
+      {
+        "q": "一共有 14 人排队，小华从后数第 6，那么从前往后他是第几？",
+        "o": [
+          "8",
+          "10",
+          "9",
+          "6"
+        ],
+        "a": "9",
+        "e": "从后数第 6，前面有 8 人，所以从前数是第 8+1=9。"
+      },
+      {
+        "q": "小朋友排队，小红从前数第 5，从后数第 7，这队一共有几人？",
+        "o": [
+          "10",
+          "11",
+          "13",
+          "12"
+        ],
+        "a": "11",
+        "e": "小红被数了两次，所以 5+7-1=11 人。"
+      },
+      {
+        "q": "排队时，小明前面有 4 人，后面有 5 人，一共几人？",
+        "o": [
+          "8",
+          "10",
+          "11",
+          "9"
+        ],
+        "a": "10",
+        "e": "前面 4 人 + 后面 5 人 + 小明自己 = 10 人。"
+      },
+      {
+        "q": "一共有 14 人排队，小华从后数第 4，那么从前往后他是第几？",
+        "o": [
+          "4",
+          "11",
+          "12",
+          "10"
+        ],
+        "a": "11",
+        "e": "从后数第 4，前面有 10 人，所以从前数是第 10+1=11。"
+      },
+      {
+        "q": "小朋友排队，小红从前数第 6，从后数第 5，这队一共有几人？",
+        "o": [
+          "10",
+          "12",
+          "9",
+          "11"
+        ],
+        "a": "10",
+        "e": "小红被数了两次，所以 6+5-1=10 人。"
+      }
+    ],
+    "qiaosuan": [
+      {
+        "q": "巧算：93 + 25 = ?",
+        "o": [
+          "120",
+          "116",
+          "118",
+          "128"
+        ],
+        "a": "118",
+        "e": "把 93 看成 100：100+25−7=118。"
+      },
+      {
+        "q": "巧算：25 × 4 × 4 = ?",
+        "o": [
+          "401",
+          "200",
+          "500",
+          "400"
+        ],
+        "a": "400",
+        "e": "先算 25×4=100，再 ×4=400。"
+      },
+      {
+        "q": "巧算：290 − 99 = ?",
+        "o": [
+          "191",
+          "190",
+          "193",
+          "192"
+        ],
+        "a": "191",
+        "e": "先减 100 再加回零头：290−100+1=191。"
+      },
+      {
+        "q": "算一算：23 + 77 = ?",
+        "o": [
+          "101",
+          "100",
+          "99",
+          "102"
+        ],
+        "a": "100",
+        "e": "23 和 77 正好凑成 100，答案是 100。"
+      },
+      {
+        "q": "巧算：94 + 75 = ?",
+        "o": [
+          "169",
+          "167",
+          "179",
+          "171"
+        ],
+        "a": "169",
+        "e": "把 94 看成 100：100+75−6=169。"
+      },
+      {
+        "q": "巧算：25 × 4 × 4 = ?",
+        "o": [
+          "200",
+          "400",
+          "401",
+          "500"
+        ],
+        "a": "400",
+        "e": "先算 25×4=100，再 ×4=400。"
+      },
+      {
+        "q": "巧算：317 − 96 = ?",
+        "o": [
+          "222",
+          "221",
+          "217",
+          "220"
+        ],
+        "a": "221",
+        "e": "先减 100 再加回零头：317−100+4=221。"
+      },
+      {
+        "q": "算一算：27 + 73 = ?",
+        "o": [
+          "100",
+          "102",
+          "99",
+          "101"
+        ],
+        "a": "100",
+        "e": "27 和 73 正好凑成 100，答案是 100。"
+      },
+      {
+        "q": "巧算：94 + 45 = ?",
+        "o": [
+          "141",
+          "139",
+          "149",
+          "137"
+        ],
+        "a": "139",
+        "e": "把 94 看成 100：100+45−6=139。"
+      },
+      {
+        "q": "巧算：25 × 4 × 5 = ?",
+        "o": [
+          "600",
+          "250",
+          "500",
+          "501"
+        ],
+        "a": "500",
+        "e": "先算 25×4=100，再 ×5=500。"
+      }
+    ],
+    "tuxing": [
+      {
+        "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
+        "o": [
+          "5",
+          "9",
+          "20",
+          "10"
+        ],
+        "a": "10",
+        "e": "每两个点确定一条线段：5×4÷2=10 条。"
+      },
+      {
+        "q": "用小棒摆 4 个连在一起的正方形，一共要多少根小棒？",
+        "o": [
+          "16",
+          "14",
+          "12",
+          "13"
+        ],
+        "a": "13",
+        "e": "第一个用 4 根，以后每加一个多用 3 根：4+3×3=13 根。"
+      },
+      {
+        "q": "从 1 数到 4，一共有多少个数？如果每层摆的个数是 1、2、3…4，共摆多少个？",
+        "o": [
+          "10",
+          "16",
+          "9",
+          "8"
+        ],
+        "a": "10",
+        "e": "1+2+…+4=4×5÷2=10 个。"
+      },
+      {
+        "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
+        "o": [
+          "20",
+          "10",
+          "5",
+          "9"
+        ],
+        "a": "10",
+        "e": "每两个点确定一条线段：5×4÷2=10 条。"
+      },
+      {
+        "q": "用小棒摆 5 个连在一起的正方形，一共要多少根小棒？",
+        "o": [
+          "16",
+          "15",
+          "20",
+          "17"
+        ],
+        "a": "16",
+        "e": "第一个用 4 根，以后每加一个多用 3 根：4+3×4=16 根。"
+      },
+      {
+        "q": "从 1 数到 5，一共有多少个数？如果每层摆的个数是 1、2、3…5，共摆多少个？",
+        "o": [
+          "10",
+          "15",
+          "25",
+          "14"
+        ],
+        "a": "15",
+        "e": "1+2+…+5=5×6÷2=15 个。"
+      },
+      {
+        "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
+        "o": [
+          "10",
+          "9",
+          "5",
+          "20"
+        ],
+        "a": "10",
+        "e": "每两个点确定一条线段：5×4÷2=10 条。"
+      },
+      {
+        "q": "用小棒摆 5 个连在一起的正方形，一共要多少根小棒？",
+        "o": [
+          "16",
+          "17",
+          "20",
+          "15"
+        ],
+        "a": "16",
+        "e": "第一个用 4 根，以后每加一个多用 3 根：4+3×4=16 根。"
+      },
+      {
+        "q": "从 1 数到 5，一共有多少个数？如果每层摆的个数是 1、2、3…5，共摆多少个？",
+        "o": [
+          "14",
+          "15",
+          "10",
+          "25"
+        ],
+        "a": "15",
+        "e": "1+2+…+5=5×6÷2=15 个。"
+      },
+      {
+        "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
+        "o": [
+          "20",
+          "9",
+          "10",
+          "5"
+        ],
+        "a": "10",
+        "e": "每两个点确定一条线段：5×4÷2=10 条。"
+      }
+    ],
+    "jianyi": [
+      {
+        "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+        "o": [
+          "小明",
+          "小刚",
+          "小丽",
+          "一样高"
+        ],
+        "a": "小明",
+        "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+      },
+      {
+        "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+        "o": [
+          "小明",
+          "小刚",
+          "小丽",
+          "一样高"
+        ],
+        "a": "小明",
+        "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+      },
+      {
+        "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+        "o": [
+          "小明",
+          "小刚",
+          "小丽",
+          "一样高"
+        ],
+        "a": "小明",
+        "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+      },
+      {
+        "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+        "o": [
+          "小明",
+          "小刚",
+          "小丽",
+          "一样高"
+        ],
+        "a": "小明",
+        "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+      },
+      {
+        "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+        "o": [
+          "小明",
+          "小刚",
+          "小丽",
+          "一样高"
+        ],
+        "a": "小明",
+        "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+      },
+      {
+        "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+        "o": [
+          "小明",
+          "小刚",
+          "小丽",
+          "一样高"
+        ],
+        "a": "小明",
+        "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+      },
+      {
+        "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+        "o": [
+          "小明",
+          "小刚",
+          "小丽",
+          "一样高"
+        ],
+        "a": "小明",
+        "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+      },
+      {
+        "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+        "o": [
+          "小明",
+          "小刚",
+          "小丽",
+          "一样高"
+        ],
+        "a": "小明",
+        "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+      },
+      {
+        "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+        "o": [
+          "小明",
+          "小刚",
+          "小丽",
+          "一样高"
+        ],
+        "a": "小明",
+        "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+      },
+      {
+        "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+        "o": [
+          "小明",
+          "小刚",
+          "小丽",
+          "一样高"
+        ],
+        "a": "小明",
+        "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+      }
+    ],
+    "cutrope": [
+      {
+        "q": "一根绳子剪 5 刀（每刀只剪断一处），一共分成几段？",
+        "o": [
+          "5",
+          "6",
+          "7",
+          "4"
+        ],
+        "a": "6",
+        "e": "每剪一刀多一段：5+1=6 段。"
+      },
+      {
+        "q": "把一根绳子对折 2 次后，从中间剪一刀，展开后共有几段？",
+        "o": [
+          "5",
+          "4",
+          "7",
+          "6"
+        ],
+        "a": "5",
+        "e": "对折 2 次有 4 层，一刀剪出 4 个断口，段数=断口+1=5。"
+      },
+      {
+        "q": "一个绳圈（绳子两头接在一起）剪 5 刀，会变成几段？",
+        "o": [
+          "6",
+          "5",
+          "10",
+          "4"
+        ],
+        "a": "5",
+        "e": "封闭绳圈剪第一刀还是 1 段，以后每刀多一段，共 5 段。"
+      },
+      {
+        "q": "要把一根绳子剪成 7 段，需要剪几刀？",
+        "o": [
+          "6",
+          "7",
+          "5",
+          "8"
+        ],
+        "a": "6",
+        "e": "段数比刀数多 1，所以剪 6 刀。"
+      },
+      {
+        "q": "一根绳子剪 6 刀（每刀只剪断一处），一共分成几段？",
+        "o": [
+          "5",
+          "7",
+          "8",
+          "6"
+        ],
+        "a": "7",
+        "e": "每剪一刀多一段：6+1=7 段。"
+      },
+      {
+        "q": "把一根绳子对折 2 次后，从中间剪一刀，展开后共有几段？",
+        "o": [
+          "5",
+          "6",
+          "7",
+          "4"
+        ],
+        "a": "5",
+        "e": "对折 2 次有 4 层，一刀剪出 4 个断口，段数=断口+1=5。"
+      },
+      {
+        "q": "一个绳圈（绳子两头接在一起）剪 6 刀，会变成几段？",
+        "o": [
+          "6",
+          "5",
+          "12",
+          "7"
+        ],
+        "a": "6",
+        "e": "封闭绳圈剪第一刀还是 1 段，以后每刀多一段，共 6 段。"
+      },
+      {
+        "q": "要把一根绳子剪成 7 段，需要剪几刀？",
+        "o": [
+          "8",
+          "5",
+          "7",
+          "6"
+        ],
+        "a": "6",
+        "e": "段数比刀数多 1，所以剪 6 刀。"
+      },
+      {
+        "q": "一根绳子剪 6 刀（每刀只剪断一处），一共分成几段？",
+        "o": [
+          "5",
+          "8",
+          "6",
+          "7"
+        ],
+        "a": "7",
+        "e": "每剪一刀多一段：6+1=7 段。"
+      },
+      {
+        "q": "把一根绳子对折 2 次后，从中间剪一刀，展开后共有几段？",
+        "o": [
+          "6",
+          "5",
+          "4",
+          "7"
+        ],
+        "a": "5",
+        "e": "对折 2 次有 4 层，一刀剪出 4 个断口，段数=断口+1=5。"
+      }
+    ],
+    "interval": [
+      {
+        "q": "把一根木头锯成 7 段，一共要锯几次？",
+        "o": [
+          "7",
+          "6",
+          "8",
+          "5"
+        ],
+        "a": "6",
+        "e": "锯的次数比段数少 1：7−1=6 次。"
+      },
+      {
+        "q": "从 1 楼走到 9 楼，一共要走几层楼梯？",
+        "o": [
+          "8",
+          "9",
+          "7",
+          "10"
+        ],
+        "a": "8",
+        "e": "楼层数减 1：9−1=8 层。"
+      },
+      {
+        "q": "时钟敲 6 下，每两下之间隔 4 秒，从第一下到最后一下共多少秒？",
+        "o": [
+          "28",
+          "24",
+          "20",
+          "21"
+        ],
+        "a": "20",
+        "e": "敲 6 下有 5 个间隔：5×4=20 秒。"
+      },
+      {
+        "q": "锯木头每锯一次要 3 分钟，锯成 7 段共要多少分钟？",
+        "o": [
+          "18",
+          "21",
+          "19",
+          "24"
+        ],
+        "a": "18",
+        "e": "要锯 6 次：6×3=18 分钟。"
+      },
+      {
+        "q": "把一根木头锯成 8 段，一共要锯几次？",
+        "o": [
+          "6",
+          "7",
+          "9",
+          "8"
+        ],
+        "a": "7",
+        "e": "锯的次数比段数少 1：8−1=7 次。"
+      },
+      {
+        "q": "从 1 楼走到 10 楼，一共要走几层楼梯？",
+        "o": [
+          "9",
+          "11",
+          "8",
+          "10"
+        ],
+        "a": "9",
+        "e": "楼层数减 1：10−1=9 层。"
+      },
+      {
+        "q": "时钟敲 7 下，每两下之间隔 3 秒，从第一下到最后一下共多少秒？",
+        "o": [
+          "21",
+          "18",
+          "19",
+          "24"
+        ],
+        "a": "18",
+        "e": "敲 7 下有 6 个间隔：6×3=18 秒。"
+      },
+      {
+        "q": "锯木头每锯一次要 2 分钟，锯成 7 段共要多少分钟？",
+        "o": [
+          "13",
+          "12",
+          "14",
+          "16"
+        ],
+        "a": "12",
+        "e": "要锯 6 次：6×2=12 分钟。"
+      },
+      {
+        "q": "把一根木头锯成 9 段，一共要锯几次？",
+        "o": [
+          "7",
+          "10",
+          "9",
+          "8"
+        ],
+        "a": "8",
+        "e": "锯的次数比段数少 1：9−1=8 次。"
+      },
+      {
+        "q": "从 1 楼走到 11 楼，一共要走几层楼梯？",
+        "o": [
+          "12",
+          "10",
+          "11",
+          "9"
+        ],
+        "a": "10",
+        "e": "楼层数减 1：11−1=10 层。"
+      }
+    ],
+    "exchange": [
+      {
+        "q": "1 个苹果能换 3 个桃，1 个桃能换 5 个枣。1 个苹果能换几个枣？",
+        "o": [
+          "16",
+          "15",
+          "8",
+          "20"
+        ],
+        "a": "15",
+        "e": "苹果→桃→枣：3×5=15 个枣。"
+      },
+      {
+        "q": "2 个苹果能换 6 个梨，1 个梨能换 3 个桃。1 个苹果能换几个桃？",
+        "o": [
+          "9",
+          "11",
+          "12",
+          "6"
+        ],
+        "a": "9",
+        "e": "先算 1 苹果=3 个梨，再 ×3 得 9 个桃。"
+      },
+      {
+        "q": "天平平衡：3 个 A 等于 9 个 B。1 个 A 等于几个 B？",
+        "o": [
+          "4",
+          "3",
+          "6",
+          "2"
+        ],
+        "a": "3",
+        "e": "3 个 A = 9 个 B，1 个 A = 9÷3 = 3 个 B。"
+      },
+      {
+        "q": "1 只羊能换 2 只兔，1 只兔能换 3 只鸡。3 只羊能换几只鸡？",
+        "o": [
+          "18",
+          "15",
+          "24",
+          "20"
+        ],
+        "a": "18",
+        "e": "1 羊=2×3=6 鸡，3 羊=3×6=18 鸡。"
+      },
+      {
+        "q": "1 个苹果能换 4 个桃，1 个桃能换 3 个枣。1 个苹果能换几个枣？",
+        "o": [
+          "15",
+          "7",
+          "12",
+          "13"
+        ],
+        "a": "12",
+        "e": "苹果→桃→枣：4×3=12 个枣。"
+      },
+      {
+        "q": "2 个苹果能换 8 个梨，1 个梨能换 3 个桃。1 个苹果能换几个桃？",
+        "o": [
+          "12",
+          "7",
+          "15",
+          "14"
+        ],
+        "a": "12",
+        "e": "先算 1 苹果=4 个梨，再 ×3 得 12 个桃。"
+      },
+      {
+        "q": "天平平衡：3 个 A 等于 12 个 B。1 个 A 等于几个 B？",
+        "o": [
+          "4",
+          "3",
+          "8",
+          "5"
+        ],
+        "a": "4",
+        "e": "3 个 A = 12 个 B，1 个 A = 12÷3 = 4 个 B。"
+      },
+      {
+        "q": "1 只羊能换 2 只兔，1 只兔能换 3 只鸡。3 只羊能换几只鸡？",
+        "o": [
+          "20",
+          "24",
+          "15",
+          "18"
+        ],
+        "a": "18",
+        "e": "1 羊=2×3=6 鸡，3 羊=3×6=18 鸡。"
+      },
+      {
+        "q": "1 个苹果能换 4 个桃，1 个桃能换 2 个枣。1 个苹果能换几个枣？",
+        "o": [
+          "6",
+          "8",
+          "10",
+          "9"
+        ],
+        "a": "8",
+        "e": "苹果→桃→枣：4×2=8 个枣。"
+      },
+      {
+        "q": "2 个苹果能换 8 个梨，1 个梨能换 3 个桃。1 个苹果能换几个桃？",
+        "o": [
+          "7",
+          "12",
+          "14",
+          "15"
+        ],
+        "a": "12",
+        "e": "先算 1 苹果=4 个梨，再 ×3 得 12 个桃。"
+      }
+    ],
+    "age0": [
+      {
+        "q": "今年爸爸比小明大 10 岁。9 年后，爸爸比小明大几岁？",
+        "o": [
+          "1",
+          "10",
+          "19",
+          "11"
+        ],
+        "a": "10",
+        "e": "年龄差永远不变，还是 10 岁。"
+      },
+      {
+        "q": "3 年前哥哥比弟弟大 8 岁，今年哥哥比弟弟大几岁？",
+        "o": [
+          "11",
+          "8",
+          "5",
+          "9"
+        ],
+        "a": "8",
+        "e": "不管过几年，年龄差都是 8 岁。"
+      },
+      {
+        "q": "妈妈今年 35 岁，小明今年 14 岁。妈妈比小明大几岁？",
+        "o": [
+          "22",
+          "49",
+          "21",
+          "20"
+        ],
+        "a": "21",
+        "e": "年龄差=35−14=21 岁。"
+      },
+      {
+        "q": "妹妹今年 15 岁，姐姐比妹妹大 11 岁。姐姐今年几岁？",
+        "o": [
+          "26",
+          "11",
+          "15",
+          "27"
+        ],
+        "a": "26",
+        "e": "姐姐=15+11=26 岁。"
+      },
+      {
+        "q": "今年爸爸比小明大 12 岁。6 年后，爸爸比小明大几岁？",
+        "o": [
+          "13",
+          "18",
+          "12",
+          "6"
+        ],
+        "a": "12",
+        "e": "年龄差永远不变，还是 12 岁。"
+      },
+      {
+        "q": "3 年前哥哥比弟弟大 9 岁，今年哥哥比弟弟大几岁？",
+        "o": [
+          "9",
+          "10",
+          "12",
+          "6"
+        ],
+        "a": "9",
+        "e": "不管过几年，年龄差都是 9 岁。"
+      },
+      {
+        "q": "妈妈今年 37 岁，小明今年 8 岁。妈妈比小明大几岁？",
+        "o": [
+          "45",
+          "29",
+          "28",
+          "30"
+        ],
+        "a": "29",
+        "e": "年龄差=37−8=29 岁。"
+      },
+      {
+        "q": "妹妹今年 10 岁，姐姐比妹妹大 12 岁。姐姐今年几岁？",
+        "o": [
+          "10",
+          "22",
+          "12",
+          "23"
+        ],
+        "a": "22",
+        "e": "姐姐=10+12=22 岁。"
+      },
+      {
+        "q": "今年爸爸比小明大 13 岁。2 年后，爸爸比小明大几岁？",
+        "o": [
+          "15",
+          "13",
+          "14",
+          "11"
+        ],
+        "a": "13",
+        "e": "年龄差永远不变，还是 13 岁。"
+      },
+      {
+        "q": "3 年前哥哥比弟弟大 10 岁，今年哥哥比弟弟大几岁？",
+        "o": [
+          "11",
+          "7",
+          "10",
+          "13"
+        ],
+        "a": "10",
+        "e": "不管过几年，年龄差都是 10 岁。"
+      }
+    ],
+    "pages": [
+      {
+        "q": "一本书从第 1 页编到第 46 页，一共用了多少个数字？",
+        "o": [
+          "84",
+          "83",
+          "82",
+          "92"
+        ],
+        "a": "83",
+        "e": "1~9 用 9 个，10~46 有 37 个两位数用 74 个，共 9+74=83 个。"
+      },
+      {
+        "q": "一本书第 1~9 页用 9 个数字，第 10 页起每页用 2 个数字。编到第 32 页共用几个数字？",
+        "o": [
+          "55",
+          "57",
+          "64",
+          "53"
+        ],
+        "a": "55",
+        "e": "9+23×2=55 个数字。"
+      },
+      {
+        "q": "从第 25 页到第 39 页（页码都是两位数），一共印了多少个数字？",
+        "o": [
+          "28",
+          "32",
+          "30",
+          "15"
+        ],
+        "a": "30",
+        "e": "共 15 页，每页 2 个数字：15×2=30。"
+      },
+      {
+        "q": "从第 1 页到第 99 页，数字“5”一共出现多少次？",
+        "o": [
+          "20",
+          "10",
+          "18",
+          "22"
+        ],
+        "a": "20",
+        "e": "个位上 5 出现 10 次，十位上 5 出现 10 次，共 20 次。"
+      },
+      {
+        "q": "一本书从第 1 页编到第 55 页，一共用了多少个数字？",
+        "o": [
+          "110",
+          "101",
+          "100",
+          "102"
+        ],
+        "a": "101",
+        "e": "1~9 用 9 个，10~55 有 46 个两位数用 92 个，共 9+92=101 个。"
+      },
+      {
+        "q": "一本书第 1~9 页用 9 个数字，第 10 页起每页用 2 个数字。编到第 36 页共用几个数字？",
+        "o": [
+          "63",
+          "61",
+          "72",
+          "65"
+        ],
+        "a": "63",
+        "e": "9+27×2=63 个数字。"
+      },
+      {
+        "q": "从第 27 页到第 34 页（页码都是两位数），一共印了多少个数字？",
+        "o": [
+          "18",
+          "16",
+          "8",
+          "14"
+        ],
+        "a": "16",
+        "e": "共 8 页，每页 2 个数字：8×2=16。"
+      },
+      {
+        "q": "从第 1 页到第 99 页，数字“5”一共出现多少次？",
+        "o": [
+          "10",
+          "18",
+          "20",
+          "22"
+        ],
+        "a": "20",
+        "e": "个位上 5 出现 10 次，十位上 5 出现 10 次，共 20 次。"
+      },
+      {
+        "q": "一本书从第 1 页编到第 63 页，一共用了多少个数字？",
+        "o": [
+          "126",
+          "116",
+          "118",
+          "117"
+        ],
+        "a": "117",
+        "e": "1~9 用 9 个，10~63 有 54 个两位数用 108 个，共 9+108=117 个。"
+      },
+      {
+        "q": "一本书第 1~9 页用 9 个数字，第 10 页起每页用 2 个数字。编到第 40 页共用几个数字？",
+        "o": [
+          "69",
+          "71",
+          "73",
+          "80"
+        ],
+        "a": "71",
+        "e": "9+31×2=71 个数字。"
+      }
+    ],
+    "stroke": [
+      {
+        "q": "一个连通图有 0 个奇点，能一笔画成吗？",
+        "o": [
+          "能",
+          "不能",
+          "只有从奇点出发才行",
+          "无法判断"
+        ],
+        "a": "能",
+        "e": "奇点数为 0 或 2 的连通图能一笔画。"
+      },
+      {
+        "q": "一个连通图有 2 个奇点，能一笔画成吗？",
+        "o": [
+          "能",
+          "不能",
+          "必须从一个偶点开始",
+          "无法判断"
+        ],
+        "a": "能",
+        "e": "2 个奇点时从一个奇点出发、另一个奇点结束即可。"
+      },
+      {
+        "q": "一个连通图有 4 个奇点，能一笔画成吗？",
+        "o": [
+          "能",
+          "不能",
+          "要看大小",
+          "无法判断"
+        ],
+        "a": "不能",
+        "e": "奇点数超过 2 就不能一笔画。"
+      },
+      {
+        "q": "正方形加一条对角线，能一笔画成吗？",
+        "o": [
+          "能",
+          "不能",
+          "要两笔",
+          "要看怎么画"
+        ],
+        "a": "能",
+        "e": "对角线两端的两个顶点是奇点（度 3），其余为偶点，共 2 个奇点，能一笔画。"
+      },
+      {
+        "q": "“日”字形（两个正方形共用一条边），奇点有几个？",
+        "o": [
+          "0 个",
+          "2 个",
+          "4 个",
+          "6 个"
+        ],
+        "a": "2 个",
+        "e": "中间横线两端各连 3 条线，是 2 个奇点，其余都是偶点。"
+      },
+      {
+        "q": "“田”字格，奇点有几个？",
+        "o": [
+          "2 个",
+          "4 个",
+          "6 个",
+          "0 个"
+        ],
+        "a": "4 个",
+        "e": "四条边的中点各连出 3 条线，是 4 个奇点，所以不能一笔画。"
+      },
+      {
+        "q": "两个圆相交于一点（像数字 8），能一笔画成吗？",
+        "o": [
+          "能",
+          "不能",
+          "要两笔",
+          "无法判断"
+        ],
+        "a": "能",
+        "e": "交点连出 4 条线是偶点，其余也是偶点，共 0 个奇点，能一笔画。"
+      },
+      {
+        "q": "一个连通图有 6 个奇点，能一笔画成吗？",
+        "o": [
+          "能",
+          "不能",
+          "从奇点出发就能",
+          "无法判断"
+        ],
+        "a": "不能",
+        "e": "奇点数大于 2，不能一笔画。"
+      },
+      {
+        "q": "平面上两条互不相交的线段，能一笔画完吗？",
+        "o": [
+          "能",
+          "不能",
+          "从端点开始就能",
+          "无法判断"
+        ],
+        "a": "不能",
+        "e": "图形不连通，不能一笔画（一笔画要求连通）。"
+      },
+      {
+        "q": "一个连通图只有 1 个奇点，可能吗？",
+        "o": [
+          "可能",
+          "不可能",
+          "要看边数",
+          "无法判断"
+        ],
+        "a": "不可能",
+        "e": "图的奇点个数一定是偶数，不可能只有 1 个。"
+      }
+    ],
+    "match": [
+      {
+        "q": "用小棒摆 7 个连在一起的正方形，一共要多少根？",
+        "o": [
+          "28",
+          "22",
+          "21",
+          "24"
+        ],
+        "a": "22",
+        "e": "第一个 4 根，以后每加一个多 3 根：4+3×6=22。"
+      },
+      {
+        "q": "用小棒摆 7 个连在一起的三角形，一共要多少根？",
+        "o": [
+          "15",
+          "21",
+          "17",
+          "14"
+        ],
+        "a": "15",
+        "e": "第一个 3 根，以后每加一个多 2 根：3+2×6=15。"
+      },
+      {
+        "q": "算式 6+4=4 不成立。移动 1 根火柴让它成立，应变成下面哪个式子？",
+        "o": [
+          "8−4=4",
+          "9+4=13",
+          "5+4=9",
+          "6−4=2"
+        ],
+        "a": "8−4=4",
+        "e": "把“+”号的竖火柴移到 6 的左上角，6 变 8、“+”变“−”，得 8−4=4。"
+      },
+      {
+        "q": "算式 1+1=10 不成立。移动 1 根火柴让它成立，应变成哪个式子？",
+        "o": [
+          "11−1=10",
+          "11+1=10",
+          "1−1=10",
+          "1+1=2"
+        ],
+        "a": "11−1=10",
+        "e": "把“+”的竖火柴移到第一个 1 前面，变成 11−1=10。"
+      },
+      {
+        "q": "用小棒摆 8 个连在一起的正方形，一共要多少根？",
+        "o": [
+          "27",
+          "25",
+          "24",
+          "32"
+        ],
+        "a": "25",
+        "e": "第一个 4 根，以后每加一个多 3 根：4+3×7=25。"
+      },
+      {
+        "q": "用小棒摆 8 个连在一起的三角形，一共要多少根？",
+        "o": [
+          "17",
+          "16",
+          "19",
+          "24"
+        ],
+        "a": "17",
+        "e": "第一个 3 根，以后每加一个多 2 根：3+2×7=17。"
+      },
+      {
+        "q": "算式 6+4=4 不成立。移动 1 根火柴让它成立，应变成下面哪个式子？",
+        "o": [
+          "5+4=9",
+          "6−4=2",
+          "8−4=4",
+          "9+4=13"
+        ],
+        "a": "8−4=4",
+        "e": "把“+”号的竖火柴移到 6 的左上角，6 变 8、“+”变“−”，得 8−4=4。"
+      },
+      {
+        "q": "算式 1+1=10 不成立。移动 1 根火柴让它成立，应变成哪个式子？",
+        "o": [
+          "11+1=10",
+          "1−1=10",
+          "11−1=10",
+          "1+1=2"
+        ],
+        "a": "11−1=10",
+        "e": "把“+”的竖火柴移到第一个 1 前面，变成 11−1=10。"
+      },
+      {
+        "q": "用小棒摆 9 个连在一起的正方形，一共要多少根？",
+        "o": [
+          "30",
+          "27",
+          "36",
+          "28"
+        ],
+        "a": "28",
+        "e": "第一个 4 根，以后每加一个多 3 根：4+3×8=28。"
+      },
+      {
+        "q": "用小棒摆 9 个连在一起的三角形，一共要多少根？",
+        "o": [
+          "18",
+          "19",
+          "27",
+          "21"
+        ],
+        "a": "19",
+        "e": "第一个 3 根，以后每加一个多 2 根：3+2×8=19。"
+      }
+    ],
+    "vertical": [
+      {
+        "q": "竖式谜：AB + BA = CDC（A、B、C、D 代表不同数字，C 不为 0）。C 是多少？",
+        "o": [
+          "1",
+          "2",
+          "3",
+          "无法确定"
+        ],
+        "a": "1",
+        "e": "AB+BA=11(A+B)，和是 11 的倍数且为三位数，只能取 121（C=1、D=2、A+B=11），故 C=1。"
+      },
+      {
+        "q": "竖式谜：一个两位数加它的倒序数，和是 121。这两个数字之和是多少？",
+        "o": [
+          "11",
+          "12",
+          "10",
+          "9"
+        ],
+        "a": "11",
+        "e": "两位数 AB+BA=11(A+B)=121，所以 A+B=11。"
+      },
+      {
+        "q": "加法竖式：个位 7+8 的结果，个位写几、向十位进几？",
+        "o": [
+          "写5进1",
+          "写15进1",
+          "写5进0",
+          "写15进0"
+        ],
+        "a": "写5进1",
+        "e": "7+8=15，个位写 5，向十位进 1。"
+      },
+      {
+        "q": "竖式谜：3A + 4 = 42，A 是几？",
+        "o": [
+          "8",
+          "38",
+          "4",
+          "2"
+        ],
+        "a": "8",
+        "e": "3A 表示 30+A，30+A+4=42，A=8。"
+      },
+      {
+        "q": "竖式谜：两位数 AB 减去 BA 等于 27，A 比 B 大几？",
+        "o": [
+          "3",
+          "2",
+          "9",
+          "无法确定"
+        ],
+        "a": "3",
+        "e": "AB−BA=9(A−B)=27，所以 A−B=3。"
+      },
+      {
+        "q": "乘法竖式：24 × 3 的积的十位数字是几？",
+        "o": [
+          "7",
+          "2",
+          "4",
+          "3"
+        ],
+        "a": "7",
+        "e": "24×3=72，十位是 7。"
+      },
+      {
+        "q": "竖式谜：一个两位数乘以 3，积是 111。这个两位数是多少？",
+        "o": [
+          "37",
+          "33",
+          "39",
+          "27"
+        ],
+        "a": "37",
+        "e": "111÷3=37，验算 37×3=111，正确。"
+      },
+      {
+        "q": "加法竖式中，某一位相加满 10，应该怎么办？",
+        "o": [
+          "向高位进 1",
+          "向低位借 1",
+          "不进位",
+          "写 10"
+        ],
+        "a": "向高位进 1",
+        "e": "满十向前一位进 1，这是十进制竖式的基本规则。"
+      },
+      {
+        "q": "减法竖式中，个位不够减时应该怎么办？",
+        "o": [
+          "向十位借 1",
+          "向个位借 1",
+          "直接减",
+          "写成负数"
+        ],
+        "a": "向十位借 1",
+        "e": "个位不够减，向十位借 1 当 10。"
+      },
+      {
+        "q": "竖式谜：一个加数个位是 6，另一个加数个位是 9，和的个位是几？",
+        "o": [
+          "5",
+          "15",
+          "6",
+          "9"
+        ],
+        "a": "5",
+        "e": "6+9=15，个位写 5，向十位进 1。"
+      }
+    ],
+    "signs": [
+      {
+        "q": "在 1、2、3 之间填运算符号：1 ○ 2 × 3 = 7，○ 里填什么？",
+        "o": [
+          "+",
+          "−",
+          "×",
+          "÷"
+        ],
+        "a": "+",
+        "e": "1+2×3=1+6=7。"
+      },
+      {
+        "q": "在 2、3、4 之间填符号：2 × 3 ○ 4 = 10，○ 里填什么？",
+        "o": [
+          "+",
+          "−",
+          "×",
+          "÷"
+        ],
+        "a": "+",
+        "e": "2×3+4=6+4=10。"
+      },
+      {
+        "q": "下面哪个算式的结果等于 1？（用 3、3、3、3）",
+        "o": [
+          "3÷3+3−3",
+          "3+3+3−3",
+          "3×3÷3+3",
+          "3−3−3−3"
+        ],
+        "a": "3÷3+3−3",
+        "e": "3÷3+3−3=1+3−3=1。"
+      },
+      {
+        "q": "在 8、8、8、8 之间填符号使结果为 2：8÷8+8÷8=？",
+        "o": [
+          "2",
+          "1",
+          "4",
+          "16"
+        ],
+        "a": "2",
+        "e": "8÷8=1，两个 1 相加得 2。"
+      },
+      {
+        "q": "算式 1+2×3−4 的结果是多少？",
+        "o": [
+          "3",
+          "5",
+          "7",
+          "9"
+        ],
+        "a": "3",
+        "e": "先乘后加减：1+6−4=3。"
+      },
+      {
+        "q": "算式 (1+2)×3−4 的结果是多少？",
+        "o": [
+          "5",
+          "3",
+          "9",
+          "7"
+        ],
+        "a": "5",
+        "e": "先算括号：3×3−4=9−4=5。"
+      },
+      {
+        "q": "给 4+4÷4 加括号，使结果等于 2，应写成？",
+        "o": [
+          "(4+4)÷4",
+          "4+(4÷4)",
+          "(4+4÷4)",
+          "4+4÷(4)"
+        ],
+        "a": "(4+4)÷4",
+        "e": "(4+4)÷4=8÷4=2。"
+      },
+      {
+        "q": "用 5、5、5、1 各一次，下面哪个式子得 24？",
+        "o": [
+          "5×(5−1÷5)",
+          "5×5−5−1",
+          "5+5+5+1",
+          "(5+5)×1+5"
+        ],
+        "a": "5×(5−1÷5)",
+        "e": "1÷5=0.2，5−0.2=4.8，5×4.8=24。"
+      },
+      {
+        "q": "在 9、9、9 之间填符号：9 ○ 9 ÷ 9 = 10，○ 里填什么？",
+        "o": [
+          "+",
+          "−",
+          "×",
+          "÷"
+        ],
+        "a": "+",
+        "e": "9+9÷9=9+1=10。"
+      },
+      {
+        "q": "算式 2×3+4×5 的结果是多少？",
+        "o": [
+          "26",
+          "22",
+          "30",
+          "50"
+        ],
+        "a": "26",
+        "e": "先乘：6+20=26。"
+      }
+    ],
+    "array": [
+      {
+        "q": "把 1~6 填入三角形的三个顶点和三条边中点，使每边和相等。若三个顶点填的数和为 9，每边的和是多少？",
+        "o": [
+          "11",
+          "10",
+          "9",
+          "7"
+        ],
+        "a": "10",
+        "e": "三顶点被算了两次：(21+9)÷3=10。"
+      },
+      {
+        "q": "三角形数阵填 1~6，顶点数和为 12，每边和是多少？",
+        "o": [
+          "13",
+          "11",
+          "9",
+          "7"
+        ],
+        "a": "11",
+        "e": "每边和=(21+12)÷3=11。"
+      },
+      {
+        "q": "把 1~4 排成一列，所有数的和是多少？",
+        "o": [
+          "11",
+          "10",
+          "16",
+          "9"
+        ],
+        "a": "10",
+        "e": "1+2+…+4=4×5÷2=10。"
+      },
+      {
+        "q": "把 1~6 填入三角形的三个顶点和三条边中点，使每边和相等。若三个顶点填的数和为 9，每边的和是多少？",
+        "o": [
+          "10",
+          "11",
+          "7",
+          "9"
+        ],
+        "a": "10",
+        "e": "三顶点被算了两次：(21+9)÷3=10。"
+      },
+      {
+        "q": "三角形数阵填 1~6，顶点数和为 10，每边和是多少？",
+        "o": [
+          "7",
+          "12.333333333333334",
+          "10.333333333333334",
+          "8.333333333333334"
+        ],
+        "a": "10.333333333333334",
+        "e": "每边和=(21+10)÷3=10.333333333333334。"
+      },
+      {
+        "q": "把 1~4 排成一列，所有数的和是多少？",
+        "o": [
+          "10",
+          "9",
+          "16",
+          "11"
+        ],
+        "a": "10",
+        "e": "1+2+…+4=4×5÷2=10。"
+      },
+      {
+        "q": "把 1~6 填入三角形的三个顶点和三条边中点，使每边和相等。若三个顶点填的数和为 9，每边的和是多少？",
+        "o": [
+          "10",
+          "9",
+          "7",
+          "11"
+        ],
+        "a": "10",
+        "e": "三顶点被算了两次：(21+9)÷3=10。"
+      },
+      {
+        "q": "三角形数阵填 1~6，顶点数和为 8，每边和是多少？",
+        "o": [
+          "7",
+          "9.666666666666666",
+          "11.666666666666666",
+          "7.666666666666666"
+        ],
+        "a": "9.666666666666666",
+        "e": "每边和=(21+8)÷3=9.666666666666666。"
+      },
+      {
+        "q": "把 1~4 排成一列，所有数的和是多少？",
+        "o": [
+          "16",
+          "9",
+          "11",
+          "10"
+        ],
+        "a": "10",
+        "e": "1+2+…+4=4×5÷2=10。"
+      },
+      {
+        "q": "把 1~6 填入三角形的三个顶点和三条边中点，使每边和相等。若三个顶点填的数和为 12，每边的和是多少？",
+        "o": [
+          "10",
+          "11",
+          "12",
+          "7"
+        ],
+        "a": "11",
+        "e": "三顶点被算了两次：(21+12)÷3=11。"
+      }
+    ],
+    "river": [
+      {
+        "q": "狼、羊、菜过河：人不在时狼会吃羊、羊会吃菜。人每次只能带一样，第一步应带什么？",
+        "o": [
+          "狼",
+          "羊",
+          "菜",
+          "空手"
+        ],
+        "a": "羊",
+        "e": "先带羊过去，人回来再带狼（或菜），并把羊带回来，最后带菜（或狼）。"
+      },
+      {
+        "q": "狼羊菜问题：人带羊过河后空手回来，第二步应带什么？",
+        "o": [
+          "狼",
+          "菜",
+          "羊",
+          "什么都不带"
+        ],
+        "a": "狼",
+        "e": "带狼过去后把羊带回来，避免狼和羊单独相处。"
+      },
+      {
+        "q": "四个人过桥用时 1、2、5、10 分钟，每次最多 2 人且必须带手电，最短要几分钟？",
+        "o": [
+          "17",
+          "19",
+          "15",
+          "20"
+        ],
+        "a": "17",
+        "e": "1和2过(2)，1回(1)，5和10过(10)，2回(2)，1和2过(2)，共 17 分钟。"
+      },
+      {
+        "q": "两人过桥（用时 1、2 分钟）加一人 5 分钟，三人全过桥最少几分钟？",
+        "o": [
+          "8",
+          "9",
+          "10",
+          "11"
+        ],
+        "a": "8",
+        "e": "1和2过(2)，1回(1)，1和5过(5)，共 8 分钟。"
+      },
+      {
+        "q": "狼羊菜问题中，哪两样不能单独留在一起？",
+        "o": [
+          "狼和菜",
+          "狼和羊、羊和菜",
+          "狼和羊",
+          "只有羊和菜"
+        ],
+        "a": "狼和羊、羊和菜",
+        "e": "狼会吃羊，羊会吃菜，狼和菜可以单独相处。"
+      },
+      {
+        "q": "手电筒过桥：A用1分、B用2分、C用5分，A和C一起过桥要几分钟？",
+        "o": [
+          "5",
+          "6",
+          "1",
+          "4"
+        ],
+        "a": "5",
+        "e": "两人一起过用较慢者的时间，即 5 分钟。"
+      },
+      {
+        "q": "过河时船只能载 2 人，4 个人都要过河，至少要渡几次（单程算一次）？",
+        "o": [
+          "5",
+          "4",
+          "6",
+          "7"
+        ],
+        "a": "5",
+        "e": "去2回1去2回1去2，共 5 次单程。"
+      },
+      {
+        "q": "农夫带鸡和狐狸过河，狐狸会吃鸡。人不在时必须把什么带走？",
+        "o": [
+          "鸡",
+          "狐狸",
+          "都带走",
+          "都不带"
+        ],
+        "a": "鸡",
+        "e": "人不在时狐狸会吃鸡，所以离开时要把鸡带走。"
+      },
+      {
+        "q": "三人过桥分别要 1、2、3 分钟，每次最多 2 人且须带手电，最短几分钟？",
+        "o": [
+          "6",
+          "5",
+          "4",
+          "7"
+        ],
+        "a": "6",
+        "e": "1和2先过用 2 分，1 返回用 1 分，1和3再过用 3 分，共 2+1+3=6 分钟。"
+      },
+      {
+        "q": "过河问题主要考察的是什么？",
+        "o": [
+          "谁不能单独相处、谁来回送",
+          "谁走得最快",
+          "船有多大",
+          "水有多深"
+        ],
+        "a": "谁不能单独相处、谁来回送",
+        "e": "过河问题核心是安全约束和往返安排。"
+      }
+    ],
+    "handshake": [
+      {
+        "q": "11 个人两两握手一次，一共握手多少次？",
+        "o": [
+          "110",
+          "55",
+          "60.5",
+          "56"
+        ],
+        "a": "55",
+        "e": "每人和其他 10 人握，除以 2：11×10÷2=55。"
+      },
+      {
+        "q": "一条直线上有 10 个点，一共能连出多少条线段？",
+        "o": [
+          "45",
+          "90",
+          "44",
+          "100"
+        ],
+        "a": "45",
+        "e": "每两点确定一条：10×9÷2=45。"
+      },
+      {
+        "q": "9 支球队进行单循环比赛（每两队赛一场），一共多少场？",
+        "o": [
+          "72",
+          "36",
+          "38",
+          "81"
+        ],
+        "a": "36",
+        "e": "单循环场次=9×8÷2=36。"
+      },
+      {
+        "q": "12 个人两两握手一次，一共握手多少次？",
+        "o": [
+          "66",
+          "132",
+          "67",
+          "72"
+        ],
+        "a": "66",
+        "e": "每人和其他 11 人握，除以 2：12×11÷2=66。"
+      },
+      {
+        "q": "一条直线上有 10 个点，一共能连出多少条线段？",
+        "o": [
+          "44",
+          "45",
+          "100",
+          "90"
+        ],
+        "a": "45",
+        "e": "每两点确定一条：10×9÷2=45。"
+      },
+      {
+        "q": "10 支球队进行单循环比赛（每两队赛一场），一共多少场？",
+        "o": [
+          "45",
+          "100",
+          "47",
+          "90"
+        ],
+        "a": "45",
+        "e": "单循环场次=10×9÷2=45。"
+      },
+      {
+        "q": "13 个人两两握手一次，一共握手多少次？",
+        "o": [
+          "78",
+          "84.5",
+          "79",
+          "156"
+        ],
+        "a": "78",
+        "e": "每人和其他 12 人握，除以 2：13×12÷2=78。"
+      },
+      {
+        "q": "一条直线上有 11 个点，一共能连出多少条线段？",
+        "o": [
+          "121",
+          "54",
+          "110",
+          "55"
+        ],
+        "a": "55",
+        "e": "每两点确定一条：11×10÷2=55。"
+      },
+      {
+        "q": "11 支球队进行单循环比赛（每两队赛一场），一共多少场？",
+        "o": [
+          "57",
+          "121",
+          "110",
+          "55"
+        ],
+        "a": "55",
+        "e": "单循环场次=11×10÷2=55。"
+      },
+      {
+        "q": "14 个人两两握手一次，一共握手多少次？",
+        "o": [
+          "98",
+          "91",
+          "182",
+          "92"
+        ],
+        "a": "91",
+        "e": "每人和其他 13 人握，除以 2：14×13÷2=91。"
+      }
+    ]
+  },
+  "mid": {
+    "hecha": [
+      {
+        "q": "两数和是 20，大数是小数的 3 倍，大数是多少？",
+        "o": [
+          "16",
+          "5",
+          "15",
+          "20"
+        ],
+        "a": "15",
+        "e": "小数 = 20÷4=5，大数 = 5×3=15。"
+      },
+      {
+        "q": "两数相差 6，大数是小数的 3 倍，大数是多少？",
+        "o": [
+          "9",
+          "6",
+          "3",
+          "10"
+        ],
+        "a": "9",
+        "e": "小数 = 6÷2=3，大数 = 3×3=9。"
+      },
+      {
+        "q": "两数和是 48，差是 20，较大的数是多少？",
+        "o": [
+          "34",
+          "14",
+          "32",
+          "36"
+        ],
+        "a": "34",
+        "e": "大数 = (和+差)÷2 = (48+20)÷2 = 34。"
+      },
+      {
+        "q": "两数和是 56，大数是小数的 3 倍，大数是多少？",
+        "o": [
+          "56",
+          "14",
+          "42",
+          "43"
+        ],
+        "a": "42",
+        "e": "小数 = 56÷4=14，大数 = 14×3=42。"
+      },
+      {
+        "q": "两数相差 22，大数是小数的 3 倍，大数是多少？",
+        "o": [
+          "33",
+          "11",
+          "22",
+          "34"
+        ],
+        "a": "33",
+        "e": "小数 = 22÷2=11，大数 = 11×3=33。"
+      },
+      {
+        "q": "两数和是 52，差是 16，较大的数是多少？",
+        "o": [
+          "18",
+          "32",
+          "34",
+          "36"
+        ],
+        "a": "34",
+        "e": "大数 = (和+差)÷2 = (52+16)÷2 = 34。"
+      },
+      {
+        "q": "两数和是 44，大数是小数的 3 倍，大数是多少？",
+        "o": [
+          "34",
+          "33",
+          "44",
+          "11"
+        ],
+        "a": "33",
+        "e": "小数 = 44÷4=11，大数 = 11×3=33。"
+      },
+      {
+        "q": "两数相差 16，大数是小数的 3 倍，大数是多少？",
+        "o": [
+          "16",
+          "24",
+          "25",
+          "8"
+        ],
+        "a": "24",
+        "e": "小数 = 16÷2=8，大数 = 8×3=24。"
+      },
+      {
+        "q": "两数和是 57，差是 11，较大的数是多少？",
+        "o": [
+          "36",
+          "34",
+          "32",
+          "23"
+        ],
+        "a": "34",
+        "e": "大数 = (和+差)÷2 = (57+11)÷2 = 34。"
+      },
+      {
+        "q": "两数和是 28，大数是小数的 3 倍，大数是多少？",
+        "o": [
+          "21",
+          "28",
+          "22",
+          "7"
+        ],
+        "a": "21",
+        "e": "小数 = 28÷4=7，大数 = 7×3=21。"
+      }
+    ],
+    "zhishu": [
+      {
+        "q": "一条 35 米长的路，每隔 5 米栽一棵树，两端都栽，共栽几棵？",
+        "o": [
+          "6",
+          "7",
+          "8",
+          "9"
+        ],
+        "a": "8",
+        "e": "间隔数 = 35÷5=7，两端都栽：7+1=8 棵。"
+      },
+      {
+        "q": "一条 30 米长的路，每隔 5 米栽一棵，两端都不栽，共栽几棵？",
+        "o": [
+          "5",
+          "4",
+          "6",
+          "7"
+        ],
+        "a": "5",
+        "e": "间隔数 = 6，两端都不栽：6−1=5 棵。"
+      },
+      {
+        "q": "一个圆形花坛周长 100 米，每隔 5 米栽一棵，共栽几棵？",
+        "o": [
+          "20",
+          "21",
+          "22",
+          "19"
+        ],
+        "a": "20",
+        "e": "封闭图形：棵数 = 间隔数 = 100÷5=20 棵。"
+      },
+      {
+        "q": "一条 95 米长的路，每隔 5 米栽一棵，只栽一端，共栽几棵？",
+        "o": [
+          "21",
+          "20",
+          "19",
+          "18"
+        ],
+        "a": "19",
+        "e": "只栽一端：棵数 = 间隔数 = 19 棵。"
+      },
+      {
+        "q": "一条 85 米长的路，每隔 5 米栽一棵树，两端都栽，共栽几棵？",
+        "o": [
+          "18",
+          "17",
+          "19",
+          "16"
+        ],
+        "a": "18",
+        "e": "间隔数 = 85÷5=17，两端都栽：17+1=18 棵。"
+      },
+      {
+        "q": "一条 80 米长的路，每隔 5 米栽一棵，两端都不栽，共栽几棵？",
+        "o": [
+          "16",
+          "14",
+          "15",
+          "17"
+        ],
+        "a": "15",
+        "e": "间隔数 = 16，两端都不栽：16−1=15 棵。"
+      },
+      {
+        "q": "一个圆形花坛周长 84 米，每隔 6 米栽一棵，共栽几棵？",
+        "o": [
+          "13",
+          "14",
+          "16",
+          "15"
+        ],
+        "a": "14",
+        "e": "封闭图形：棵数 = 间隔数 = 84÷6=14 棵。"
+      },
+      {
+        "q": "一条 78 米长的路，每隔 6 米栽一棵，只栽一端，共栽几棵？",
+        "o": [
+          "15",
+          "13",
+          "12",
+          "14"
+        ],
+        "a": "13",
+        "e": "只栽一端：棵数 = 间隔数 = 13 棵。"
+      },
+      {
+        "q": "一条 66 米长的路，每隔 6 米栽一棵树，两端都栽，共栽几棵？",
+        "o": [
+          "10",
+          "12",
+          "13",
+          "11"
+        ],
+        "a": "12",
+        "e": "间隔数 = 66÷6=11，两端都栽：11+1=12 棵。"
+      },
+      {
+        "q": "一条 60 米长的路，每隔 6 米栽一棵，两端都不栽，共栽几棵？",
+        "o": [
+          "9",
+          "8",
+          "11",
+          "10"
+        ],
+        "a": "9",
+        "e": "间隔数 = 10，两端都不栽：10−1=9 棵。"
+      }
+    ],
+    "jitu": [
+      {
+        "q": "鸡兔同笼，共 15 个头，36 只脚。鸡有几只？",
+        "o": [
+          "14",
+          "3",
+          "12",
+          "11"
+        ],
+        "a": "12",
+        "e": "假设全是兔：15×4=60 脚，少了 24 脚，每只鸡少 2 脚，所以鸡 = 24÷2=12 只。"
+      },
+      {
+        "q": "鸡兔同笼，共 15 个头，34 只脚。兔有几只？",
+        "o": [
+          "2",
+          "1",
+          "13",
+          "4"
+        ],
+        "a": "2",
+        "e": "假设全是鸡：15×2=30 脚，多出 4 脚，每只兔多 2 脚，所以兔 = 4÷2=2 只。"
+      },
+      {
+        "q": "鸡兔同笼，共 16 个头，48 只脚。鸡有几只？",
+        "o": [
+          "8",
+          "10",
+          "9",
+          "7"
+        ],
+        "a": "8",
+        "e": "假设全是兔：16×4=64 脚，少了 16 脚，每只鸡少 2 脚，所以鸡 = 16÷2=8 只。"
+      },
+      {
+        "q": "鸡兔同笼，共 16 个头，48 只脚。兔有几只？",
+        "o": [
+          "9",
+          "10",
+          "8",
+          "7"
+        ],
+        "a": "8",
+        "e": "假设全是鸡：16×2=32 脚，多出 16 脚，每只兔多 2 脚，所以兔 = 16÷2=8 只。"
+      },
+      {
+        "q": "鸡兔同笼，共 17 个头，48 只脚。鸡有几只？",
+        "o": [
+          "10",
+          "7",
+          "9",
+          "12"
+        ],
+        "a": "10",
+        "e": "假设全是兔：17×4=68 脚，少了 20 脚，每只鸡少 2 脚，所以鸡 = 20÷2=10 只。"
+      },
+      {
+        "q": "鸡兔同笼，共 17 个头，48 只脚。兔有几只？",
+        "o": [
+          "10",
+          "6",
+          "7",
+          "9"
+        ],
+        "a": "7",
+        "e": "假设全是鸡：17×2=34 脚，多出 14 脚，每只兔多 2 脚，所以兔 = 14÷2=7 只。"
+      },
+      {
+        "q": "鸡兔同笼，共 18 个头，48 只脚。鸡有几只？",
+        "o": [
+          "14",
+          "12",
+          "11",
+          "6"
+        ],
+        "a": "12",
+        "e": "假设全是兔：18×4=72 脚，少了 24 脚，每只鸡少 2 脚，所以鸡 = 24÷2=12 只。"
+      },
+      {
+        "q": "鸡兔同笼，共 18 个头，48 只脚。兔有几只？",
+        "o": [
+          "5",
+          "6",
+          "8",
+          "12"
+        ],
+        "a": "6",
+        "e": "假设全是鸡：18×2=36 脚，多出 12 脚，每只兔多 2 脚，所以兔 = 12÷2=6 只。"
+      },
+      {
+        "q": "鸡兔同笼，共 19 个头，48 只脚。鸡有几只？",
+        "o": [
+          "16",
+          "14",
+          "13",
+          "5"
+        ],
+        "a": "14",
+        "e": "假设全是兔：19×4=76 脚，少了 28 脚，每只鸡少 2 脚，所以鸡 = 28÷2=14 只。"
+      },
+      {
+        "q": "鸡兔同笼，共 19 个头，46 只脚。兔有几只？",
+        "o": [
+          "4",
+          "3",
+          "6",
+          "15"
+        ],
+        "a": "4",
+        "e": "假设全是鸡：19×2=38 脚，多出 8 脚，每只兔多 2 脚，所以兔 = 8÷2=4 只。"
+      }
+    ],
+    "zhouqi": [
+      {
+        "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 27 盏是什么颜色？",
+        "o": [
+          "蓝",
+          "黄",
+          "红",
+          "紫"
+        ],
+        "a": "蓝",
+        "e": "27÷3 余 0（余 0 看作第 3 个），对应蓝色。"
+      },
+      {
+        "q": "今天是星期二，再过 13 天是星期几？",
+        "o": [
+          "一",
+          "四",
+          "二",
+          "三"
+        ],
+        "a": "一",
+        "e": "13÷7 余 6，从星期二往后数 6 天是星期一。"
+      },
+      {
+        "q": "一串珠子每 5 颗穿一组，80 颗珠子可以穿几组？",
+        "o": [
+          "16",
+          "17",
+          "5",
+          "15"
+        ],
+        "a": "16",
+        "e": "80÷5=16 组（取整）。"
+      },
+      {
+        "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 57 盏是什么颜色？",
+        "o": [
+          "紫",
+          "黄",
+          "红",
+          "蓝"
+        ],
+        "a": "蓝",
+        "e": "57÷3 余 0（余 0 看作第 3 个），对应蓝色。"
+      },
+      {
+        "q": "今天是星期三，再过 43 天是星期几？",
+        "o": [
+          "四",
+          "一",
+          "三",
+          "二"
+        ],
+        "a": "四",
+        "e": "43÷7 余 1，从星期三往后数 1 天是星期四。"
+      },
+      {
+        "q": "一串珠子每 5 颗穿一组，66 颗珠子可以穿几组？",
+        "o": [
+          "14",
+          "5",
+          "13",
+          "12"
+        ],
+        "a": "13",
+        "e": "66÷5=13 组（取整）。"
+      },
+      {
+        "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 45 盏是什么颜色？",
+        "o": [
+          "蓝",
+          "红",
+          "紫",
+          "黄"
+        ],
+        "a": "蓝",
+        "e": "45÷3 余 0（余 0 看作第 3 个），对应蓝色。"
+      },
+      {
+        "q": "今天是星期三，再过 31 天是星期几？",
+        "o": [
+          "三",
+          "六",
+          "二",
+          "一"
+        ],
+        "a": "六",
+        "e": "31÷7 余 3，从星期三往后数 3 天是星期六。"
+      },
+      {
+        "q": "一串珠子每 5 颗穿一组，52 颗珠子可以穿几组？",
+        "o": [
+          "9",
+          "10",
+          "5",
+          "11"
+        ],
+        "a": "10",
+        "e": "52÷5=10 组（取整）。"
+      },
+      {
+        "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 34 盏是什么颜色？",
+        "o": [
+          "红",
+          "紫",
+          "蓝",
+          "黄"
+        ],
+        "a": "红",
+        "e": "34÷3 余 1（余 0 看作第 3 个），对应红色。"
+      }
+    ],
+    "huanyuan": [
+      {
+        "q": "一个数加上 5，再乘 5，结果是 45。这个数是多少？",
+        "o": [
+          "9",
+          "6",
+          "5",
+          "4"
+        ],
+        "a": "4",
+        "e": "倒推：45÷5=9，再减 5 得 4。"
+      },
+      {
+        "q": "一个数加上 4，再乘 5，结果是 45。这个数是多少？",
+        "o": [
+          "5",
+          "9",
+          "7",
+          "6"
+        ],
+        "a": "5",
+        "e": "倒推：45÷5=9，再减 4 得 5。"
+      },
+      {
+        "q": "一个数加上 15，再乘 5，结果是 100。这个数是多少？",
+        "o": [
+          "6",
+          "5",
+          "20",
+          "7"
+        ],
+        "a": "5",
+        "e": "倒推：100÷5=20，再减 15 得 5。"
+      },
+      {
+        "q": "一个数加上 14，再乘 5，结果是 95。这个数是多少？",
+        "o": [
+          "5",
+          "7",
+          "19",
+          "6"
+        ],
+        "a": "5",
+        "e": "倒推：95÷5=19，再减 14 得 5。"
+      },
+      {
+        "q": "一个数加上 13，再乘 4，结果是 72。这个数是多少？",
+        "o": [
+          "6",
+          "5",
+          "7",
+          "18"
+        ],
+        "a": "5",
+        "e": "倒推：72÷4=18，再减 13 得 5。"
+      },
+      {
+        "q": "一个数加上 12，再乘 4，结果是 72。这个数是多少？",
+        "o": [
+          "18",
+          "7",
+          "8",
+          "6"
+        ],
+        "a": "6",
+        "e": "倒推：72÷4=18，再减 12 得 6。"
+      },
+      {
+        "q": "一个数加上 11，再乘 4，结果是 68。这个数是多少？",
+        "o": [
+          "8",
+          "7",
+          "6",
+          "17"
+        ],
+        "a": "6",
+        "e": "倒推：68÷4=17，再减 11 得 6。"
+      },
+      {
+        "q": "一个数加上 9，再乘 4，结果是 60。这个数是多少？",
+        "o": [
+          "7",
+          "15",
+          "6",
+          "8"
+        ],
+        "a": "6",
+        "e": "倒推：60÷4=15，再减 9 得 6。"
+      },
+      {
+        "q": "一个数加上 8，再乘 3，结果是 42。这个数是多少？",
+        "o": [
+          "6",
+          "14",
+          "8",
+          "7"
+        ],
+        "a": "6",
+        "e": "倒推：42÷3=14，再减 8 得 6。"
+      },
+      {
+        "q": "一个数加上 7，再乘 3，结果是 39。这个数是多少？",
+        "o": [
+          "13",
+          "6",
+          "7",
+          "8"
+        ],
+        "a": "6",
+        "e": "倒推：39÷3=13，再减 7 得 6。"
+      }
+    ],
+    "yingkui": [
+      {
+        "q": "分苹果：每人 3 个多 9 个，每人 7 个少 5 个。一共有几人？",
+        "o": [
+          "4",
+          "3",
+          "14",
+          "5"
+        ],
+        "a": "4",
+        "e": "人数=(盈+亏)÷两次差=(9+5)÷4=4 人。"
+      },
+      {
+        "q": "分糖：每人 3 颗多 20 颗，每人 6 颗多 -7 颗。共有几人？",
+        "o": [
+          "27",
+          "9",
+          "8",
+          "10"
+        ],
+        "a": "9",
+        "e": "双盈用减：(20−-7)÷3=9 人。"
+      },
+      {
+        "q": "分书：每人 3 本少 7 本，每人 5 本少 10 本。共有几人？",
+        "o": [
+          "3",
+          "4",
+          "2",
+          "1"
+        ],
+        "a": "2",
+        "e": "双亏用减：(10−7)÷2=2 人。"
+      },
+      {
+        "q": "分苹果：每人 4 个多 8 个，每人 7 个少 7 个。一共有几人？",
+        "o": [
+          "5",
+          "6",
+          "15",
+          "4"
+        ],
+        "a": "5",
+        "e": "人数=(盈+亏)÷两次差=(8+7)÷3=5 人。"
+      },
+      {
+        "q": "分糖：每人 4 颗多 13 颗，每人 6 颗多 -3 颗。共有几人？",
+        "o": [
+          "7",
+          "9",
+          "8",
+          "16"
+        ],
+        "a": "8",
+        "e": "双盈用减：(13−-3)÷2=8 人。"
+      },
+      {
+        "q": "分书：每人 4 本少 6 本，每人 6 本少 11 本。共有几人？",
+        "o": [
+          "3",
+          "4",
+          "2",
+          "5"
+        ],
+        "a": "3",
+        "e": "双亏用减：(11−6)÷2=3 人。"
+      },
+      {
+        "q": "分苹果：每人 4 个多 7 个，每人 6 个少 10 个。一共有几人？",
+        "o": [
+          "10",
+          "8",
+          "17",
+          "9"
+        ],
+        "a": "9",
+        "e": "人数=(盈+亏)÷两次差=(7+10)÷2=9 人。"
+      },
+      {
+        "q": "分糖：每人 4 颗多 15 颗，每人 5 颗多 8 颗。共有几人？",
+        "o": [
+          "8",
+          "9",
+          "6",
+          "7"
+        ],
+        "a": "7",
+        "e": "双盈用减：(15−8)÷1=7 人。"
+      },
+      {
+        "q": "分书：每人 4 本少 5 本，每人 5 本少 12 本。共有几人？",
+        "o": [
+          "6",
+          "9",
+          "7",
+          "8"
+        ],
+        "a": "7",
+        "e": "双亏用减：(12−5)÷1=7 人。"
+      },
+      {
+        "q": "分苹果：每人 4 个多 5 个，每人 8 个少 2 个。一共有几人？",
+        "o": [
+          "2",
+          "7",
+          "1",
+          "3"
+        ],
+        "a": "2",
+        "e": "人数=(盈+亏)÷两次差=(5+2)÷4=2 人。"
+      }
+    ],
+    "age1": [
+      {
+        "q": "哥哥比弟弟大 26 岁，今年哥哥的年龄是弟弟的 3 倍。弟弟今年几岁？",
+        "o": [
+          "12",
+          "13",
+          "14",
+          "26"
+        ],
+        "a": "13",
+        "e": "弟弟=差÷(倍数−1)=26÷2=13 岁。"
+      },
+      {
+        "q": "弟弟今年 7 岁，哥哥年龄是弟弟的 3 倍。几年后哥哥年龄是弟弟的 2 倍？",
+        "o": [
+          "8",
+          "7",
+          "6",
+          "9"
+        ],
+        "a": "7",
+        "e": "年龄差不变=14 岁；2 倍时弟弟=14÷1=14 岁，距现在 14−7=7 年。"
+      },
+      {
+        "q": "两人年龄差 18 岁，大的年龄是小的 3 倍。大的几岁？",
+        "o": [
+          "28",
+          "9",
+          "27",
+          "18"
+        ],
+        "a": "27",
+        "e": "小的=18÷2=9，大的=9×3=27。"
+      },
+      {
+        "q": "哥哥比弟弟大 30 岁，今年哥哥的年龄是弟弟的 4 倍。弟弟今年几岁？",
+        "o": [
+          "10",
+          "11",
+          "30",
+          "9"
+        ],
+        "a": "10",
+        "e": "弟弟=差÷(倍数−1)=30÷3=10 岁。"
+      },
+      {
+        "q": "弟弟今年 10 岁，哥哥年龄是弟弟的 4 倍。几年后哥哥年龄是弟弟的 3 倍？",
+        "o": [
+          "7",
+          "6",
+          "5",
+          "4"
+        ],
+        "a": "5",
+        "e": "年龄差不变=30 岁；3 倍时弟弟=30÷2=15 岁，距现在 15−10=5 年。"
+      },
+      {
+        "q": "两人年龄差 19 岁，大的年龄是小的 3 倍。大的几岁？",
+        "o": [
+          "28.5",
+          "19",
+          "9.5",
+          "29.5"
+        ],
+        "a": "28.5",
+        "e": "小的=19÷2=9.5，大的=9.5×3=28.5。"
+      },
+      {
+        "q": "哥哥比弟弟大 18 岁，今年哥哥的年龄是弟弟的 4 倍。弟弟今年几岁？",
+        "o": [
+          "7",
+          "6",
+          "18",
+          "5"
+        ],
+        "a": "6",
+        "e": "弟弟=差÷(倍数−1)=18÷3=6 岁。"
+      },
+      {
+        "q": "弟弟今年 6 岁，哥哥年龄是弟弟的 4 倍。几年后哥哥年龄是弟弟的 3 倍？",
+        "o": [
+          "5",
+          "3",
+          "4",
+          "2"
+        ],
+        "a": "3",
+        "e": "年龄差不变=18 岁；3 倍时弟弟=18÷2=9 岁，距现在 9−6=3 年。"
+      },
+      {
+        "q": "两人年龄差 21 岁，大的年龄是小的 2 倍。大的几岁？",
+        "o": [
+          "21",
+          "42",
+          "44",
+          "43"
+        ],
+        "a": "42",
+        "e": "小的=21÷1=21，大的=21×2=42。"
+      },
+      {
+        "q": "哥哥比弟弟大 45 岁，今年哥哥的年龄是弟弟的 4 倍。弟弟今年几岁？",
+        "o": [
+          "45",
+          "14",
+          "15",
+          "16"
+        ],
+        "a": "15",
+        "e": "弟弟=差÷(倍数−1)=45÷3=15 岁。"
+      }
+    ],
+    "average": [
+      {
+        "q": "5 个数的平均数是 36，加入 72 后，平均数是多少？",
+        "o": [
+          "41",
+          "42",
+          "36",
+          "43"
+        ],
+        "a": "42",
+        "e": "原和 5×36=180，加 72 后÷6=42。"
+      },
+      {
+        "q": "7 个数的平均数是 50，去掉一个数后平均数变成 56。去掉的数是多少？",
+        "o": [
+          "50",
+          "14",
+          "13",
+          "15"
+        ],
+        "a": "14",
+        "e": "去掉的数=50×7−56×6=14。"
+      },
+      {
+        "q": "三次数学测验得分 79、86、92，平均分约是多少？",
+        "o": [
+          "85",
+          "86",
+          "88",
+          "87"
+        ],
+        "a": "86",
+        "e": "(79+86+92)÷3≈86。"
+      },
+      {
+        "q": "6 个数的平均数是 27，加入 62 后，平均数是多少？",
+        "o": [
+          "32",
+          "33",
+          "27",
+          "31"
+        ],
+        "a": "32",
+        "e": "原和 6×27=162，加 62 后÷7=32。"
+      },
+      {
+        "q": "7 个数的平均数是 39，去掉一个数后平均数变成 40。去掉的数是多少？",
+        "o": [
+          "32",
+          "34",
+          "33",
+          "39"
+        ],
+        "a": "33",
+        "e": "去掉的数=39×7−40×6=33。"
+      },
+      {
+        "q": "三次数学测验得分 82、75、86，平均分约是多少？",
+        "o": [
+          "81",
+          "82",
+          "83",
+          "80"
+        ],
+        "a": "81",
+        "e": "(82+75+86)÷3≈81。"
+      },
+      {
+        "q": "6 个数的平均数是 18，加入 46 后，平均数是多少？",
+        "o": [
+          "23",
+          "21",
+          "22",
+          "18"
+        ],
+        "a": "22",
+        "e": "原和 6×18=108，加 46 后÷7=22。"
+      },
+      {
+        "q": "8 个数的平均数是 27，去掉一个数后平均数变成 30。去掉的数是多少？",
+        "o": [
+          "7",
+          "27",
+          "5",
+          "6"
+        ],
+        "a": "6",
+        "e": "去掉的数=27×8−30×7=6。"
+      },
+      {
+        "q": "三次数学测验得分 85、63、80，平均分约是多少？",
+        "o": [
+          "77",
+          "75",
+          "76",
+          "78"
+        ],
+        "a": "76",
+        "e": "(85+63+80)÷3≈76。"
+      },
+      {
+        "q": "6 个数的平均数是 40，加入 61 后，平均数是多少？",
+        "o": [
+          "40",
+          "42",
+          "44",
+          "43"
+        ],
+        "a": "43",
+        "e": "原和 6×40=240，加 61 后÷7=43。"
+      }
+    ],
+    "phalanx": [
+      {
+        "q": "一个实心方阵每边 11 人，一共有多少人？",
+        "o": [
+          "44",
+          "121",
+          "110",
+          "122"
+        ],
+        "a": "121",
+        "e": "实心方阵=11×11=121 人。"
+      },
+      {
+        "q": "一个方阵每边 11 人，最外层一共有多少人？",
+        "o": [
+          "40",
+          "44",
+          "121",
+          "48"
+        ],
+        "a": "40",
+        "e": "最外层=4×11−4=40 人（四个角重复算了）。"
+      },
+      {
+        "q": "方阵最外层有 44 人，里面相邻一层有多少人？",
+        "o": [
+          "52",
+          "36",
+          "28",
+          "40"
+        ],
+        "a": "36",
+        "e": "相邻两层相差 8 人：44−8=36。"
+      },
+      {
+        "q": "一个实心方阵每边 12 人，一共有多少人？",
+        "o": [
+          "144",
+          "48",
+          "145",
+          "132"
+        ],
+        "a": "144",
+        "e": "实心方阵=12×12=144 人。"
+      },
+      {
+        "q": "一个方阵每边 12 人，最外层一共有多少人？",
+        "o": [
+          "144",
+          "44",
+          "52",
+          "48"
+        ],
+        "a": "44",
+        "e": "最外层=4×12−4=44 人（四个角重复算了）。"
+      },
+      {
+        "q": "方阵最外层有 48 人，里面相邻一层有多少人？",
+        "o": [
+          "40",
+          "44",
+          "32",
+          "56"
+        ],
+        "a": "40",
+        "e": "相邻两层相差 8 人：48−8=40。"
+      },
+      {
+        "q": "一个实心方阵每边 13 人，一共有多少人？",
+        "o": [
+          "169",
+          "156",
+          "170",
+          "52"
+        ],
+        "a": "169",
+        "e": "实心方阵=13×13=169 人。"
+      },
+      {
+        "q": "一个方阵每边 14 人，最外层一共有多少人？",
+        "o": [
+          "60",
+          "196",
+          "56",
+          "52"
+        ],
+        "a": "52",
+        "e": "最外层=4×14−4=52 人（四个角重复算了）。"
+      },
+      {
+        "q": "方阵最外层有 52 人，里面相邻一层有多少人？",
+        "o": [
+          "36",
+          "48",
+          "60",
+          "44"
+        ],
+        "a": "44",
+        "e": "相邻两层相差 8 人：52−8=44。"
+      },
+      {
+        "q": "一个实心方阵每边 14 人，一共有多少人？",
+        "o": [
+          "182",
+          "196",
+          "56",
+          "197"
+        ],
+        "a": "196",
+        "e": "实心方阵=14×14=196 人。"
+      }
+    ],
+    "inclusion": [
+      {
+        "q": "班里喜欢语文的有 19 人，喜欢数学的有 27 人，都喜欢的有 17 人。至少喜欢一科的有几人？",
+        "o": [
+          "12",
+          "29",
+          "30",
+          "46"
+        ],
+        "a": "29",
+        "e": "总数=19+27−17=29 人。"
+      },
+      {
+        "q": "喜欢画画 19 人、唱歌 25 人，都喜欢的 16 人。全班至少喜欢一样的有几人？",
+        "o": [
+          "28",
+          "27",
+          "44",
+          "29"
+        ],
+        "a": "28",
+        "e": "19+25−16=28。"
+      },
+      {
+        "q": "全班 39 人，参加语文组 20 人、数学组 22 人，每人至少参加一组。两组都参加的有几人？",
+        "o": [
+          "4",
+          "-3",
+          "3",
+          "1"
+        ],
+        "a": "3",
+        "e": "重叠=a+b−总数=20+22−39=3。"
+      },
+      {
+        "q": "班里喜欢语文的有 20 人，喜欢数学的有 21 人，都喜欢的有 15 人。至少喜欢一科的有几人？",
+        "o": [
+          "26",
+          "41",
+          "27",
+          "11"
+        ],
+        "a": "26",
+        "e": "总数=20+21−15=26 人。"
+      },
+      {
+        "q": "喜欢画画 21 人、唱歌 19 人，都喜欢的 13 人。全班至少喜欢一样的有几人？",
+        "o": [
+          "40",
+          "28",
+          "26",
+          "27"
+        ],
+        "a": "27",
+        "e": "21+19−13=27。"
+      },
+      {
+        "q": "全班 30 人，参加语文组 15 人、数学组 20 人，每人至少参加一组。两组都参加的有几人？",
+        "o": [
+          "5",
+          "6",
+          "1",
+          "-5"
+        ],
+        "a": "5",
+        "e": "重叠=a+b−总数=15+20−30=5。"
+      },
+      {
+        "q": "班里喜欢语文的有 22 人，喜欢数学的有 15 人，都喜欢的有 9 人。至少喜欢一科的有几人？",
+        "o": [
+          "37",
+          "19",
+          "28",
+          "29"
+        ],
+        "a": "28",
+        "e": "总数=22+15−9=28 人。"
+      },
+      {
+        "q": "喜欢画画 22 人、唱歌 13 人，都喜欢的 8 人。全班至少喜欢一样的有几人？",
+        "o": [
+          "26",
+          "28",
+          "27",
+          "35"
+        ],
+        "a": "27",
+        "e": "22+13−8=27。"
+      },
+      {
+        "q": "全班 22 人，参加语文组 11 人、数学组 18 人，每人至少参加一组。两组都参加的有几人？",
+        "o": [
+          "1",
+          "-7",
+          "7",
+          "8"
+        ],
+        "a": "7",
+        "e": "重叠=a+b−总数=11+18−22=7。"
+      },
+      {
+        "q": "班里喜欢语文的有 23 人，喜欢数学的有 30 人，都喜欢的有 11 人。至少喜欢一科的有几人？",
+        "o": [
+          "43",
+          "31",
+          "53",
+          "42"
+        ],
+        "a": "42",
+        "e": "总数=23+30−11=42 人。"
+      }
+    ],
+    "area": [
+      {
+        "q": "一个长方形长 9 厘米、宽 14 厘米，面积是多少平方厘米？",
+        "o": [
+          "23",
+          "126",
+          "46",
+          "127"
+        ],
+        "a": "126",
+        "e": "长方形面积=长×宽=9×14=126。"
+      },
+      {
+        "q": "一个正方形边长 8 厘米，面积是多少平方厘米？",
+        "o": [
+          "64",
+          "32",
+          "65",
+          "16"
+        ],
+        "a": "64",
+        "e": "正方形面积=边长×边长=8×8=64。"
+      },
+      {
+        "q": "长 10、宽 9 的长方形，剪掉 3 平方厘米的小块，剩下面积是多少？",
+        "o": [
+          "93",
+          "87",
+          "84",
+          "90"
+        ],
+        "a": "87",
+        "e": "10×9−3=87 平方厘米。"
+      },
+      {
+        "q": "一个长方形长 10 厘米、宽 10 厘米，面积是多少平方厘米？",
+        "o": [
+          "100",
+          "40",
+          "101",
+          "20"
+        ],
+        "a": "100",
+        "e": "长方形面积=长×宽=10×10=100。"
+      },
+      {
+        "q": "一个正方形边长 9 厘米，面积是多少平方厘米？",
+        "o": [
+          "82",
+          "81",
+          "18",
+          "36"
+        ],
+        "a": "81",
+        "e": "正方形面积=边长×边长=9×9=81。"
+      },
+      {
+        "q": "长 11、宽 7 的长方形，剪掉 2 平方厘米的小块，剩下面积是多少？",
+        "o": [
+          "75",
+          "77",
+          "73",
+          "79"
+        ],
+        "a": "75",
+        "e": "11×7−2=75 平方厘米。"
+      },
+      {
+        "q": "一个长方形长 10 厘米、宽 7 厘米，面积是多少平方厘米？",
+        "o": [
+          "34",
+          "70",
+          "71",
+          "17"
+        ],
+        "a": "70",
+        "e": "长方形面积=长×宽=10×7=70。"
+      },
+      {
+        "q": "一个正方形边长 9 厘米，面积是多少平方厘米？",
+        "o": [
+          "18",
+          "82",
+          "36",
+          "81"
+        ],
+        "a": "81",
+        "e": "正方形面积=边长×边长=9×9=81。"
+      },
+      {
+        "q": "长 12、宽 4 的长方形，剪掉 2 平方厘米的小块，剩下面积是多少？",
+        "o": [
+          "48",
+          "50",
+          "46",
+          "44"
+        ],
+        "a": "46",
+        "e": "12×4−2=46 平方厘米。"
+      },
+      {
+        "q": "一个长方形长 11 厘米、宽 15 厘米，面积是多少平方厘米？",
+        "o": [
+          "166",
+          "26",
+          "165",
+          "52"
+        ],
+        "a": "165",
+        "e": "长方形面积=长×宽=11×15=165。"
+      }
+    ],
+    "perimeter": [
+      {
+        "q": "正方形边长 7 厘米，周长是多少厘米？",
+        "o": [
+          "49",
+          "28",
+          "14",
+          "29"
+        ],
+        "a": "28",
+        "e": "正方形周长=边长×4=7×4=28。"
+      },
+      {
+        "q": "长方形长 8、宽 8 厘米，周长是多少厘米？",
+        "o": [
+          "64",
+          "32",
+          "24",
+          "34"
+        ],
+        "a": "32",
+        "e": "周长=(长+宽)×2=(8+8)×2=32。"
+      },
+      {
+        "q": "两个边长 7 厘米的正方形拼成一个长方形，周长是多少厘米？",
+        "o": [
+          "56",
+          "42",
+          "44",
+          "28"
+        ],
+        "a": "42",
+        "e": "拼成长 14、宽 7 的长方形，周长=2×(14+7)=42 厘米。"
+      },
+      {
+        "q": "正方形边长 8 厘米，周长是多少厘米？",
+        "o": [
+          "32",
+          "64",
+          "33",
+          "16"
+        ],
+        "a": "32",
+        "e": "正方形周长=边长×4=8×4=32。"
+      },
+      {
+        "q": "长方形长 8、宽 6 厘米，周长是多少厘米？",
+        "o": [
+          "30",
+          "48",
+          "28",
+          "22"
+        ],
+        "a": "28",
+        "e": "周长=(长+宽)×2=(8+6)×2=28。"
+      },
+      {
+        "q": "两个边长 7 厘米的正方形拼成一个长方形，周长是多少厘米？",
+        "o": [
+          "42",
+          "28",
+          "44",
+          "56"
+        ],
+        "a": "42",
+        "e": "拼成长 14、宽 7 的长方形，周长=2×(14+7)=42 厘米。"
+      },
+      {
+        "q": "正方形边长 8 厘米，周长是多少厘米？",
+        "o": [
+          "32",
+          "16",
+          "33",
+          "64"
+        ],
+        "a": "32",
+        "e": "正方形周长=边长×4=8×4=32。"
+      },
+      {
+        "q": "长方形长 9、宽 4 厘米，周长是多少厘米？",
+        "o": [
+          "28",
+          "26",
+          "36",
+          "22"
+        ],
+        "a": "26",
+        "e": "周长=(长+宽)×2=(9+4)×2=26。"
+      },
+      {
+        "q": "两个边长 8 厘米的正方形拼成一个长方形，周长是多少厘米？",
+        "o": [
+          "50",
+          "32",
+          "64",
+          "48"
+        ],
+        "a": "48",
+        "e": "拼成长 16、宽 8 的长方形，周长=2×(16+8)=48 厘米。"
+      },
+      {
+        "q": "正方形边长 9 厘米，周长是多少厘米？",
+        "o": [
+          "18",
+          "36",
+          "81",
+          "37"
+        ],
+        "a": "36",
+        "e": "正方形周长=边长×4=9×4=36。"
+      }
+    ],
+    "cube": [
+      {
+        "q": "用棱长 1 厘米的小方块摆成 3×3×3 的大正方体，共需多少块？",
+        "o": [
+          "9",
+          "27",
+          "28",
+          "29"
+        ],
+        "a": "27",
+        "e": "3×3×3=27 块。"
+      },
+      {
+        "q": "一个长方体底面积 5 平方厘米、高 5 厘米，体积是多少立方厘米？",
+        "o": [
+          "10",
+          "25",
+          "11",
+          "30"
+        ],
+        "a": "25",
+        "e": "体积=底面积×高=5×5=25 立方厘米。"
+      },
+      {
+        "q": "正方体展开图一共有多少种不同的形式？",
+        "o": [
+          "11",
+          "10",
+          "12",
+          "9"
+        ],
+        "a": "11",
+        "e": "正方体展开图共有 11 种，判断时要看哪些面互为对面。"
+      },
+      {
+        "q": "用棱长 1 厘米的小方块摆成 4×4×4 的大正方体，共需多少块？",
+        "o": [
+          "64",
+          "12",
+          "65",
+          "16"
+        ],
+        "a": "64",
+        "e": "4×4×4=64 块。"
+      },
+      {
+        "q": "一个长方体底面积 6 平方厘米、高 4 厘米，体积是多少立方厘米？",
+        "o": [
+          "28",
+          "10",
+          "24",
+          "11"
+        ],
+        "a": "24",
+        "e": "体积=底面积×高=6×4=24 立方厘米。"
+      },
+      {
+        "q": "正方体展开图一共有多少种不同的形式？",
+        "o": [
+          "11",
+          "12",
+          "9",
+          "10"
+        ],
+        "a": "11",
+        "e": "正方体展开图共有 11 种，判断时要看哪些面互为对面。"
+      },
+      {
+        "q": "用棱长 1 厘米的小方块摆成 4×4×4 的大正方体，共需多少块？",
+        "o": [
+          "64",
+          "16",
+          "65",
+          "12"
+        ],
+        "a": "64",
+        "e": "4×4×4=64 块。"
+      },
+      {
+        "q": "一个长方体底面积 6 平方厘米、高 2 厘米，体积是多少立方厘米？",
+        "o": [
+          "14",
+          "12",
+          "8",
+          "9"
+        ],
+        "a": "12",
+        "e": "体积=底面积×高=6×2=12 立方厘米。"
+      },
+      {
+        "q": "正方体展开图一共有多少种不同的形式？",
+        "o": [
+          "12",
+          "9",
+          "11",
+          "10"
+        ],
+        "a": "11",
+        "e": "正方体展开图共有 11 种，判断时要看哪些面互为对面。"
+      },
+      {
+        "q": "用棱长 1 厘米的小方块摆成 4×4×4 的大正方体，共需多少块？",
+        "o": [
+          "16",
+          "64",
+          "12",
+          "65"
+        ],
+        "a": "64",
+        "e": "4×4×4=64 块。"
+      }
+    ],
+    "counting": [
+      {
+        "q": "上衣有 4 件、裤子有 6 条，一套搭配有几种？",
+        "o": [
+          "25",
+          "24",
+          "10",
+          "26"
+        ],
+        "a": "24",
+        "e": "分步用乘：4×6=24 种。"
+      },
+      {
+        "q": "去学校有 4 条公交路线，或 5 条地铁线路可选，共有几种走法？",
+        "o": [
+          "20",
+          "9",
+          "10",
+          "11"
+        ],
+        "a": "9",
+        "e": "分类用加：4+5=9 种。"
+      },
+      {
+        "q": "从甲地到乙地有 3 条路，乙到丙有 4 条，丙到丁有 5 条。甲到丁共几种走法？",
+        "o": [
+          "32",
+          "60",
+          "61",
+          "12"
+        ],
+        "a": "60",
+        "e": "分步相乘：3×4×5=60 种。"
+      },
+      {
+        "q": "上衣有 4 件、裤子有 4 条，一套搭配有几种？",
+        "o": [
+          "16",
+          "8",
+          "18",
+          "17"
+        ],
+        "a": "16",
+        "e": "分步用乘：4×4=16 种。"
+      },
+      {
+        "q": "去学校有 4 条公交路线，或 4 条地铁线路可选，共有几种走法？",
+        "o": [
+          "10",
+          "16",
+          "8",
+          "9"
+        ],
+        "a": "8",
+        "e": "分类用加：4+4=8 种。"
+      },
+      {
+        "q": "从甲地到乙地有 4 条路，乙到丙有 3 条，丙到丁有 4 条。甲到丁共几种走法？",
+        "o": [
+          "48",
+          "11",
+          "49",
+          "24"
+        ],
+        "a": "48",
+        "e": "分步相乘：4×3×4=48 种。"
+      },
+      {
+        "q": "上衣有 4 件、裤子有 3 条，一套搭配有几种？",
+        "o": [
+          "7",
+          "12",
+          "14",
+          "13"
+        ],
+        "a": "12",
+        "e": "分步用乘：4×3=12 种。"
+      },
+      {
+        "q": "去学校有 4 条公交路线，或 2 条地铁线路可选，共有几种走法？",
+        "o": [
+          "9",
+          "6",
+          "8",
+          "7"
+        ],
+        "a": "6",
+        "e": "分类用加：4+2=6 种。"
+      },
+      {
+        "q": "从甲地到乙地有 4 条路，乙到丙有 2 条，丙到丁有 4 条。甲到丁共几种走法？",
+        "o": [
+          "10",
+          "16",
+          "32",
+          "33"
+        ],
+        "a": "32",
+        "e": "分步相乘：4×2×4=32 种。"
+      },
+      {
+        "q": "上衣有 5 件、裤子有 6 条，一套搭配有几种？",
+        "o": [
+          "32",
+          "31",
+          "30",
+          "11"
+        ],
+        "a": "30",
+        "e": "分步用乘：5×6=30 种。"
+      }
+    ],
+    "series": [
+      {
+        "q": "计算 1+2+3+…+16 的和。",
+        "o": [
+          "256",
+          "136",
+          "272",
+          "137"
+        ],
+        "a": "136",
+        "e": "和=16×17÷2=136。"
+      },
+      {
+        "q": "前 7 个连续奇数的和（1+3+5+…）是多少？",
+        "o": [
+          "49",
+          "56",
+          "48",
+          "14"
+        ],
+        "a": "49",
+        "e": "连续奇数和=项数²=7²=49。"
+      },
+      {
+        "q": "等差数列首项 3、公差 5，共 11 项，求和。",
+        "o": [
+          "313",
+          "308",
+          "309",
+          "88"
+        ],
+        "a": "308",
+        "e": "和=n×a+n(n−1)d÷2=308。"
+      },
+      {
+        "q": "计算 1+2+3+…+18 的和。",
+        "o": [
+          "171",
+          "324",
+          "172",
+          "342"
+        ],
+        "a": "171",
+        "e": "和=18×19÷2=171。"
+      },
+      {
+        "q": "前 8 个连续奇数的和（1+3+5+…）是多少？",
+        "o": [
+          "63",
+          "64",
+          "16",
+          "72"
+        ],
+        "a": "64",
+        "e": "连续奇数和=项数²=8²=64。"
+      },
+      {
+        "q": "等差数列首项 3、公差 3，共 10 项，求和。",
+        "o": [
+          "165",
+          "60",
+          "166",
+          "168"
+        ],
+        "a": "165",
+        "e": "和=n×a+n(n−1)d÷2=165。"
+      },
+      {
+        "q": "计算 1+2+3+…+19 的和。",
+        "o": [
+          "190",
+          "380",
+          "191",
+          "361"
+        ],
+        "a": "190",
+        "e": "和=19×20÷2=190。"
+      },
+      {
+        "q": "前 8 个连续奇数的和（1+3+5+…）是多少？",
+        "o": [
+          "16",
+          "63",
+          "72",
+          "64"
+        ],
+        "a": "64",
+        "e": "连续奇数和=项数²=8²=64。"
+      },
+      {
+        "q": "等差数列首项 4、公差 2，共 9 项，求和。",
+        "o": [
+          "54",
+          "110",
+          "108",
+          "109"
+        ],
+        "a": "108",
+        "e": "和=n×a+n(n−1)d÷2=108。"
+      },
+      {
+        "q": "计算 1+2+3+…+21 的和。",
+        "o": [
+          "462",
+          "231",
+          "441",
+          "232"
+        ],
+        "a": "231",
+        "e": "和=21×22÷2=231。"
+      }
+    ],
+    "horizontal": [
+      {
+        "q": "算式中的汉字代表不同数字：苹+果=10，苹−果=2。苹是几？",
+        "o": [
+          "6",
+          "4",
+          "8",
+          "5"
+        ],
+        "a": "6",
+        "e": "苹=(10+2)÷2=6，果=4。"
+      },
+      {
+        "q": "A+B=12，A−B=4，A 是多少？",
+        "o": [
+          "8",
+          "4",
+          "6",
+          "10"
+        ],
+        "a": "8",
+        "e": "A=(12+4)÷2=8。"
+      },
+      {
+        "q": "一个两位数，十位比个位大 3，个位数字是 2，这个数是多少？",
+        "o": [
+          "52",
+          "25",
+          "32",
+          "23"
+        ],
+        "a": "52",
+        "e": "十位=2+3=5，所以是 52。"
+      },
+      {
+        "q": "甲乙两数之和是 30，甲是乙的 2 倍。乙是多少？",
+        "o": [
+          "10",
+          "20",
+          "15",
+          "12"
+        ],
+        "a": "10",
+        "e": "乙=30÷(2+1)=10。"
+      },
+      {
+        "q": "3×□+2=20，□里是几？",
+        "o": [
+          "6",
+          "5",
+          "7",
+          "8"
+        ],
+        "a": "6",
+        "e": "3×□=18，□=6。"
+      },
+      {
+        "q": "一个数的 3 倍减去 5 等于 16，这个数是多少？",
+        "o": [
+          "7",
+          "6",
+          "8",
+          "9"
+        ],
+        "a": "7",
+        "e": "3x=21，x=7。"
+      },
+      {
+        "q": "□÷4=6……2，□是多少？",
+        "o": [
+          "26",
+          "24",
+          "28",
+          "22"
+        ],
+        "a": "26",
+        "e": "被除数=4×6+2=26。"
+      },
+      {
+        "q": "A、B 是不同的数字，AB+BA=99，A+B 是多少？",
+        "o": [
+          "9",
+          "11",
+          "10",
+          "99"
+        ],
+        "a": "9",
+        "e": "11(A+B)=99，A+B=9。"
+      },
+      {
+        "q": "两个数的积是 48，和是 14，较大的数是多少？",
+        "o": [
+          "8",
+          "6",
+          "12",
+          "10"
+        ],
+        "a": "8",
+        "e": "6×8=48，6+8=14，较大的是 8。"
+      },
+      {
+        "q": "用 2、4、6、8 组成的四位数，最大与最小相差多少？",
+        "o": [
+          "6174",
+          "6420",
+          "2468",
+          "5200"
+        ],
+        "a": "6174",
+        "e": "8642−2468=6174。"
+      }
+    ],
+    "schedule": [
+      {
+        "q": "沏茶：洗水壶1分、烧水8分、洗茶杯2分、找茶叶1分、沏茶1分。最少几分钟？",
+        "o": [
+          "11",
+          "13",
+          "9",
+          "10"
+        ],
+        "a": "11",
+        "e": "烧水8分钟里洗茶杯、找茶叶，最后沏茶：1+8+1+1=11 分钟。"
+      },
+      {
+        "q": "烙饼：锅最多放2张饼，每面3分钟。烙3张饼最少几分钟？",
+        "o": [
+          "9",
+          "12",
+          "6",
+          "18"
+        ],
+        "a": "9",
+        "e": "交替烙，共 6 个面、每面3分钟分3轮，共9分钟。"
+      },
+      {
+        "q": "烙饼：锅最多放2张，每面3分钟。烙4张饼最少几分钟？",
+        "o": [
+          "12",
+          "9",
+          "6",
+          "24"
+        ],
+        "a": "12",
+        "e": "两张一组，每组6分钟，两组共12分钟。"
+      },
+      {
+        "q": "三人接水分别要 1、3、5 分钟，只有一个水龙头。怎样排总等待时间最短？",
+        "o": [
+          "1、3、5",
+          "5、3、1",
+          "3、1、5",
+          "都一样"
+        ],
+        "a": "1、3、5",
+        "e": "用时短的先接，等待总和最小。"
+      },
+      {
+        "q": "接到热水需要 5 分钟，这 5 分钟里可以同时做什么以节省时间？",
+        "o": [
+          "洗茶杯",
+          "发呆",
+          "等着",
+          "关火"
+        ],
+        "a": "洗茶杯",
+        "e": "把不依赖热水的活安排进等待时间。"
+      },
+      {
+        "q": "妈妈煎鱼，锅一次煎2条，每面2分钟，煎3条最少几分钟？",
+        "o": [
+          "6",
+          "8",
+          "4",
+          "12"
+        ],
+        "a": "6",
+        "e": "6 个面分 3 轮，每轮2分钟，共6分钟。"
+      },
+      {
+        "q": "合理安排的核心思想是什么？",
+        "o": [
+          "能同时做的事同时做",
+          "先做难的",
+          "一件件慢慢做",
+          "只做一件"
+        ],
+        "a": "能同时做的事同时做",
+        "e": "利用等待时间做别的事，减少总用时。"
+      },
+      {
+        "q": "刷牙3分、烧水10分、冲奶粉2分，最短几分钟能喝上奶？",
+        "o": [
+          "12",
+          "15",
+          "10",
+          "13"
+        ],
+        "a": "12",
+        "e": "烧水时刷牙，水开后冲奶粉：10+2=12 分钟。"
+      },
+      {
+        "q": "排队打水时，让谁先打能使所有人等待时间总和最小？",
+        "o": [
+          "用时最短的",
+          "用时最长的",
+          "随机",
+          "高个子"
+        ],
+        "a": "用时最短的",
+        "e": "短作业优先可最小化总等待时间。"
+      },
+      {
+        "q": "做作业20分、听英语10分（可用耳朵），最少几分钟完成两件事？",
+        "o": [
+          "20",
+          "30",
+          "10",
+          "15"
+        ],
+        "a": "20",
+        "e": "做作业时同时听英语，取较长的20分钟。"
+      }
+    ]
+  },
+  "high": {
+    "xingcheng": [
+      {
+        "q": "甲乙两地相距 435 千米，两车相向而行，速度分别是 50 和 37 千米/时，几小时相遇？",
+        "o": [
+          "4",
+          "8",
+          "6",
+          "5"
+        ],
+        "a": "5",
+        "e": "相遇时间 = 路程÷速度和 = 435÷87=5 小时。"
+      },
+      {
+        "q": "两车相距 72 千米，同向而行，快车 68 千米/时，慢车 32 千米/时，快车几小时追上慢车？",
+        "o": [
+          "2",
+          "4",
+          "1",
+          "3"
+        ],
+        "a": "2",
+        "e": "追及时间 = 路程差÷速度差 = 72÷36=2 小时。"
+      },
+      {
+        "q": "一辆车以 52 千米/时行驶了 5 小时，一共走了多少千米？",
+        "o": [
+          "260",
+          "57",
+          "208",
+          "312"
+        ],
+        "a": "260",
+        "e": "路程 = 速度×时间 = 52×5=260 千米。"
+      },
+      {
+        "q": "甲乙两地相距 600 千米，两车相向而行，速度分别是 53 和 67 千米/时，几小时相遇？",
+        "o": [
+          "5",
+          "11",
+          "4",
+          "6"
+        ],
+        "a": "5",
+        "e": "相遇时间 = 路程÷速度和 = 600÷120=5 小时。"
+      },
+      {
+        "q": "两车相距 57 千米，同向而行，快车 70 千米/时，慢车 51 千米/时，快车几小时追上慢车？",
+        "o": [
+          "4",
+          "3",
+          "2",
+          "5"
+        ],
+        "a": "3",
+        "e": "追及时间 = 路程差÷速度差 = 57÷19=3 小时。"
+      },
+      {
+        "q": "一辆车以 55 千米/时行驶了 4 小时，一共走了多少千米？",
+        "o": [
+          "59",
+          "165",
+          "220",
+          "275"
+        ],
+        "a": "220",
+        "e": "路程 = 速度×时间 = 55×4=220 千米。"
+      },
+      {
+        "q": "甲乙两地相距 440 千米，两车相向而行，速度分别是 55 和 55 千米/时，几小时相遇？",
+        "o": [
+          "8",
+          "5",
+          "4",
+          "3"
+        ],
+        "a": "4",
+        "e": "相遇时间 = 路程÷速度和 = 440÷110=4 小时。"
+      },
+      {
+        "q": "两车相距 58 千米，同向而行，快车 72 千米/时，慢车 43 千米/时，快车几小时追上慢车？",
+        "o": [
+          "3",
+          "4",
+          "2",
+          "1"
+        ],
+        "a": "2",
+        "e": "追及时间 = 路程差÷速度差 = 58÷29=2 小时。"
+      },
+      {
+        "q": "一辆车以 57 千米/时行驶了 3 小时，一共走了多少千米？",
+        "o": [
+          "228",
+          "171",
+          "114",
+          "60"
+        ],
+        "a": "171",
+        "e": "路程 = 速度×时间 = 57×3=171 千米。"
+      },
+      {
+        "q": "甲乙两地相距 306 千米，两车相向而行，速度分别是 58 和 44 千米/时，几小时相遇？",
+        "o": [
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "a": "3",
+        "e": "相遇时间 = 路程÷速度和 = 306÷102=3 小时。"
+      }
+    ],
+    "gongcheng": [
+      {
+        "q": "一项工程，甲单独做要 6 天，乙单独做要 6 天。两人合作要几天完成？",
+        "o": [
+          "6",
+          "4",
+          "3",
+          "5"
+        ],
+        "a": "3",
+        "e": "合作时间 = 1÷(1/6+1/6) = 6×6÷(6+6)=3 天。"
+      },
+      {
+        "q": "一项工程，甲单独做要 6 天，乙单独做要 6 天。两人合作要几天完成？",
+        "o": [
+          "3",
+          "5",
+          "4",
+          "6"
+        ],
+        "a": "3",
+        "e": "合作时间 = 1÷(1/6+1/6) = 6×6÷(6+6)=3 天。"
+      },
+      {
+        "q": "一项工程，甲单独做要 6 天，乙单独做要 12 天。两人合作要几天完成？",
+        "o": [
+          "4",
+          "5",
+          "9",
+          "6"
+        ],
+        "a": "4",
+        "e": "合作时间 = 1÷(1/6+1/12) = 6×12÷(6+12)=4 天。"
+      },
+      {
+        "q": "一项工程，甲单独做要 6 天，乙单独做要 12 天。两人合作要几天完成？",
+        "o": [
+          "9",
+          "5",
+          "4",
+          "6"
+        ],
+        "a": "4",
+        "e": "合作时间 = 1÷(1/6+1/12) = 6×12÷(6+12)=4 天。"
+      },
+      {
+        "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
+        "o": [
+          "3.5",
+          "4.5",
+          "5.5",
+          "7"
+        ],
+        "a": "3.5",
+        "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
+      },
+      {
+        "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
+        "o": [
+          "4.5",
+          "5.5",
+          "3.5",
+          "7"
+        ],
+        "a": "3.5",
+        "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
+      },
+      {
+        "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
+        "o": [
+          "7",
+          "3.5",
+          "5.5",
+          "4.5"
+        ],
+        "a": "3.5",
+        "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
+      },
+      {
+        "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
+        "o": [
+          "5.5",
+          "3.5",
+          "7",
+          "4.5"
+        ],
+        "a": "3.5",
+        "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
+      },
+      {
+        "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
+        "o": [
+          "7",
+          "3.5",
+          "5.5",
+          "4.5"
+        ],
+        "a": "3.5",
+        "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
+      },
+      {
+        "q": "一项工程，甲单独做要 8 天，乙单独做要 8 天。两人合作要几天完成？",
+        "o": [
+          "4",
+          "6",
+          "8",
+          "5"
+        ],
+        "a": "4",
+        "e": "合作时间 = 1÷(1/8+1/8) = 8×8÷(8+8)=4 天。"
+      }
+    ],
+    "chouti": [
+      {
+        "q": "有 6 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
+        "o": [
+          "6",
+          "12",
+          "8",
+          "7"
+        ],
+        "a": "7",
+        "e": "最坏情况每个抽屉 1 个，放 6 个；再多 1 个必有抽屉达 2 个，所以是 6+1=7 个。"
+      },
+      {
+        "q": "一年有 9 个月，至少有多少人，才能保证有 2 人同一个月生日？",
+        "o": [
+          "9",
+          "18",
+          "11",
+          "10"
+        ],
+        "a": "10",
+        "e": "把人看作苹果、月份看作抽屉：9+1=10 人。"
+      },
+      {
+        "q": "袋里有 3 种颜色的球各若干个，至少摸出几个，才能保证有 3 个同色？",
+        "o": [
+          "7",
+          "6",
+          "8",
+          "9"
+        ],
+        "a": "7",
+        "e": "最坏情况每种摸 2 个共 6 个，再摸 1 个必有 3 个同色：7 个。"
+      },
+      {
+        "q": "有 6 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
+        "o": [
+          "8",
+          "7",
+          "6",
+          "12"
+        ],
+        "a": "7",
+        "e": "最坏情况每个抽屉 1 个，放 6 个；再多 1 个必有抽屉达 2 个，所以是 6+1=7 个。"
+      },
+      {
+        "q": "一年有 10 个月，至少有多少人，才能保证有 2 人同一个月生日？",
+        "o": [
+          "11",
+          "12",
+          "10",
+          "20"
+        ],
+        "a": "11",
+        "e": "把人看作苹果、月份看作抽屉：10+1=11 人。"
+      },
+      {
+        "q": "袋里有 4 种颜色的球各若干个，至少摸出几个，才能保证有 3 个同色？",
+        "o": [
+          "12",
+          "9",
+          "8",
+          "10"
+        ],
+        "a": "9",
+        "e": "最坏情况每种摸 2 个共 8 个，再摸 1 个必有 3 个同色：9 个。"
+      },
+      {
+        "q": "有 7 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
+        "o": [
+          "8",
+          "14",
+          "7",
+          "9"
+        ],
+        "a": "8",
+        "e": "最坏情况每个抽屉 1 个，放 7 个；再多 1 个必有抽屉达 2 个，所以是 7+1=8 个。"
+      },
+      {
+        "q": "一年有 11 个月，至少有多少人，才能保证有 2 人同一个月生日？",
+        "o": [
+          "12",
+          "22",
+          "11",
+          "13"
+        ],
+        "a": "12",
+        "e": "把人看作苹果、月份看作抽屉：11+1=12 人。"
+      },
+      {
+        "q": "袋里有 4 种颜色的球各若干个，至少摸出几个，才能保证有 3 个同色？",
+        "o": [
+          "10",
+          "9",
+          "12",
+          "8"
+        ],
+        "a": "9",
+        "e": "最坏情况每种摸 2 个共 8 个，再摸 1 个必有 3 个同色：9 个。"
+      },
+      {
+        "q": "有 8 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
+        "o": [
+          "10",
+          "16",
+          "9",
+          "8"
+        ],
+        "a": "9",
+        "e": "最坏情况每个抽屉 1 个，放 8 个；再多 1 个必有抽屉达 2 个，所以是 8+1=9 个。"
+      }
+    ],
+    "nongdu": [
+      {
+        "q": "把 11 克糖放入 68 克水中，糖水的浓度约是多少？",
+        "o": [
+          "16",
+          "19",
+          "14",
+          "11"
+        ],
+        "a": "14",
+        "e": "浓度 = 糖÷糖水总重 = 11÷79≈14%。"
+      },
+      {
+        "q": "浓度为 11% 的糖水共 164 克，其中糖有多少克？",
+        "o": [
+          "18",
+          "2",
+          "23",
+          "146"
+        ],
+        "a": "18",
+        "e": "糖 = 糖水总重×浓度 = 164×11%=18 克。"
+      },
+      {
+        "q": "16 克糖和 120 克水的糖水，再加入 47 克水后，浓度约变为多少？",
+        "o": [
+          "12",
+          "9",
+          "6",
+          "13"
+        ],
+        "a": "9",
+        "e": "加水后糖仍是 16 克，总重 183 克，浓度 = 16÷183≈9%。（加水变稀）"
+      },
+      {
+        "q": "把 13 克糖放入 141 克水中，糖水的浓度约是多少？",
+        "o": [
+          "5",
+          "13",
+          "8",
+          "9"
+        ],
+        "a": "8",
+        "e": "浓度 = 糖÷糖水总重 = 13÷154≈8%。"
+      },
+      {
+        "q": "浓度为 22% 的糖水共 91 克，其中糖有多少克？",
+        "o": [
+          "20",
+          "25",
+          "1",
+          "71"
+        ],
+        "a": "20",
+        "e": "糖 = 糖水总重×浓度 = 91×22%=20 克。"
+      },
+      {
+        "q": "17 克糖和 103 克水的糖水，再加入 41 克水后，浓度约变为多少？",
+        "o": [
+          "8",
+          "14",
+          "15",
+          "11"
+        ],
+        "a": "11",
+        "e": "加水后糖仍是 17 克，总重 161 克，浓度 = 17÷161≈11%。（加水变稀）"
+      },
+      {
+        "q": "把 15 克糖放入 113 克水中，糖水的浓度约是多少？",
+        "o": [
+          "13",
+          "12",
+          "9",
+          "17"
+        ],
+        "a": "12",
+        "e": "浓度 = 糖÷糖水总重 = 15÷128≈12%。"
+      },
+      {
+        "q": "浓度为 18% 的糖水共 122 克，其中糖有多少克？",
+        "o": [
+          "1",
+          "22",
+          "100",
+          "27"
+        ],
+        "a": "22",
+        "e": "糖 = 糖水总重×浓度 = 122×18%=22 克。"
+      },
+      {
+        "q": "19 克糖和 86 克水的糖水，再加入 35 克水后，浓度约变为多少？",
+        "o": [
+          "14",
+          "11",
+          "15",
+          "18"
+        ],
+        "a": "14",
+        "e": "加水后糖仍是 19 克，总重 140 克，浓度 = 19÷140≈14%。（加水变稀）"
+      },
+      {
+        "q": "把 16 克糖放入 84 克水中，糖水的浓度约是多少？",
+        "o": [
+          "16",
+          "13",
+          "19",
+          "21"
+        ],
+        "a": "16",
+        "e": "浓度 = 糖÷糖水总重 = 16÷100≈16%。"
+      }
+    ],
+    "luoji": [
+      {
+        "q": "甲、乙、丙三人中只有一人做了好事。甲说“是乙做的”，乙说“不是我”，丙说“也不是我”。已知只有一人说真话，是谁做的好事？",
+        "o": [
+          "甲",
+          "乙",
+          "丙",
+          "无法确定"
+        ],
+        "a": "丙",
+        "e": "假设甲做：甲假、乙真、丙真（两真，不符）；假设乙做：甲真、乙假、丙真（两真，不符）；假设丙做：甲假、乙真、丙假（只有一真，符合）。所以是丙做的。"
+      },
+      {
+        "q": "小明、小红、小强分别喜欢语文、数学、英语中的一科。小明不喜欢语文，小红不喜欢数学也不喜欢语文，那么小强喜欢哪一科？",
+        "o": [
+          "语文",
+          "数学",
+          "英语",
+          "无法确定"
+        ],
+        "a": "语文",
+        "e": "小红不喜欢数学也不喜欢语文 → 小红喜欢英语；小明不喜欢语文 → 小明只能喜欢数学；剩下语文归小强。"
+      },
+      {
+        "q": "三张卡片分别写着 1、2、3。小张拿的不是 1，小李拿的不是 2 也不是 1，那么小王拿的是几？",
+        "o": [
+          "1",
+          "2",
+          "3",
+          "无法确定"
+        ],
+        "a": "1",
+        "e": "小李不是 2 也不是 1 → 小李拿 3；小张不是 1 且 3 已被拿 → 小张拿 2；剩下 1 归小王。"
+      },
+      {
+        "q": "红、黄、蓝三种颜色的球各一个，分给小丽、小美、小芳。小丽不要红球，小美不要红球也不要黄球，那么小芳拿到什么球？",
+        "o": [
+          "红球",
+          "黄球",
+          "蓝球",
+          "无法确定"
+        ],
+        "a": "红球",
+        "e": "小美不要红黄 → 小美拿蓝球；小丽不要红且蓝已被拿 → 小丽拿黄球；剩下红球归小芳。"
+      },
+      {
+        "q": "老师把 1、2、3 三个数分给小强、小军、小浩。小强拿的不是最大的，小军拿的是最小的，那么小浩拿到几？",
+        "o": [
+          "1",
+          "2",
+          "3",
+          "无法确定"
+        ],
+        "a": "3",
+        "e": "最小是 1 → 小军拿 1；最大是 3，小强不是最大 → 小强拿 2；剩下 3 归小浩。"
+      },
+      {
+        "q": "小云、小雨、小雪三人年龄各不相同。小云比小雨大，小雨比小雪大。谁年龄最小？",
+        "o": [
+          "小云",
+          "小雨",
+          "小雪",
+          "一样大"
+        ],
+        "a": "小雪",
+        "e": "小云 > 小雨 > 小雪，所以小雪最小。"
+      },
+      {
+        "q": "书架上层、中层、下层分别放着语文、数学、英语书。已知语文不在上层，数学在中层，那么英语在哪一层？",
+        "o": [
+          "上层",
+          "中层",
+          "下层",
+          "无法确定"
+        ],
+        "a": "上层",
+        "e": "数学在中层；语文不在上层 → 语文在下层；剩下英语在上层。"
+      },
+      {
+        "q": "甲、乙、丙站成一排。甲站在乙的左边，丙站在最右边。谁站在中间？",
+        "o": [
+          "甲",
+          "乙",
+          "丙",
+          "无法确定"
+        ],
+        "a": "乙",
+        "e": "丙在最右边；甲在乙左边，所以甲最左、乙居中、丙最右。中间是乙。"
+      },
+      {
+        "q": "小 A 比小 B 高，小 C 比小 A 高，小 B 比小 D 高。他们四人中谁最高？",
+        "o": [
+          "小 A",
+          "小 B",
+          "小 C",
+          "小 D"
+        ],
+        "a": "小 C",
+        "e": "由条件得 小 C > 小 A > 小 B > 小 D，所以最高的是小 C。"
+      },
+      {
+        "q": "甲、乙、丙、丁比身高。甲不是最高也不是最矮，乙比甲矮，丙比甲高，丁比乙矮。谁最高？",
+        "o": [
+          "甲",
+          "乙",
+          "丙",
+          "丁"
+        ],
+        "a": "丙",
+        "e": "由条件得 丙 > 甲 > 乙 > 丁，所以最高的是丙。"
+      }
+    ],
+    "cowgrass": [
+      {
+        "q": "一片草每天新长 5 份，供 37 头牛吃 18 天。这些天共吃掉多少份草？",
+        "o": [
+          "751",
+          "756",
+          "761",
+          "666"
+        ],
+        "a": "756",
+        "e": "共吃=37×18（原有部分）+5×18（新长）=756 份。"
+      },
+      {
+        "q": "原有草 77 份，每天新长 8 份，26 头牛能吃几天？",
+        "o": [
+          "26",
+          "4",
+          "3",
+          "5"
+        ],
+        "a": "4",
+        "e": "每天净吃 18 份，77÷18≈4 天。"
+      },
+      {
+        "q": "每天新长 5 份草，23 头牛吃 13 天刚好吃完。原有草多少份？",
+        "o": [
+          "239",
+          "234",
+          "229",
+          "299"
+        ],
+        "a": "234",
+        "e": "原有草=(牛数−新长)×天数=(23−5)×13=234 份。"
+      },
+      {
+        "q": "一片草每天新长 5 份，供 33 头牛吃 13 天。这些天共吃掉多少份草？",
+        "o": [
+          "494",
+          "429",
+          "499",
+          "489"
+        ],
+        "a": "494",
+        "e": "共吃=33×13（原有部分）+5×13（新长）=494 份。"
+      },
+      {
+        "q": "原有草 82 份，每天新长 6 份，12 头牛能吃几天？",
+        "o": [
+          "13",
+          "15",
+          "14",
+          "12"
+        ],
+        "a": "14",
+        "e": "每天净吃 6 份，82÷6≈14 天。"
+      },
+      {
+        "q": "每天新长 5 份草，17 头牛吃 11 天刚好吃完。原有草多少份？",
+        "o": [
+          "132",
+          "187",
+          "127",
+          "137"
+        ],
+        "a": "132",
+        "e": "原有草=(牛数−新长)×天数=(17−5)×11=132 份。"
+      },
+      {
+        "q": "一片草每天新长 6 份，供 28 头牛吃 9 天。这些天共吃掉多少份草？",
+        "o": [
+          "252",
+          "300",
+          "306",
+          "312"
+        ],
+        "a": "306",
+        "e": "共吃=28×9（原有部分）+6×9（新长）=306 份。"
+      },
+      {
+        "q": "原有草 88 份，每天新长 3 份，13 头牛能吃几天？",
+        "o": [
+          "10",
+          "13",
+          "8",
+          "9"
+        ],
+        "a": "9",
+        "e": "每天净吃 10 份，88÷10≈9 天。"
+      },
+      {
+        "q": "每天新长 6 份草，11 头牛吃 10 天刚好吃完。原有草多少份？",
+        "o": [
+          "110",
+          "56",
+          "50",
+          "44"
+        ],
+        "a": "50",
+        "e": "原有草=(牛数−新长)×天数=(11−6)×10=50 份。"
+      },
+      {
+        "q": "一片草每天新长 6 份，供 24 头牛吃 20 天。这些天共吃掉多少份草？",
+        "o": [
+          "606",
+          "594",
+          "480",
+          "600"
+        ],
+        "a": "600",
+        "e": "共吃=24×20（原有部分）+6×20（新长）=600 份。"
+      }
+    ],
+    "clock": [
+      {
+        "q": "钟面上分针每分钟走 6°，30 分钟走了多少度？",
+        "o": [
+          "30",
+          "180",
+          "90",
+          "186"
+        ],
+        "a": "180",
+        "e": "分针速度 6°/分：30×6=180°。"
+      },
+      {
+        "q": "分针与时针的夹角相差 231°，两针速度差 5.5°/分，经过多少分钟重合？",
+        "o": [
+          "43",
+          "42",
+          "41",
+          "231"
+        ],
+        "a": "42",
+        "e": "追及时间=角度差÷速度差=231÷5.5≈42 分。"
+      },
+      {
+        "q": "镜子里看到的时间是 6 点 39 分，实际时间约是几点几分（11:60 减）？",
+        "o": [
+          "6点21分",
+          "6点39分",
+          "5点21分",
+          "5点22分"
+        ],
+        "a": "5点21分",
+        "e": "镜面时间=11:60−镜中时间，得 5 点 21 分。"
+      },
+      {
+        "q": "钟面上分针每分钟走 6°，33 分钟走了多少度？",
+        "o": [
+          "198",
+          "33",
+          "204",
+          "99"
+        ],
+        "a": "198",
+        "e": "分针速度 6°/分：33×6=198°。"
+      },
+      {
+        "q": "分针与时针的夹角相差 149°，两针速度差 5.5°/分，经过多少分钟重合？",
+        "o": [
+          "149",
+          "28",
+          "27",
+          "26"
+        ],
+        "a": "27",
+        "e": "追及时间=角度差÷速度差=149÷5.5≈27 分。"
+      },
+      {
+        "q": "镜子里看到的时间是 7 点 22 分，实际时间约是几点几分（11:60 减）？",
+        "o": [
+          "4点38分",
+          "4点39分",
+          "7点22分",
+          "5点38分"
+        ],
+        "a": "4点38分",
+        "e": "镜面时间=11:60−镜中时间，得 4 点 38 分。"
+      },
+      {
+        "q": "钟面上分针每分钟走 6°，36 分钟走了多少度？",
+        "o": [
+          "216",
+          "108",
+          "222",
+          "36"
+        ],
+        "a": "216",
+        "e": "分针速度 6°/分：36×6=216°。"
+      },
+      {
+        "q": "分针与时针的夹角相差 72°，两针速度差 5.5°/分，经过多少分钟重合？",
+        "o": [
+          "72",
+          "13",
+          "14",
+          "12"
+        ],
+        "a": "13",
+        "e": "追及时间=角度差÷速度差=72÷5.5≈13 分。"
+      },
+      {
+        "q": "镜子里看到的时间是 7 点 5 分，实际时间约是几点几分（11:60 减）？",
+        "o": [
+          "7点05分",
+          "4点55分",
+          "4点56分",
+          "5点55分"
+        ],
+        "a": "4点55分",
+        "e": "镜面时间=11:60−镜中时间，得 4 点 55 分。"
+      },
+      {
+        "q": "钟面上分针每分钟走 6°，39 分钟走了多少度？",
+        "o": [
+          "117",
+          "234",
+          "39",
+          "240"
+        ],
+        "a": "234",
+        "e": "分针速度 6°/分：39×6=234°。"
+      }
+    ],
+    "train": [
+      {
+        "q": "一列火车长 188 米，通过一座 700 米的大桥，速度 37 米/秒，需要几秒？",
+        "o": [
+          "5.081081081081081",
+          "24",
+          "18.91891891891892",
+          "25"
+        ],
+        "a": "24",
+        "e": "过桥路程=车长+桥长=188+700=888，时间=888÷37=24 秒。"
+      },
+      {
+        "q": "两列火车长 169 米和 212 米，相向而行速度 28 和 28 米/秒，错车需几秒？",
+        "o": [
+          "7.571428571428571",
+          "7",
+          "6.035714285714286",
+          "8"
+        ],
+        "a": "7",
+        "e": "错车路程=两车长之和=381，速度和=56，时间≈7 秒。"
+      },
+      {
+        "q": "火车长 197 米，速度 23 米/秒，通过一根电线杆需几秒？",
+        "o": [
+          "18",
+          "10",
+          "9",
+          "8"
+        ],
+        "a": "9",
+        "e": "过电线杆路程=车长 197，时间=197÷23≈9 秒。"
+      },
+      {
+        "q": "一列火车长 201 米，通过一座 525 米的大桥，速度 33 米/秒，需要几秒？",
+        "o": [
+          "22",
+          "23",
+          "15.909090909090908",
+          "6.090909090909091"
+        ],
+        "a": "22",
+        "e": "过桥路程=车长+桥长=201+525=726，时间=726÷33=22 秒。"
+      },
+      {
+        "q": "两列火车长 179 米和 170 米，相向而行速度 26 和 16 米/秒，错车需几秒？",
+        "o": [
+          "6.884615384615385",
+          "9",
+          "8",
+          "10.625"
+        ],
+        "a": "8",
+        "e": "错车路程=两车长之和=349，速度和=42，时间≈8 秒。"
+      },
+      {
+        "q": "火车长 210 米，速度 17 米/秒，通过一根电线杆需几秒？",
+        "o": [
+          "12",
+          "11",
+          "13",
+          "24"
+        ],
+        "a": "12",
+        "e": "过电线杆路程=车长 210，时间=210÷17≈12 秒。"
+      },
+      {
+        "q": "一列火车长 214 米，通过一座 374 米的大桥，速度 28 米/秒，需要几秒？",
+        "o": [
+          "22",
+          "7.642857142857143",
+          "21",
+          "13.357142857142858"
+        ],
+        "a": "21",
+        "e": "过桥路程=车长+桥长=214+374=588，时间=588÷28=21 秒。"
+      },
+      {
+        "q": "两列火车长 189 米和 127 米，相向而行速度 23 和 20 米/秒，错车需几秒？",
+        "o": [
+          "8",
+          "6.35",
+          "8.217391304347826",
+          "7"
+        ],
+        "a": "7",
+        "e": "错车路程=两车长之和=316，速度和=43，时间≈7 秒。"
+      },
+      {
+        "q": "火车长 223 米，速度 11 米/秒，通过一根电线杆需几秒？",
+        "o": [
+          "21",
+          "20",
+          "19",
+          "40"
+        ],
+        "a": "20",
+        "e": "过电线杆路程=车长 223，时间=223÷11≈20 秒。"
+      },
+      {
+        "q": "一列火车长 228 米，通过一座 804 米的大桥，速度 24 米/秒，需要几秒？",
+        "o": [
+          "33.5",
+          "9.5",
+          "44",
+          "43"
+        ],
+        "a": "43",
+        "e": "过桥路程=车长+桥长=228+804=1032，时间=1032÷24=43 秒。"
+      }
+    ],
+    "boat": [
+      {
+        "q": "船在静水中速度 23 千米/时，水速 7 千米/时，顺水航行 8 小时走多少千米？",
+        "o": [
+          "184",
+          "240",
+          "241",
+          "128"
+        ],
+        "a": "240",
+        "e": "顺水速度=23+7=30，路程=30×8=240。"
+      },
+      {
+        "q": "船静水速度 24 千米/时，水速 7 千米/时，逆水 7 小时走多少千米？",
+        "o": [
+          "119",
+          "168",
+          "217",
+          "120"
+        ],
+        "a": "119",
+        "e": "逆水速度=24−7=17，路程=17×7=119。"
+      },
+      {
+        "q": "顺水速度 35 千米/时，逆水速度 15 千米/时，静水船速是多少？",
+        "o": [
+          "35",
+          "10",
+          "25",
+          "15"
+        ],
+        "a": "25",
+        "e": "静水速度=(顺+逆)÷2=(35+15)÷2=25。"
+      },
+      {
+        "q": "船在静水中速度 25 千米/时，水速 5 千米/时，顺水航行 7 小时走多少千米？",
+        "o": [
+          "210",
+          "140",
+          "211",
+          "175"
+        ],
+        "a": "210",
+        "e": "顺水速度=25+5=30，路程=30×7=210。"
+      },
+      {
+        "q": "船静水速度 26 千米/时，水速 5 千米/时，逆水 6 小时走多少千米？",
+        "o": [
+          "186",
+          "127",
+          "156",
+          "126"
+        ],
+        "a": "126",
+        "e": "逆水速度=26−5=21，路程=21×6=126。"
+      },
+      {
+        "q": "顺水速度 37 千米/时，逆水速度 12 千米/时，静水船速是多少？",
+        "o": [
+          "24.5",
+          "12",
+          "12.5",
+          "37"
+        ],
+        "a": "24.5",
+        "e": "静水速度=(顺+逆)÷2=(37+12)÷2=24.5。"
+      },
+      {
+        "q": "船在静水中速度 27 千米/时，水速 3 千米/时，顺水航行 6 小时走多少千米？",
+        "o": [
+          "144",
+          "162",
+          "180",
+          "181"
+        ],
+        "a": "180",
+        "e": "顺水速度=27+3=30，路程=30×6=180。"
+      },
+      {
+        "q": "船静水速度 28 千米/时，水速 3 千米/时，逆水 5 小时走多少千米？",
+        "o": [
+          "140",
+          "126",
+          "125",
+          "155"
+        ],
+        "a": "125",
+        "e": "逆水速度=28−3=25，路程=25×5=125。"
+      },
+      {
+        "q": "顺水速度 39 千米/时，逆水速度 9 千米/时，静水船速是多少？",
+        "o": [
+          "15",
+          "24",
+          "9",
+          "39"
+        ],
+        "a": "24",
+        "e": "静水速度=(顺+逆)÷2=(39+9)÷2=24。"
+      },
+      {
+        "q": "船在静水中速度 29 千米/时，水速 8 千米/时，顺水航行 5 小时走多少千米？",
+        "o": [
+          "186",
+          "145",
+          "105",
+          "185"
+        ],
+        "a": "185",
+        "e": "顺水速度=29+8=37，路程=37×5=185。"
+      }
+    ],
+    "track": [
+      {
+        "q": "环形跑道长 374 米，两人反向而跑速度 9 和 8 米/秒，几秒后第一次相遇？",
+        "o": [
+          "41.55555555555556",
+          "22",
+          "46.75",
+          "23"
+        ],
+        "a": "22",
+        "e": "反向用速度和：374÷17=22 秒。"
+      },
+      {
+        "q": "环形跑道长 384 米，两人同向而跑速度 11 和 8 米/秒，快者多久第一次追上慢者？",
+        "o": [
+          "128",
+          "34.90909090909091",
+          "129",
+          "20.210526315789473"
+        ],
+        "a": "128",
+        "e": "同向用速度差：384÷3=128 秒。"
+      },
+      {
+        "q": "环形跑道长 394 米，两人反向速度 8 和 7 米/秒，第 2 次相遇需几秒？",
+        "o": [
+          "26.5",
+          "26.266666666666666",
+          "53",
+          "79"
+        ],
+        "a": "53",
+        "e": "第一次 26.266666666666666 秒，第 2 次=26.266666666666666×2≈53 秒。"
+      },
+      {
+        "q": "环形跑道长 406 米，两人反向而跑速度 7 和 7 米/秒，几秒后第一次相遇？",
+        "o": [
+          "29",
+          "30",
+          "31",
+          "58"
+        ],
+        "a": "29",
+        "e": "反向用速度和：406÷14=29 秒。"
+      },
+      {
+        "q": "环形跑道长 412 米，两人同向而跑速度 9 和 7 米/秒，快者多久第一次追上慢者？",
+        "o": [
+          "207",
+          "25.75",
+          "45.77777777777778",
+          "206"
+        ],
+        "a": "206",
+        "e": "同向用速度差：412÷2=206 秒。"
+      },
+      {
+        "q": "环形跑道长 420 米，两人反向速度 6 和 6 米/秒，第 3 次相遇需几秒？",
+        "o": [
+          "105",
+          "35",
+          "140",
+          "106"
+        ],
+        "a": "105",
+        "e": "第一次 35 秒，第 3 次=35×3≈105 秒。"
+      },
+      {
+        "q": "环形跑道长 429 米，两人反向而跑速度 5 和 6 米/秒，几秒后第一次相遇？",
+        "o": [
+          "40",
+          "85.8",
+          "39",
+          "71.5"
+        ],
+        "a": "39",
+        "e": "反向用速度和：429÷11=39 秒。"
+      },
+      {
+        "q": "环形跑道长 438 米，两人同向而跑速度 7 和 6 米/秒，快者多久第一次追上慢者？",
+        "o": [
+          "62.57142857142857",
+          "33.69230769230769",
+          "438",
+          "439"
+        ],
+        "a": "438",
+        "e": "同向用速度差：438÷1=438 秒。"
+      },
+      {
+        "q": "环形跑道长 446 米，两人反向速度 4 和 6 米/秒，第 4 次相遇需几秒？",
+        "o": [
+          "223",
+          "44.6",
+          "178",
+          "44.5"
+        ],
+        "a": "178",
+        "e": "第一次 44.6 秒，第 4 次=44.6×4≈178 秒。"
+      },
+      {
+        "q": "环形跑道长 450 米，两人反向而跑速度 10 和 5 米/秒，几秒后第一次相遇？",
+        "o": [
+          "90",
+          "45",
+          "31",
+          "30"
+        ],
+        "a": "30",
+        "e": "反向用速度和：450÷15=30 秒。"
+      }
+    ],
+    "number": [
+      {
+        "q": "下面哪个数能被 3 整除？",
+        "o": [
+          "1234",
+          "1242",
+          "1235",
+          "1241"
+        ],
+        "a": "1242",
+        "e": "1+2+4+2=9，能被3整除。"
+      },
+      {
+        "q": "下面哪个数能被 9 整除？",
+        "o": [
+          "123",
+          "124",
+          "125",
+          "126"
+        ],
+        "a": "126",
+        "e": "1+2+6=9，能被9整除。"
+      },
+      {
+        "q": "36 和 48 的最大公约数是多少？",
+        "o": [
+          "12",
+          "6",
+          "24",
+          "8"
+        ],
+        "a": "12",
+        "e": "36=2²×3²，48=2⁴×3，最大公约数=2²×3=12。"
+      },
+      {
+        "q": "12 和 18 的最小公倍数是多少？",
+        "o": [
+          "36",
+          "24",
+          "18",
+          "72"
+        ],
+        "a": "36",
+        "e": "12=2²×3，18=2×3²，最小公倍数=2²×3²=36。"
+      },
+      {
+        "q": "两个数的积是 72，最大公约数是 6，最小公倍数是多少？",
+        "o": [
+          "12",
+          "66",
+          "432",
+          "36"
+        ],
+        "a": "12",
+        "e": "两数积=最大公约数×最小公倍数，72=6×最小公倍数，得12。"
+      },
+      {
+        "q": "把 60 分解质因数，正确的是？",
+        "o": [
+          "2²×3×5",
+          "2×3×10",
+          "4×15",
+          "6×10"
+        ],
+        "a": "2²×3×5",
+        "e": "60=2×2×3×5=2²×3×5。"
+      },
+      {
+        "q": "一个数能被 4 整除，只要看它的什么？",
+        "o": [
+          "末两位",
+          "末三位",
+          "数字和",
+          "首位"
+        ],
+        "a": "末两位",
+        "e": "能被4整除看末两位，能被8整除看末三位。"
+      },
+      {
+        "q": "一个数能被 11 整除，看什么？",
+        "o": [
+          "奇偶位数字和的差",
+          "末两位",
+          "数字和",
+          "末位"
+        ],
+        "a": "奇偶位数字和的差",
+        "e": "奇数位和与偶数位和的差能被11整除即可。"
+      },
+      {
+        "q": "8 和 9 的最大公约数是多少？",
+        "o": [
+          "1",
+          "2",
+          "8",
+          "72"
+        ],
+        "a": "1",
+        "e": "互质的两个数最大公约数是1。"
+      },
+      {
+        "q": "能被 2 和 5 同时整除的数，末位一定是？",
+        "o": [
+          "0",
+          "2",
+          "5",
+          "偶数"
+        ],
+        "a": "0",
+        "e": "同时被2和5整除即被10整除，末位为0。"
+      }
+    ],
+    "remainder": [
+      {
+        "q": "一个数除以 5 余 2，除以 3 也余 2，最小是多少？",
+        "o": [
+          "17",
+          "7",
+          "12",
+          "22"
+        ],
+        "a": "17",
+        "e": "余同取余：5和3的最小公倍数15，15+2=17。"
+      },
+      {
+        "q": "除以 4 余 1 的数中，最小的是几？",
+        "o": [
+          "5",
+          "4",
+          "1",
+          "9"
+        ],
+        "a": "5",
+        "e": "4×1+1=5（正整数的商至少1；若允许0则为1，此处取5）。"
+      },
+      {
+        "q": "一串珠子按红黄蓝循环，第 100 颗是什么颜色？（100÷3 余 1）",
+        "o": [
+          "红",
+          "黄",
+          "蓝",
+          "不确定"
+        ],
+        "a": "红",
+        "e": "余1对应周期第一个，红色。"
+      },
+      {
+        "q": "今天是星期三，再过 100 天是星期几？",
+        "o": [
+          "星期五",
+          "星期四",
+          "星期六",
+          "星期三"
+        ],
+        "a": "星期五",
+        "e": "100÷7余2，星期三往后2天是星期五。"
+      },
+      {
+        "q": "一个数除以 7 余 3，除以 7 余 3 的另一个数，它们的和除以 7 余几？",
+        "o": [
+          "6",
+          "3",
+          "0",
+          "2"
+        ],
+        "a": "6",
+        "e": "余数相加：3+3=6。"
+      },
+      {
+        "q": "“余同取余”中的“公倍数”指的是？",
+        "o": [
+          "两个除数的最小公倍数",
+          "两个除数之积",
+          "除数之和",
+          "余数之和"
+        ],
+        "a": "两个除数的最小公倍数",
+        "e": "通解周期是两个除数的最小公倍数。"
+      },
+      {
+        "q": "除以 6 余 4，除以 8 余 6，这个数最小是多少？",
+        "o": [
+          "22",
+          "46",
+          "70",
+          "16"
+        ],
+        "a": "22",
+        "e": "差同减差：6−4=2，8−6=2，6和8最小公倍数24，24−2=22。"
+      },
+      {
+        "q": "彩灯按 4 个一组循环，第 2026 盏是第几个？",
+        "o": [
+          "第1个",
+          "第2个",
+          "第3个",
+          "第4个"
+        ],
+        "a": "第2个",
+        "e": "2026÷4=506余2，对应第2个。"
+      },
+      {
+        "q": "一个数除以 5 余 3，这个数可能是？",
+        "o": [
+          "18",
+          "20",
+          "15",
+          "17"
+        ],
+        "a": "18",
+        "e": "18=5×3+3。"
+      },
+      {
+        "q": "某数除以 3 余 1，除以 4 余 1，除以 5 余 1，最小是多少？",
+        "o": [
+          "61",
+          "60",
+          "13",
+          "121"
+        ],
+        "a": "61",
+        "e": "余同取余：3、4、5最小公倍数60，60+1=61。"
+      }
+    ],
+    "parity": [
+      {
+        "q": "两个奇数相加，结果是？",
+        "o": [
+          "偶数",
+          "奇数",
+          "不确定",
+          "质数"
+        ],
+        "a": "偶数",
+        "e": "奇+奇=偶。"
+      },
+      {
+        "q": "奇数加偶数的结果是？",
+        "o": [
+          "奇数",
+          "偶数",
+          "不确定",
+          "0"
+        ],
+        "a": "奇数",
+        "e": "奇+偶=奇。"
+      },
+      {
+        "q": "连续 10 个自然数中，奇数有几个？",
+        "o": [
+          "5",
+          "10",
+          "4",
+          "6"
+        ],
+        "a": "5",
+        "e": "奇偶交替，各占一半。"
+      },
+      {
+        "q": "一个杯子正放，翻转 7 次后是正放还是倒放？",
+        "o": [
+          "倒放",
+          "正放",
+          "不确定",
+          "侧放"
+        ],
+        "a": "倒放",
+        "e": "奇数次翻转改变状态。"
+      },
+      {
+        "q": "有 7 个杯子全正放，每次翻 2 个，能否全翻成倒放？",
+        "o": [
+          "能",
+          "不能",
+          "翻3次能",
+          "翻7次能"
+        ],
+        "a": "不能",
+        "e": "每次翻2个，倒放数变化为偶数；7是奇数，不可能全倒。"
+      },
+      {
+        "q": "1+2+3+…+100 的和是奇数还是偶数？",
+        "o": [
+          "偶数",
+          "奇数",
+          "不确定",
+          "质数"
+        ],
+        "a": "偶数",
+        "e": "100×101÷2=5050，是偶数。"
+      },
+      {
+        "q": "两个数的和是奇数，它们的积是？",
+        "o": [
+          "偶数",
+          "奇数",
+          "不确定",
+          "0"
+        ],
+        "a": "偶数",
+        "e": "和为奇说明一奇一偶，积必为偶。"
+      },
+      {
+        "q": "任意三个连续整数的和一定是几的倍数？",
+        "o": [
+          "3",
+          "2",
+          "5",
+          "6"
+        ],
+        "a": "3",
+        "e": "设n−1,n,n+1，和为3n，是3的倍数。"
+      },
+      {
+        "q": "一个偶数与一个偶数的差是？",
+        "o": [
+          "偶数",
+          "奇数",
+          "不确定",
+          "质数"
+        ],
+        "a": "偶数",
+        "e": "偶−偶=偶。"
+      },
+      {
+        "q": "翻杯子问题主要用的是什么方法？",
+        "o": [
+          "奇偶性分析",
+          "面积计算",
+          "植树模型",
+          "平均数"
+        ],
+        "a": "奇偶性分析",
+        "e": "看翻转次数的奇偶。"
+      }
+    ],
+    "digit": [
+      {
+        "q": "数 496 除以 9 的余数是多少？",
+        "o": [
+          "2",
+          "1",
+          "3",
+          "9"
+        ],
+        "a": "1",
+        "e": "弃九法：数字和 mod 9 = 原数 mod 9，余 1。"
+      },
+      {
+        "q": "计算 51+77=128，用弃九法验算：结果各位数字之和是多少？",
+        "o": [
+          "12",
+          "11",
+          "10",
+          "9"
+        ],
+        "a": "11",
+        "e": "数字和 11，与原式模9同余，可用于验算。"
+      },
+      {
+        "q": "数 536 各位数字之和是多少？",
+        "o": [
+          "15",
+          "14",
+          "16",
+          "13"
+        ],
+        "a": "14",
+        "e": "各位相加=14，弃九法用它检验计算。"
+      },
+      {
+        "q": "数 555 除以 9 的余数是多少？",
+        "o": [
+          "6",
+          "7",
+          "9",
+          "8"
+        ],
+        "a": "6",
+        "e": "弃九法：数字和 mod 9 = 原数 mod 9，余 6。"
+      },
+      {
+        "q": "计算 57+51=108，用弃九法验算：结果各位数字之和是多少？",
+        "o": [
+          "11",
+          "10",
+          "9",
+          "8"
+        ],
+        "a": "9",
+        "e": "数字和 9，与原式模9同余，可用于验算。"
+      },
+      {
+        "q": "数 595 各位数字之和是多少？",
+        "o": [
+          "19",
+          "18",
+          "21",
+          "20"
+        ],
+        "a": "19",
+        "e": "各位相加=19，弃九法用它检验计算。"
+      },
+      {
+        "q": "数 614 除以 9 的余数是多少？",
+        "o": [
+          "2",
+          "4",
+          "9",
+          "3"
+        ],
+        "a": "2",
+        "e": "弃九法：数字和 mod 9 = 原数 mod 9，余 2。"
+      },
+      {
+        "q": "计算 63+26=89，用弃九法验算：结果各位数字之和是多少？",
+        "o": [
+          "9",
+          "17",
+          "18",
+          "16"
+        ],
+        "a": "17",
+        "e": "数字和 17，与原式模9同余，可用于验算。"
+      },
+      {
+        "q": "数 654 各位数字之和是多少？",
+        "o": [
+          "17",
+          "14",
+          "16",
+          "15"
+        ],
+        "a": "15",
+        "e": "各位相加=15，弃九法用它检验计算。"
+      },
+      {
+        "q": "数 673 除以 9 的余数是多少？",
+        "o": [
+          "0",
+          "7",
+          "8",
+          "9"
+        ],
+        "a": "7",
+        "e": "弃九法：数字和 mod 9 = 原数 mod 9，余 7。"
+      }
+    ],
+    "fraction": [
+      {
+        "q": "计算 1/(1×2)+1/(2×3)+…+1/(10×11)，结果是多少？",
+        "o": [
+          "9/10",
+          "10/11",
+          "11/12",
+          "1/11"
+        ],
+        "a": "10/11",
+        "e": "裂项后只剩 1−1/11=10/11，即 10/11。"
+      },
+      {
+        "q": "1/(1×2)+…+1/(9×10) 等于 1−1/10，这个结果约是多少（保留两位）？",
+        "o": [
+          "0.90",
+          "0.5",
+          "1.00",
+          "0.9"
+        ],
+        "a": "0.90",
+        "e": "1−1/10≈0.90。"
+      },
+      {
+        "q": "1/(2×3)+1/(3×4)+…+1/(7×8) 裂项后剩什么？",
+        "o": [
+          "1−1/8",
+          "1/2−1/8",
+          "1/2",
+          "1/2+1/8"
+        ],
+        "a": "1/2−1/8",
+        "e": "从 1/2 开始裂项，首尾相消剩 1/2−1/8。"
+      },
+      {
+        "q": "计算 1/(1×2)+1/(2×3)+…+1/(11×12)，结果是多少？",
+        "o": [
+          "11/12",
+          "10/11",
+          "1/12",
+          "12/13"
+        ],
+        "a": "11/12",
+        "e": "裂项后只剩 1−1/12=11/12，即 11/12。"
+      },
+      {
+        "q": "1/(1×2)+…+1/(9×10) 等于 1−1/10，这个结果约是多少（保留两位）？",
+        "o": [
+          "1.00",
+          "0.90",
+          "0.9",
+          "0.5"
+        ],
+        "a": "0.90",
+        "e": "1−1/10≈0.90。"
+      },
+      {
+        "q": "1/(2×3)+1/(3×4)+…+1/(8×9) 裂项后剩什么？",
+        "o": [
+          "1/2−1/9",
+          "1/2+1/9",
+          "1/2",
+          "1−1/9"
+        ],
+        "a": "1/2−1/9",
+        "e": "从 1/2 开始裂项，首尾相消剩 1/2−1/9。"
+      },
+      {
+        "q": "计算 1/(1×2)+1/(2×3)+…+1/(12×13)，结果是多少？",
+        "o": [
+          "12/13",
+          "13/14",
+          "1/13",
+          "11/12"
+        ],
+        "a": "12/13",
+        "e": "裂项后只剩 1−1/13=12/13，即 12/13。"
+      },
+      {
+        "q": "1/(1×2)+…+1/(10×11) 等于 1−1/11，这个结果约是多少（保留两位）？",
+        "o": [
+          "0.9",
+          "1.00",
+          "0.5",
+          "0.91"
+        ],
+        "a": "0.91",
+        "e": "1−1/11≈0.91。"
+      },
+      {
+        "q": "1/(2×3)+1/(3×4)+…+1/(8×9) 裂项后剩什么？",
+        "o": [
+          "1/2",
+          "1/2+1/9",
+          "1−1/9",
+          "1/2−1/9"
+        ],
+        "a": "1/2−1/9",
+        "e": "从 1/2 开始裂项，首尾相消剩 1/2−1/9。"
+      },
+      {
+        "q": "计算 1/(1×2)+1/(2×3)+…+1/(14×15)，结果是多少？",
+        "o": [
+          "15/16",
+          "14/15",
+          "13/14",
+          "1/15"
+        ],
+        "a": "14/15",
+        "e": "裂项后只剩 1−1/15=14/15，即 14/15。"
+      }
+    ],
+    "ratio": [
+      {
+        "q": "把 30 按 4:2 分配，第一份是多少？",
+        "o": [
+          "20",
+          "21",
+          "10",
+          "5"
+        ],
+        "a": "20",
+        "e": "每份=30÷6=5，第一份=20。"
+      },
+      {
+        "q": "一种饮料原液与水按 1:4 配制，原液 28 毫升，需要水多少毫升？",
+        "o": [
+          "32",
+          "112",
+          "140",
+          "113"
+        ],
+        "a": "112",
+        "e": "水=原液×4=28×4=112 毫升。"
+      },
+      {
+        "q": "长方形的长是宽的 4 倍，宽 39 厘米，长是多少厘米？",
+        "o": [
+          "157",
+          "43",
+          "156",
+          "158"
+        ],
+        "a": "156",
+        "e": "长=39×4=156 厘米。"
+      },
+      {
+        "q": "把 48 按 3:3 分配，第一份是多少？",
+        "o": [
+          "24",
+          "8",
+          "26",
+          "25"
+        ],
+        "a": "24",
+        "e": "每份=48÷6=8，第一份=24。"
+      },
+      {
+        "q": "一种饮料原液与水按 1:3 配制，原液 31 毫升，需要水多少毫升？",
+        "o": [
+          "94",
+          "34",
+          "93",
+          "124"
+        ],
+        "a": "93",
+        "e": "水=原液×3=31×3=93 毫升。"
+      },
+      {
+        "q": "长方形的长是宽的 3 倍，宽 42 厘米，长是多少厘米？",
+        "o": [
+          "126",
+          "128",
+          "45",
+          "127"
+        ],
+        "a": "126",
+        "e": "长=42×3=126 厘米。"
+      },
+      {
+        "q": "把 21 按 3:4 分配，第一份是多少？",
+        "o": [
+          "9",
+          "10",
+          "12",
+          "3"
+        ],
+        "a": "9",
+        "e": "每份=21÷7=3，第一份=9。"
+      },
+      {
+        "q": "一种饮料原液与水按 1:2 配制，原液 34 毫升，需要水多少毫升？",
+        "o": [
+          "69",
+          "68",
+          "36",
+          "102"
+        ],
+        "a": "68",
+        "e": "水=原液×2=34×2=68 毫升。"
+      },
+      {
+        "q": "长方形的长是宽的 2 倍，宽 45 厘米，长是多少厘米？",
+        "o": [
+          "47",
+          "90",
+          "92",
+          "91"
+        ],
+        "a": "90",
+        "e": "长=45×2=90 厘米。"
+      },
+      {
+        "q": "把 72 按 2:1 分配，第一份是多少？",
+        "o": [
+          "48",
+          "50",
+          "49",
+          "24"
+        ],
+        "a": "48",
+        "e": "每份=72÷3=24，第一份=48。"
+      }
+    ],
+    "mix": [
+      {
+        "q": "浓度 26% 的糖水 46 克与浓度 16% 的糖水 74 克混合，浓度约是多少？",
+        "o": [
+          "20",
+          "16",
+          "42",
+          "26"
+        ],
+        "a": "20",
+        "e": "糖共 24 克，总重 120，浓度≈20%。"
+      },
+      {
+        "q": "24 克糖、127 克水，再加入 71 克水，浓度约变为多少？",
+        "o": [
+          "11",
+          "13",
+          "16",
+          "9"
+        ],
+        "a": "11",
+        "e": "糖不变，总重 222，浓度≈11%（变稀）。"
+      },
+      {
+        "q": "20 克糖、96 克水，再加入 17 克糖，浓度约变为多少？",
+        "o": [
+          "30",
+          "28",
+          "26",
+          "17"
+        ],
+        "a": "28",
+        "e": "糖变为 37，总重 133，浓度≈28%（变浓）。"
+      },
+      {
+        "q": "浓度 19% 的糖水 50 克与浓度 22% 的糖水 65 克混合，浓度约是多少？",
+        "o": [
+          "21",
+          "19",
+          "41",
+          "22"
+        ],
+        "a": "21",
+        "e": "糖共 24 克，总重 115，浓度≈21%。"
+      },
+      {
+        "q": "26 克糖、102 克水，再加入 62 克水，浓度约变为多少？",
+        "o": [
+          "20",
+          "12",
+          "16",
+          "14"
+        ],
+        "a": "14",
+        "e": "糖不变，总重 190，浓度≈14%（变稀）。"
+      },
+      {
+        "q": "21 克糖、76 克水，再加入 15 克糖，浓度约变为多少？",
+        "o": [
+          "32",
+          "22",
+          "30",
+          "34"
+        ],
+        "a": "32",
+        "e": "糖变为 36，总重 112，浓度≈32%（变浓）。"
+      },
+      {
+        "q": "浓度 12% 的糖水 54 克与浓度 29% 的糖水 56 克混合，浓度约是多少？",
+        "o": [
+          "12",
+          "29",
+          "41",
+          "21"
+        ],
+        "a": "21",
+        "e": "糖共 23 克，总重 110，浓度≈21%。"
+      },
+      {
+        "q": "28 克糖、76 克水，再加入 53 克水，浓度约变为多少？",
+        "o": [
+          "20",
+          "16",
+          "18",
+          "27"
+        ],
+        "a": "18",
+        "e": "糖不变，总重 157，浓度≈18%（变稀）。"
+      },
+      {
+        "q": "22 克糖、56 克水，再加入 13 克糖，浓度约变为多少？",
+        "o": [
+          "28",
+          "40",
+          "38",
+          "36"
+        ],
+        "a": "38",
+        "e": "糖变为 35，总重 91，浓度≈38%（变浓）。"
+      },
+      {
+        "q": "浓度 30% 的糖水 58 克与浓度 9% 的糖水 47 克混合，浓度约是多少？",
+        "o": [
+          "21",
+          "39",
+          "9",
+          "30"
+        ],
+        "a": "21",
+        "e": "糖共 22 克，总重 105，浓度≈21%。"
+      }
+    ],
+    "profit": [
+      {
+        "q": "一件商品成本 275 元，按成本加价 44% 出售，利润是多少元？",
+        "o": [
+          "396",
+          "121",
+          "275",
+          "122"
+        ],
+        "a": "121",
+        "e": "利润=成本×利润率=275×44%=121 元。"
+      },
+      {
+        "q": "原价 285 元，打 8 折后售价多少元？",
+        "o": [
+          "57",
+          "228",
+          "229",
+          "285"
+        ],
+        "a": "228",
+        "e": "售价=原价×8÷10=228 元。"
+      },
+      {
+        "q": "一件商品先涨价 23%，再降价 23%，现价比原价？",
+        "o": [
+          "高16元",
+          "一样",
+          "低16元",
+          "无法判断"
+        ],
+        "a": "低16元",
+        "e": "原价 295，现价 279，先涨后降不等于原价，低了 16 元。"
+      },
+      {
+        "q": "一件商品成本 305 元，按成本加价 32% 出售，利润是多少元？",
+        "o": [
+          "97.6",
+          "305",
+          "98.6",
+          "402.6"
+        ],
+        "a": "97.6",
+        "e": "利润=成本×利润率=305×32%=97.6 元。"
+      },
+      {
+        "q": "原价 310 元，打 7 折后售价多少元？",
+        "o": [
+          "310",
+          "93",
+          "217",
+          "218"
+        ],
+        "a": "217",
+        "e": "售价=原价×7÷10=217 元。"
+      },
+      {
+        "q": "一件商品先涨价 17%，再降价 17%，现价比原价？",
+        "o": [
+          "低9元",
+          "无法判断",
+          "一样",
+          "高9元"
+        ],
+        "a": "低9元",
+        "e": "原价 320，现价 311，先涨后降不等于原价，低了 9 元。"
+      },
+      {
+        "q": "一件商品成本 330 元，按成本加价 21% 出售，利润是多少元？",
+        "o": [
+          "330",
+          "69.3",
+          "70.3",
+          "399.3"
+        ],
+        "a": "69.3",
+        "e": "利润=成本×利润率=330×21%=69.3 元。"
+      },
+      {
+        "q": "原价 340 元，打 6 折后售价多少元？",
+        "o": [
+          "340",
+          "204",
+          "136",
+          "205"
+        ],
+        "a": "204",
+        "e": "售价=原价×6÷10=204 元。"
+      },
+      {
+        "q": "一件商品先涨价 11%，再降价 11%，现价比原价？",
+        "o": [
+          "一样",
+          "低4元",
+          "无法判断",
+          "高4元"
+        ],
+        "a": "低4元",
+        "e": "原价 345，现价 341，先涨后降不等于原价，低了 4 元。"
+      },
+      {
+        "q": "一件商品成本 355 元，按成本加价 50% 出售，利润是多少元？",
+        "o": [
+          "178.5",
+          "532.5",
+          "177.5",
+          "355"
+        ],
+        "a": "177.5",
+        "e": "利润=成本×利润率=355×50%=177.5 元。"
+      }
+    ],
+    "solid": [
+      {
+        "q": "长方体长 5、宽 7、高 1 厘米，所有棱长总和是多少厘米？",
+        "o": [
+          "24",
+          "48",
+          "70",
+          "52"
+        ],
+        "a": "48",
+        "e": "棱长总和=4×(长+宽+高)=4×(5+7+1)=48 厘米。"
+      },
+      {
+        "q": "长方体长 4、宽 5、高 6，表面积是多少平方厘米？",
+        "o": [
+          "148",
+          "30",
+          "120",
+          "150"
+        ],
+        "a": "148",
+        "e": "表面积=2(ab+bc+ac)=148 平方厘米。"
+      },
+      {
+        "q": "棱长 5 厘米的正方体铁块浸没水中，排开水的体积是多少立方厘米？",
+        "o": [
+          "15",
+          "125",
+          "124",
+          "25"
+        ],
+        "a": "125",
+        "e": "浸没时排水体积=物体体积=5³=125 立方厘米。"
+      },
+      {
+        "q": "长方体长 5、宽 5、高 1 厘米，所有棱长总和是多少厘米？",
+        "o": [
+          "40",
+          "50",
+          "44",
+          "20"
+        ],
+        "a": "40",
+        "e": "棱长总和=4×(长+宽+高)=4×(5+5+1)=40 厘米。"
+      },
+      {
+        "q": "长方体长 4、宽 4、高 5，表面积是多少平方厘米？",
+        "o": [
+          "80",
+          "114",
+          "26",
+          "112"
+        ],
+        "a": "112",
+        "e": "表面积=2(ab+bc+ac)=112 平方厘米。"
+      },
+      {
+        "q": "棱长 6 厘米的正方体铁块浸没水中，排开水的体积是多少立方厘米？",
+        "o": [
+          "216",
+          "36",
+          "215",
+          "18"
+        ],
+        "a": "216",
+        "e": "浸没时排水体积=物体体积=6³=216 立方厘米。"
+      },
+      {
+        "q": "长方体长 6、宽 3、高 1 厘米，所有棱长总和是多少厘米？",
+        "o": [
+          "18",
+          "36",
+          "37",
+          "40"
+        ],
+        "a": "36",
+        "e": "棱长总和=4×(长+宽+高)=4×(6+3+1)=36 厘米。"
+      },
+      {
+        "q": "长方体长 4、宽 2、高 4，表面积是多少平方厘米？",
+        "o": [
+          "20",
+          "66",
+          "64",
+          "32"
+        ],
+        "a": "64",
+        "e": "表面积=2(ab+bc+ac)=64 平方厘米。"
+      },
+      {
+        "q": "棱长 6 厘米的正方体铁块浸没水中，排开水的体积是多少立方厘米？",
+        "o": [
+          "215",
+          "36",
+          "18",
+          "216"
+        ],
+        "a": "216",
+        "e": "浸没时排水体积=物体体积=6³=216 立方厘米。"
+      },
+      {
+        "q": "长方体长 6、宽 8、高 1 厘米，所有棱长总和是多少厘米？",
+        "o": [
+          "60",
+          "28",
+          "56",
+          "96"
+        ],
+        "a": "56",
+        "e": "棱长总和=4×(长+宽+高)=4×(6+8+1)=56 厘米。"
+      }
+    ],
+    "maxmin": [
+      {
+        "q": "两个数的和是 20，它们的积最大是多少？",
+        "o": [
+          "100",
+          "99",
+          "96",
+          "91"
+        ],
+        "a": "100",
+        "e": "和一定时两数越接近积越大，10×10=100。"
+      },
+      {
+        "q": "两个数的和是 15，积最大时两数分别是？",
+        "o": [
+          "7和8",
+          "6和9",
+          "5和10",
+          "1和14"
+        ],
+        "a": "7和8",
+        "e": "越接近积越大，7×8=56。"
+      },
+      {
+        "q": "周长相等的长方形和正方形，谁的面积大？",
+        "o": [
+          "正方形",
+          "长方形",
+          "一样",
+          "无法比较"
+        ],
+        "a": "正方形",
+        "e": "周长一定时，越接近正方形面积越大。"
+      },
+      {
+        "q": "两个数的差是 6，要使积最小，应该？",
+        "o": [
+          "两数尽量小（含0附近）",
+          "两数尽量大",
+          "相等",
+          "无法确定"
+        ],
+        "a": "两数尽量小（含0附近）",
+        "e": "差一定时积随两数增大而增大，取小的数积更小。"
+      },
+      {
+        "q": "用 24 米篱笆围长方形菜地，最大面积是多少？",
+        "o": [
+          "36平方米",
+          "24平方米",
+          "48平方米",
+          "144平方米"
+        ],
+        "a": "36平方米",
+        "e": "围成正方形边长6米，面积36平方米。"
+      },
+      {
+        "q": "和是 12 的两个正整数，积最大是多少？",
+        "o": [
+          "36",
+          "35",
+          "32",
+          "27"
+        ],
+        "a": "36",
+        "e": "6×6=36。"
+      },
+      {
+        "q": "和一定的两个数，什么时候积最大？",
+        "o": [
+          "两数相等或最接近",
+          "相差最大",
+          "一数为0",
+          "无法判断"
+        ],
+        "a": "两数相等或最接近",
+        "e": "这是和定差小积大的原理。"
+      },
+      {
+        "q": "差是 4 的两个数，积是 45，较大的数是多少？",
+        "o": [
+          "9",
+          "5",
+          "10",
+          "8"
+        ],
+        "a": "9",
+        "e": "5和9差4、积45，较大的是9。"
+      },
+      {
+        "q": "面积一定的长方形，周长最小时形状是？",
+        "o": [
+          "正方形",
+          "细长条",
+          "长方形都可以",
+          "三角形"
+        ],
+        "a": "正方形",
+        "e": "面积一定时，正方形周长最小。"
+      },
+      {
+        "q": "和是 10 的三个正整数，积最大是多少？",
+        "o": [
+          "36",
+          "27",
+          "30",
+          "24"
+        ],
+        "a": "36",
+        "e": "尽量平均 3+3+4，积=36。"
+      }
+    ],
+    "tournament": [
+      {
+        "q": "11 支队伍单循环比赛（每两队赛一场），共多少场？",
+        "o": [
+          "110",
+          "55",
+          "121",
+          "56"
+        ],
+        "a": "55",
+        "e": "场次=11×10÷2=55。"
+      },
+      {
+        "q": "9 支队伍淘汰赛决出冠军（每场淘汰一队），共赛多少场？",
+        "o": [
+          "8",
+          "9",
+          "10",
+          "36"
+        ],
+        "a": "8",
+        "e": "淘汰 8 队需 8 场。"
+      },
+      {
+        "q": "从甲地到乙地 4 条路，乙到丙 5 条路，甲经乙到丙共几种走法（标数法）？",
+        "o": [
+          "21",
+          "9",
+          "20",
+          "22"
+        ],
+        "a": "20",
+        "e": "分步相乘 4×5=20 种。"
+      },
+      {
+        "q": "12 支队伍单循环比赛（每两队赛一场），共多少场？",
+        "o": [
+          "66",
+          "132",
+          "67",
+          "144"
+        ],
+        "a": "66",
+        "e": "场次=12×11÷2=66。"
+      },
+      {
+        "q": "10 支队伍淘汰赛决出冠军（每场淘汰一队），共赛多少场？",
+        "o": [
+          "11",
+          "9",
+          "45",
+          "10"
+        ],
+        "a": "9",
+        "e": "淘汰 9 队需 9 场。"
+      },
+      {
+        "q": "从甲地到乙地 4 条路，乙到丙 3 条路，甲经乙到丙共几种走法（标数法）？",
+        "o": [
+          "12",
+          "14",
+          "7",
+          "13"
+        ],
+        "a": "12",
+        "e": "分步相乘 4×3=12 种。"
+      },
+      {
+        "q": "13 支队伍单循环比赛（每两队赛一场），共多少场？",
+        "o": [
+          "78",
+          "169",
+          "79",
+          "156"
+        ],
+        "a": "78",
+        "e": "场次=13×12÷2=78。"
+      },
+      {
+        "q": "11 支队伍淘汰赛决出冠军（每场淘汰一队），共赛多少场？",
+        "o": [
+          "55",
+          "12",
+          "11",
+          "10"
+        ],
+        "a": "10",
+        "e": "淘汰 10 队需 10 场。"
+      },
+      {
+        "q": "从甲地到乙地 5 条路，乙到丙 2 条路，甲经乙到丙共几种走法（标数法）？",
+        "o": [
+          "7",
+          "10",
+          "12",
+          "11"
+        ],
+        "a": "10",
+        "e": "分步相乘 5×2=10 种。"
+      },
+      {
+        "q": "14 支队伍单循环比赛（每两队赛一场），共多少场？",
+        "o": [
+          "196",
+          "91",
+          "182",
+          "92"
+        ],
+        "a": "91",
+        "e": "场次=14×13÷2=91。"
+      }
+    ],
+    "optimize": [
+      {
+        "q": "统筹优化的核心思想是什么？",
+        "o": [
+          "消除重复劳动、能并行的并行",
+          "只做第一件事",
+          "全部串行",
+          "先做最难的"
+        ],
+        "a": "消除重复劳动、能并行的并行",
+        "e": "通过重排顺序、合并步骤来省时间。"
+      },
+      {
+        "q": "烙 3 张饼（每面 3 分钟、锅放 2 张）最少几分钟？",
+        "o": [
+          "9",
+          "12",
+          "6",
+          "18"
+        ],
+        "a": "9",
+        "e": "交替烙 3 轮，每轮 3 分钟，共 9 分钟。"
+      },
+      {
+        "q": "3 人接水分别 1、2、4 分钟，怎样排总等待时间最短？",
+        "o": [
+          "1、2、4",
+          "4、2、1",
+          "2、1、4",
+          "都一样"
+        ],
+        "a": "1、2、4",
+        "e": "用时短的先接。"
+      },
+      {
+        "q": "烧水 8 分钟的同时可以做哪类事？",
+        "o": [
+          "洗杯子、找茶叶",
+          "一直盯着水",
+          "关掉火",
+          "把水倒掉"
+        ],
+        "a": "洗杯子、找茶叶",
+        "e": "把不依赖烧水的事放到等待时间里。"
+      },
+      {
+        "q": "过桥问题中，让最快的两个人负责送手电，是为了？",
+        "o": [
+          "减少返回用时",
+          "增加次数",
+          "让慢的先过",
+          "没有作用"
+        ],
+        "a": "减少返回用时",
+        "e": "返回用时应尽量短。"
+      },
+      {
+        "q": "货物调运问题要最小化什么？",
+        "o": [
+          "总运输量×距离",
+          "只看距离",
+          "只看数量",
+          "随便运"
+        ],
+        "a": "总运输量×距离",
+        "e": "统筹调运以总周转量最小为目标。"
+      },
+      {
+        "q": "同时做两件事至少要花的时间是？",
+        "o": [
+          "较长的那件",
+          "两件之和",
+          "较短的那件",
+          "两件之差"
+        ],
+        "a": "较长的那件",
+        "e": "并行时取耗时 longest。"
+      },
+      {
+        "q": "排队时“短作业优先”能使什么最小？",
+        "o": [
+          "总等待时间",
+          "单人最长用时",
+          "人数",
+          "队伍长度"
+        ],
+        "a": "总等待时间",
+        "e": "短作业优先最小化平均等待时间。"
+      },
+      {
+        "q": "田忌赛马体现的思想是？",
+        "o": [
+          "合理安排顺序以弱胜强",
+          "比马跑得快",
+          "马越多越好",
+          "不用安排"
+        ],
+        "a": "合理安排顺序以弱胜强",
+        "e": "通过调整出场顺序取得整体优势。"
+      },
+      {
+        "q": "统筹方法与简单罗列步骤的区别在于？",
+        "o": [
+          "会优化顺序和并行",
+          "没有区别",
+          "步骤更多",
+          "更慢"
+        ],
+        "a": "会优化顺序和并行",
+        "e": "统筹强调优化安排，不是简单罗列。"
+      }
+    ]
+  }
 };
 
 var KEY_BEST = 'olympiad.best';
@@ -2221,11 +7494,7 @@ $('replayBtn').addEventListener('click',function(){ speak(state.current.q); });
 window.replayCurrent = function(){ if(state.current) speak(state.current.q); };
 window.XNLY_NEXT = function(){ if(!$('quizView').classList.contains('hide')) manualNext(); };
 </script>
-<script>
-if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
-  navigator.serviceWorker.register('../sw.js').catch(function () { });
-}
-</script>
+<script src="../sw.js"></script>
 <script src="../homebtn.js"></script>
 </body>
 </html>
