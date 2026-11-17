@@ -158,6 +158,8 @@
  * v77 变化：考试听力每题自动播 2 遍、不可重听、不显示题号且不能回退；笔试区答题卡只读，
  *           仅「上一题 / 下一题」；练习模式答对自动跳下一题、答错停留看原文。
  * v78 变化：新增「英语抖音」页 games/english-douyin.html（3 个抖音账号分组练听力，答错给全文）并加入预缓存。
+ * v92 变化：新增「小学奥数思维」页 games/olympiad.html——低/中/高年级分 15 专题，150 题闯关 + 随机无限出题，
+ *           答案全部由公式生成并校验，答对 1.1s 自动下一题、答错看解析；加入预缓存。首页卡片同步新增。
  * v91 变化：题库 puzzles.js 更新为 394 题（新增 2026-11-17 的 D级77/78，expert+evil），页面无需改动。
  * v90 变化：英语抖音 4 条「仅答案」记录按答案+关键词自编成正式题入库（【一】2/3/4集、【三】3集——
  *           踢足球 / 30元 / 农民 / 兔子玩具），题库 72→76，撤掉「仅答案」说明卡；补 4 段离线语音。
@@ -177,7 +179,7 @@
  *           （15 条 mp3，-10% 语速），失败回退系统语音；首页卡片同色。
  *           附「在抖音里看」兜底链接；看原声期间暂停自动跳题，已答题关闭后 1.6s 继续。
  */
-var CACHE = 'xnly-v91';
+var CACHE = 'xnly-v92';
 
 var PRECACHE = [
   './',
@@ -228,6 +230,7 @@ var PRECACHE = [
   'games/near-syn.html',
   'games/number-match.html',
   'games/odd-one.html',
+  'games/olympiad.html',
   'games/english-words.html',
   'games/pairs.html',
   'games/path-connect.html',

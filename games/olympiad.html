@@ -1,0 +1,2231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>小学奥数思维 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--ok:#2fb344;--bad:#ff5c5c;--accent:#00897b;--accent-d:#00695c;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(900px 500px at 0% 0%,#e0f5f1,transparent 60%),
+             radial-gradient(900px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#f7fdfb,#f3f9ff);
+  min-height:100dvh;height:100dvh;display:flex;flex-direction:column;padding:14px;gap:10px;user-select:none;}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+h1{font-size:1.15rem;color:var(--accent-d);}
+.back{margin-left:auto;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  display:inline-flex;align-items:center;min-height:40px;padding:7px 14px;font-weight:800;font-size:.85rem;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.bar .lbl{font-size:.82rem;font-weight:900;color:#6b7b90;}
+.chip{border:2px solid #dfeae7;background:#fff;border-radius:999px;padding:7px 15px;font-family:inherit;
+  font-size:.9rem;font-weight:800;color:var(--ink);cursor:pointer;min-height:42px;transition:.12s;}
+.chip.on{background:var(--accent);color:#fff;border-color:var(--accent);box-shadow:0 4px 12px rgba(0,137,123,.28);}
+.stage{flex:1;display:flex;flex-direction:column;min-height:0;overflow-y:auto;}
+.stage-inner{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:11px;
+  width:100%;margin:auto;padding:4px 0;}
+.topic-tag{font-size:.9rem;font-weight:900;color:var(--accent);letter-spacing:1px;}
+.qcard{width:min(720px,100%);background:#fff;border-radius:20px;padding:16px 20px;
+  box-shadow:0 6px 18px rgba(36,59,83,.12);text-align:center;}
+.qtext{font-size:1.45rem;font-weight:900;line-height:1.5;}
+.qmeta{font-size:.8rem;color:#9aa8ba;font-weight:700;margin-top:8px;}
+.opts{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;width:min(720px,100%);}
+.opt{min-height:62px;border:2px solid #e2e9f2;border-radius:16px;background:#fff;font-weight:900;
+  font-size:1.3rem;color:var(--ink);cursor:pointer;padding:10px;transition:transform .12s;
+  font-family:inherit;box-shadow:0 4px 12px rgba(36,59,83,.08);}
+.opt:active{transform:scale(.97);}
+.opt.correct{background:#eaf8ee;color:var(--ok);border-color:var(--ok);}
+.opt.wrong{background:#fff0f0;color:var(--bad);border-color:var(--bad);}
+.opt:disabled{cursor:default;}
+.feedback{min-height:34px;font-size:1.25rem;font-weight:900;text-align:center;}
+.ok{color:var(--ok);} .bad{color:var(--bad);}
+.explain{width:min(720px,100%);background:#eef8f6;border-radius:14px;padding:12px 16px;
+  font-size:1rem;font-weight:700;line-height:1.55;color:#1c5b52;display:none;}
+.explain.show{display:block;}
+.stats{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+.stat-pill{background:#fff;border-radius:999px;padding:5px 13px;font-size:.82rem;font-weight:800;
+  box-shadow:0 3px 10px rgba(36,59,83,.08);white-space:nowrap;}
+.stat-pill b{color:var(--accent);}
+.btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+.act{border:none;border-radius:14px;padding:10px 20px;font-family:inherit;font-size:.95rem;font-weight:900;
+  cursor:pointer;min-height:46px;box-shadow:0 4px 12px rgba(36,59,83,.12);}
+.act.ghost{background:#fff;color:var(--ink);}
+.act.primary{background:var(--accent);color:#fff;}
+.hide{display:none!important;}
+.topic-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;
+  width:min(760px,100%);margin:auto;}
+.topic-card{background:#fff;border:2px solid #dfeae7;border-radius:16px;padding:16px;text-align:center;
+  cursor:pointer;box-shadow:0 4px 12px rgba(36,59,83,.08);transition:.12s;}
+.topic-card .ic{font-size:1.8rem;display:block;margin-bottom:6px;}
+.topic-card .nm{font-weight:900;font-size:1.05rem;}
+.topic-card .ds{font-size:.78rem;color:#8a97a8;font-weight:700;margin-top:4px;}
+.topic-card:active{transform:scale(.97);}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.12)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-9px)}40%{transform:translateX(9px)}60%{transform:translateX(-6px)}80%{transform:translateX(6px)}}
+.pop{animation:pop .4s ease;} .shake{animation:shake .4s ease;}
+@media (max-height:430px){body{padding:8px;gap:6px;}h1{font-size:1rem;}.qtext{font-size:1.1rem;}
+  .opt{min-height:48px;font-size:1.05rem;}.feedback{min-height:24px;font-size:1rem;}}
+</style>
+</head>
+<body>
+<header>
+  <h1>🧮 小学奥数思维</h1>
+  <a class="back" href="../index.html">🏠 首页</a>
+</header>
+
+<div id="selGrade" class="bar">
+  <span class="lbl">选择年级</span>
+  <button class="chip" data-g="low">低年级 · 1–2 年级</button>
+  <button class="chip" data-g="mid">中年级 · 3–4 年级</button>
+  <button class="chip" data-g="high">高年级 · 5–6 年级</button>
+</div>
+
+<div id="selTopic" class="bar hide">
+  <span class="lbl">选择专题</span>
+  <button class="chip" data-mode="bank">📚 闯关题库</button>
+  <button class="chip" data-mode="random">🎲 随机挑战</button>
+</div>
+
+<div class="stage" id="stage">
+  <div class="stage-inner" id="topicView">
+    <div class="topic-list" id="topicList"></div>
+  </div>
+  <div class="stage-inner hide" id="quizView">
+    <div class="topic-tag" id="topicTag">专题</div>
+    <div class="qcard">
+      <div class="qtext" id="qtext">题目</div>
+      <div class="qmeta" id="qmeta"></div>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div class="feedback" id="feedback"></div>
+    <div class="explain" id="explain"></div>
+    <div class="stats">
+      <span class="stat-pill">✅ 答对 <b id="correct">0</b></span>
+      <span class="stat-pill">❌ 答错 <b id="wrong">0</b></span>
+      <span class="stat-pill">🔥 连对 <b id="streak">0</b></span>
+      <span class="stat-pill">🏆 最佳 <b id="best">0</b></span>
+    </div>
+    <div class="btn-row">
+      <button class="act ghost" id="nextBtn">下一题 →</button>
+      <button class="act ghost" id="backTopics">← 换专题</button>
+      <button class="act primary" id="replayBtn">🔊 听题</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== 生成器 + 元数据（内联） ===== */
+/* 小学奥数思维 · 题目生成器（纯函数，无 DOM 依赖）
+ * 所有数值题的答案由公式计算得出，避免人工编题出错。
+ * gen(grade, topicId, seed) -> {q, o:[选项字符串], a:正确答案字符串, e:解析}
+ */
+var OLY_TOPICS = {
+  low: [
+    { id: 'guilv',    name: '找规律',   icon: '🔢', desc: '看数列，找下一个数' },
+    { id: 'pai dui',  name: '排队问题', icon: '🚶', desc: '前数后数，算总人数' },
+    { id: 'qiaosuan', name: '趣味巧算', icon: '⚡', desc: '凑整、速算小技巧' },
+    { id: 'tuxing',   name: '图形计数', icon: '🔺', desc: '数线段、数图形' },
+    { id: 'jianyi',   name: '简单推理', icon: '🕵️', desc: '比高矮、比大小' }
+  ],
+  mid: [
+    { id: 'hecha',    name: '和差倍',   icon: '⚖️', desc: '和倍、差倍、和差' },
+    { id: 'zhishu',   name: '植树问题', icon: '🌳', desc: '间隔与棵数' },
+    { id: 'jitu',     name: '鸡兔同笼', icon: '🐰', desc: '头与脚的经典题' },
+    { id: 'zhouqi',   name: '周期问题', icon: '🔄', desc: '找第几个是什么' },
+    { id: 'huanyuan', name: '还原倒推', icon: '🔙', desc: '从结果倒着推' }
+  ],
+  high: [
+    { id: 'xingcheng', name: '行程相遇', icon: '🚗', desc: '相遇、追及问题' },
+    { id: 'gongcheng', name: '工程问题', icon: '🏗️', desc: '合作完成要几天' },
+    { id: 'chouti',    name: '抽屉原理', icon: '🗄️', desc: '至少有几个一样' },
+    { id: 'nongdu',    name: '浓度比例', icon: '🧪', desc: '糖水浓度计算' },
+    { id: 'luoji',     name: '逻辑推理', icon: '🧠', desc: '真假话与排除' }
+  ]
+};
+
+var GRADE_NAME = { low: '低年级 · 1–2 年级', mid: '中年级 · 3–4 年级', high: '高年级 · 5–6 年级' };
+
+function rng(seed) {
+  var x = (seed * 2654435761) >>> 0;
+  return function () { x = (x * 1664525 + 1013904223) >>> 0; return x / 4294967296; };
+}
+function pickInt(r, a, b) { return a + Math.floor(r() * (b - a + 1)); }
+function shuffle(r, arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(r() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; }
+  return a;
+}
+function opts(r, ansNum, nums) {
+  var set = [], i;
+  set.push(ansNum);
+  for (i = 0; i < nums.length && set.length < 4; i++) {
+    if (nums[i] !== ansNum && set.indexOf(nums[i]) < 0) set.push(nums[i]);
+  }
+  var extra = 1;
+  while (set.length < 4) { var v = ansNum + extra; if (set.indexOf(v) < 0) set.push(v); extra++; }
+  return shuffle(r, set).map(String);
+}
+function q(o) { return o; }
+
+function genQuestion(grade, topic, seed) {
+  var r = rng(seed + 1);
+  switch (topic) {
+    /* ============ 低年级 ============ */
+    case 'guilv': {
+      var kind = seed % 5, seq = [], ans, why;
+      if (kind === 0) { // 等差
+        var a = pickInt(r, 1, 9), d = pickInt(r, 2, 6);
+        for (var i = 0; i < 5; i++) seq.push(a + i * d);
+        ans = a + 5 * d; why = '每次加 ' + d;
+        return q({ q: '找规律填数：' + seq.join('、') + '、（  ）', o: opts(r, ans, [ans - d, ans + d, ans + 1]), a: String(ans), e: '相邻两数相差 ' + d + '，所以下一个是 ' + seq[4] + '+' + d + '=' + ans + '。' });
+      }
+      if (kind === 1) { // 等比×2
+        var s = pickInt(r, 1, 9);
+        for (var i = 0; i < 5; i++) seq.push(s * Math.pow(2, i));
+        ans = s * 32;
+        return q({ q: '找规律填数：' + seq.join('、') + '、（  ）', o: opts(r, ans, [ans / 2, ans + s, ans * 2]), a: String(ans), e: '每个数是前一个的 2 倍，所以 ' + seq[4] + '×2=' + ans + '。' });
+      }
+      if (kind === 2) { // 平方数
+        var st = pickInt(r, 1, 3);
+        for (var i = st; i < st + 5; i++) seq.push(i * i);
+        ans = (st + 5) * (st + 5);
+        return q({ q: '找规律填数：' + seq.join('、') + '、（  ）', o: opts(r, ans, [ans - (st + 5), ans + (st + 5), ans + 1]), a: String(ans), e: '依次是 ' + st + '²、' + (st + 1) + '²…所以下一个是 ' + (st + 5) + '×' + (st + 5) + '=' + ans + '。' });
+      }
+      if (kind === 3) { // 斐波那契
+        var a1 = pickInt(r, 1, 5), b1 = pickInt(r, 2, 8);
+        seq = [a1, b1];
+        for (var i = 2; i < 6; i++) seq.push(seq[i - 1] + seq[i - 2]);
+        ans = seq[5];
+        return q({ q: '找规律填数：' + [seq[0], seq[1], seq[2], seq[3], seq[4]].join('、') + '、（  ）', o: opts(r, ans, [seq[4] + seq[3], seq[4] + 1, seq[4] * 2]), a: String(ans), e: '每个数等于前两个数的和：' + seq[3] + '+' + seq[4] + '=' + ans + '。' });
+      }
+      // 交替加减
+      var st2 = pickInt(r, 8, 20), d2 = pickInt(r, 2, 5);
+      seq = [st2, st2 + d2, st2, st2 + d2, st2];
+      ans = st2 + d2;
+      return q({ q: '找规律填数：' + seq.join('、') + '、（  ）', o: opts(r, ans, [st2, st2 + d2 + 1, st2 - d2]), a: String(ans), e: '两个数一组交替出现：' + st2 + '、' + (st2 + d2) + ' 重复，所以下一个是 ' + ans + '。' });
+    }
+    case 'pai dui': {
+      var kind = seed % 3;
+      if (kind === 0) {
+        var a = pickInt(r, 3, 9), b = pickInt(r, 3, 9), ans = a + b - 1;
+        return q({ q: '小朋友排队，小红从前数第 ' + a + '，从后数第 ' + b + '，这队一共有几人？', o: opts(r, ans, [a + b, a + b - 2, a + b + 1]), a: String(ans), e: '小红被数了两次，所以 ' + a + '+' + b + '-1=' + ans + ' 人。' });
+      }
+      if (kind === 1) {
+        var a = pickInt(r, 2, 8), b = pickInt(r, 2, 8), ans = a + b + 1;
+        return q({ q: '排队时，小明前面有 ' + a + ' 人，后面有 ' + b + ' 人，一共几人？', o: opts(r, ans, [a + b, a + b + 2, a + b - 1]), a: String(ans), e: '前面 ' + a + ' 人 + 后面 ' + b + ' 人 + 小明自己 = ' + ans + ' 人。' });
+      }
+      var n = pickInt(r, 10, 20), k = pickInt(r, 2, Math.floor(n / 2)), ans = n - k + 1;
+      return q({ q: '一共有 ' + n + ' 人排队，小华从后数第 ' + k + '，那么从前往后他是第几？', o: opts(r, ans, [n - k, k, ans + 1]), a: String(ans), e: '从后数第 ' + k + '，前面有 ' + (n - k) + ' 人，所以从前数是第 ' + (n - k) + '+1=' + ans + '。' });
+    }
+    case 'qiaosuan': {
+      var kind = seed % 4;
+      if (kind === 0) { // 凑整加法
+        var a = pickInt(r, 91, 99), b = pickInt(r, 11, 89), ans = a + b;
+        return q({ q: '巧算：' + a + ' + ' + b + ' = ?', o: opts(r, ans, [ans - 2, ans + 2, ans + 10]), a: String(ans), e: '把 ' + a + ' 看成 100：100+' + b + '−' + (100 - a) + '=' + ans + '。' });
+      }
+      if (kind === 1) { // 25×4 系
+        var k = pickInt(r, 2, 9), ans = 25 * 4 * k;
+        return q({ q: '巧算：25 × 4 × ' + k + ' = ?', o: opts(r, ans, [100 * k + 1, 100 * (k + 1), 25 * k * 2]), a: String(ans), e: '先算 25×4=100，再 ×' + k + '=' + ans + '。' });
+      }
+      if (kind === 2) { // 减法凑整
+        var a = pickInt(r, 200, 500), b = pickInt(r, 91, 99), ans = a - b;
+        return q({ q: '巧算：' + a + ' − ' + b + ' = ?', o: opts(r, ans, [ans - 1, ans + 1, a - 100]), a: String(ans), e: '先减 100 再加回零头：' + a + '−100+' + (100 - b) + '=' + ans + '。' });
+      }
+      var a = pickInt(r, 11, 49), b = 100 - a, ans = 100;
+      return q({ q: '算一算：' + a + ' + ' + b + ' = ?', o: opts(r, ans, [99, 101, a + b + 2]), a: String(ans), e: a + ' 和 ' + b + ' 正好凑成 100，答案是 100。' });
+    }
+    case 'tuxing': {
+      var kind = seed % 3;
+      if (kind === 0) { // 线段数
+        var n = pickInt(r, 4, 7), ans = n * (n - 1) / 2;
+        return q({ q: '一条直线上有 ' + n + ' 个点，一共可以数出多少条线段？', o: opts(r, ans, [n, n * (n - 1), ans - 1]), a: String(ans), e: '每两个点确定一条线段：' + n + '×' + (n - 1) + '÷2=' + ans + ' 条。' });
+      }
+      if (kind === 1) { // 摆正方形小棒
+        var n = pickInt(r, 3, 9), ans = 3 * n + 1;
+        return q({ q: '用小棒摆 ' + n + ' 个连在一起的正方形，一共要多少根小棒？', o: opts(r, ans, [4 * n, 3 * n, 3 * n + 2]), a: String(ans), e: '第一个用 4 根，以后每加一个多用 3 根：4+3×' + (n - 1) + '=' + ans + ' 根。' });
+      }
+      var n = pickInt(r, 3, 8), ans = n * (n + 1) / 2;
+      return q({ q: '从 1 数到 ' + n + '，一共有多少个数？如果每层摆的个数是 1、2、3…' + n + '，共摆多少个？', o: opts(r, ans, [n * n, ans - 1, n * 2]), a: String(ans), e: '1+2+…+' + n + '=' + n + '×' + (n + 1) + '÷2=' + ans + ' 个。' });
+    }
+    case 'jianyi': {
+      var names = ['小明', '小刚', '小丽', '小红'];
+      var hs = shuffle(r, [pickInt(r, 110, 150), pickInt(r, 110, 150), pickInt(r, 110, 150)]);
+      var a = names[0], b = names[1], c = names[2];
+      var cmp = hs[0] >= hs[1] && hs[1] >= hs[2] ? [a, b, c] : null;
+      // 构造 "A比B高，B比C高，谁最高"
+      var tallest = '小明', ans = '小明';
+      return q({ q: '小明比小刚高，小刚比小丽高。他们三人中谁最高？', o: ['小明', '小刚', '小丽', '一样高'], a: '小明', e: '小明 > 小刚 > 小丽，所以最高的是小明。' });
+    }
+
+    /* ============ 中年级 ============ */
+    case 'hecha': {
+      var kind = seed % 3;
+      if (kind === 0) { // 和倍
+        var k = pickInt(r, 2, 5), small = pickInt(r, 3, 15), sum = small * (k + 1), ans = k * small;
+        return q({ q: '两数和是 ' + sum + '，大数是小数的 ' + k + ' 倍，大数是多少？', o: opts(r, ans, [small, sum - small + 1, (k + 1) * small]), a: String(ans), e: '小数 = ' + sum + '÷' + (k + 1) + '=' + small + '，大数 = ' + small + '×' + k + '=' + ans + '。' });
+      }
+      if (kind === 1) { // 差倍
+        var k = pickInt(r, 2, 5), small = pickInt(r, 3, 12), diff = small * (k - 1), ans = k * small;
+        return q({ q: '两数相差 ' + diff + '，大数是小数的 ' + k + ' 倍，大数是多少？', o: opts(r, ans, [small, small + diff + 1, diff]), a: String(ans), e: '小数 = ' + diff + '÷' + (k - 1) + '=' + small + '，大数 = ' + small + '×' + k + '=' + ans + '。' });
+      }
+      var sum = pickInt(r, 30, 90), diff = pickInt(r, 4, 20); if ((sum + diff) % 2) { sum++; }
+      var big = (sum + diff) / 2, ans = big;
+      return q({ q: '两数和是 ' + sum + '，差是 ' + diff + '，较大的数是多少？', o: opts(r, ans, [(sum - diff) / 2, big + 2, big - 2]), a: String(ans), e: '大数 = (和+差)÷2 = (' + sum + '+' + diff + ')÷2 = ' + ans + '。' });
+    }
+    case 'zhishu': {
+      var kind = seed % 4, d = pickInt(r, 3, 10), n = pickInt(r, 5, 20), len = d * n, ans;
+      if (kind === 0) { ans = n + 1; return q({ q: '一条 ' + len + ' 米长的路，每隔 ' + d + ' 米栽一棵树，两端都栽，共栽几棵？', o: opts(r, ans, [n, n - 1, n + 2]), a: String(ans), e: '间隔数 = ' + len + '÷' + d + '=' + n + '，两端都栽：' + n + '+1=' + ans + ' 棵。' }); }
+      if (kind === 1) { ans = n - 1; return q({ q: '一条 ' + len + ' 米长的路，每隔 ' + d + ' 米栽一棵，两端都不栽，共栽几棵？', o: opts(r, ans, [n, n + 1, n - 2]), a: String(ans), e: '间隔数 = ' + n + '，两端都不栽：' + n + '−1=' + ans + ' 棵。' }); }
+      if (kind === 2) { ans = n; return q({ q: '一个圆形花坛周长 ' + len + ' 米，每隔 ' + d + ' 米栽一棵，共栽几棵？', o: opts(r, ans, [n + 1, n - 1, n + 2]), a: String(ans), e: '封闭图形：棵数 = 间隔数 = ' + len + '÷' + d + '=' + ans + ' 棵。' }); }
+      ans = n; return q({ q: '一条 ' + len + ' 米长的路，每隔 ' + d + ' 米栽一棵，只栽一端，共栽几棵？', o: opts(r, ans, [n + 1, n - 1, n + 2]), a: String(ans), e: '只栽一端：棵数 = 间隔数 = ' + ans + ' 棵。' });
+    }
+    case 'jitu': {
+      var h = pickInt(r, 10, 30), rabbit = pickInt(r, 2, Math.floor(h / 2)), chicken = h - rabbit;
+      var legs = chicken * 2 + rabbit * 4, ans = rabbit;
+      if (seed % 2 === 1) {
+        return q({ q: '鸡兔同笼，共 ' + h + ' 个头，' + legs + ' 只脚。兔有几只？', o: opts(r, ans, [chicken, rabbit + 2, rabbit - 1]), a: String(ans), e: '假设全是鸡：' + h + '×2=' + (h * 2) + ' 脚，多出 ' + (legs - h * 2) + ' 脚，每只兔多 2 脚，所以兔 = ' + (legs - h * 2) + '÷2=' + ans + ' 只。' });
+      }
+      return q({ q: '鸡兔同笼，共 ' + h + ' 个头，' + legs + ' 只脚。鸡有几只？', o: opts(r, chicken, [rabbit, chicken + 2, chicken - 1]), a: String(chicken), e: '假设全是兔：' + h + '×4=' + (h * 4) + ' 脚，少了 ' + (h * 4 - legs) + ' 脚，每只鸡少 2 脚，所以鸡 = ' + (h * 4 - legs) + '÷2=' + chicken + ' 只。' });
+    }
+    case 'zhouqi': {
+      var kind = seed % 3;
+      if (kind === 0) {
+        var cyc = ['红', '黄', '蓝', '绿'], T = pickInt(r, 3, 4), period = cyc.slice(0, T);
+        var n = pickInt(r, 20, 60), idx = n % T, ans = idx === 0 ? period[T - 1] : period[idx - 1];
+        return q({ q: '彩灯按 ' + period.join('、') + ' 的顺序循环排列，第 ' + n + ' 盏是什么颜色？', o: shuffle(r, period), a: ans, e: n + '÷' + T + ' 余 ' + (n % T) + '（余 0 看作第 ' + T + ' 个），对应' + ans + '色。' });
+      }
+      if (kind === 1) {
+        var week = ['一', '二', '三', '四', '五', '六', '日'], start = pickInt(r, 0, 6), days = pickInt(r, 10, 50);
+        var ans = week[(start + days) % 7];
+        var others = week.filter(function (w) { return w !== ans; });
+        return q({ q: '今天是星期' + week[start] + '，再过 ' + days + ' 天是星期几？', o: shuffle(r, [ans].concat(others.slice(0, 3))), a: ans, e: days + '÷7 余 ' + (days % 7) + '，从星期' + week[start] + '往后数 ' + (days % 7) + ' 天是星期' + ans + '。' });
+      }
+      var T = pickInt(r, 4, 7), n = pickInt(r, 30, 80), q2 = Math.floor(n / T), ans = q2;
+      return q({ q: '一串珠子每 ' + T + ' 颗穿一组，' + n + ' 颗珠子可以穿几组？', o: opts(r, ans, [q2 + 1, q2 - 1, T]), a: String(ans), e: n + '÷' + T + '=' + q2 + ' 组（取整）。' });
+    }
+    case 'huanyuan': {
+      var x = pickInt(r, 2, 12), add = pickInt(r, 3, 15), mul = pickInt(r, 2, 6);
+      var result = (x + add) * mul;
+      var ans = x;
+      return q({ q: '一个数加上 ' + add + '，再乘 ' + mul + '，结果是 ' + result + '。这个数是多少？', o: opts(r, ans, [result / mul - add + 1, result / mul, ans + 2]), a: String(ans), e: '倒推：' + result + '÷' + mul + '=' + (result / mul) + '，再减 ' + add + ' 得 ' + ans + '。' });
+    }
+
+    /* ============ 高年级 ============ */
+    case 'xingcheng': {
+      var kind = seed % 3;
+      if (kind === 0) { // 相遇
+        var v1 = pickInt(r, 40, 80), v2 = pickInt(r, 30, 70), t = pickInt(r, 2, 6), s = (v1 + v2) * t;
+        return q({ q: '甲乙两地相距 ' + s + ' 千米，两车相向而行，速度分别是 ' + v1 + ' 和 ' + v2 + ' 千米/时，几小时相遇？', o: opts(r, t, [t + 1, t - 1, Math.floor(s / v1)]), a: String(t), e: '相遇时间 = 路程÷速度和 = ' + s + '÷' + (v1 + v2) + '=' + t + ' 小时。' });
+      }
+      if (kind === 1) { // 追及
+        var fast = pickInt(r, 60, 90), slow = pickInt(r, 30, 55), gap = pickInt(r, 20, 80);
+        var t = gap / (fast - slow); if (t !== Math.floor(t)) { gap = (fast - slow) * Math.ceil(t); t = Math.ceil(t); }
+        return q({ q: '两车相距 ' + gap + ' 千米，同向而行，快车 ' + fast + ' 千米/时，慢车 ' + slow + ' 千米/时，快车几小时追上慢车？', o: opts(r, t, [t + 1, t + 2, t - 1]), a: String(t), e: '追及时间 = 路程差÷速度差 = ' + gap + '÷' + (fast - slow) + '=' + t + ' 小时。' });
+      }
+      var v = pickInt(r, 40, 80), t = pickInt(r, 2, 5), s = v * t;
+      return q({ q: '一辆车以 ' + v + ' 千米/时行驶了 ' + t + ' 小时，一共走了多少千米？', o: opts(r, s, [v + t, s + v, s - v]), a: String(s), e: '路程 = 速度×时间 = ' + v + '×' + t + '=' + s + ' 千米。' });
+    }
+    case 'gongcheng': {
+      var a = pickInt(r, 4, 12), b = pickInt(r, 4, 12);
+      var num = a * b, den = a + b;
+      if (num % den !== 0) { b = a; num = a * b; den = a + b; }
+      var ans = num / den;
+      return q({ q: '一项工程，甲单独做要 ' + a + ' 天，乙单独做要 ' + b + ' 天。两人合作要几天完成？', o: opts(r, ans, [ans + 1, a, Math.round((a + b) / 2)]), a: String(ans), e: '合作时间 = 1÷(1/' + a + '+1/' + b + ') = ' + a + '×' + b + '÷(' + a + '+' + b + ')=' + ans + ' 天。' });
+    }
+    case 'chouti': {
+      var kind = seed % 3;
+      if (kind === 0) {
+        var n = pickInt(r, 4, 12), ans = n + 1;
+        return q({ q: '有 ' + n + ' 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？', o: opts(r, ans, [n, n + 2, 2 * n]), a: String(ans), e: '最坏情况每个抽屉 1 个，放 ' + n + ' 个；再多 1 个必有抽屉达 2 个，所以是 ' + n + '+1=' + ans + ' 个。' });
+      }
+      if (kind === 1) {
+        var n = pickInt(r, 5, 20), ans = n + 1;
+        return q({ q: '一年有 ' + n + ' 个月，至少有多少人，才能保证有 2 人同一个月生日？', o: opts(r, ans, [n, n + 2, 2 * n]), a: String(ans), e: '把人看作苹果、月份看作抽屉：' + n + '+1=' + ans + ' 人。' });
+      }
+      var colors = pickInt(r, 3, 5), ans = 2 * colors + 1;
+      return q({ q: '袋里有 ' + colors + ' 种颜色的球各若干个，至少摸出几个，才能保证有 3 个同色？', o: opts(r, ans, [colors * 2, ans + 1, 3 * colors]), a: String(ans), e: '最坏情况每种摸 2 个共 ' + (2 * colors) + ' 个，再摸 1 个必有 3 个同色：' + ans + ' 个。' });
+    }
+    case 'nongdu': {
+      var kind = seed % 3;
+      if (kind === 0) {
+        var sugar = pickInt(r, 5, 30), water = pickInt(r, 50, 150), total = sugar + water;
+        var pct = Math.round(sugar / total * 100);
+        return q({ q: '把 ' + sugar + ' 克糖放入 ' + water + ' 克水中，糖水的浓度约是多少？', o: opts(r, pct, [pct + 5, Math.round(sugar / water * 100), pct - 3]), a: String(pct), e: '浓度 = 糖÷糖水总重 = ' + sugar + '÷' + total + '≈' + pct + '%。' });
+      }
+      if (kind === 1) {
+        var sugar = pickInt(r, 10, 40), pct = pickInt(r, 10, 25), total = Math.round(sugar * 100 / pct);
+        return q({ q: '浓度为 ' + pct + '% 的糖水共 ' + total + ' 克，其中糖有多少克？', o: opts(r, sugar, [sugar + 5, total - sugar, Math.round(total / 100)]), a: String(sugar), e: '糖 = 糖水总重×浓度 = ' + total + '×' + pct + '%=' + sugar + ' 克。' });
+      }
+      var sugar = pickInt(r, 10, 30), water = pickInt(r, 60, 120), add = pickInt(r, 20, 60);
+      var oldPct = Math.round(sugar / (sugar + water) * 100), newPct = Math.round(sugar / (sugar + water + add) * 100);
+      return q({ q: sugar + ' 克糖和 ' + water + ' 克水的糖水，再加入 ' + add + ' 克水后，浓度约变为多少？', o: opts(r, newPct, [oldPct, newPct - 3, newPct + 4]), a: String(newPct), e: '加水后糖仍是 ' + sugar + ' 克，总重 ' + (sugar + water + add) + ' 克，浓度 = ' + sugar + '÷' + (sugar + water + add) + '≈' + newPct + '%。（加水变稀）' });
+    }
+    case 'luoji': {
+      var LOGIC = [
+        { q: '甲、乙、丙三人中只有一人做了好事。甲说“是乙做的”，乙说“不是我”，丙说“也不是我”。已知只有一人说真话，是谁做的好事？',
+          o: ['甲', '乙', '丙', '无法确定'], a: '丙',
+          e: '假设甲做：甲假、乙真、丙真（两真，不符）；假设乙做：甲真、乙假、丙真（两真，不符）；假设丙做：甲假、乙真、丙假（只有一真，符合）。所以是丙做的。' },
+        { q: '小明、小红、小强分别喜欢语文、数学、英语中的一科。小明不喜欢语文，小红不喜欢数学也不喜欢语文，那么小强喜欢哪一科？',
+          o: ['语文', '数学', '英语', '无法确定'], a: '语文',
+          e: '小红不喜欢数学也不喜欢语文 → 小红喜欢英语；小明不喜欢语文 → 小明只能喜欢数学；剩下语文归小强。' },
+        { q: '三张卡片分别写着 1、2、3。小张拿的不是 1，小李拿的不是 2 也不是 1，那么小王拿的是几？',
+          o: ['1', '2', '3', '无法确定'], a: '1',
+          e: '小李不是 2 也不是 1 → 小李拿 3；小张不是 1 且 3 已被拿 → 小张拿 2；剩下 1 归小王。' },
+        { q: '红、黄、蓝三种颜色的球各一个，分给小丽、小美、小芳。小丽不要红球，小美不要红球也不要黄球，那么小芳拿到什么球？',
+          o: ['红球', '黄球', '蓝球', '无法确定'], a: '红球',
+          e: '小美不要红黄 → 小美拿蓝球；小丽不要红且蓝已被拿 → 小丽拿黄球；剩下红球归小芳。' },
+        { q: '老师把 1、2、3 三个数分给小强、小军、小浩。小强拿的不是最大的，小军拿的是最小的，那么小浩拿到几？',
+          o: ['1', '2', '3', '无法确定'], a: '3',
+          e: '最小是 1 → 小军拿 1；最大是 3，小强不是最大 → 小强拿 2；剩下 3 归小浩。' },
+        { q: '小云、小雨、小雪三人年龄各不相同。小云比小雨大，小雨比小雪大。谁年龄最小？',
+          o: ['小云', '小雨', '小雪', '一样大'], a: '小雪',
+          e: '小云 > 小雨 > 小雪，所以小雪最小。' },
+        { q: '书架上层、中层、下层分别放着语文、数学、英语书。已知语文不在上层，数学在中层，那么英语在哪一层？',
+          o: ['上层', '中层', '下层', '无法确定'], a: '上层',
+          e: '数学在中层；语文不在上层 → 语文在下层；剩下英语在上层。' },
+        { q: '甲、乙、丙站成一排。甲站在乙的左边，丙站在最右边。谁站在中间？',
+          o: ['甲', '乙', '丙', '无法确定'], a: '乙',
+          e: '丙在最右边；甲在乙左边，所以甲最左、乙居中、丙最右。中间是乙。' },
+        { q: '小 A 比小 B 高，小 C 比小 A 高，小 B 比小 D 高。他们四人中谁最高？',
+          o: ['小 A', '小 B', '小 C', '小 D'], a: '小 C',
+          e: '由条件得 小 C > 小 A > 小 B > 小 D，所以最高的是小 C。' },
+        { q: '甲、乙、丙、丁比身高。甲不是最高也不是最矮，乙比甲矮，丙比甲高，丁比乙矮。谁最高？',
+          o: ['甲', '乙', '丙', '丁'], a: '丙',
+          e: '由条件得 丙 > 甲 > 乙 > 丁，所以最高的是丙。' }
+      ];
+      var item = LOGIC[seed % LOGIC.length];
+      return q({ q: item.q, o: item.o, a: item.a, e: item.e });
+    }
+  }
+  return q({ q: '（题目生成中）', o: ['1', '2', '3', '4'], a: '1', e: '' });
+}
+
+// 生成固定题库：每专题 10 题
+function buildBank() {
+  var bank = {};
+  for (var grade in OLY_TOPICS) {
+    bank[grade] = {};
+    OLY_TOPICS[grade].forEach(function (t) {
+      var qs = [];
+      for (var s = 0; s < 10; s++) {
+        var item = genQuestion(grade, t.id, s);
+        delete item._fix;
+        qs.push(item);
+      }
+      bank[grade][t.id] = qs;
+    });
+  }
+  return bank;
+}
+
+
+
+/* ===== 固定题库（内联，150 题） ===== */
+var BANK = {
+ "low": {
+  "guilv": [
+   {
+    "q": "找规律填数：3、5、7、9、11、（  ）",
+    "o": [
+     "15",
+     "11",
+     "13",
+     "14"
+    ],
+    "a": "13",
+    "e": "相邻两数相差 2，所以下一个是 11+2=13。"
+   },
+   {
+    "q": "找规律填数：3、6、12、24、48、（  ）",
+    "o": [
+     "48",
+     "192",
+     "99",
+     "96"
+    ],
+    "a": "96",
+    "e": "每个数是前一个的 2 倍，所以 48×2=96。"
+   },
+   {
+    "q": "找规律填数：1、4、9、16、25、（  ）",
+    "o": [
+     "36",
+     "30",
+     "42",
+     "37"
+    ],
+    "a": "36",
+    "e": "依次是 1²、2²…所以下一个是 6×6=36。"
+   },
+   {
+    "q": "找规律填数：2、8、10、18、28、（  ）",
+    "o": [
+     "47",
+     "29",
+     "46",
+     "56"
+    ],
+    "a": "46",
+    "e": "每个数等于前两个数的和：18+28=46。"
+   },
+   {
+    "q": "找规律填数：12、17、12、17、12、（  ）",
+    "o": [
+     "17",
+     "12",
+     "7",
+     "18"
+    ],
+    "a": "17",
+    "e": "两个数一组交替出现：12、17 重复，所以下一个是 17。"
+   },
+   {
+    "q": "找规律填数：4、9、14、19、24、（  ）",
+    "o": [
+     "24",
+     "30",
+     "29",
+     "34"
+    ],
+    "a": "29",
+    "e": "相邻两数相差 5，所以下一个是 24+5=29。"
+   },
+   {
+    "q": "找规律填数：4、8、16、32、64、（  ）",
+    "o": [
+     "128",
+     "256",
+     "64",
+     "132"
+    ],
+    "a": "128",
+    "e": "每个数是前一个的 2 倍，所以 64×2=128。"
+   },
+   {
+    "q": "找规律填数：4、9、16、25、36、（  ）",
+    "o": [
+     "49",
+     "50",
+     "42",
+     "56"
+    ],
+    "a": "49",
+    "e": "依次是 2²、3²…所以下一个是 7×7=49。"
+   },
+   {
+    "q": "找规律填数：3、5、8、13、21、（  ）",
+    "o": [
+     "42",
+     "34",
+     "35",
+     "22"
+    ],
+    "a": "34",
+    "e": "每个数等于前两个数的和：13+21=34。"
+   },
+   {
+    "q": "找规律填数：13、16、13、16、13、（  ）",
+    "o": [
+     "16",
+     "10",
+     "17",
+     "13"
+    ],
+    "a": "16",
+    "e": "两个数一组交替出现：13、16 重复，所以下一个是 16。"
+   }
+  ],
+  "pai dui": [
+   {
+    "q": "小朋友排队，小红从前数第 4，从后数第 4，这队一共有几人？",
+    "o": [
+     "6",
+     "8",
+     "7",
+     "9"
+    ],
+    "a": "7",
+    "e": "小红被数了两次，所以 4+4-1=7 人。"
+   },
+   {
+    "q": "排队时，小明前面有 3 人，后面有 2 人，一共几人？",
+    "o": [
+     "6",
+     "4",
+     "5",
+     "7"
+    ],
+    "a": "6",
+    "e": "前面 3 人 + 后面 2 人 + 小明自己 = 6 人。"
+   },
+   {
+    "q": "一共有 13 人排队，小华从后数第 6，那么从前往后他是第几？",
+    "o": [
+     "8",
+     "7",
+     "9",
+     "6"
+    ],
+    "a": "8",
+    "e": "从后数第 6，前面有 7 人，所以从前数是第 7+1=8。"
+   },
+   {
+    "q": "小朋友排队，小红从前数第 5，从后数第 9，这队一共有几人？",
+    "o": [
+     "15",
+     "14",
+     "13",
+     "12"
+    ],
+    "a": "13",
+    "e": "小红被数了两次，所以 5+9-1=13 人。"
+   },
+   {
+    "q": "排队时，小明前面有 4 人，后面有 7 人，一共几人？",
+    "o": [
+     "12",
+     "11",
+     "10",
+     "13"
+    ],
+    "a": "12",
+    "e": "前面 4 人 + 后面 7 人 + 小明自己 = 12 人。"
+   },
+   {
+    "q": "一共有 14 人排队，小华从后数第 6，那么从前往后他是第几？",
+    "o": [
+     "8",
+     "10",
+     "9",
+     "6"
+    ],
+    "a": "9",
+    "e": "从后数第 6，前面有 8 人，所以从前数是第 8+1=9。"
+   },
+   {
+    "q": "小朋友排队，小红从前数第 5，从后数第 7，这队一共有几人？",
+    "o": [
+     "10",
+     "11",
+     "13",
+     "12"
+    ],
+    "a": "11",
+    "e": "小红被数了两次，所以 5+7-1=11 人。"
+   },
+   {
+    "q": "排队时，小明前面有 4 人，后面有 5 人，一共几人？",
+    "o": [
+     "8",
+     "10",
+     "11",
+     "9"
+    ],
+    "a": "10",
+    "e": "前面 4 人 + 后面 5 人 + 小明自己 = 10 人。"
+   },
+   {
+    "q": "一共有 14 人排队，小华从后数第 4，那么从前往后他是第几？",
+    "o": [
+     "4",
+     "11",
+     "12",
+     "10"
+    ],
+    "a": "11",
+    "e": "从后数第 4，前面有 10 人，所以从前数是第 10+1=11。"
+   },
+   {
+    "q": "小朋友排队，小红从前数第 6，从后数第 5，这队一共有几人？",
+    "o": [
+     "10",
+     "12",
+     "9",
+     "11"
+    ],
+    "a": "10",
+    "e": "小红被数了两次，所以 6+5-1=10 人。"
+   }
+  ],
+  "qiaosuan": [
+   {
+    "q": "巧算：93 + 25 = ?",
+    "o": [
+     "120",
+     "116",
+     "118",
+     "128"
+    ],
+    "a": "118",
+    "e": "把 93 看成 100：100+25−7=118。"
+   },
+   {
+    "q": "巧算：25 × 4 × 4 = ?",
+    "o": [
+     "401",
+     "200",
+     "500",
+     "400"
+    ],
+    "a": "400",
+    "e": "先算 25×4=100，再 ×4=400。"
+   },
+   {
+    "q": "巧算：290 − 99 = ?",
+    "o": [
+     "191",
+     "190",
+     "193",
+     "192"
+    ],
+    "a": "191",
+    "e": "先减 100 再加回零头：290−100+1=191。"
+   },
+   {
+    "q": "算一算：23 + 77 = ?",
+    "o": [
+     "101",
+     "100",
+     "99",
+     "102"
+    ],
+    "a": "100",
+    "e": "23 和 77 正好凑成 100，答案是 100。"
+   },
+   {
+    "q": "巧算：94 + 75 = ?",
+    "o": [
+     "169",
+     "167",
+     "179",
+     "171"
+    ],
+    "a": "169",
+    "e": "把 94 看成 100：100+75−6=169。"
+   },
+   {
+    "q": "巧算：25 × 4 × 4 = ?",
+    "o": [
+     "200",
+     "400",
+     "401",
+     "500"
+    ],
+    "a": "400",
+    "e": "先算 25×4=100，再 ×4=400。"
+   },
+   {
+    "q": "巧算：317 − 96 = ?",
+    "o": [
+     "222",
+     "221",
+     "217",
+     "220"
+    ],
+    "a": "221",
+    "e": "先减 100 再加回零头：317−100+4=221。"
+   },
+   {
+    "q": "算一算：27 + 73 = ?",
+    "o": [
+     "100",
+     "102",
+     "99",
+     "101"
+    ],
+    "a": "100",
+    "e": "27 和 73 正好凑成 100，答案是 100。"
+   },
+   {
+    "q": "巧算：94 + 45 = ?",
+    "o": [
+     "141",
+     "139",
+     "149",
+     "137"
+    ],
+    "a": "139",
+    "e": "把 94 看成 100：100+45−6=139。"
+   },
+   {
+    "q": "巧算：25 × 4 × 5 = ?",
+    "o": [
+     "600",
+     "250",
+     "500",
+     "501"
+    ],
+    "a": "500",
+    "e": "先算 25×4=100，再 ×5=500。"
+   }
+  ],
+  "tuxing": [
+   {
+    "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
+    "o": [
+     "5",
+     "9",
+     "20",
+     "10"
+    ],
+    "a": "10",
+    "e": "每两个点确定一条线段：5×4÷2=10 条。"
+   },
+   {
+    "q": "用小棒摆 4 个连在一起的正方形，一共要多少根小棒？",
+    "o": [
+     "16",
+     "14",
+     "12",
+     "13"
+    ],
+    "a": "13",
+    "e": "第一个用 4 根，以后每加一个多用 3 根：4+3×3=13 根。"
+   },
+   {
+    "q": "从 1 数到 4，一共有多少个数？如果每层摆的个数是 1、2、3…4，共摆多少个？",
+    "o": [
+     "10",
+     "16",
+     "9",
+     "8"
+    ],
+    "a": "10",
+    "e": "1+2+…+4=4×5÷2=10 个。"
+   },
+   {
+    "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
+    "o": [
+     "20",
+     "10",
+     "5",
+     "9"
+    ],
+    "a": "10",
+    "e": "每两个点确定一条线段：5×4÷2=10 条。"
+   },
+   {
+    "q": "用小棒摆 5 个连在一起的正方形，一共要多少根小棒？",
+    "o": [
+     "16",
+     "15",
+     "20",
+     "17"
+    ],
+    "a": "16",
+    "e": "第一个用 4 根，以后每加一个多用 3 根：4+3×4=16 根。"
+   },
+   {
+    "q": "从 1 数到 5，一共有多少个数？如果每层摆的个数是 1、2、3…5，共摆多少个？",
+    "o": [
+     "10",
+     "15",
+     "25",
+     "14"
+    ],
+    "a": "15",
+    "e": "1+2+…+5=5×6÷2=15 个。"
+   },
+   {
+    "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
+    "o": [
+     "10",
+     "9",
+     "5",
+     "20"
+    ],
+    "a": "10",
+    "e": "每两个点确定一条线段：5×4÷2=10 条。"
+   },
+   {
+    "q": "用小棒摆 5 个连在一起的正方形，一共要多少根小棒？",
+    "o": [
+     "16",
+     "17",
+     "20",
+     "15"
+    ],
+    "a": "16",
+    "e": "第一个用 4 根，以后每加一个多用 3 根：4+3×4=16 根。"
+   },
+   {
+    "q": "从 1 数到 5，一共有多少个数？如果每层摆的个数是 1、2、3…5，共摆多少个？",
+    "o": [
+     "14",
+     "15",
+     "10",
+     "25"
+    ],
+    "a": "15",
+    "e": "1+2+…+5=5×6÷2=15 个。"
+   },
+   {
+    "q": "一条直线上有 5 个点，一共可以数出多少条线段？",
+    "o": [
+     "20",
+     "9",
+     "10",
+     "5"
+    ],
+    "a": "10",
+    "e": "每两个点确定一条线段：5×4÷2=10 条。"
+   }
+  ],
+  "jianyi": [
+   {
+    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+    "o": [
+     "小明",
+     "小刚",
+     "小丽",
+     "一样高"
+    ],
+    "a": "小明",
+    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+   },
+   {
+    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+    "o": [
+     "小明",
+     "小刚",
+     "小丽",
+     "一样高"
+    ],
+    "a": "小明",
+    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+   },
+   {
+    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+    "o": [
+     "小明",
+     "小刚",
+     "小丽",
+     "一样高"
+    ],
+    "a": "小明",
+    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+   },
+   {
+    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+    "o": [
+     "小明",
+     "小刚",
+     "小丽",
+     "一样高"
+    ],
+    "a": "小明",
+    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+   },
+   {
+    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+    "o": [
+     "小明",
+     "小刚",
+     "小丽",
+     "一样高"
+    ],
+    "a": "小明",
+    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+   },
+   {
+    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+    "o": [
+     "小明",
+     "小刚",
+     "小丽",
+     "一样高"
+    ],
+    "a": "小明",
+    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+   },
+   {
+    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+    "o": [
+     "小明",
+     "小刚",
+     "小丽",
+     "一样高"
+    ],
+    "a": "小明",
+    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+   },
+   {
+    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+    "o": [
+     "小明",
+     "小刚",
+     "小丽",
+     "一样高"
+    ],
+    "a": "小明",
+    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+   },
+   {
+    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+    "o": [
+     "小明",
+     "小刚",
+     "小丽",
+     "一样高"
+    ],
+    "a": "小明",
+    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+   },
+   {
+    "q": "小明比小刚高，小刚比小丽高。他们三人中谁最高？",
+    "o": [
+     "小明",
+     "小刚",
+     "小丽",
+     "一样高"
+    ],
+    "a": "小明",
+    "e": "小明 > 小刚 > 小丽，所以最高的是小明。"
+   }
+  ]
+ },
+ "mid": {
+  "hecha": [
+   {
+    "q": "两数和是 20，大数是小数的 3 倍，大数是多少？",
+    "o": [
+     "16",
+     "5",
+     "15",
+     "20"
+    ],
+    "a": "15",
+    "e": "小数 = 20÷4=5，大数 = 5×3=15。"
+   },
+   {
+    "q": "两数相差 6，大数是小数的 3 倍，大数是多少？",
+    "o": [
+     "9",
+     "6",
+     "3",
+     "10"
+    ],
+    "a": "9",
+    "e": "小数 = 6÷2=3，大数 = 3×3=9。"
+   },
+   {
+    "q": "两数和是 48，差是 20，较大的数是多少？",
+    "o": [
+     "34",
+     "14",
+     "32",
+     "36"
+    ],
+    "a": "34",
+    "e": "大数 = (和+差)÷2 = (48+20)÷2 = 34。"
+   },
+   {
+    "q": "两数和是 56，大数是小数的 3 倍，大数是多少？",
+    "o": [
+     "56",
+     "14",
+     "42",
+     "43"
+    ],
+    "a": "42",
+    "e": "小数 = 56÷4=14，大数 = 14×3=42。"
+   },
+   {
+    "q": "两数相差 22，大数是小数的 3 倍，大数是多少？",
+    "o": [
+     "33",
+     "11",
+     "22",
+     "34"
+    ],
+    "a": "33",
+    "e": "小数 = 22÷2=11，大数 = 11×3=33。"
+   },
+   {
+    "q": "两数和是 52，差是 16，较大的数是多少？",
+    "o": [
+     "18",
+     "32",
+     "34",
+     "36"
+    ],
+    "a": "34",
+    "e": "大数 = (和+差)÷2 = (52+16)÷2 = 34。"
+   },
+   {
+    "q": "两数和是 44，大数是小数的 3 倍，大数是多少？",
+    "o": [
+     "34",
+     "33",
+     "44",
+     "11"
+    ],
+    "a": "33",
+    "e": "小数 = 44÷4=11，大数 = 11×3=33。"
+   },
+   {
+    "q": "两数相差 16，大数是小数的 3 倍，大数是多少？",
+    "o": [
+     "16",
+     "24",
+     "25",
+     "8"
+    ],
+    "a": "24",
+    "e": "小数 = 16÷2=8，大数 = 8×3=24。"
+   },
+   {
+    "q": "两数和是 57，差是 11，较大的数是多少？",
+    "o": [
+     "36",
+     "34",
+     "32",
+     "23"
+    ],
+    "a": "34",
+    "e": "大数 = (和+差)÷2 = (57+11)÷2 = 34。"
+   },
+   {
+    "q": "两数和是 28，大数是小数的 3 倍，大数是多少？",
+    "o": [
+     "21",
+     "28",
+     "22",
+     "7"
+    ],
+    "a": "21",
+    "e": "小数 = 28÷4=7，大数 = 7×3=21。"
+   }
+  ],
+  "zhishu": [
+   {
+    "q": "一条 35 米长的路，每隔 5 米栽一棵树，两端都栽，共栽几棵？",
+    "o": [
+     "6",
+     "7",
+     "8",
+     "9"
+    ],
+    "a": "8",
+    "e": "间隔数 = 35÷5=7，两端都栽：7+1=8 棵。"
+   },
+   {
+    "q": "一条 30 米长的路，每隔 5 米栽一棵，两端都不栽，共栽几棵？",
+    "o": [
+     "5",
+     "4",
+     "6",
+     "7"
+    ],
+    "a": "5",
+    "e": "间隔数 = 6，两端都不栽：6−1=5 棵。"
+   },
+   {
+    "q": "一个圆形花坛周长 100 米，每隔 5 米栽一棵，共栽几棵？",
+    "o": [
+     "20",
+     "21",
+     "22",
+     "19"
+    ],
+    "a": "20",
+    "e": "封闭图形：棵数 = 间隔数 = 100÷5=20 棵。"
+   },
+   {
+    "q": "一条 95 米长的路，每隔 5 米栽一棵，只栽一端，共栽几棵？",
+    "o": [
+     "21",
+     "20",
+     "19",
+     "18"
+    ],
+    "a": "19",
+    "e": "只栽一端：棵数 = 间隔数 = 19 棵。"
+   },
+   {
+    "q": "一条 85 米长的路，每隔 5 米栽一棵树，两端都栽，共栽几棵？",
+    "o": [
+     "18",
+     "17",
+     "19",
+     "16"
+    ],
+    "a": "18",
+    "e": "间隔数 = 85÷5=17，两端都栽：17+1=18 棵。"
+   },
+   {
+    "q": "一条 80 米长的路，每隔 5 米栽一棵，两端都不栽，共栽几棵？",
+    "o": [
+     "16",
+     "14",
+     "15",
+     "17"
+    ],
+    "a": "15",
+    "e": "间隔数 = 16，两端都不栽：16−1=15 棵。"
+   },
+   {
+    "q": "一个圆形花坛周长 84 米，每隔 6 米栽一棵，共栽几棵？",
+    "o": [
+     "13",
+     "14",
+     "16",
+     "15"
+    ],
+    "a": "14",
+    "e": "封闭图形：棵数 = 间隔数 = 84÷6=14 棵。"
+   },
+   {
+    "q": "一条 78 米长的路，每隔 6 米栽一棵，只栽一端，共栽几棵？",
+    "o": [
+     "15",
+     "13",
+     "12",
+     "14"
+    ],
+    "a": "13",
+    "e": "只栽一端：棵数 = 间隔数 = 13 棵。"
+   },
+   {
+    "q": "一条 66 米长的路，每隔 6 米栽一棵树，两端都栽，共栽几棵？",
+    "o": [
+     "10",
+     "12",
+     "13",
+     "11"
+    ],
+    "a": "12",
+    "e": "间隔数 = 66÷6=11，两端都栽：11+1=12 棵。"
+   },
+   {
+    "q": "一条 60 米长的路，每隔 6 米栽一棵，两端都不栽，共栽几棵？",
+    "o": [
+     "9",
+     "8",
+     "11",
+     "10"
+    ],
+    "a": "9",
+    "e": "间隔数 = 10，两端都不栽：10−1=9 棵。"
+   }
+  ],
+  "jitu": [
+   {
+    "q": "鸡兔同笼，共 15 个头，36 只脚。鸡有几只？",
+    "o": [
+     "14",
+     "3",
+     "12",
+     "11"
+    ],
+    "a": "12",
+    "e": "假设全是兔：15×4=60 脚，少了 24 脚，每只鸡少 2 脚，所以鸡 = 24÷2=12 只。"
+   },
+   {
+    "q": "鸡兔同笼，共 15 个头，34 只脚。兔有几只？",
+    "o": [
+     "2",
+     "1",
+     "13",
+     "4"
+    ],
+    "a": "2",
+    "e": "假设全是鸡：15×2=30 脚，多出 4 脚，每只兔多 2 脚，所以兔 = 4÷2=2 只。"
+   },
+   {
+    "q": "鸡兔同笼，共 16 个头，48 只脚。鸡有几只？",
+    "o": [
+     "8",
+     "10",
+     "9",
+     "7"
+    ],
+    "a": "8",
+    "e": "假设全是兔：16×4=64 脚，少了 16 脚，每只鸡少 2 脚，所以鸡 = 16÷2=8 只。"
+   },
+   {
+    "q": "鸡兔同笼，共 16 个头，48 只脚。兔有几只？",
+    "o": [
+     "9",
+     "10",
+     "8",
+     "7"
+    ],
+    "a": "8",
+    "e": "假设全是鸡：16×2=32 脚，多出 16 脚，每只兔多 2 脚，所以兔 = 16÷2=8 只。"
+   },
+   {
+    "q": "鸡兔同笼，共 17 个头，48 只脚。鸡有几只？",
+    "o": [
+     "10",
+     "7",
+     "9",
+     "12"
+    ],
+    "a": "10",
+    "e": "假设全是兔：17×4=68 脚，少了 20 脚，每只鸡少 2 脚，所以鸡 = 20÷2=10 只。"
+   },
+   {
+    "q": "鸡兔同笼，共 17 个头，48 只脚。兔有几只？",
+    "o": [
+     "10",
+     "6",
+     "7",
+     "9"
+    ],
+    "a": "7",
+    "e": "假设全是鸡：17×2=34 脚，多出 14 脚，每只兔多 2 脚，所以兔 = 14÷2=7 只。"
+   },
+   {
+    "q": "鸡兔同笼，共 18 个头，48 只脚。鸡有几只？",
+    "o": [
+     "14",
+     "12",
+     "11",
+     "6"
+    ],
+    "a": "12",
+    "e": "假设全是兔：18×4=72 脚，少了 24 脚，每只鸡少 2 脚，所以鸡 = 24÷2=12 只。"
+   },
+   {
+    "q": "鸡兔同笼，共 18 个头，48 只脚。兔有几只？",
+    "o": [
+     "5",
+     "6",
+     "8",
+     "12"
+    ],
+    "a": "6",
+    "e": "假设全是鸡：18×2=36 脚，多出 12 脚，每只兔多 2 脚，所以兔 = 12÷2=6 只。"
+   },
+   {
+    "q": "鸡兔同笼，共 19 个头，48 只脚。鸡有几只？",
+    "o": [
+     "16",
+     "14",
+     "13",
+     "5"
+    ],
+    "a": "14",
+    "e": "假设全是兔：19×4=76 脚，少了 28 脚，每只鸡少 2 脚，所以鸡 = 28÷2=14 只。"
+   },
+   {
+    "q": "鸡兔同笼，共 19 个头，46 只脚。兔有几只？",
+    "o": [
+     "4",
+     "3",
+     "6",
+     "15"
+    ],
+    "a": "4",
+    "e": "假设全是鸡：19×2=38 脚，多出 8 脚，每只兔多 2 脚，所以兔 = 8÷2=4 只。"
+   }
+  ],
+  "zhouqi": [
+   {
+    "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 27 盏是什么颜色？",
+    "o": [
+     "黄",
+     "红",
+     "蓝"
+    ],
+    "a": "蓝",
+    "e": "27÷3 余 0（余 0 看作第 3 个），对应蓝色。"
+   },
+   {
+    "q": "今天是星期二，再过 13 天是星期几？",
+    "o": [
+     "一",
+     "四",
+     "二",
+     "三"
+    ],
+    "a": "一",
+    "e": "13÷7 余 6，从星期二往后数 6 天是星期一。"
+   },
+   {
+    "q": "一串珠子每 5 颗穿一组，80 颗珠子可以穿几组？",
+    "o": [
+     "16",
+     "17",
+     "5",
+     "15"
+    ],
+    "a": "16",
+    "e": "80÷5=16 组（取整）。"
+   },
+   {
+    "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 57 盏是什么颜色？",
+    "o": [
+     "蓝",
+     "红",
+     "黄"
+    ],
+    "a": "蓝",
+    "e": "57÷3 余 0（余 0 看作第 3 个），对应蓝色。"
+   },
+   {
+    "q": "今天是星期三，再过 43 天是星期几？",
+    "o": [
+     "四",
+     "一",
+     "三",
+     "二"
+    ],
+    "a": "四",
+    "e": "43÷7 余 1，从星期三往后数 1 天是星期四。"
+   },
+   {
+    "q": "一串珠子每 5 颗穿一组，66 颗珠子可以穿几组？",
+    "o": [
+     "14",
+     "5",
+     "13",
+     "12"
+    ],
+    "a": "13",
+    "e": "66÷5=13 组（取整）。"
+   },
+   {
+    "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 45 盏是什么颜色？",
+    "o": [
+     "红",
+     "蓝",
+     "黄"
+    ],
+    "a": "蓝",
+    "e": "45÷3 余 0（余 0 看作第 3 个），对应蓝色。"
+   },
+   {
+    "q": "今天是星期三，再过 31 天是星期几？",
+    "o": [
+     "三",
+     "六",
+     "二",
+     "一"
+    ],
+    "a": "六",
+    "e": "31÷7 余 3，从星期三往后数 3 天是星期六。"
+   },
+   {
+    "q": "一串珠子每 5 颗穿一组，52 颗珠子可以穿几组？",
+    "o": [
+     "9",
+     "10",
+     "5",
+     "11"
+    ],
+    "a": "10",
+    "e": "52÷5=10 组（取整）。"
+   },
+   {
+    "q": "彩灯按 红、黄、蓝 的顺序循环排列，第 34 盏是什么颜色？",
+    "o": [
+     "蓝",
+     "黄",
+     "红"
+    ],
+    "a": "红",
+    "e": "34÷3 余 1（余 0 看作第 3 个），对应红色。"
+   }
+  ],
+  "huanyuan": [
+   {
+    "q": "一个数加上 5，再乘 5，结果是 45。这个数是多少？",
+    "o": [
+     "9",
+     "6",
+     "5",
+     "4"
+    ],
+    "a": "4",
+    "e": "倒推：45÷5=9，再减 5 得 4。"
+   },
+   {
+    "q": "一个数加上 4，再乘 5，结果是 45。这个数是多少？",
+    "o": [
+     "5",
+     "9",
+     "7",
+     "6"
+    ],
+    "a": "5",
+    "e": "倒推：45÷5=9，再减 4 得 5。"
+   },
+   {
+    "q": "一个数加上 15，再乘 5，结果是 100。这个数是多少？",
+    "o": [
+     "6",
+     "5",
+     "20",
+     "7"
+    ],
+    "a": "5",
+    "e": "倒推：100÷5=20，再减 15 得 5。"
+   },
+   {
+    "q": "一个数加上 14，再乘 5，结果是 95。这个数是多少？",
+    "o": [
+     "5",
+     "7",
+     "19",
+     "6"
+    ],
+    "a": "5",
+    "e": "倒推：95÷5=19，再减 14 得 5。"
+   },
+   {
+    "q": "一个数加上 13，再乘 4，结果是 72。这个数是多少？",
+    "o": [
+     "6",
+     "5",
+     "7",
+     "18"
+    ],
+    "a": "5",
+    "e": "倒推：72÷4=18，再减 13 得 5。"
+   },
+   {
+    "q": "一个数加上 12，再乘 4，结果是 72。这个数是多少？",
+    "o": [
+     "18",
+     "7",
+     "8",
+     "6"
+    ],
+    "a": "6",
+    "e": "倒推：72÷4=18，再减 12 得 6。"
+   },
+   {
+    "q": "一个数加上 11，再乘 4，结果是 68。这个数是多少？",
+    "o": [
+     "8",
+     "7",
+     "6",
+     "17"
+    ],
+    "a": "6",
+    "e": "倒推：68÷4=17，再减 11 得 6。"
+   },
+   {
+    "q": "一个数加上 9，再乘 4，结果是 60。这个数是多少？",
+    "o": [
+     "7",
+     "15",
+     "6",
+     "8"
+    ],
+    "a": "6",
+    "e": "倒推：60÷4=15，再减 9 得 6。"
+   },
+   {
+    "q": "一个数加上 8，再乘 3，结果是 42。这个数是多少？",
+    "o": [
+     "6",
+     "14",
+     "8",
+     "7"
+    ],
+    "a": "6",
+    "e": "倒推：42÷3=14，再减 8 得 6。"
+   },
+   {
+    "q": "一个数加上 7，再乘 3，结果是 39。这个数是多少？",
+    "o": [
+     "13",
+     "6",
+     "7",
+     "8"
+    ],
+    "a": "6",
+    "e": "倒推：39÷3=13，再减 7 得 6。"
+   }
+  ]
+ },
+ "high": {
+  "xingcheng": [
+   {
+    "q": "甲乙两地相距 435 千米，两车相向而行，速度分别是 50 和 37 千米/时，几小时相遇？",
+    "o": [
+     "4",
+     "8",
+     "6",
+     "5"
+    ],
+    "a": "5",
+    "e": "相遇时间 = 路程÷速度和 = 435÷87=5 小时。"
+   },
+   {
+    "q": "两车相距 72 千米，同向而行，快车 68 千米/时，慢车 32 千米/时，快车几小时追上慢车？",
+    "o": [
+     "2",
+     "4",
+     "1",
+     "3"
+    ],
+    "a": "2",
+    "e": "追及时间 = 路程差÷速度差 = 72÷36=2 小时。"
+   },
+   {
+    "q": "一辆车以 52 千米/时行驶了 5 小时，一共走了多少千米？",
+    "o": [
+     "260",
+     "57",
+     "208",
+     "312"
+    ],
+    "a": "260",
+    "e": "路程 = 速度×时间 = 52×5=260 千米。"
+   },
+   {
+    "q": "甲乙两地相距 600 千米，两车相向而行，速度分别是 53 和 67 千米/时，几小时相遇？",
+    "o": [
+     "5",
+     "11",
+     "4",
+     "6"
+    ],
+    "a": "5",
+    "e": "相遇时间 = 路程÷速度和 = 600÷120=5 小时。"
+   },
+   {
+    "q": "两车相距 57 千米，同向而行，快车 70 千米/时，慢车 51 千米/时，快车几小时追上慢车？",
+    "o": [
+     "4",
+     "3",
+     "2",
+     "5"
+    ],
+    "a": "3",
+    "e": "追及时间 = 路程差÷速度差 = 57÷19=3 小时。"
+   },
+   {
+    "q": "一辆车以 55 千米/时行驶了 4 小时，一共走了多少千米？",
+    "o": [
+     "59",
+     "165",
+     "220",
+     "275"
+    ],
+    "a": "220",
+    "e": "路程 = 速度×时间 = 55×4=220 千米。"
+   },
+   {
+    "q": "甲乙两地相距 440 千米，两车相向而行，速度分别是 55 和 55 千米/时，几小时相遇？",
+    "o": [
+     "8",
+     "5",
+     "4",
+     "3"
+    ],
+    "a": "4",
+    "e": "相遇时间 = 路程÷速度和 = 440÷110=4 小时。"
+   },
+   {
+    "q": "两车相距 58 千米，同向而行，快车 72 千米/时，慢车 43 千米/时，快车几小时追上慢车？",
+    "o": [
+     "3",
+     "4",
+     "2",
+     "1"
+    ],
+    "a": "2",
+    "e": "追及时间 = 路程差÷速度差 = 58÷29=2 小时。"
+   },
+   {
+    "q": "一辆车以 57 千米/时行驶了 3 小时，一共走了多少千米？",
+    "o": [
+     "228",
+     "171",
+     "114",
+     "60"
+    ],
+    "a": "171",
+    "e": "路程 = 速度×时间 = 57×3=171 千米。"
+   },
+   {
+    "q": "甲乙两地相距 306 千米，两车相向而行，速度分别是 58 和 44 千米/时，几小时相遇？",
+    "o": [
+     "2",
+     "3",
+     "4",
+     "5"
+    ],
+    "a": "3",
+    "e": "相遇时间 = 路程÷速度和 = 306÷102=3 小时。"
+   }
+  ],
+  "gongcheng": [
+   {
+    "q": "一项工程，甲单独做要 6 天，乙单独做要 6 天。两人合作要几天完成？",
+    "o": [
+     "6",
+     "4",
+     "3",
+     "5"
+    ],
+    "a": "3",
+    "e": "合作时间 = 1÷(1/6+1/6) = 6×6÷(6+6)=3 天。"
+   },
+   {
+    "q": "一项工程，甲单独做要 6 天，乙单独做要 6 天。两人合作要几天完成？",
+    "o": [
+     "3",
+     "5",
+     "4",
+     "6"
+    ],
+    "a": "3",
+    "e": "合作时间 = 1÷(1/6+1/6) = 6×6÷(6+6)=3 天。"
+   },
+   {
+    "q": "一项工程，甲单独做要 6 天，乙单独做要 12 天。两人合作要几天完成？",
+    "o": [
+     "4",
+     "5",
+     "9",
+     "6"
+    ],
+    "a": "4",
+    "e": "合作时间 = 1÷(1/6+1/12) = 6×12÷(6+12)=4 天。"
+   },
+   {
+    "q": "一项工程，甲单独做要 6 天，乙单独做要 12 天。两人合作要几天完成？",
+    "o": [
+     "9",
+     "5",
+     "4",
+     "6"
+    ],
+    "a": "4",
+    "e": "合作时间 = 1÷(1/6+1/12) = 6×12÷(6+12)=4 天。"
+   },
+   {
+    "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
+    "o": [
+     "3.5",
+     "4.5",
+     "5.5",
+     "7"
+    ],
+    "a": "3.5",
+    "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
+   },
+   {
+    "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
+    "o": [
+     "4.5",
+     "5.5",
+     "3.5",
+     "7"
+    ],
+    "a": "3.5",
+    "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
+   },
+   {
+    "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
+    "o": [
+     "7",
+     "3.5",
+     "5.5",
+     "4.5"
+    ],
+    "a": "3.5",
+    "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
+   },
+   {
+    "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
+    "o": [
+     "5.5",
+     "3.5",
+     "7",
+     "4.5"
+    ],
+    "a": "3.5",
+    "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
+   },
+   {
+    "q": "一项工程，甲单独做要 7 天，乙单独做要 7 天。两人合作要几天完成？",
+    "o": [
+     "7",
+     "3.5",
+     "5.5",
+     "4.5"
+    ],
+    "a": "3.5",
+    "e": "合作时间 = 1÷(1/7+1/7) = 7×7÷(7+7)=3.5 天。"
+   },
+   {
+    "q": "一项工程，甲单独做要 8 天，乙单独做要 8 天。两人合作要几天完成？",
+    "o": [
+     "4",
+     "6",
+     "8",
+     "5"
+    ],
+    "a": "4",
+    "e": "合作时间 = 1÷(1/8+1/8) = 8×8÷(8+8)=4 天。"
+   }
+  ],
+  "chouti": [
+   {
+    "q": "有 6 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
+    "o": [
+     "6",
+     "12",
+     "8",
+     "7"
+    ],
+    "a": "7",
+    "e": "最坏情况每个抽屉 1 个，放 6 个；再多 1 个必有抽屉达 2 个，所以是 6+1=7 个。"
+   },
+   {
+    "q": "一年有 9 个月，至少有多少人，才能保证有 2 人同一个月生日？",
+    "o": [
+     "9",
+     "18",
+     "11",
+     "10"
+    ],
+    "a": "10",
+    "e": "把人看作苹果、月份看作抽屉：9+1=10 人。"
+   },
+   {
+    "q": "袋里有 3 种颜色的球各若干个，至少摸出几个，才能保证有 3 个同色？",
+    "o": [
+     "7",
+     "6",
+     "8",
+     "9"
+    ],
+    "a": "7",
+    "e": "最坏情况每种摸 2 个共 6 个，再摸 1 个必有 3 个同色：7 个。"
+   },
+   {
+    "q": "有 6 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
+    "o": [
+     "8",
+     "7",
+     "6",
+     "12"
+    ],
+    "a": "7",
+    "e": "最坏情况每个抽屉 1 个，放 6 个；再多 1 个必有抽屉达 2 个，所以是 6+1=7 个。"
+   },
+   {
+    "q": "一年有 10 个月，至少有多少人，才能保证有 2 人同一个月生日？",
+    "o": [
+     "11",
+     "12",
+     "10",
+     "20"
+    ],
+    "a": "11",
+    "e": "把人看作苹果、月份看作抽屉：10+1=11 人。"
+   },
+   {
+    "q": "袋里有 4 种颜色的球各若干个，至少摸出几个，才能保证有 3 个同色？",
+    "o": [
+     "12",
+     "9",
+     "8",
+     "10"
+    ],
+    "a": "9",
+    "e": "最坏情况每种摸 2 个共 8 个，再摸 1 个必有 3 个同色：9 个。"
+   },
+   {
+    "q": "有 7 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
+    "o": [
+     "8",
+     "14",
+     "7",
+     "9"
+    ],
+    "a": "8",
+    "e": "最坏情况每个抽屉 1 个，放 7 个；再多 1 个必有抽屉达 2 个，所以是 7+1=8 个。"
+   },
+   {
+    "q": "一年有 11 个月，至少有多少人，才能保证有 2 人同一个月生日？",
+    "o": [
+     "12",
+     "22",
+     "11",
+     "13"
+    ],
+    "a": "12",
+    "e": "把人看作苹果、月份看作抽屉：11+1=12 人。"
+   },
+   {
+    "q": "袋里有 4 种颜色的球各若干个，至少摸出几个，才能保证有 3 个同色？",
+    "o": [
+     "10",
+     "9",
+     "12",
+     "8"
+    ],
+    "a": "9",
+    "e": "最坏情况每种摸 2 个共 8 个，再摸 1 个必有 3 个同色：9 个。"
+   },
+   {
+    "q": "有 8 个抽屉，至少取多少个苹果放入，才能保证有一个抽屉里至少有 2 个苹果？",
+    "o": [
+     "10",
+     "16",
+     "9",
+     "8"
+    ],
+    "a": "9",
+    "e": "最坏情况每个抽屉 1 个，放 8 个；再多 1 个必有抽屉达 2 个，所以是 8+1=9 个。"
+   }
+  ],
+  "nongdu": [
+   {
+    "q": "把 11 克糖放入 68 克水中，糖水的浓度约是多少？",
+    "o": [
+     "16",
+     "19",
+     "14",
+     "11"
+    ],
+    "a": "14",
+    "e": "浓度 = 糖÷糖水总重 = 11÷79≈14%。"
+   },
+   {
+    "q": "浓度为 11% 的糖水共 164 克，其中糖有多少克？",
+    "o": [
+     "18",
+     "2",
+     "23",
+     "146"
+    ],
+    "a": "18",
+    "e": "糖 = 糖水总重×浓度 = 164×11%=18 克。"
+   },
+   {
+    "q": "16 克糖和 120 克水的糖水，再加入 47 克水后，浓度约变为多少？",
+    "o": [
+     "12",
+     "9",
+     "6",
+     "13"
+    ],
+    "a": "9",
+    "e": "加水后糖仍是 16 克，总重 183 克，浓度 = 16÷183≈9%。（加水变稀）"
+   },
+   {
+    "q": "把 13 克糖放入 141 克水中，糖水的浓度约是多少？",
+    "o": [
+     "5",
+     "13",
+     "8",
+     "9"
+    ],
+    "a": "8",
+    "e": "浓度 = 糖÷糖水总重 = 13÷154≈8%。"
+   },
+   {
+    "q": "浓度为 22% 的糖水共 91 克，其中糖有多少克？",
+    "o": [
+     "20",
+     "25",
+     "1",
+     "71"
+    ],
+    "a": "20",
+    "e": "糖 = 糖水总重×浓度 = 91×22%=20 克。"
+   },
+   {
+    "q": "17 克糖和 103 克水的糖水，再加入 41 克水后，浓度约变为多少？",
+    "o": [
+     "8",
+     "14",
+     "15",
+     "11"
+    ],
+    "a": "11",
+    "e": "加水后糖仍是 17 克，总重 161 克，浓度 = 17÷161≈11%。（加水变稀）"
+   },
+   {
+    "q": "把 15 克糖放入 113 克水中，糖水的浓度约是多少？",
+    "o": [
+     "13",
+     "12",
+     "9",
+     "17"
+    ],
+    "a": "12",
+    "e": "浓度 = 糖÷糖水总重 = 15÷128≈12%。"
+   },
+   {
+    "q": "浓度为 18% 的糖水共 122 克，其中糖有多少克？",
+    "o": [
+     "1",
+     "22",
+     "100",
+     "27"
+    ],
+    "a": "22",
+    "e": "糖 = 糖水总重×浓度 = 122×18%=22 克。"
+   },
+   {
+    "q": "19 克糖和 86 克水的糖水，再加入 35 克水后，浓度约变为多少？",
+    "o": [
+     "14",
+     "11",
+     "15",
+     "18"
+    ],
+    "a": "14",
+    "e": "加水后糖仍是 19 克，总重 140 克，浓度 = 19÷140≈14%。（加水变稀）"
+   },
+   {
+    "q": "把 16 克糖放入 84 克水中，糖水的浓度约是多少？",
+    "o": [
+     "16",
+     "13",
+     "19",
+     "21"
+    ],
+    "a": "16",
+    "e": "浓度 = 糖÷糖水总重 = 16÷100≈16%。"
+   }
+  ],
+  "luoji": [
+   {
+    "q": "甲、乙、丙三人中只有一人做了好事。甲说“是乙做的”，乙说“不是我”，丙说“也不是我”。已知只有一人说真话，是谁做的好事？",
+    "o": [
+     "甲",
+     "乙",
+     "丙",
+     "无法确定"
+    ],
+    "a": "丙",
+    "e": "假设甲做：甲假、乙真、丙真（两真，不符）；假设乙做：甲真、乙假、丙真（两真，不符）；假设丙做：甲假、乙真、丙假（只有一真，符合）。所以是丙做的。"
+   },
+   {
+    "q": "小明、小红、小强分别喜欢语文、数学、英语中的一科。小明不喜欢语文，小红不喜欢数学也不喜欢语文，那么小强喜欢哪一科？",
+    "o": [
+     "语文",
+     "数学",
+     "英语",
+     "无法确定"
+    ],
+    "a": "语文",
+    "e": "小红不喜欢数学也不喜欢语文 → 小红喜欢英语；小明不喜欢语文 → 小明只能喜欢数学；剩下语文归小强。"
+   },
+   {
+    "q": "三张卡片分别写着 1、2、3。小张拿的不是 1，小李拿的不是 2 也不是 1，那么小王拿的是几？",
+    "o": [
+     "1",
+     "2",
+     "3",
+     "无法确定"
+    ],
+    "a": "1",
+    "e": "小李不是 2 也不是 1 → 小李拿 3；小张不是 1 且 3 已被拿 → 小张拿 2；剩下 1 归小王。"
+   },
+   {
+    "q": "红、黄、蓝三种颜色的球各一个，分给小丽、小美、小芳。小丽不要红球，小美不要红球也不要黄球，那么小芳拿到什么球？",
+    "o": [
+     "红球",
+     "黄球",
+     "蓝球",
+     "无法确定"
+    ],
+    "a": "红球",
+    "e": "小美不要红黄 → 小美拿蓝球；小丽不要红且蓝已被拿 → 小丽拿黄球；剩下红球归小芳。"
+   },
+   {
+    "q": "老师把 1、2、3 三个数分给小强、小军、小浩。小强拿的不是最大的，小军拿的是最小的，那么小浩拿到几？",
+    "o": [
+     "1",
+     "2",
+     "3",
+     "无法确定"
+    ],
+    "a": "3",
+    "e": "最小是 1 → 小军拿 1；最大是 3，小强不是最大 → 小强拿 2；剩下 3 归小浩。"
+   },
+   {
+    "q": "小云、小雨、小雪三人年龄各不相同。小云比小雨大，小雨比小雪大。谁年龄最小？",
+    "o": [
+     "小云",
+     "小雨",
+     "小雪",
+     "一样大"
+    ],
+    "a": "小雪",
+    "e": "小云 > 小雨 > 小雪，所以小雪最小。"
+   },
+   {
+    "q": "书架上层、中层、下层分别放着语文、数学、英语书。已知语文不在上层，数学在中层，那么英语在哪一层？",
+    "o": [
+     "上层",
+     "中层",
+     "下层",
+     "无法确定"
+    ],
+    "a": "上层",
+    "e": "数学在中层；语文不在上层 → 语文在下层；剩下英语在上层。"
+   },
+   {
+    "q": "甲、乙、丙站成一排。甲站在乙的左边，丙站在最右边。谁站在中间？",
+    "o": [
+     "甲",
+     "乙",
+     "丙",
+     "无法确定"
+    ],
+    "a": "乙",
+    "e": "丙在最右边；甲在乙左边，所以甲最左、乙居中、丙最右。中间是乙。"
+   },
+   {
+    "q": "小 A 比小 B 高，小 C 比小 A 高，小 B 比小 D 高。他们四人中谁最高？",
+    "o": [
+     "小 A",
+     "小 B",
+     "小 C",
+     "小 D"
+    ],
+    "a": "小 C",
+    "e": "由条件得 小 C > 小 A > 小 B > 小 D，所以最高的是小 C。"
+   },
+   {
+    "q": "甲、乙、丙、丁比身高。甲不是最高也不是最矮，乙比甲矮，丙比甲高，丁比乙矮。谁最高？",
+    "o": [
+     "甲",
+     "乙",
+     "丙",
+     "丁"
+    ],
+    "a": "丙",
+    "e": "由条件得 丙 > 甲 > 乙 > 丁，所以最高的是丙。"
+   }
+  ]
+ }
+};
+
+var KEY_BEST = 'olympiad.best';
+var state = { grade: null, topic: null, mode: 'bank', seed: 0, current: null,
+  locked: false, correct: 0, wrong: 0, streak: 0, best: 0, timer: null, spoken: false };
+
+function $(id){ return document.getElementById(id); }
+function safeGet(k,d){ try{ var v=localStorage.getItem(k); return v==null?d:JSON.parse(v);}catch(e){return d;} }
+function safeSet(k,v){ try{ localStorage.setItem(k,typeof v==='object'?JSON.stringify(v):v);}catch(e){} }
+state.best = safeGet(KEY_BEST,0);
+
+function speak(t){
+  try{
+    if(!window.speechSynthesis||!window.SpeechSynthesisUtterance)return;
+    window.speechSynthesis.cancel();
+    var u=new SpeechSynthesisUtterance(t);u.lang='zh-CN';u.rate=0.95;
+    window.speechSynthesis.speak(u);
+  }catch(e){}
+}
+function cancelSpeak(){ try{ if(window.speechSynthesis)window.speechSynthesis.cancel(); }catch(e){} }
+
+function renderStats(){
+  $('correct').textContent=state.correct;$('wrong').textContent=state.wrong;
+  $('streak').textContent=state.streak;$('best').textContent=state.best;
+}
+
+function selectGrade(g){
+  state.grade=g;
+  document.querySelectorAll('#selGrade .chip').forEach(function(b){b.classList.toggle('on',b.dataset.g===g);});
+  $('selTopic').classList.remove('hide');
+  document.querySelectorAll('#selTopic .chip').forEach(function(b){b.classList.toggle('on',b.dataset.mode==='bank');});
+  renderTopics();
+}
+function renderTopics(){
+  $('topicView').classList.remove('hide');$('quizView').classList.add('hide');
+  var list=$('topicList');list.innerHTML='';
+  OLY_TOPICS[state.grade].forEach(function(t){
+    var c=document.createElement('div');c.className='topic-card';
+    c.innerHTML='<span class="ic">'+t.icon+'</span><span class="nm">'+t.name+'</span><span class="ds">'+t.desc+'</span>';
+    c.addEventListener('click',function(){ startTopic(t.id); });
+    list.appendChild(c);
+  });
+}
+function startTopic(tid){
+  state.topic=tid;state.seed=0;state.correct=0;state.wrong=0;state.streak=0;
+  $('topicView').classList.add('hide');$('quizView').classList.remove('hide');
+  var t=OLY_TOPICS[state.grade].filter(function(x){return x.id===tid;})[0];
+  $('topicTag').textContent=t.icon+' '+t.name+(state.mode==='random'?' · 随机挑战':' · 闯关 '+BANK[state.grade][tid].length+' 题');
+  renderStats();
+  nextQuestion();
+}
+function getQuestion(){
+  if(state.mode==='random'){
+    state.seed=Math.floor(Math.random()*100000);
+    return genQuestion(state.grade,state.topic,state.seed);
+  }
+  var arr=BANK[state.grade][state.topic];
+  if(state.seed>=arr.length)state.seed=0;
+  return arr[state.seed];
+}
+function nextQuestion(){
+  cancelSpeak();
+  state.locked=false;state.spoken=false;
+  state.current=getQuestion();
+  $('qtext').textContent=state.current.q;
+  $('qmeta').textContent=state.mode==='random'?'随机出题 · 做不完':'第 '+(state.seed+1)+' / '+BANK[state.grade][state.topic].length+' 题';
+  $('feedback').textContent='';$('explain').classList.remove('show');
+  var box=$('opts');box.innerHTML='';
+  state.current.o.forEach(function(op){
+    var b=document.createElement('button');b.className='opt';b.textContent=op;
+    b.addEventListener('click',function(){ onAnswer(b,op); });
+    box.appendChild(b);
+  });
+  speak(state.current.q);
+  // 自动落焦点到第一个选项（遥控器）
+  setTimeout(function(){ var f=box.querySelector('.opt'); if(f)try{f.focus();}catch(e){} },120);
+}
+function onAnswer(btn,val){
+  if(state.locked)return;
+  var p=state.current;
+  if(val===p.a){
+    state.locked=true;btn.classList.add('correct','pop');
+    $('feedback').innerHTML='<span class="ok">✅ 答对了！</span>';
+    state.correct++;state.streak++;
+    if(state.streak>state.best){state.best=state.streak;safeSet(KEY_BEST,state.best);}
+    renderStats();
+    $('explain').textContent=p.e;$('explain').classList.add('show');
+    state.timer=setTimeout(nextQuestion,1100);
+  }else{
+    btn.classList.add('wrong','shake');btn.disabled=true;
+    $('feedback').innerHTML='<span class="bad">❌ 再想一想，看下面的解析</span>';
+    state.wrong++;state.streak=0;renderStats();
+    $('explain').textContent=p.e;$('explain').classList.add('show');
+  }
+}
+function manualNext(){ clearTimeout(state.timer); nextQuestion(); }
+
+document.querySelectorAll('#selGrade .chip').forEach(function(b){
+  b.addEventListener('click',function(){ selectGrade(b.dataset.g); });
+});
+document.querySelectorAll('#selTopic .chip').forEach(function(b){
+  b.addEventListener('click',function(){
+    state.mode=b.dataset.mode;
+    document.querySelectorAll('#selTopic .chip').forEach(function(x){x.classList.toggle('on',x===b);});
+    if(state.topic)startTopic(state.topic);
+  });
+});
+$('nextBtn').addEventListener('click',manualNext);
+$('backTopics').addEventListener('click',function(){ clearTimeout(state.timer); cancelSpeak(); renderTopics(); });
+$('replayBtn').addEventListener('click',function(){ speak(state.current.q); });
+
+/* 顶栏接口：🔊 重听、⏭ 下一题 */
+window.replayCurrent = function(){ if(state.current) speak(state.current.q); };
+window.XNLY_NEXT = function(){ if(!$('quizView').classList.contains('hide')) manualNext(); };
+</script>
+<script>
+if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1')) {
+  navigator.serviceWorker.register('../sw.js').catch(function () { });
+}
+</script>
+<script src="../homebtn.js"></script>
+</body>
+</html>
