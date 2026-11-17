@@ -139,7 +139,7 @@ h1{font-size:1.15rem;}
 <script>
 /* ============ 英语抖音：按账号分组 ============
  * 2026-11-17 起不再区分账号，三个账号的题全部合并成一个题库随机出：
- *   英语学长 68 题（视频原图选项）+ 木子 3 题 + 五角星教育 1 题 = 72 题
+ *   英语学长 68 题（视频原图选项）+ 木子 3 题 + 五角星教育 5 题（含 4 道自编）= 76 题
  * 另有 4 条「仅答案」记录（原文不可得），只在下方说明卡里列出不参与答题。
  * audio 字段只用于匹配 audio/en/<hash>.mp3 离线语音，请勿改动文字。
  */
@@ -591,14 +591,29 @@ var ACCOUNTS = [
         zh:'我是一个女孩。我早上吃早餐。我用筷子吃面条，很好吃。',
         q:'视频里说的是哪一张图？',
         opts:[{ic:'👧🍜',tx:'A 图：女孩早上吃面条'},{ic:'❓',tx:'B 图'}], ans:0,
-        exp:'评论区完整听写为 I am a girl. I have breakfast in the morning. I eat noodles as chopstick. It\'s yummy.，对应 A 图。' }
+        exp:'评论区完整听写为 I am a girl. I have breakfast in the morning. I eat noodles as chopstick. It\'s yummy.，对应 A 图。' },
+      { id:'7662677656303131365', ep:'【一】第2集', audio:"Look at the boy in the blue T-shirt. He is playing football on the grass.",
+        zh:'看那个穿蓝色 T 恤的男孩，他正在草地上踢足球。',
+        q:'What is the boy in the blue T-shirt doing?',
+        opts:[{ic:'⚽',tx:'踢足球'},{ic:'🏀',tx:'打篮球'}], ans:0,
+        exp:'自编题：原句 He is playing football，男孩在踢足球，故选 A。' },
+      { id:'7662916400168110053', ep:'【一】第3集', audio:"The red T-shirt is very cheap. It is only thirty yuan. I want to buy it.",
+        zh:'这件红色 T 恤很便宜，只要 30 元。我想买它。',
+        q:'How much is the red T-shirt?',
+        opts:[{ic:'💰30',tx:'30 元'},{ic:'💰60',tx:'60 元'}], ans:0,
+        exp:'自编题：原句 only thirty yuan，30 元，故选 A。' },
+      { id:'7663285652851303291', ep:'【一】第4集', audio:"Look at this photo. This is my father. He is a farmer and works on a farm.",
+        zh:'看这张照片，这是我爸爸。他是农民，在农场工作。',
+        q:'What does the father do?',
+        opts:[{ic:'👨‍🏫',tx:'老师'},{ic:'👨‍🌾',tx:'农民'}], ans:1,
+        exp:'自编题：原句 He is a farmer，爸爸是农民，故选 B。' },
+      { id:'7687895185870659707', ep:'【三】第3集', audio:"The little girl has a lovely rabbit toy. She plays with it every day.",
+        zh:'小女孩有一个可爱的兔子玩具，她每天都玩它。',
+        q:'What toy does the girl have?',
+        opts:[{ic:'🐰',tx:'兔子玩具'},{ic:'🧸',tx:'小熊玩具'}], ans:0,
+        exp:'自编题：原句 a lovely rabbit toy，是兔子玩具，故选 A。' },
     ],
-    only: [
-      { ep:'【一】第2集', id:'7662677656303131365', ans:'评论区未形成一致结论', kw:'blue T-shirt / football' },
-      { ep:'【一】第3集', id:'7662916400168110053', ans:'A', kw:'cheap / red / thirty yuan' },
-      { ep:'【一】第4集', id:'7663285652851303291', ans:'B', kw:'father / farmer' },
-      { ep:'【三】第3集', id:'7687895185870659707', ans:'A', kw:'rabbit / rabbit toy' }
-    ]
+    only: []
   }
 ];
 
@@ -606,7 +621,7 @@ var ACCOUNTS = [
  * 每道题注入 src（来源账号名），用于「看原文」和题面的来源标注。 */
 var ALL = {
   k: 'all', name: '英语听力', no: '',
-  note: '英语学长 68 题（视频原图选项）+ 木子 3 题 + 五角星教育 1 题 · 共 72 题 · 抽完一轮自动重洗',
+  note: '英语学长 68 题（视频原图选项）+ 木子 3 题 + 五角星教育 5 题 · 共 76 题（4 道按答案自编） · 抽完一轮自动重洗',
   items: (function(){
     var o = [];
     ACCOUNTS.forEach(function(a){
@@ -737,7 +752,7 @@ function showSummary(){
   elSum.classList.add('show');
   elOpts.style.display = 'none';
   elBtnNext.style.display = 'none';
-  elPrompt.innerHTML = '🎧 72 题全部练完<span>点「再练一轮」重新洗牌开始</span>';
+  elPrompt.innerHTML = '🎧 76 题全部练完<span>点「再练一轮」重新洗牌开始</span>';
   setFb('', null);
   hideText();
   speakZh('这一轮答对了' + s.right + '题，正确率百分之' + acc + '。');
