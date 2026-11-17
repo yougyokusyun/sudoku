@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="theme-color" content="#00897b">
+<title>2048 · 5×5 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--accent:#00897b;--gap:8px;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(800px 500px at 0% 0%,#e0f4f1,transparent 60%),
+             radial-gradient(800px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#f7fbf9,#f3f9ff);
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  padding:12px 12px 22px;gap:10px;user-select:none;touch-action:none;overflow:hidden;}
+header{width:100%;max-width:520px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.1rem;color:var(--accent);font-weight:900;}
+.back{margin-left:0;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  padding:7px 13px;font-weight:800;font-size:.82rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.scores{margin-left:auto;display:flex;gap:7px;}
+.sc{background:#fff;border-radius:12px;padding:5px 11px;text-align:center;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.sc span{display:block;font-size:.66rem;color:#7b8b9c;font-weight:700;}
+.sc b{font-size:1rem;color:var(--accent);}
+.bar{width:100%;max-width:520px;display:flex;gap:8px;align-items:center;justify-content:center;}
+.btn{border:none;border-radius:999px;padding:9px 17px;font-family:inherit;font-weight:900;font-size:.9rem;
+  color:#fff;background:var(--accent);box-shadow:0 4px 12px rgba(0,137,123,.28);cursor:pointer;}
+.btn.alt{background:#fff;color:var(--ink);box-shadow:0 3px 10px rgba(36,59,83,.12);}
+.tip{font-size:.74rem;color:#8090a0;text-align:center;max-width:520px;}
+.boardwrap{position:relative;margin:auto;}
+.board{position:relative;background:rgba(0,137,123,.10);border-radius:16px;box-shadow:0 10px 30px rgba(36,59,83,.16);}
+.bg{position:absolute;width:var(--cell);height:var(--cell);border-radius:10px;background:rgba(255,255,255,.55);}
+.tile{position:absolute;width:var(--cell);height:var(--cell);border-radius:10px;
+  display:flex;align-items:center;justify-content:center;font-weight:900;
+  transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap))));
+  transition:transform .12s ease-out;box-shadow:0 3px 8px rgba(36,59,83,.12);will-change:transform;}
+.tile.new{animation:pop .18s ease-out;}
+.tile.merged{animation:pop .2s ease-out;}
+@keyframes pop{0%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(.4);}70%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1.12);}100%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1);}}
+.overlay{position:fixed;inset:0;background:rgba(36,59,83,.45);display:none;align-items:center;justify-content:center;z-index:20;}
+.overlay.show{display:flex;}
+.dlg{background:#fff;border-radius:22px;padding:26px 30px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);max-width:86vw;}
+.dlg h2{font-size:1.5rem;color:var(--accent);margin-bottom:8px;}
+.dlg p{font-size:.95rem;color:#5b6b7b;margin-bottom:16px;line-height:1.6;}
+.hidden{display:none!important;}
+@media(max-width:600px){
+  h1{font-size:1rem;} .sc b{font-size:.92rem;} .btn{padding:8px 14px;font-size:.85rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🔢 2048 · 5×5</h1>
+  <div class="scores">
+    <div class="sc"><span>得分</span><b id="score">0</b></div>
+    <div class="sc"><span>最高</span><b id="best">0</b></div>
+  </div>
+</header>
+<div class="bar">
+  <button class="btn" id="newBtn" type="button">🎲 新游戏</button>
+  <button class="btn alt" id="undoBtn" type="button">↩️ 撤销</button>
+  <button class="btn alt" id="soundBtn" type="button">🔊 读状态</button>
+</div>
+<div class="tip" id="tip">手机/鼠标：滑动方块　·　电视：方向键移动，OK 键点按钮　·　相同数字相撞合并，凑出 2048！</div>
+<div class="boardwrap">
+  <div class="board" id="board"></div>
+</div>
+<div class="overlay" id="overlay">
+  <div class="dlg">
+    <h2 id="dlgTitle">游戏结束</h2>
+    <p id="dlgText"></p>
+    <button class="btn" id="dlgBtn" type="button">再来一局</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var N = 5, WIN = 2048;
+var BEST_KEY = 'game2048.best';
+var COLORS = {
+  2:'#eee4da',4:'#ede0c8',8:'#f2b179',16:'#f59563',32:'#f67c5f',64:'#f65e3b',
+  128:'#edcf72',256:'#edcc61',512:'#edc850',1024:'#edc53f',2048:'#edc22e',4096:'#3c3a32'
+};
+function colorOf(v){ return COLORS[v] || '#2f2b26'; }
+function fgOf(v){ return v<=4 ? '#5b6b7b' : '#fff'; }
+function fontSizeOf(v){ var s=String(v); return s.length>=4?'1.1rem':s.length===3?'1.35rem':s.length===2?'1.7rem':'1.9rem'; }
+
+var boardEl=document.getElementById('board'), scoreEl=document.getElementById('score'), bestEl=document.getElementById('best');
+var overlay=document.getElementById('overlay'), dlgTitle=document.getElementById('dlgTitle'), dlgText=document.getElementById('dlgText');
+var score=0, best=0, grid=[], tiles=[], uid=0, history=[], busy=false, won=false, cell=60;
+
+function readBest(){ try{ return parseInt(localStorage.getItem(BEST_KEY),10)||0; }catch(e){ return 0; } }
+function saveBest(){ try{ localStorage.setItem(BEST_KEY,String(best)); }catch(e){} }
+
+/* ---------- 布局 ---------- */
+function layout(){
+  var availW=Math.min(window.innerWidth-24, 520);
+  var availH=Math.max(240, window.innerHeight-230);
+  var size=Math.floor(Math.min(availW,availH,480));
+  boardEl.style.width=size+'px'; boardEl.style.height=size+'px';
+  cell=(size-(N+1)*8)/N;
+  boardEl.style.setProperty('--cell',cell+'px');
+}
+function buildBg(){
+  boardEl.innerHTML='';
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++){
+    var bg=document.createElement('div'); bg.className='bg';
+    bg.style.transform='translate(calc('+c+'*(100% + var(--gap))),calc('+r+'*(100% + var(--gap))))';
+    boardEl.appendChild(bg);
+  }
+}
+function makeTile(r,c,v,isNew){
+  var el=document.createElement('div'); el.className='tile'+(isNew?' new':'');
+  el.style.setProperty('--r',r); el.style.setProperty('--c',c);
+  el.textContent=String(v);
+  el.style.background=colorOf(v); el.style.color=fgOf(v); el.style.fontSize=fontSizeOf(v);
+  boardEl.appendChild(el);
+  return {id:++uid,r:r,c:c,v:v,el:el};
+}
+function place(t,r,c){ t.r=r; t.c=c; t.el.style.setProperty('--r',r); t.el.style.setProperty('--c',c); }
+function paint(t,merged){
+  t.el.textContent=String(t.v); t.el.style.background=colorOf(t.v);
+  t.el.style.color=fgOf(t.v); t.el.style.fontSize=fontSizeOf(t.v);
+  if(merged){ t.el.classList.remove('merged'); void t.el.offsetWidth; t.el.classList.add('merged'); }
+}
+
+/* ---------- 逻辑 ---------- */
+function emptyCells(){
+  var used={}, out=[], i;
+  for(i=0;i<tiles.length;i++) used[tiles[i].r+','+tiles[i].c]=1;
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++) if(!used[r+','+c]) out.push([r,c]);
+  return out;
+}
+function spawn(){
+  var cells=emptyCells(); if(!cells.length) return null;
+  var p=cells[Math.floor(Math.random()*cells.length)];
+  var v=Math.random()<0.9?2:4;
+  return makeTile(p[0],p[1],v,true);
+}
+function snapshot(){
+  var g=[]; for(var r=0;r<N;r++){ g[r]=[]; for(var c=0;c<N;c++) g[r][c]=0; }
+  for(var i=0;i<tiles.length;i++) g[tiles[i].r][tiles[i].c]=tiles[i].v;
+  return {g:g,score:score,won:won};
+}
+function restore(s){
+  for(var i=0;i<tiles.length;i++) tiles[i].el.remove();
+  tiles=[]; score=s.score; won=s.won;
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++) if(s.g[r][c]) tiles.push(makeTile(r,c,s.g[r][c],false));
+  updateHud();
+}
+function updateHud(){ scoreEl.textContent=String(score); bestEl.textContent=String(best); }
+
+function move(dir){
+  if(busy||overlay.classList.contains('show')) return;
+  var snap=snapshot();
+  var at={}, i, t;
+  for(i=0;i<tiles.length;i++){ t=tiles[i]; at[t.r+','+t.c]=t; }
+
+  /* 每条线按移动方向排序：目标端在前 */
+  var moves=[], gained=0;
+  for(var line=0;line<N;line++){
+    var seq=[];
+    for(var k=0;k<N;k++){
+      var r = dir==='left'||dir==='right' ? line : (dir==='up'?k:N-1-k);
+      var c = dir==='up'||dir==='down' ? line : (dir==='left'?k:N-1-k);
+      var tile=at[r+','+c];
+      if(tile) seq.push(tile);
+    }
+    var res=[];
+    for(i=0;i<seq.length;i++){
+      var cur=seq[i], nxt=seq[i+1];
+      if(nxt && nxt.v===cur.v){
+        var vv=cur.v*2;
+        res.push({tile:cur,v:vv,eaten:[nxt]}); gained+=vv; i++;
+      } else res.push({tile:cur,v:cur.v,eaten:[]});
+    }
+    for(i=0;i<res.length;i++){
+      var rr = dir==='left'||dir==='right' ? line : (dir==='up'?i:N-1-i);
+      var cc = dir==='up'||dir==='down' ? line : (dir==='left'?i:N-1-i);
+      var item=res[i];
+      moves.push({tile:item.tile,r:rr,c:cc,v:item.v,eaten:item.eaten});
+      for(var e=0;e<item.eaten.length;e++) moves.push({tile:item.eaten[e],r:rr,c:cc,v:0,eaten:null,remove:true});
+    }
+  }
+
+  var changed=false;
+  for(i=0;i<moves.length;i++){
+    var m=moves[i];
+    if(m.tile.r!==m.r||m.tile.c!==m.c) changed=true;
+    if(!m.remove && m.v!==m.tile.v) changed=true;
+  }
+  if(!changed) return;
+
+  history.push(snap); if(history.length>12) history.shift();
+  score+=gained; if(score>best){ best=score; saveBest(); }
+  busy=true;
+
+  /* 滑动：先更新所有位置（含被吃掉的方块滑向同格） */
+  for(i=0;i<moves.length;i++){ var mv=moves[i]; place(mv.tile,mv.r,mv.c); }
+
+  setTimeout(function(){
+    /* 移除被合并的方块，更新保留方块数值 */
+    for(var j=0;j<moves.length;j++){
+      var mv=moves[j];
+      if(mv.remove){ mv.tile.el.remove(); var ix=tiles.indexOf(mv.tile); if(ix>=0) tiles.splice(ix,1); }
+    }
+    for(j=0;j<moves.length;j++){
+      mv=moves[j];
+      if(!mv.remove && mv.v!==0){ mv.tile.v=mv.v; paint(mv.tile,true); }
+    }
+    var nt=spawn(); if(nt) tiles.push(nt);
+    updateHud();
+    checkState();
+    busy=false;
+  },130);
+}
+
+function noMoves(){
+  if(emptyCells().length) return false;
+  var at={},i;
+  for(i=0;i<tiles.length;i++) at[tiles[i].r+','+tiles[i].c]=tiles[i];
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++){
+    var t=at[r+','+c]; if(!t) continue;
+    if(c+1<N && at[r+','+(c+1)] && at[r+','+(c+1)].v===t.v) return false;
+    if(r+1<N && at[(r+1)+','+c] && at[(r+1)+','+c].v===t.v) return false;
+  }
+  return true;
+}
+function checkState(){
+  var max=0; for(var i=0;i<tiles.length;i++) max=Math.max(max,tiles[i].v);
+  if(!won && max>=WIN){ won=true; showDlg('🎉 达成 2048！','太棒了，你凑出了 '+WIN+'！可以继续挑战更高分。','继续玩'); return; }
+  if(noMoves()) showDlg('游戏结束','没有可合并的方块了，最终得分 '+score+'。','再来一局');
+}
+function showDlg(title,text,btn){
+  dlgTitle.textContent=title; dlgText.textContent=text; document.getElementById('dlgBtn').textContent=btn;
+  overlay.classList.add('show');
+}
+function hideDlg(){ overlay.classList.remove('show'); }
+function newGame(){
+  for(var i=0;i<tiles.length;i++) tiles[i].el.remove();
+  tiles=[]; score=0; won=false; history=[]; busy=false; hideDlg();
+  var a=spawn(); if(a) tiles.push(a);
+  var b=spawn(); if(b) tiles.push(b);
+  updateHud();
+}
+function undo(){ if(busy||!history.length) return; hideDlg(); restore(history.pop()); }
+
+/* ---------- 输入：方向键（capture 抢在遥控层之前） ---------- */
+var DIRS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',
+          w:'up',s:'down',a:'left',d:'right'};
+window.addEventListener('keydown',function(e){
+  var d=DIRS[e.key];
+  if(d){ e.preventDefault(); e.stopPropagation(); move(d); }
+},true);
+
+/* ---------- 输入：触摸 / 鼠标滑动 ---------- */
+var sx=0,sy=0,tracking=false;
+function start(x,y){ sx=x; sy=y; tracking=true; }
+function end(x,y){
+  if(!tracking) return; tracking=false;
+  var dx=x-sx, dy=y-sy;
+  if(Math.max(Math.abs(dx),Math.abs(dy))<24) return;
+  move(Math.abs(dx)>Math.abs(dy) ? (dx>0?'right':'left') : (dy>0?'down':'up'));
+}
+boardEl.addEventListener('touchstart',function(e){
+  if(e.touches.length!==1) return; var t=e.touches[0]; start(t.clientX,t.clientY); e.preventDefault();
+},{passive:false});
+boardEl.addEventListener('touchend',function(e){
+  if(!e.changedTouches.length) return; var t=e.changedTouches[0]; end(t.clientX,t.clientY); e.preventDefault();
+},{passive:false});
+boardEl.addEventListener('mousedown',function(e){ start(e.clientX,e.clientY); });
+window.addEventListener('mouseup',function(e){ end(e.clientX,e.clientY); });
+
+document.getElementById('newBtn').addEventListener('click',newGame);
+document.getElementById('undoBtn').addEventListener('click',undo);
+document.getElementById('soundBtn').addEventListener('click',speakState);
+document.getElementById('dlgBtn').addEventListener('click',function(){
+  if(!won) newGame(); else { won=true; hideDlg(); }
+});
+function speakState(){
+  var max=0; for(var i=0;i<tiles.length;i++) max=Math.max(max,tiles[i].v);
+  var msg='当前得分 '+score+'，最大方块 '+max+'。';
+  try{ if(window.XNLY&&window.XNLY.voice&&window.XNLY.voice.speak){ window.XNLY.voice.speak(msg); return; } }catch(e){}
+  try{ if(window.speechSynthesis){ window.speechSynthesis.cancel(); var u=new SpeechSynthesisUtterance(msg); u.lang='zh-CN'; window.speechSynthesis.speak(u); } }catch(e){}
+}
+window.replayCurrent=speakState;
+window.XNLY_NEXT=newGame;
+window.__game2048={
+  move:move,newGame:newGame,undo:undo,
+  state:function(){ var g=[]; for(var r=0;r<N;r++){g[r]=[];for(var c=0;c<N;c++)g[r][c]=0;} for(var i=0;i<tiles.length;i++)g[tiles[i].r][tiles[i].c]=tiles[i].v; return {g:g,score:score,best:best}; },
+  setGrid:function(arr){ for(var i=0;i<tiles.length;i++) tiles[i].el.remove(); tiles=[]; for(var r=0;r<N;r++)for(var c=0;c<N;c++) if(arr[r]&&arr[r][c]) tiles.push(makeTile(r,c,arr[r][c],false)); updateHud(); }
+};
+window.addEventListener('resize',function(){ layout(); });
+layout(); buildBg(); best=readBest(); newGame();
+})();
+</script>
+<script src="../sw.js"></script>
+<script src="../homebtn.js"></script>
+</body>
+</html>
