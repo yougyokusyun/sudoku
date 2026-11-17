@@ -158,6 +158,9 @@
  * v77 变化：考试听力每题自动播 2 遍、不可重听、不显示题号且不能回退；笔试区答题卡只读，
  *           仅「上一题 / 下一题」；练习模式答对自动跳下一题、答错停留看原文。
  * v78 变化：新增「英语抖音」页 games/english-douyin.html（3 个抖音账号分组练听力，答错给全文）并加入预缓存。
+ * v88 变化：英语抖音页升级——外部更新后题库扩到 72 道真题（英语学长 68 题带视频原图选项 + 木子 3 题 +
+ *           五角星教育 1 题），本次按用户要求合并三个账号为一个题库随机出题（题面标注来源与集数），
+ *           移除账号切换条；补齐 57 条缺失的离线神经语音，全站 audio/en 达 2237 段。
  * v81 变化：原「英语简单句型」（english.html 听句子选图）重做为 games/english-sentence.html——
  *           20 个生活场景的 A/B 对话逐句朗读（读完自动换下一个）、底部挂本场景核心句型；
  *           学完可直接做测试：对话补全（挖一句从 4 句里选）40 题 + 句内缺词 105 题，
@@ -168,7 +171,7 @@
  *           （15 条 mp3，-10% 语速），失败回退系统语音；首页卡片同色。
  *           附「在抖音里看」兜底链接；看原声期间暂停自动跳题，已答题关闭后 1.6s 继续。
  */
-var CACHE = 'xnly-v81';
+var CACHE = 'xnly-v88';
 
 var PRECACHE = [
   './',
@@ -292,7 +295,7 @@ self.addEventListener('activate', function (e) {
       return Promise.all(keys.filter(function (k) {
         return k !== CACHE;
       }).map(function (k) {
-        return caches.delete(k);   /* 清掉 xnly-v13 / v14 等旧缓存 */
+        return caches.delete(k);   /* 清掉 xnly-v88 / v14 等旧缓存 */
       }));
     }).then(function () {
       return self.clients.claim();
