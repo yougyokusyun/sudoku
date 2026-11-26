@@ -185,7 +185,7 @@
  *           （15 条 mp3，-10% 语速），失败回退系统语音；首页卡片同色。
  *           附「在抖音里看」兜底链接；看原声期间暂停自动跳题，已答题关闭后 1.6s 继续。
  */
-var CACHE = 'xnly-v101'; // v100: 题库新增 2026-11-26（D级90/91）
+var CACHE = 'xnly-v103'; // v103: 英语课本听力页扩到 240 题（人教PEP 课文原声，3上~4下）
 
 var PRECACHE = [
   './',
@@ -209,6 +209,7 @@ var PRECACHE = [
   'games/english.html',
   'games/english-listening.html',
   'games/english-douyin.html',
+  'games/english-pep.html',
   'games/find-diff.html',
   'games/beat-clock.html',
   'games/picture-sentence.html',
