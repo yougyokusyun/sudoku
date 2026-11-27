@@ -114,7 +114,7 @@ h1{font-size:1.05rem;color:var(--accent);font-weight:900;}
   <button class="btn alt" id="ruleBtn" type="button">❓ 规则</button>
   <button class="btn alt" id="sayBtn" type="button">🔊 读状态</button>
 </div>
-<div class="tip" id="tip">点方块消耗 1 点生命 · 上下左右连成一片的相同数字（<b>2 个起</b>）整块合并成 1 个并 +1，同时回 1 点生命</div>
+<div class="tip" id="tip">点方块消耗 1 点生命 · 相邻相同（<b>2 个起</b>）整块合并 +1 回 1 点生命 · 盘面 <b>3 个及以上相连</b>自动消除</div>
 <div class="boardwrap" id="boardwrap">
   <div class="board" id="board"></div>
 </div>
@@ -132,6 +132,7 @@ h1{font-size:1.05rem;color:var(--accent);font-weight:900;}
 'use strict';
 var N = 5;             // 5 行 5 列
 var HP_MAX = 5;        // 生命值上限
+var AUTO_MERGE = 3;      // 盘面上 3 个及以上相连的同值会自动消除
 var MIN_BLOCK = 2;     /* 原版「合成一片」规则：连在一起的相同数字，2 个起就能合并
                           （官方描述「当画面中没有相同的数字相邻时，则游戏结束」） */
 var BEST_KEY = 'xnly_legend_best';
@@ -332,12 +333,81 @@ function gravity(){
     }
   }
 }
+/* 假设在 (r,c) 放一个值 v，会形成的同值连通块大小（用于补位时避开 3 连） */
+function compSizeIf(r, c, v){
+  var seen = {}, stack = [[r,c]], n = 0;
+  seen[r+','+c] = 1;
+  while(stack.length){
+    var p = stack.pop(); n++;
+    var nb = [[p[0]-1,p[1]],[p[0]+1,p[1]],[p[0],p[1]-1],[p[0],p[1]+1]];
+    for(var i=0;i<nb.length;i++){
+      var rr = nb[i][0], cc = nb[i][1];
+      if(rr<0||rr>=N||cc<0||cc>=N) continue;
+      if(rr===r && cc===c) continue;
+      if(seen[rr+','+cc]) continue;
+      var t = grid[rr][cc];
+      if(!t || t.v !== v) continue;
+      seen[rr+','+cc] = 1;
+      stack.push([rr,cc]);
+    }
+  }
+  return n;
+}
+/* 补位：随机生成 1~5，但绝不拼出「3 个及以上相连」（AUTO_MERGE 门槛） */
+function pickSafeNum(r, c){
+  var order = [], pool = [1,2,3,4,5];
+  while(pool.length){
+    var i = Math.floor(Math.random() * pool.length);
+    order.push(pool.splice(i,1)[0]);
+  }
+  for(var k=0;k<order.length;k++){
+    if(compSizeIf(r, c, order[k]) < AUTO_MERGE) return order[k];
+  }
+  /* 五个值都会凑成 3 连（极少见）：退回加权随机 */
+  return randNum();
+}
 function spawnTop(){
   var added = 0;
   for(var r=0;r<N;r++) for(var c=0;c<N;c++){
-    if(!grid[r][c]){ makeTile(r,c,randNum(),'born'); added++; }
+    if(!grid[r][c]){ makeTile(r,c,pickSafeNum(r,c),'born'); added++; }
   }
   return added;
+}
+
+/* ---------- 自动消除：盘面上不允许残留 AUTO_MERGE(3) 个及以上相连的同值 ---------- */
+function findRun(){
+  var seen = {};
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++){
+    var t = grid[r][c];
+    if(!t || seen[r+','+c]) continue;
+    var cells = componentOf(r, c);
+    for(var i=0;i<cells.length;i++) seen[cells[i][0]+','+cells[i][1]] = 1;
+    if(cells.length >= AUTO_MERGE) return cells;
+  }
+  return null;
+}
+/* 整块合并成 1 个（落在 cells[0]），值 +1；silent=true 时不加分不回血 */
+function applyMerge(cells, ar, ac, silent){
+  var from = grid[ar][ac].v;
+  mergeBlock(cells, ar, ac);
+  if(!silent){
+    if(hp < HP_MAX){ hp += 1; drawHp(); }
+    score += cells.length * (from + 1) * 10;
+    drawScore(); drawMax();
+  }
+  bump(grid[ar][ac]);
+  return grid[ar][ac];
+}
+/* 同步把盘面所有 >=AUTO_MERGE 的连通块消干净（开局/局面载入用） */
+function clearRunsSync(silent){
+  var guard = 0;
+  while(guard++ < 400){
+    var cells = findRun();
+    if(!cells) break;
+    applyMerge(cells, cells[0][0], cells[0][1], silent);
+    gravity();
+    spawnTop();
+  }
 }
 
 /* ---------- 点击主流程 ----------
@@ -398,17 +468,33 @@ function tap(r, c){
   }
   setTimeout(chainStep, 260);
 
-  /* 5) 结算：有合并才下落 + 补位 */
+  /* 5) 结算：有合并才下落 + 补位；随后自动消除盘面残留的 >=3 连（含连锁） */
   function settle(didMerge){
-    if(!didMerge || !AUTO_FILL){ finish(); return; }
+    if(!AUTO_FILL){ finish(); return; }
+    setTimeout(function(){
+      if(!didMerge){ resolveLoop(0); return; }
+      gravity();
+      setTimeout(function(){
+        spawnTop();
+        drawMax();
+        setTimeout(function(){ resolveLoop(0); }, 220);
+      }, 230);
+    }, 60);
+  }
+  /* 盘面 >=AUTO_MERGE 连自动合并 → 下落 → 补位 → 再检查，直到没有 3 连 */
+  function resolveLoop(round){
+    if(round > 60){ finish(); return; }
+    var cells = findRun();
+    if(!cells){ finish(); return; }
+    applyMerge(cells, cells[0][0], cells[0][1], false);
     setTimeout(function(){
       gravity();
       setTimeout(function(){
         spawnTop();
         drawMax();
-        setTimeout(finish, 220);
-      }, 230);
-    }, 60);
+        setTimeout(function(){ resolveLoop(round + 1); }, 220);
+      }, 220);
+    }, 180);
   }
   function finish(){
     busy = false;
@@ -460,6 +546,7 @@ function newGame(){
   hp = HP_MAX; maxv = 1; score = 0; busy = false; over = false;
   hideDlg();
   for(r=0;r<N;r++) for(var c2=0;c2<N;c2++) makeTile(r, c2, randNum(), 'new');
+  clearRunsSync(true);   /* 开局盘面也不允许出现 3 连 */
   drawHp(); drawScore(); drawMax();
   layout();
 }
@@ -473,7 +560,8 @@ function showRules(){
     '<li>若点的方块四周没有相同数字，它先<b>数字 +1</b>；加完如果和旁边同值方块连成一片，也会一起合并（例：2 变成 3 后和旁边的两个 3 合成 4）。</li>' +
     '<li>每合并一次，<b>回复 1 点生命值</b>（不超过 5 点），并按消除数量加分。</li>' +
     '<li>合并出的新数字若又和相邻方块相同，会<b>立刻继续合并（连锁）</b>。</li>' +
-    '<li>合并结束后方块<b>竖直下落</b>，棋盘<b>顶部补上新数字</b>，始终保持满格。</li>' +
+    '<li>合并结束后方块<b>竖直下落</b>，棋盘<b>顶部补上新数字</b>，始终保持满格（补位不会拼出 3 连）。</li>' +
+    '<li>盘面上只要有 <b>3 个及以上相连的相同数字</b>，会<b>自动消除</b>（连成 1 个、数字 +1），不用你去点它。</li>' +
     '<li>生命值归零，或棋盘上再也没有相邻相同数字，本局结束。</li>' +
     '</ul>';
   dlgBtn.textContent = '知道了';
@@ -528,7 +616,9 @@ window.__legend = {
     for(r=0;r<N;r++) for(var c2=0;c2<N;c2++) if(grid[r][c2]) filled++;
     return {grid: g, hp: hp, maxv: maxv, score: score, best: best, over: over, busy: busy, filled: filled};
   },
-  setState: function(g, h, sc){
+  clearRuns: function(silent){ clearRunsSync(silent !== false); return window.__legend.state(); },
+  findRun: function(){ return findRun(); },
+  setState: function(g, h, sc, clearOnLoad){
     for(var i=0;i<tiles.length;i++){ if(tiles[i].el.parentNode) tiles[i].el.parentNode.removeChild(tiles[i].el); }
     tiles = []; grid = [];
     for(var r=0;r<N;r++){ grid[r] = []; for(var c=0;c<N;c++) grid[r][c] = null; }
@@ -538,6 +628,7 @@ window.__legend = {
       var v = g[r] && g[r][c2] ? g[r][c2] : 0;
       if(v) makeTile(r, c2, v, '');
     }
+    if(clearOnLoad) clearRunsSync(true);
     drawHp(); drawScore(); drawMax();
     return window.__legend.state();
   }
