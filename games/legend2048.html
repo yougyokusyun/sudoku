@@ -13,37 +13,43 @@ body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(
   background:radial-gradient(800px 500px at 0% 0%,#e0f4f1,transparent 60%),
              radial-gradient(800px 500px at 100% 0%,#e5f3ff,transparent 55%),
              linear-gradient(160deg,#f7fbf9,#f3f9ff);
-  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
-  padding:12px 12px 22px;gap:9px;user-select:none;touch-action:manipulation;overflow:hidden;}
+  height:100vh;height:100dvh;display:flex;flex-direction:column;align-items:center;
+  padding:10px 12px 14px;gap:8px;user-select:none;touch-action:manipulation;overflow:hidden;}
 header{width:100%;max-width:520px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
-h1{font-size:1.1rem;color:var(--accent);font-weight:900;}
+h1{font-size:1.05rem;color:var(--accent);font-weight:900;}
 .back{margin-left:0;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
   padding:7px 13px;font-weight:800;font-size:.82rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
 .bar{width:100%;max-width:520px;display:flex;gap:8px;align-items:center;justify-content:center;}
-.btn{border:none;border-radius:999px;padding:9px 17px;font-family:inherit;font-weight:900;font-size:.9rem;
+.btn{border:none;border-radius:999px;padding:8px 15px;font-family:inherit;font-weight:900;font-size:.86rem;
   color:#fff;background:var(--accent);box-shadow:0 4px 12px rgba(0,137,123,.28);cursor:pointer;}
 .btn.alt{background:#fff;color:var(--ink);box-shadow:0 3px 10px rgba(36,59,83,.12);}
 
+/* ---- 分数 / 最大数 ---- */
+.stats{width:100%;max-width:520px;display:flex;gap:8px;}
+.stat{flex:1 1 0;background:#fff;border-radius:14px;padding:5px 8px 6px;text-align:center;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.stat span{display:block;font-size:.6rem;color:#7b8b9c;font-weight:800;letter-spacing:.4px;}
+.stat b{display:block;font-size:1.04rem;color:#3d4f61;line-height:1.25;font-weight:900;}
+.stat b.hot{color:var(--accent);}
+.stat b.warm{color:#e2661d;}
+
 /* ---- 生命值 ---- */
 .hud{width:100%;max-width:520px;display:flex;gap:8px;align-items:center;}
-.hpbox{flex:1 1 auto;background:#fff;border-radius:14px;padding:7px 12px 8px;
+.hpbox{flex:1 1 auto;background:#fff;border-radius:14px;padding:6px 12px 8px;
   box-shadow:0 3px 10px rgba(36,59,83,.10);}
-.hplabel{display:flex;justify-content:space-between;font-size:.66rem;font-weight:800;
-  color:#7b8b9c;letter-spacing:.4px;margin-bottom:5px;}
+.hplabel{display:flex;justify-content:space-between;font-size:.64rem;font-weight:800;
+  color:#7b8b9c;letter-spacing:.4px;margin-bottom:4px;}
 .hplabel b{color:#0f9d58;font-size:.8rem;}
 .hpseg{display:flex;gap:4px;}
 .hpseg i{flex:1 1 0;height:12px;border-radius:5px;background:#e4ebf1;transition:background .18s ease;}
 .hpseg i.on{background:linear-gradient(180deg,#5ed08a,#0f9d58);box-shadow:0 1px 3px rgba(15,157,88,.35);}
 .hpseg i.hit{background:#ffd9c7;}
-.maxbox{flex:0 0 auto;background:#fff;border-radius:14px;padding:6px 15px;text-align:center;
-  box-shadow:0 3px 10px rgba(36,59,83,.10);}
-.maxbox span{display:block;font-size:.62rem;color:#7b8b9c;font-weight:800;letter-spacing:.4px;}
-.maxbox b{font-size:1.25rem;color:var(--accent);line-height:1.2;}
 
-.tip{font-size:.73rem;color:#8090a0;text-align:center;max-width:520px;line-height:1.55;}
+.tip{font-size:.72rem;color:#8090a0;text-align:center;max-width:520px;line-height:1.5;}
 
 /* ---- 棋盘 ---- */
-.boardwrap{position:relative;margin:auto;}
+.boardwrap{position:relative;flex:1 1 auto;min-height:0;width:100%;max-width:520px;
+  display:flex;align-items:center;justify-content:center;}
 .board{position:relative;background:rgba(0,137,123,.10);border-radius:16px;
   box-shadow:0 10px 30px rgba(36,59,83,.16);}
 .bg{position:absolute;width:var(--cell);height:var(--cell);border-radius:10px;background:rgba(255,255,255,.50);}
@@ -58,6 +64,7 @@ h1{font-size:1.1rem;color:var(--accent);font-weight:900;}
 .tile.gone{opacity:0;pointer-events:none;
   transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(.2);
   transition:transform .2s ease-in,opacity .2s ease-in;}
+.tile.hint{outline:3px solid #ffb300;outline-offset:-3px;}
 @keyframes pop{0%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(.45);}
   70%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1.1);}
   100%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1);}}
@@ -69,21 +76,20 @@ h1{font-size:1.1rem;color:var(--accent);font-weight:900;}
 
 .overlay{position:fixed;inset:0;background:rgba(36,59,83,.45);display:none;align-items:center;justify-content:center;z-index:20;padding:16px;}
 .overlay.show{display:flex;}
-.dlg{background:#fff;border-radius:22px;padding:24px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);max-width:86vw;max-height:86vh;overflow:auto;}
-.dlg h2{font-size:1.4rem;color:var(--accent);margin-bottom:8px;}
-.dlg p{font-size:.92rem;color:#5b6b7b;margin-bottom:14px;line-height:1.75;text-align:left;}
+.dlg{background:#fff;border-radius:22px;padding:22px 24px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);max-width:86vw;max-height:86vh;overflow:auto;}
+.dlg h2{font-size:1.35rem;color:var(--accent);margin-bottom:8px;}
+.dlg p{font-size:.9rem;color:#5b6b7b;margin-bottom:14px;line-height:1.75;text-align:left;}
 .dlg p.c{text-align:center;}
 .dlg ul.rules{text-align:left;}
-.dlg ul.rules li{font-size:.88rem;color:#5b6b7b;line-height:1.8;margin-left:1.05em;}
+.dlg ul.rules li{font-size:.86rem;color:#5b6b7b;line-height:1.75;margin-left:1.05em;}
 .hidden{display:none!important;}
-.toast{position:fixed;left:50%;bottom:14%;transform:translateX(-50%);background:rgba(36,59,83,.92);color:#fff;
+.toast{position:fixed;left:50%;bottom:16%;transform:translateX(-50%);background:rgba(36,59,83,.92);color:#fff;
   padding:9px 16px;border-radius:999px;font-size:.82rem;font-weight:700;opacity:0;pointer-events:none;
   transition:opacity .2s ease;z-index:30;white-space:nowrap;}
 .toast.show{opacity:1;}
 @media(max-width:600px){
-  h1{font-size:1rem;} .btn{padding:8px 14px;font-size:.85rem;}
-  .maxbox{padding:5px 11px;} .maxbox b{font-size:1.05rem;}
-  .hpseg i{height:10px;}
+  h1{font-size:.98rem;} .btn{padding:7px 12px;font-size:.82rem;}
+  .stat b{font-size:.95rem;} .hpseg i{height:10px;}
 }
 </style>
 </head>
@@ -92,20 +98,24 @@ h1{font-size:1.1rem;color:var(--accent);font-weight:900;}
   <a class="back" href="../index.html">🏠 首页</a>
   <h1>🔮 数字传奇</h1>
 </header>
+<div class="stats">
+  <div class="stat"><span>分数</span><b id="score">0</b></div>
+  <div class="stat"><span>最高分</span><b id="best">0</b></div>
+  <div class="stat"><span>最大数</span><b id="maxv" class="hot">1</b></div>
+</div>
 <div class="hud">
   <div class="hpbox">
     <div class="hplabel"><span>生命值</span><b id="hpnum">5 / 5</b></div>
     <div class="hpseg" id="hpseg"></div>
   </div>
-  <div class="maxbox"><span>最大数</span><b id="maxv">1</b></div>
 </div>
 <div class="bar">
   <button class="btn" id="newBtn" type="button">🎲 新游戏</button>
   <button class="btn alt" id="ruleBtn" type="button">❓ 规则</button>
   <button class="btn alt" id="sayBtn" type="button">🔊 读状态</button>
 </div>
-<div class="tip" id="tip">点数字 → +1，消耗 1 点生命 · 上下左右连成 3 个以上相同数字 → 整块合并成 1 个并 +1，同时回 1 点生命</div>
-<div class="boardwrap">
+<div class="tip" id="tip">点方块消耗 1 点生命 · 上下左右连成一片的相同数字（<b>2 个起</b>）整块合并成 1 个并 +1，同时回 1 点生命</div>
+<div class="boardwrap" id="boardwrap">
   <div class="board" id="board"></div>
 </div>
 <div class="toast" id="toast"></div>
@@ -120,9 +130,11 @@ h1{font-size:1.1rem;color:var(--accent);font-weight:900;}
 <script>
 (function(){
 'use strict';
-var N = 5;            // 5 行 5 列
-var HP_MAX = 5;       // 生命值上限
-var MIN_RUN = 3;      // 连通块至少几个才合并
+var N = 5;             // 5 行 5 列
+var HP_MAX = 5;        // 生命值上限
+var MIN_BLOCK = 2;     /* 原版「合成一片」规则：连在一起的相同数字，2 个起就能合并
+                          （官方描述「当画面中没有相同的数字相邻时，则游戏结束」） */
+var BEST_KEY = 'xnly_legend_best';
 
 /* 数字越大颜色越深：1 浅灰、2 浅黄、3 浅橙、4 深橙、5 深红，更大继续加深 */
 var PALETTE = {
@@ -143,14 +155,17 @@ function look(v){
 function fontSizeOf(v){
   var s = String(v);
   if(s.length >= 3) return '0.95rem';
-  if(s.length === 2) return '1.15rem';
+  if(s.length === 2) return '1.2rem';
   return '1.55rem';
 }
 
 var boardEl = document.getElementById('board');
+var wrapEl = document.getElementById('boardwrap');
 var hpsegEl = document.getElementById('hpseg');
 var hpnumEl = document.getElementById('hpnum');
 var maxvEl = document.getElementById('maxv');
+var scoreEl = document.getElementById('score');
+var bestEl = document.getElementById('best');
 var overlay = document.getElementById('overlay');
 var dlgTitle = document.getElementById('dlgTitle');
 var dlgText = document.getElementById('dlgText');
@@ -162,6 +177,8 @@ var tiles = [];     // 全部方块
 var uid = 0;
 var hp = HP_MAX;
 var maxv = 1;
+var score = 0;
+var best = 0;
 var busy = false;
 var over = false;
 var cell = 60;
@@ -169,9 +186,9 @@ var AUTO_FILL = true;   /* 合并后是否自动下落 + 顶部补位（测试�
 
 /* ---------- 布局 ---------- */
 function layout(){
-  var availW = Math.min(window.innerWidth - 24, 520);
-  var availH = Math.max(220, window.innerHeight - 268);
-  var size = Math.floor(Math.min(availW, availH, 470));
+  var availW = Math.min(wrapEl.clientWidth || window.innerWidth - 24, 520);
+  var availH = wrapEl.clientHeight || (window.innerHeight - 340);
+  var size = Math.floor(Math.min(availW, Math.max(160, availH), 470));
   boardEl.style.width = size + 'px';
   boardEl.style.height = size + 'px';
   cell = (size - (N + 1) * 8) / N;
@@ -190,6 +207,7 @@ function buildBg(){
 function paint(t){
   var lk = look(t.v);
   t.el.textContent = String(t.v);
+  t.el.setAttribute('aria-label', '数字 ' + t.v);
   t.el.style.background = lk.bg;
   t.el.style.color = lk.fg;
   t.el.style.fontSize = fontSizeOf(t.v);
@@ -224,12 +242,30 @@ function bump(t){
   t.el.classList.remove('bump'); void t.el.offsetWidth; t.el.classList.add('bump');
 }
 
-/* ---------- 生命值 ---------- */
+/* ---------- 界面数字 ---------- */
 function drawHp(){
   var html = '';
   for(var i=0;i<HP_MAX;i++) html += '<i class="' + (i < hp ? 'on' : '') + '"></i>';
   hpsegEl.innerHTML = html;
   hpnumEl.textContent = hp + ' / ' + HP_MAX;
+}
+function drawScore(){
+  scoreEl.textContent = String(score);
+  if(score > best) best = score;
+  bestEl.textContent = String(best);
+}
+function drawMax(){
+  maxvEl.textContent = String(maxv);
+  maxvEl.className = maxv >= 8 ? 'warm' : 'hot';
+}
+function loadBest(){
+  try{ best = parseInt(localStorage.getItem(BEST_KEY) || '0', 10) || 0; }catch(e){ best = 0; }
+}
+function saveBest(){
+  try{
+    if(score > best) best = score;
+    localStorage.setItem(BEST_KEY, String(best));
+  }catch(e){}
 }
 
 /* ---------- 数字生成 ---------- */
@@ -242,7 +278,7 @@ function randNum(){
   return 5;
 }
 
-/* ---------- 连通块（上下左右，允许 L 形 / 十字形 / 不规则） ---------- */
+/* ---------- 同值连通块（上下左右，允许 L 形 / 十字形 / 不规则） ---------- */
 function componentOf(r0, c0){
   var t0 = grid[r0][c0];
   if(!t0) return null;
@@ -265,19 +301,18 @@ function componentOf(r0, c0){
   return out;
 }
 
-/* 把整个连通块合并成 1 个（落在 anchor 位置），返回合并后的方块 */
+/* 整块合并成 1 个（落在 anchor＝被点击的位置），值 +1，返回合并后的方块 */
 function mergeBlock(cells, ar, ac){
-  var v = grid[ar][ac].v;
+  var from = grid[ar][ac].v;
   for(var i=0;i<cells.length;i++){
     var r = cells[i][0], c = cells[i][1];
     if(r === ar && c === ac) continue;
     killTile(grid[r][c]);
   }
   var keep = grid[ar][ac];
-  keep.v = v + 1;
+  keep.v = from + 1;
   if(keep.v > maxv) maxv = keep.v;
   paint(keep);
-  bump(keep);
   return keep;
 }
 
@@ -305,7 +340,17 @@ function spawnTop(){
   return added;
 }
 
-/* ---------- 点击 ---------- */
+/* ---------- 点击主流程 ----------
+   规则（合并原版「合成一片」与用户的例子，彻底避免「连续数字消不掉」）：
+   1) 每次点击消耗 1 点生命值。
+   2) 先按「原值」判定：被点方块若与上下左右相邻的同值方块连成一片（≥2 个，
+      L 形/十字形/不规则都算）→ 整片合并成 1 个（落在被点格），数字 +1，
+      其余消除，回 1 点生命并加分。这一步保证「两个相同数字相邻一定能消」。
+   3) 若四周没有同值方块 → 该方块数字 +1；+1 后若又与相邻方块同值并连成一片
+      → 继续合并（例：点的 2 变成 3 后和旁边的两个 3 连成一片，一起合成 4）。
+   4) 合并出的新数字若又和相邻方块相同 → 立刻继续合并（连锁，每次回 1 点生命）。
+   5) 只有真的发生过合并才下落 + 顶部补位，棋盘保持满格。
+*/
 function tap(r, c){
   if(busy || over) return;
   if(r<0||r>=N||c<0||c>=N) return;
@@ -315,51 +360,85 @@ function tap(r, c){
 
   busy = true;
 
-  /* 1) 消耗 1 点生命，数字 +1 */
+  /* 1) 消耗 1 点生命 */
   hp -= 1;
-  t.v += 1;
-  if(t.v > maxv) maxv = t.v;
-  paint(t); bump(t);
   drawHp();
-  maxvEl.textContent = String(maxv);
 
-  var ar = r, ac = c;
-  var merged = 0;
+  var merges = 0;
 
-  /* 2) 先一路结算「被点击方块所在连通块」的合并（连锁）；
-        只有真的发生过合并，才执行下落 + 顶部补位 */
-  function stepChain(){
+  /* 以 (ar,ac) 为中心找同值连通块，≥MIN_BLOCK 个才合并；返回是否合并 */
+  function absorb(ar, ac){
     var cells = componentOf(ar, ac);
-    if(cells && cells.length >= MIN_RUN){
-      mergeBlock(cells, ar, ac);
-      merged++;
-      if(hp < HP_MAX){ hp += 1; drawHp(); }   /* 每合并一次回 1 点，不溢出 */
-      maxvEl.textContent = String(maxv);
-      setTimeout(stepChain, 270);
-      return;
-    }
-    if(!merged || !AUTO_FILL){ finish(); return; }
+    if(!cells || cells.length < MIN_BLOCK) return false;
+    var from = grid[ar][ac].v;
+    mergeBlock(cells, ar, ac);
+    merges++;
+    if(hp < HP_MAX){ hp += 1; drawHp(); }
+    score += cells.length * (from + 1) * 10;
+    drawScore(); drawMax();
+    bump(grid[ar][ac]);
+    return true;
+  }
+
+  /* 2) 先按原值判定：两个相同数字相邻即可消除 */
+  if(!absorb(r, c)){
+    /* 3) 没有同值邻居 → 先 +1，再看 +1 后是否连成一片 */
+    t.v += 1;
+    if(t.v > maxv) maxv = t.v;
+    paint(t); bump(t); drawMax();
+    absorb(r, c);
+  }
+
+  /* 4) 连锁：合并出的新数字继续找同值连通块 */
+  function chainStep(){
+    var ct = grid[r][c];
+    if(!ct){ settle(merges > 0); return; }
+    if(absorb(r, c)){ setTimeout(chainStep, 260); return; }
+    settle(merges > 0);
+  }
+  setTimeout(chainStep, 260);
+
+  /* 5) 结算：有合并才下落 + 补位 */
+  function settle(didMerge){
+    if(!didMerge || !AUTO_FILL){ finish(); return; }
     setTimeout(function(){
       gravity();
       setTimeout(function(){
         spawnTop();
-        maxvEl.textContent = String(maxv);
-        setTimeout(finish, 230);
-      }, 240);
-    }, 80);
+        drawMax();
+        setTimeout(finish, 220);
+      }, 230);
+    }, 60);
   }
   function finish(){
     busy = false;
     checkState();
   }
-  setTimeout(stepChain, 190);
 }
 
 /* ---------- 状态 ---------- */
+function hasMove(){
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++){
+    var t = grid[r][c];
+    if(!t) continue;
+    if(r+1<N && grid[r+1][c] && grid[r+1][c].v === t.v) return true;
+    if(c+1<N && grid[r][c+1] && grid[r][c+1].v === t.v) return true;
+  }
+  return false;
+}
 function checkState(){
   if(hp <= 0){
     over = true;
-    showDlg('游戏结束', '生命值用完了。本局最大数字：' + maxv + '。', '再来一局');
+    saveBest();
+    drawScore();
+    showDlg('游戏结束', '生命值用完了。本局得分 ' + score + '，最大数字 ' + maxv + '。', '再来一局');
+    return;
+  }
+  if(!hasMove()){
+    over = true;
+    saveBest();
+    drawScore();
+    showDlg('本局结束', '棋盘上没有相邻的相同数字了。本局得分 ' + score + '，最大数字 ' + maxv + '。', '再来一局');
   }
 }
 function showDlg(title, text, btn){
@@ -378,23 +457,24 @@ function newGame(){
   }
   tiles = []; grid = [];
   for(var r=0;r<N;r++){ grid[r] = []; for(var c=0;c<N;c++) grid[r][c] = null; }
-  hp = HP_MAX; maxv = 1; busy = false; over = false;
+  hp = HP_MAX; maxv = 1; score = 0; busy = false; over = false;
   hideDlg();
   for(r=0;r<N;r++) for(var c2=0;c2<N;c2++) makeTile(r, c2, randNum(), 'new');
-  drawHp();
-  maxvEl.textContent = String(maxv);
+  drawHp(); drawScore(); drawMax();
+  layout();
 }
 function showRules(){
   dlgTitle.textContent = '❓ 玩法';
   dlgText.className = '';
   dlgText.innerHTML = '<ul class="rules">' +
-    '<li>棋盘 5×5，方块数字 1～5，数字越大颜色越深。</li>' +
-    '<li>点任意方块 → 数字 +1，消耗 <b>1 点生命值</b>（共 5 点，绿色长条）。</li>' +
-    '<li>上下左右连成 <b>3 个及以上</b>相同数字（可以是 L 形、十字形、任意形状）→ 整块合并成 <b>1 个</b>方块，数值 +1。</li>' +
-    '<li>每合并一次，<b>回复 1 点生命值</b>（不超过 5 点）。</li>' +
-    '<li>合并出的新数字若又连成 3 个以上，会<b>立刻继续合并（连锁）</b>。</li>' +
-    '<li>所有合并结束后，方块<b>竖直下落</b>填补空隙，棋盘<b>顶部补上新数字</b>，始终满格。</li>' +
-    '<li>生命值归零，游戏结束。</li>' +
+    '<li>棋盘 5×5 满格，方块数字 1～5，数字越大颜色越深。</li>' +
+    '<li>点任意方块 → 消耗 <b>1 点生命值</b>（共 5 点，绿色长条）。</li>' +
+    '<li>被点的方块若和上下左右<b>相邻的相同数字连成一片（2 个起，L 形、十字形都算）</b>，整片合并成 <b>1 个</b>方块，数字 +1，其余消除。</li>' +
+    '<li>若点的方块四周没有相同数字，它先<b>数字 +1</b>；加完如果和旁边同值方块连成一片，也会一起合并（例：2 变成 3 后和旁边的两个 3 合成 4）。</li>' +
+    '<li>每合并一次，<b>回复 1 点生命值</b>（不超过 5 点），并按消除数量加分。</li>' +
+    '<li>合并出的新数字若又和相邻方块相同，会<b>立刻继续合并（连锁）</b>。</li>' +
+    '<li>合并结束后方块<b>竖直下落</b>，棋盘<b>顶部补上新数字</b>，始终保持满格。</li>' +
+    '<li>生命值归零，或棋盘上再也没有相邻相同数字，本局结束。</li>' +
     '</ul>';
   dlgBtn.textContent = '知道了';
   overlay.classList.add('show');
@@ -406,7 +486,7 @@ function toast(msg){
   toast._t = setTimeout(function(){ toastEl.classList.remove('show'); }, 1200);
 }
 function speakState(){
-  var msg = '现在有 ' + hp + ' 点生命值，棋盘上最大的数字是 ' + maxv + '。';
+  var msg = '现在有 ' + hp + ' 点生命值，得分 ' + score + '，最大数字 ' + maxv + '。';
   try{ if(window.XNLY && window.XNLY.voice && window.XNLY.voice.speak){ window.XNLY.voice.speak(msg); return; } }catch(e){}
   try{
     if(window.speechSynthesis){
@@ -422,13 +502,10 @@ function speakState(){
 boardEl.addEventListener('click', function(e){
   var el = e.target.closest ? e.target.closest('.tile') : null;
   if(!el) return;
-  var c = parseInt(el.style.getPropertyValue('--c'), 10);
-  var r = parseInt(el.style.getPropertyValue('--r'), 10);
   /* 以当前 grid 反查更稳（下落/合并后样式值已同步） */
   for(var rr=0;rr<N;rr++) for(var cc=0;cc<N;cc++){
     if(grid[rr][cc] && grid[rr][cc].el === el){ tap(rr, cc); return; }
   }
-  if(!isNaN(r) && !isNaN(c)) tap(r, c);
 });
 document.getElementById('newBtn').addEventListener('click', newGame);
 document.getElementById('ruleBtn').addEventListener('click', showRules);
@@ -439,6 +516,7 @@ dlgBtn.addEventListener('click', function(){
   newGame();
 });
 window.addEventListener('resize', function(){ layout(); });
+window.addEventListener('orientationchange', function(){ setTimeout(layout, 260); });
 
 /* 调试 / 自动化测试接口 */
 window.__legend = {
@@ -448,19 +526,19 @@ window.__legend = {
     for(var r=0;r<N;r++){ g[r] = []; for(var c=0;c<N;c++) g[r][c] = grid[r][c] ? grid[r][c].v : 0; }
     var filled = 0;
     for(r=0;r<N;r++) for(var c2=0;c2<N;c2++) if(grid[r][c2]) filled++;
-    return {grid: g, hp: hp, maxv: maxv, over: over, busy: busy, filled: filled};
+    return {grid: g, hp: hp, maxv: maxv, score: score, best: best, over: over, busy: busy, filled: filled};
   },
-  setState: function(g, h){
+  setState: function(g, h, sc){
     for(var i=0;i<tiles.length;i++){ if(tiles[i].el.parentNode) tiles[i].el.parentNode.removeChild(tiles[i].el); }
     tiles = []; grid = [];
     for(var r=0;r<N;r++){ grid[r] = []; for(var c=0;c<N;c++) grid[r][c] = null; }
-    hp = (h == null ? HP_MAX : h); maxv = 1; busy = false; over = false;
+    hp = (h == null ? HP_MAX : h); maxv = 1; score = (sc || 0); busy = false; over = false;
     hideDlg();
     for(r=0;r<N;r++) for(var c2=0;c2<N;c2++){
       var v = g[r] && g[r][c2] ? g[r][c2] : 0;
       if(v) makeTile(r, c2, v, '');
     }
-    drawHp(); maxvEl.textContent = String(maxv);
+    drawHp(); drawScore(); drawMax();
     return window.__legend.state();
   }
 };
@@ -468,6 +546,7 @@ window.__legend.setAutoFill = function(b){ AUTO_FILL = !!b; return AUTO_FILL; };
 window.replayCurrent = speakState;
 window.XNLY_NEXT = newGame;
 
+loadBest(); drawScore();
 layout(); buildBg(); newGame();
 })();
 </script>
