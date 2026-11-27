@@ -114,7 +114,7 @@ h1{font-size:1.05rem;color:var(--accent);font-weight:900;}
   <button class="btn alt" id="ruleBtn" type="button">❓ 规则</button>
   <button class="btn alt" id="sayBtn" type="button">🔊 读状态</button>
 </div>
-<div class="tip" id="tip">点方块消耗 1 点生命 · 相邻相同（<b>2 个起</b>）整块合并 +1 回 1 点生命 · 盘面 <b>3 个及以上相连</b>自动消除</div>
+<div class="tip" id="tip">点方块消耗 1 点生命 · <b>3 个及以上</b>相连的相同数字整块合并 +1 并回 1 点生命 · 不足 3 个不合并</div>
 <div class="boardwrap" id="boardwrap">
   <div class="board" id="board"></div>
 </div>
@@ -132,9 +132,8 @@ h1{font-size:1.05rem;color:var(--accent);font-weight:900;}
 'use strict';
 var N = 5;             // 5 行 5 列
 var HP_MAX = 5;        // 生命值上限
-var AUTO_MERGE = 3;      // 盘面上 3 个及以上相连的同值会自动消除
-var MIN_BLOCK = 2;     /* 原版「合成一片」规则：连在一起的相同数字，2 个起就能合并
-                          （官方描述「当画面中没有相同的数字相邻时，则游戏结束」） */
+var MIN_BLOCK = 3;     /* 合并门槛：连成一片的相同数字，3 个起才能合并（只有 2 个相同相邻不合并） */
+var AUTO_MERGE = 3;    // 盘面上 3 个及以上相连的同值会自动消除（与合并门槛一致）
 var BEST_KEY = 'xnly_legend_best';
 
 /* 数字越大颜色越深：1 浅灰、2 浅黄、3 浅橙、4 深橙、5 深红，更大继续加深 */
@@ -413,12 +412,12 @@ function clearRunsSync(silent){
 /* ---------- 点击主流程 ----------
    规则（合并原版「合成一片」与用户的例子，彻底避免「连续数字消不掉」）：
    1) 每次点击消耗 1 点生命值。
-   2) 先按「原值」判定：被点方块若与上下左右相邻的同值方块连成一片（≥2 个，
+   2) 先按「原值」判定：被点方块若与上下左右相邻的同值方块连成一片（≥3 个，
       L 形/十字形/不规则都算）→ 整片合并成 1 个（落在被点格），数字 +1，
-      其余消除，回 1 点生命并加分。这一步保证「两个相同数字相邻一定能消」。
+      其余消除，回 1 点生命并加分。
    3) 若四周没有同值方块 → 该方块数字 +1；+1 后若又与相邻方块同值并连成一片
-      → 继续合并（例：点的 2 变成 3 后和旁边的两个 3 连成一片，一起合成 4）。
-   4) 合并出的新数字若又和相邻方块相同 → 立刻继续合并（连锁，每次回 1 点生命）。
+      → 继续合并（例：点的 2 变成 3 后和旁边的两个 3 连成 3 个，一起合成 4）。
+   4) 合并出的新数字若又能和相邻同值凑成 3 个 → 立刻继续合并（连锁，每次回 1 点生命）。
    5) 只有真的发生过合并才下落 + 顶部补位，棋盘保持满格。
 */
 function tap(r, c){
@@ -503,12 +502,13 @@ function tap(r, c){
 }
 
 /* ---------- 状态 ---------- */
+/* 还有没有能凑出 3 连的点击：点某格让它 +1 后，能否与相邻同值连成 >=MIN_BLOCK 片 */
 function hasMove(){
   for(var r=0;r<N;r++) for(var c=0;c<N;c++){
     var t = grid[r][c];
     if(!t) continue;
-    if(r+1<N && grid[r+1][c] && grid[r+1][c].v === t.v) return true;
-    if(c+1<N && grid[r][c+1] && grid[r][c+1].v === t.v) return true;
+    if(compSizeIf(r, c, t.v + 1) >= MIN_BLOCK) return true;
+    if(compSizeIf(r, c, t.v) >= MIN_BLOCK) return true;
   }
   return false;
 }
@@ -556,13 +556,13 @@ function showRules(){
   dlgText.innerHTML = '<ul class="rules">' +
     '<li>棋盘 5×5 满格，方块数字 1～5，数字越大颜色越深。</li>' +
     '<li>点任意方块 → 消耗 <b>1 点生命值</b>（共 5 点，绿色长条）。</li>' +
-    '<li>被点的方块若和上下左右<b>相邻的相同数字连成一片（2 个起，L 形、十字形都算）</b>，整片合并成 <b>1 个</b>方块，数字 +1，其余消除。</li>' +
-    '<li>若点的方块四周没有相同数字，它先<b>数字 +1</b>；加完如果和旁边同值方块连成一片，也会一起合并（例：2 变成 3 后和旁边的两个 3 合成 4）。</li>' +
+    '<li>只有 <b>3 个及以上</b>相同的数字连成一片（上下左右相邻，L 形、十字形都算）才会合并；<b>只有 2 个相同相邻不会合并</b>。</li>' +
+    '<li>若点的方块和周围凑不成 3 个，它先<b>数字 +1</b>；加完如果和旁边同值方块连成 3 个，就一起合并（例：2 变成 3 后和旁边的两个 3 合成 4）。</li>' +
     '<li>每合并一次，<b>回复 1 点生命值</b>（不超过 5 点），并按消除数量加分。</li>' +
     '<li>合并出的新数字若又和相邻方块相同，会<b>立刻继续合并（连锁）</b>。</li>' +
-    '<li>合并结束后方块<b>竖直下落</b>，棋盘<b>顶部补上新数字</b>，始终保持满格（补位不会拼出 3 连）。</li>' +
+    '<li>合并结束后方块<b>竖直下落</b>，棋盘<b>顶部补上新数字</b>，始终保持满格。</li>' +
     '<li>盘面上只要有 <b>3 个及以上相连的相同数字</b>，会<b>自动消除</b>（连成 1 个、数字 +1），不用你去点它。</li>' +
-    '<li>生命值归零，或棋盘上再也没有相邻相同数字，本局结束。</li>' +
+    '<li>生命值归零，或盘面上再也凑不出 3 个相同数字，本局结束。</li>' +
     '</ul>';
   dlgBtn.textContent = '知道了';
   overlay.classList.add('show');
@@ -618,6 +618,7 @@ window.__legend = {
   },
   clearRuns: function(silent){ clearRunsSync(silent !== false); return window.__legend.state(); },
   findRun: function(){ return findRun(); },
+  hasMove: function(){ return hasMove(); },
   setState: function(g, h, sc, clearOnLoad){
     for(var i=0;i<tiles.length;i++){ if(tiles[i].el.parentNode) tiles[i].el.parentNode.removeChild(tiles[i].el); }
     tiles = []; grid = [];
@@ -630,6 +631,7 @@ window.__legend = {
     }
     if(clearOnLoad) clearRunsSync(true);
     drawHp(); drawScore(); drawMax();
+    checkState();
     return window.__legend.state();
   }
 };
