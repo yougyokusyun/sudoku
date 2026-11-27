@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta name="theme-color" content="#00897b">
+<title>数字传奇 · 5×5 · 小脑袋乐园</title>
+<style>
+:root{--ink:#243b53;--accent:#00897b;--gap:8px;}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+body{font-family:'PingFang SC','Microsoft YaHei',system-ui,sans-serif;color:var(--ink);
+  background:radial-gradient(800px 500px at 0% 0%,#e0f4f1,transparent 60%),
+             radial-gradient(800px 500px at 100% 0%,#e5f3ff,transparent 55%),
+             linear-gradient(160deg,#f7fbf9,#f3f9ff);
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;align-items:center;
+  padding:12px 12px 22px;gap:10px;user-select:none;touch-action:manipulation;overflow:hidden;}
+header{width:100%;max-width:520px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+h1{font-size:1.1rem;color:var(--accent);font-weight:900;}
+.back{margin-left:0;text-decoration:none;background:#fff;color:var(--ink);border-radius:999px;
+  padding:7px 13px;font-weight:800;font-size:.82rem;box-shadow:0 3px 10px rgba(36,59,83,.10);}
+.hud{width:100%;max-width:520px;display:flex;gap:8px;justify-content:center;align-items:stretch;}
+.chip{background:#fff;border-radius:14px;padding:6px 16px;text-align:center;
+  box-shadow:0 3px 10px rgba(36,59,83,.10);display:flex;flex-direction:column;justify-content:center;}
+.chip span{font-size:.66rem;color:#7b8b9c;font-weight:800;letter-spacing:.5px;}
+.chip b{font-size:1.35rem;color:var(--accent);line-height:1.15;}
+.chip.warn{background:#fff1e8;}
+.chip.warn b{color:#e0642f;}
+.bar{width:100%;max-width:520px;display:flex;gap:8px;align-items:center;justify-content:center;}
+.btn{border:none;border-radius:999px;padding:9px 17px;font-family:inherit;font-weight:900;font-size:.9rem;
+  color:#fff;background:var(--accent);box-shadow:0 4px 12px rgba(0,137,123,.28);cursor:pointer;}
+.btn.alt{background:#fff;color:var(--ink);box-shadow:0 3px 10px rgba(36,59,83,.12);}
+.tip{font-size:.74rem;color:#8090a0;text-align:center;max-width:520px;line-height:1.55;}
+.boardwrap{position:relative;margin:auto;}
+.board{position:relative;background:rgba(0,137,123,.10);border-radius:16px;box-shadow:0 10px 30px rgba(36,59,83,.16);}
+.bg{position:absolute;width:var(--cell);height:var(--cell);border-radius:10px;background:rgba(255,255,255,.55);}
+.tile{position:absolute;width:var(--cell);height:var(--cell);border-radius:10px;border:none;
+  display:flex;align-items:center;justify-content:center;font-weight:900;font-family:inherit;
+  cursor:pointer;transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap))));
+  transition:transform .12s ease-out,background .12s ease-out;box-shadow:0 3px 8px rgba(36,59,83,.12);will-change:transform;}
+.tile.new{animation:pop .18s ease-out;}
+.tile.bump{animation:bump .22s ease-out;}
+.tile.merged{animation:mergePop .26s ease-out;}
+@keyframes pop{0%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(.4);}
+  70%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1.12);}
+  100%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1);}}
+@keyframes bump{0%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1);}
+  50%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1.14);}
+  100%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1);}}
+@keyframes mergePop{0%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(.55);}
+  60%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1.18);}
+  100%{transform:translate(calc(var(--c)*(100% + var(--gap))),calc(var(--r)*(100% + var(--gap)))) scale(1);}}
+.overlay{position:fixed;inset:0;background:rgba(36,59,83,.45);display:none;align-items:center;justify-content:center;z-index:20;padding:16px;}
+.overlay.show{display:flex;}
+.dlg{background:#fff;border-radius:22px;padding:24px 26px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);max-width:86vw;max-height:86vh;overflow:auto;}
+.dlg h2{font-size:1.4rem;color:var(--accent);margin-bottom:8px;}
+.dlg p{font-size:.92rem;color:#5b6b7b;margin-bottom:14px;line-height:1.7;text-align:left;}
+.dlg p.c{text-align:center;}
+.dlg .rules li{font-size:.9rem;color:#5b6b7b;line-height:1.75;margin-left:1.1em;}
+.hidden{display:none!important;}
+.toast{position:fixed;left:50%;bottom:14%;transform:translateX(-50%);background:rgba(36,59,83,.92);color:#fff;
+  padding:9px 16px;border-radius:999px;font-size:.82rem;font-weight:700;opacity:0;pointer-events:none;
+  transition:opacity .2s ease;z-index:30;white-space:nowrap;}
+.toast.show{opacity:1;}
+@media(max-width:600px){
+  h1{font-size:1rem;} .sc b{font-size:.92rem;} .btn{padding:8px 14px;font-size:.85rem;}
+}
+</style>
+</head>
+<body>
+<header>
+  <a class="back" href="../index.html">🏠 首页</a>
+  <h1>🔮 数字传奇</h1>
+</header>
+<div class="bar">
+  <button class="btn" id="newBtn" type="button">🎲 新游戏</button>
+  <button class="btn alt" id="ruleBtn" type="button">❓ 规则</button>
+  <button class="btn alt" id="sayBtn" type="button">🔊 读状态</button>
+</div>
+<div class="hud">
+  <div class="chip" id="credBox"><span>积分</span><b id="credits">5</b></div>
+  <div class="chip"><span>最大数</span><b id="maxv">0</b></div>
+</div>
+<div class="tip" id="tip">点任意数字 → 它 +1，消耗 1 格积分（总共 5 格）· 横排或竖排连着 3 个相同数字 → 自动合并成一格并 +1</div>
+<div class="boardwrap">
+  <div class="board" id="board"></div>
+</div>
+<div class="toast" id="toast"></div>
+<div class="overlay" id="overlay">
+  <div class="dlg">
+    <h2 id="dlgTitle">游戏结束</h2>
+    <p class="c" id="dlgText"></p>
+    <button class="btn" id="dlgBtn" type="button">再来一局</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+var N = 5;                 // 5 行 5 列
+var START_CREDITS = 5;     // 开局 5 格积分
+var MERGE_BONUS   = 0;     // 合并是否返还积分：0 = 严格只有 5 格
+var WIN_VALUE     = 10;    // 达到这个数字即“传奇”
+var START_FILLED  = 15;    // 开局放多少个数字（其余留空，方便堆数字）
+var SPAWN_RATE    = 0.7;   // 合并空出的格子有 70% 补一个新数字
+var MAX_CHAIN     = 30;    // 连锁合并次数上限，防死循环
+
+var PALETTE = {
+  1:['#e8f5f2','#0b7a6b'], 2:['#d5efe9','#0b7a6b'], 3:['#bfe6dd','#085f54'],
+  4:['#ffd79a','#7a4a05'], 5:['#ffc06b','#7a3f00'], 6:['#f79a5b','#5a2600'],
+  7:['#f07b4e','#fff'],    8:['#e35d3c','#fff'],    9:['#d13f45','#fff'],
+  10:['#b02a6b','#fff'],   11:['#8a2b8f','#fff'],   12:['#5b2bb8','#fff']
+};
+function colorOf(v){ var p = PALETTE[v]; if(p) return {bg:p[0],fg:p[1]}; return {bg:'#2f2b26',fg:'#fff'}; }
+function fontSizeOf(v){ var s=String(v); return s.length>=2 ? '1.15rem' : '1.55rem'; }
+
+var boardEl = document.getElementById('board');
+var creditsEl = document.getElementById('credits');
+var maxvEl = document.getElementById('maxv');
+var credBox = document.getElementById('credBox');
+var overlay = document.getElementById('overlay');
+var dlgTitle = document.getElementById('dlgTitle');
+var dlgText = document.getElementById('dlgText');
+var dlgBtn = document.getElementById('dlgBtn');
+var toastEl = document.getElementById('toast');
+
+var grid = [];      // grid[r][c] = 数字，0 表示空格
+var els = {};       // 单元格索引 -> DOM
+var credits = START_CREDITS;
+var maxv = 0;
+var busy = false;
+var over = false;
+var landed = -1;    // 本次点击的格子
+var cell = 60;
+
+function idx(r,c){ return r*N+c; }
+function inBoard(r,c){ return r>=0 && r<N && c>=0 && c<N; }
+
+/* ---------- 布局 ---------- */
+function layout(){
+  var availW = Math.min(window.innerWidth-24, 520);
+  var availH = Math.max(240, window.innerHeight-232);
+  var size = Math.floor(Math.min(availW, availH, 480));
+  boardEl.style.width = size+'px'; boardEl.style.height = size+'px';
+  cell = (size-(N+1)*8)/N;
+  boardEl.style.setProperty('--cell', cell+'px');
+}
+function buildBg(){
+  boardEl.innerHTML = ''; els = {};
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++){
+    var bg = document.createElement('div'); bg.className='bg';
+    bg.style.transform = 'translate(calc('+c+'*(100% + var(--gap))),calc('+r+'*(100% + var(--gap))))';
+    boardEl.appendChild(bg);
+  }
+}
+
+/* ---------- 渲染 ---------- */
+function render(bumpIdx, mergeIdx){
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++){
+    var k = idx(r,c), v = grid[r][c], el = els[k];
+    if(!v){
+      if(el){ el.remove(); delete els[k]; }
+      continue;
+    }
+    if(!el){
+      el = document.createElement('button');
+      el.type = 'button'; el.className = 'tile new';
+      el.style.setProperty('--r', r); el.style.setProperty('--c', c);
+      el.dataset.r = r; el.dataset.c = c;
+      boardEl.appendChild(el); els[k] = el;
+    }
+    el.textContent = String(v);
+    var col = colorOf(v);
+    el.style.background = col.bg; el.style.color = col.fg;
+    el.style.fontSize = fontSizeOf(v);
+    if(k === mergeIdx){ el.classList.remove('merged'); void el.offsetWidth; el.classList.add('merged'); }
+    else if(k === bumpIdx){ el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+  }
+  creditsEl.textContent = String(credits);
+  maxvEl.textContent = String(maxv);
+  if(credits <= 1) credBox.classList.add('warn'); else credBox.classList.remove('warn');
+}
+
+function toast(msg){
+  toastEl.textContent = msg; toastEl.classList.add('show');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ toastEl.classList.remove('show'); }, 1200);
+}
+
+/* ---------- 数字生成 ---------- */
+function randNum(){
+  var x = Math.random();
+  if(x < 0.50) return 1;
+  if(x < 0.82) return 2;
+  if(x < 0.96) return 3;
+  return 4;
+}
+function emptyCells(){
+  var out = [];
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++) if(!grid[r][c]) out.push([r,c]);
+  return out;
+}
+
+/* ---------- 合并检测：横/竖连续 >=3 个相同 ---------- */
+function findRun(){
+  var r,c,len;
+  for(r=0;r<N;r++){
+    c=0;
+    while(c<N){
+      var v = grid[r][c];
+      if(!v){ c++; continue; }
+      len = 1;
+      while(c+len<N && grid[r][c+len]===v) len++;
+      if(len>=3){
+        var cells = [];
+        for(var k=0;k<len;k++) cells.push([r,c+k]);
+        return cells;
+      }
+      c += len;
+    }
+  }
+  for(c=0;c<N;c++){
+    r=0;
+    while(r<N){
+      var v2 = grid[r][c];
+      if(!v2){ r++; continue; }
+      len = 1;
+      while(r+len<N && grid[r+len][c]===v2) len++;
+      if(len>=3){
+        var cells2 = [];
+        for(var k2=0;k2<len;k2++) cells2.push([r+k2,c]);
+        return cells2;
+      }
+      r += len;
+    }
+  }
+  return null;
+}
+
+/* 消一次合并，返回被合并的格子索引 */
+function stepMerge(){
+  var cells = findRun();
+  if(!cells) return -1;
+  var v = grid[cells[0][0]][cells[0][1]];
+  /* 落点：如果本次点的格子在这串里，就落在它上面；否则落在中间那格 */
+  var anchor = cells[Math.floor((cells.length-1)/2)];
+  for(var i=0;i<cells.length;i++){
+    if(idx(cells[i][0], cells[i][1]) === landed){ anchor = cells[i]; break; }
+  }
+  var emptied = [];
+  for(i=0;i<cells.length;i++){
+    var rr = cells[i][0], cc = cells[i][1];
+    grid[rr][cc] = 0;
+    if(!(rr===anchor[0] && cc===anchor[1])) emptied.push([rr,cc]);
+  }
+  grid[anchor[0]][anchor[1]] = v+1;
+  if(v+1 > maxv) maxv = v+1;
+
+  /* 合并送积分 + 空出的格子补新数字 */
+  credits += MERGE_BONUS;
+  for(i=0;i<emptied.length;i++){
+    if(Math.random() < SPAWN_RATE) grid[emptied[i][0]][emptied[i][1]] = randNum();
+  }
+  landed = idx(anchor[0], anchor[1]);
+  return landed;
+}
+
+/* ---------- 点击一个数字 ---------- */
+function tap(r,c){
+  if(busy || over) return;
+  if(!inBoard(r,c)) return;
+  if(!grid[r][c]){ toast('空格不能点，点数字才能 +1'); return; }
+  if(credits <= 0){ toast('积分用完了，点「新游戏」再来一局'); return; }
+
+  grid[r][c] += 1;
+  if(grid[r][c] > maxv) maxv = grid[r][c];
+  credits -= 1;
+  landed = idx(r,c);
+  render(landed, -1);
+  busy = true;
+
+  setTimeout(function(){
+    var chain = 0, lastMerge = -1;
+    while(chain < MAX_CHAIN){
+      var m = stepMerge();
+      if(m < 0) break;
+      lastMerge = m; chain++;
+      render(-1, m);
+    }
+    busy = false;
+    checkState();
+  }, 150);
+}
+
+/* ---------- 状态判定 ---------- */
+function checkState(){
+  if(maxv >= WIN_VALUE && !over){
+    over = true;
+    showDlg('🏆 传奇达成！', '你做出了一枚 ' + WIN_VALUE + '，太厉害了！剩余积分 ' + credits + ' 格。', '再来一局');
+    return;
+  }
+  if(credits <= 0){
+    over = true;
+    showDlg('游戏结束', '积分用完了。本局最大数字：' + maxv + '。点「再来一局」继续挑战。', '再来一局');
+  }
+}
+function showDlg(title, text, btn){
+  dlgTitle.textContent = title; dlgText.textContent = text; dlgBtn.textContent = btn;
+  overlay.classList.add('show');
+}
+function hideDlg(){ overlay.classList.remove('show'); }
+
+/* ---------- 新游戏 / 撤销 / 规则 ---------- */
+function newGame(){
+  grid = [];
+  for(var r=0;r<N;r++){ grid[r]=[]; for(var c=0;c<N;c++) grid[r][c]=0; }
+  var pool = [];
+  for(r=0;r<N;r++) for(c=0;c<N;c++) pool.push([r,c]);
+  for(var i=pool.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=pool[i]; pool[i]=pool[j]; pool[j]=t; }
+  for(i=0;i<START_FILLED;i++){ grid[pool[i][0]][pool[i][1]] = randNum(); }
+
+  credits = START_CREDITS; maxv = 0; over = false; busy = false; landed = -1;
+  hideDlg();
+  for(var key in els) if(els.hasOwnProperty(key)){ els[key].remove(); delete els[key]; }
+  render(-1,-1);
+}
+function showRules(){
+  dlgTitle.textContent = '❓ 玩法';
+  dlgText.innerHTML = '<ul class="rules">' +
+    '<li>棋盘 5 行 5 列，开局随机出现一些数字。</li>' +
+    '<li>点任意一个数字 → 它 +1，同时消耗 1 格积分。开局只有 <b>5 格</b> 积分，用完就结束。</li>' +
+    '<li>同一条横排或竖排上有 <b>连续 3 个相同</b>数字 → 立刻自动合并成一格，数值再 +1。连着 4 个、5 个也算一次合并。</li>' +
+    '<li>合并后空出来的格子会随机补上新数字。</li>' +
+    '<li>做出 <b>' + WIN_VALUE + '</b> 就通关。</li>' +
+    '</ul>';
+  dlgText.className = '';
+  dlgBtn.textContent = '知道了';
+  overlay.classList.add('show');
+}
+
+/* ---------- 事件绑定 ---------- */
+boardEl.addEventListener('click', function(e){
+  var el = e.target.closest ? e.target.closest('.tile') : null;
+  if(!el) return;
+  tap(parseInt(el.dataset.r,10), parseInt(el.dataset.c,10));
+});
+document.getElementById('newBtn').addEventListener('click', newGame);
+document.getElementById('sayBtn').addEventListener('click', speakState);
+document.getElementById('ruleBtn').addEventListener('click', showRules);
+dlgBtn.addEventListener('click', function(){
+  if(dlgText.querySelector && dlgText.querySelector('.rules')){ hideDlg(); return; }
+  newGame();
+});
+window.addEventListener('resize', function(){ layout(); });
+
+/* 给自动化测试/调试用 */
+window.__legend = {
+  tap: tap, newGame: newGame,
+  state: function(){
+    return { grid: grid.map(function(r){ return r.slice(); }), credits: credits, maxv: maxv, over: over };
+  },
+  setState: function(g, cr){
+    grid = g.map(function(r){ return r.slice(); }); credits = (cr==null?START_CREDITS:cr); maxv = 0;
+    over = false; landed = -1;
+    for(var key in els) if(els.hasOwnProperty(key)){ els[key].remove(); delete els[key]; }
+    for(var r=0;r<N;r++) for(var c=0;c<N;c++) if(grid[r][c] > maxv) maxv = grid[r][c];
+    render(-1,-1); return window.__legend.state();
+  }
+};
+function speakState(){
+  var msg = '当前有 ' + credits + ' 格积分，最大的数字是 ' + maxv + '。';
+  var open = 0;
+  for(var r=0;r<N;r++) for(var c=0;c<N;c++) if(!grid[r][c]) open++;
+  msg += '还剩 ' + open + ' 个空格。';
+  try{ if(window.XNLY && window.XNLY.voice && window.XNLY.voice.speak){ window.XNLY.voice.speak(msg); return; } }catch(e){}
+  try{
+    if(window.speechSynthesis){
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(msg); u.lang = 'zh-CN';
+      window.speechSynthesis.speak(u);
+    }
+  }catch(e){}
+}
+window.replayCurrent = speakState;
+window.XNLY_NEXT = newGame;
+
+layout(); buildBg(); newGame();
+})();
+</script>
+<script src="../sw.js"></script>
+<script src="../homebtn.js"></script>
+</body>
+</html>

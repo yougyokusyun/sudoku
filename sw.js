@@ -185,12 +185,13 @@
  *           （15 条 mp3，-10% 语速），失败回退系统语音；首页卡片同色。
  *           附「在抖音里看」兜底链接；看原声期间暂停自动跳题，已答题关闭后 1.6s 继续。
  */
-var CACHE = 'xnly-v103'; // v103: 英语课本听力页扩到 240 题（人教PEP 课文原声，3上~4下）
+var CACHE = 'xnly-v104'; // v104: 新增「数字传奇」页 games/legend2048.html（5×5 点击+1／5格积分／三连合并）
 
 var PRECACHE = [
   './',
   'games/24point.html',
   'games/game2048.html',
+  'games/legend2048.html',
   'games/animal-chess.html',
   'games/animal-feed.html',
   'games/animals-learn.html',
